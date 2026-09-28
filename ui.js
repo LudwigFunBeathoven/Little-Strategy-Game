@@ -41,6 +41,7 @@ function t(key, params){
 }
 function applyStaticTexts(){
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  if (typeof renderHint === 'function' && document.getElementById('hintBox')) renderHint();
   $('lane').setAttribute('aria-label', t('lane.aria'));
   $('footVersion').textContent = t('foot.version', { v: C.VERSION });
 }
@@ -135,6 +136,7 @@ function repairReason(i){
   const S = G.S, cost = G.repairCost();
   if (S.status !== 'running') return t('tip.notRunning');
   if (S.sections[i].hp >= G.sectionMax(i)) return t('tip.baseFull');
+  if (S.sections[i].repairCd > 0) return t('tip.repairCd', { s: Math.ceil(S.sections[i].repairCd) });
   if (S.material < cost) return missing('material', cost, S.material);
   return null;
 }
@@ -212,6 +214,8 @@ function tipContent(id){
     case 'start': return { title: t('start.go'), body: t('tip.start.body') };
     case 'back':  return { title: t('start.back'), body: t('tip.back.body') };
     case 'again': return { title: t('result.again'), body: t('tip.again.body') };
+    case 'resetHints': return { title: t('start.resetHints'), body: t('tip.resetHints.body') };
+    case 'hintOk': return { title: t('hint.ok'), body: t('tip.hintOk.body') };
   }
   return { title: id };
 }
@@ -318,7 +322,15 @@ function tooltipAudit(){
   const sel = 'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
   return [...document.querySelectorAll(sel)].filter(e => !e.dataset.tooltip).map(e => e.outerHTML.slice(0, 100));
 }
-if (DEV) setInterval(() => { const m = tooltipAudit(); if (m.length) console.warn('[tooltip] ohne Tooltip:', m); }, C.DEV_AUDIT_MS);
+/* Jeder sichtbare Knopf trägt eine Erklärzeile (REQ-20.1) */
+function explAudit(){
+  return [...document.querySelectorAll('button')].filter(b => !b.closest('[hidden]') && b.offsetParent !== null)
+    .filter(b => { const e = b.querySelector('.expl'); return !e || !e.textContent.trim(); }).map(e => e.outerHTML.slice(0, 100));
+}
+if (DEV) setInterval(() => {
+  const m = tooltipAudit(); if (m.length) console.warn('[tooltip] ohne Tooltip:', m);
+  const x = explAudit(); if (x.length) console.warn('[expl] ohne Erklärzeile:', x);
+}, C.DEV_AUDIT_MS);
 
 /* ================= Speichern ================= */
 function save(){
@@ -344,12 +356,35 @@ function writeRecord(diff, time){
   return false;
 }
 
+/* ================= Erstkontakt-Hinweise (REQ-20.2/20.3) ================= */
+const Hints = KF_HINTS.create({ get: storageGet, set: storageSet }, C.HINTS_KEY);
+const hintQueue = [];
+function showHint(id){
+  if (!Hints.trigger(id)) return;
+  hintQueue.push(id);
+  renderHint();
+}
+function renderHint(){
+  const box = $('hintBox'), id = hintQueue[0];
+  box.hidden = !id;
+  if (!id) return;
+  $('hintTitle').textContent = t('hint.title');
+  $('hintText').textContent = t('hint.' + id, { x: C.SIEGE_STRENGTH, percent: pct(C.HOLD_DISCOUNT), cap: G.supplyCap() });
+  $('hintOk').querySelector('.btn-label').textContent = t('hint.ok');
+  $('hintOk').querySelector('.expl').textContent = t('ex.hintOk');
+}
+function dismissHint(){ hintQueue.shift(); renderHint(); }
+
 /* ================= Startbildschirm und Ergebnis ================= */
 let modalOpen = false, resultShownFor = null;
 let pickDiff = C.DEFAULT_DIFFICULTY, canCancel = false;
-function mkButton(cls, text, onClick, tip){
+/* Knopf mit Beschriftung und Erklärzeile darunter (REQ-20.1) */
+function mkButton(cls, text, onClick, tip, expl){
   const b = document.createElement('button');
-  b.type = 'button'; b.className = cls; b.textContent = text;
+  b.type = 'button'; b.className = cls;
+  const nm = document.createElement('span'); nm.className = 'btn-label'; nm.textContent = text;
+  const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = expl || '';
+  b.append(nm, ex);
   if (tip) b.dataset.tooltip = tip;
   b.addEventListener('click', e => { if (!isDis(b)) onClick(e); });
   return b;
@@ -372,7 +407,7 @@ function renderStart(){
   const ll = document.createElement('span'); ll.className = 'field-label'; ll.textContent = t('start.language');
   const seg = document.createElement('div'); seg.className = 'seg';
   for (const l of C.LANGUAGES){
-    const b = mkButton('', t('lang.' + l), () => { setLang(l); renderStart(); render(); }, 'lang:' + l);
+    const b = mkButton('', t('lang.' + l), () => { setLang(l); renderStart(); render(); }, 'lang:' + l, t('ex.lang.' + l));
     b.setAttribute('aria-pressed', String(l === lang));
     seg.appendChild(b);
   }
@@ -388,16 +423,24 @@ function renderStart(){
     const nm = document.createElement('b'); nm.textContent = t(`diff.${key}.name`);
     const rc = document.createElement('span'); rc.className = 'rec'; rc.textContent = rec[key] ? t('start.record', { time: clock(rec[key]) }) : '';
     const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(`diff.${key}.desc`);
-    b.append(nm, rc, ds);
+    const d = C.DIFFICULTY[key];
+    const ex = document.createElement('span'); ex.className = 'expl';
+    ex.textContent = t('ex.diff', { hp: fmt(d.enemyBaseHp), size: fmt1(d.waveBase), growth: fmt1(d.waveGrowth) });
+    b.append(nm, rc, ds, ex);
     b.addEventListener('click', () => { pickDiff = key; renderStart(); });
     diffs.appendChild(b);
   }
   diffField.append(dl, diffs);
-  body.append(langField, diffField);
+  const hintField = document.createElement('div'); hintField.className = 'field';
+  const hl = document.createElement('span'); hl.className = 'field-label'; hl.textContent = t('start.hints');
+  const hb = mkButton('btn-ghost', t('start.resetHints'), () => { Hints.reset(); hb.querySelector('.expl').textContent = t('ex.resetHints.done'); }, 'resetHints', t('ex.resetHints'));
+  const hrow = document.createElement('div'); hrow.className = 'seg'; hrow.appendChild(hb);
+  hintField.append(hl, hrow);
+  body.append(langField, diffField, hintField);
 
   const act = $('mActions'); act.innerHTML = '';
-  if (canCancel) act.appendChild(mkButton('btn-ghost', t('start.back'), closeModal, 'back'));
-  act.appendChild(mkButton('btn-primary', t('start.go'), () => startGame(pickDiff), 'start'));
+  if (canCancel) act.appendChild(mkButton('btn-ghost', t('start.back'), closeModal, 'back', t('ex.back')));
+  act.appendChild(mkButton('btn-primary', t('start.go'), () => startGame(pickDiff), 'start', t('ex.start', { diff: t(`diff.${pickDiff}.name`) })));
 }
 function openResult(){
   modalOpen = true;
@@ -411,7 +454,7 @@ function openResult(){
     : t('result.lost.text', { kills: fmt(S.kills) });
   $('mBody').innerHTML = '';
   const act = $('mActions'); act.innerHTML = '';
-  const b = mkButton('btn-primary', t('result.again'), () => openStart(false), 'again');
+  const b = mkButton('btn-primary', t('result.again'), () => openStart(false), 'again', t('ex.again'));
   act.appendChild(b);
   $('modal').hidden = false;
   b.focus();
@@ -450,7 +493,8 @@ function buildUI(){
   }
   $('clickBtn').addEventListener('click', () => { if (!isDis($('clickBtn'))){ G.doClick(); render(); } });
   $('hold_go').addEventListener('click', () => { if (!isDis($('hold_go'))){ G.setHold(false); render(); } });
-  $('hold_hold').addEventListener('click', () => { if (!isDis($('hold_hold'))){ G.setHold(true); render(); } });
+  $('hold_hold').addEventListener('click', () => { if (!isDis($('hold_hold'))){ G.setHold(true); showHint('hold'); render(); } });
+  $('hintOk').addEventListener('click', dismissHint);
   $('newBtn').addEventListener('click', () => openStart(G.S.status === 'running'));
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -548,6 +592,7 @@ function openDraft(){
     b.addEventListener('click', () => { if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; closeModal(); render(); } });
     list.appendChild(b);
   });
+  showHint('card');
   const more = S.pendingLevels - 1;
   showDialog({ eyebrow: t('draft.eyebrow', { n: d.level }), title: t('draft.title'),
                text: t('draft.text') + (more > 0 ? ' ' + t('draft.queue', { n: more }) : ''), body: [list], actions: [], wide: true,
@@ -569,7 +614,7 @@ function showDialog({ eyebrow, title, text, body, actions, focus, wide }){
 }
 function openSlotDialog(i){
   const S = G.S, sl = S.slots[i];
-  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel');
+  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel', t('ex.cancel'));
   if (!sl){
     const list = document.createElement('div'); list.className = 'diffs';
     for (const type of C.BUILDINGS){
@@ -592,7 +637,7 @@ function openSlotDialog(i){
                  body: [list], actions: [cancel], focus: list.querySelector('.pick:not([aria-disabled="true"])') || cancel });
   } else {
     const refund = costText('material', G.refundFor(i));
-    const del = mkButton('btn-ghost', t('slot.demolish'), () => openDemolishConfirm(i), 'demolish:' + i);
+    const del = mkButton('btn-ghost', t('slot.demolish'), () => openDemolishConfirm(i), 'demolish:' + i, t('ex.demolish', { refund }));
     showDialog({ eyebrow: t('slot.label', { n: i + 1 }), title: t(`bld.${sl.type}.name`),
                  text: t('slot.bldText', { desc: t(`bld.${sl.type}.desc`), refund }), actions: [del, cancel], focus: cancel });
   }
@@ -601,8 +646,9 @@ function openDemolishConfirm(i){
   const sl = G.S.slots[i];
   if (!sl) return closeModal();
   const refund = costText('material', G.refundFor(i));
-  const ok = mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); slotKey = ''; closeModal(); render(); }, 'confirmDemolish:' + i);
-  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel');
+  showHint('demolish');
+  const ok = mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); slotKey = ''; closeModal(); render(); }, 'confirmDemolish:' + i, t('ex.demolish', { refund }));
+  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel', t('ex.cancel'));
   showDialog({ eyebrow: t('slot.label', { n: i + 1 }), title: t('demolish.title', { name: t(`bld.${sl.type}.name`) }),
                text: t('demolish.text', { refund, percent: pct(C.REFUND_RATE) }), actions: [cancel, ok], focus: cancel });
 }
@@ -614,6 +660,10 @@ function renderWave(){
   $('waveLabel').textContent = t('wave.next', { n: S.waveNo + 1 });
   $('waveIn').textContent = clock(Math.ceil(G.waveIn()));
   $('waveCmd').textContent = t(hold ? 'wave.cmd.hold' : 'wave.cmd.go');
+  // Belagerungswelle: Countdown ab der Ankündigung (REQ-19.3)
+  const siege = G.siegeAnnounced();
+  $('siegeInfo').hidden = !siege;
+  if (siege) $('siegeInfo').textContent = t('wave.siege', { time: clock(Math.ceil(G.siegeIn())), x: C.SIEGE_STRENGTH });
   for (const k of ['go', 'hold']){
     const b = $('hold_' + k), pressed = (k === 'hold') === hold;
     b.setAttribute('aria-pressed', String(pressed));
@@ -639,6 +689,8 @@ function render(){
   const cp = G.clickPower(), cpText = cp < 10 && cp % 1 ? fmt1(cp) : fmt(cp);
   $('perClick').textContent = t('hud.perClick', { n: cpText });
   $('clickHint').textContent = cpText;
+  $('clickExpl').textContent = t('ex.click', { n: cpText });
+  $('newExpl').textContent = t('ex.newGame');
   $('scrap').textContent = fmt(S.scrap);
   $('clock').textContent = clock(S.t);
   $('kills').textContent = fmt(S.kills);
@@ -674,7 +726,8 @@ function render(){
     const r = optEls['repair_' + i];
     r.btn.hidden = !S.revealed['repair_' + i];
     r.name.textContent = t('repair.' + i);
-    r.expl.textContent = t('ex.repair', { n: fmt(C.REPAIR_AMOUNT), cost: costText('material', G.repairCost()) });
+    r.expl.textContent = S.sections[i].repairCd > 0 ? t('tip.repairCd', { s: Math.ceil(S.sections[i].repairCd) })
+      : t('ex.repair', { n: fmt(C.REPAIR_AMOUNT), cost: costText('material', G.repairCost()) });
     setDis(r.btn, !!repairReason(i));
   }
 
@@ -714,6 +767,8 @@ function render(){
       ol.appendChild(li);
     }
   }
+  if (S.status === 'running' && S.waveNo >= 1) showHint('wave');
+  if (S.status === 'running' && G.siegeAnnounced()) showHint('siege');
   if (S.status === 'running' && S.pendingDraft && !modalOpen) openDraft();
   if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t && !modalOpen){
     resultShownFor = S.t;
@@ -819,7 +874,7 @@ function drawEnemyBase(){
 }
 function drawUnit(u, now){
   const sx = cw / W, gy = unitGround(u);
-  const us = Math.max(0.7, Math.min(1.25, sx * 1.2));
+  const us = Math.max(0.7, Math.min(1.25, sx * 1.2)) * (u.siege ? 1.35 : 1);   // Belagerungseinheiten größer
   const px = u.x * sx;
   const bob = (!reduceMotion && u.moving) ? Math.abs(Math.sin(now / 90 + u.bob)) * 1.5 : 0;
   ctx.fillStyle = u.flash > 0 ? COL.ink : (u.side === 'p' ? COL.steel : COL.rust);
@@ -958,7 +1013,7 @@ new MutationObserver(readColors).observe(document.documentElement, { attributes:
 setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
 // Schnittstelle für automatisierte Browser-Tests
-window.__kf = { G, C, t, setLang, startGame, tooltipAudit, Tip, get lang(){ return lang; } };
+window.__kf = { G, C, t, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, get lang(){ return lang; } };
 
 setLang(lang);
 buildUI();

@@ -49,12 +49,13 @@ test('Leere Warteschlange: keine eigene Welle', () => {
 
 test('Gegnervorschau stimmt mit der tatsächlichen Gegnerwelle überein (gleicher Seed)', () => {
   const a = game('normal', 4242).G, b = game('normal', 4242).G;
+  a.S.sections.forEach(x => { x.hp = 1e9; });
   assert.equal(sig(a.S.nextEnemy), sig(b.S.nextEnemy), 'gleicher Seed, gleiche Vorschau');
   for (let w = 0; w < 6; w++){
     const G = a;
     const preview = sig(G.S.nextEnemy);
     const seen = new Set(G.S.units.map(u => u.id)), queued = G.S.enemyQueue.length;
-    while (G.S.waveNo === w){ if (G.S.pendingDraft) G.chooseDraft(0); G.tick(0.05); }
+    while (G.S.waveNo === w && G.S.status === 'running'){ if (G.S.pendingDraft) G.chooseDraft(0); G.tick(0.05); }
     const arrived = G.S.units.filter(u => u.side === 'e' && !seen.has(u.id)).map(u => ({ type: u.type, lane: u.lane }));
     const late = G.S.enemyQueue.slice(queued).filter(q => !q.alarm);
     assert.equal(sig([...arrived, ...late]), preview, `Welle ${w + 1}`);
@@ -66,7 +67,7 @@ test('Verteilung der Welle nach 12.1 mit der stärkeren angekündigten Gegnerwel
   G.S.material = 1e6;
   G.S.nextEnemy = [{ type: 'laeufer', lane: BOT }, { type: 'werfer', lane: BOT }, { type: 'laeufer', lane: TOP }];
   G.spawn('laeufer'); G.spawn('laeufer'); G.spawn('werfer');
-  while (G.S.waveNo === 0) G.tick(0.05);
+  while (G.S.waveNo === 0 && G.S.status === 'running') G.tick(0.05);
   const p = G.S.units.filter(u => u.side === 'p');
   assert.deepEqual(Array.from(p.filter(u => u.type === 'laeufer').map(u => u.lane)).sort(), [MID, BOT].sort());
   assert.deepEqual(Array.from(p.filter(u => u.type === 'werfer').map(u => u.lane)), [MID]);
@@ -85,11 +86,11 @@ test('Halten: Reparatur kostet 70 %, Warteschlange bleibt, Befehl springt nach d
   const m = G.S.material; G.repair(MID);
   assert.equal(m - G.S.material, 42);
   assert.ok(G.upCost('mauer') < Math.ceil(C.UPGRADES.mauer.baseCost), 'Mauer-Upgrade verbilligt');
-  while (G.S.waveNo === 0) G.tick(0.05);
+  while (G.S.waveNo === 0 && G.S.status === 'running') G.tick(0.05);
   assert.equal(G.S.hold, false, 'Befehl springt zurück');
   assert.equal(G.S.queue.length, 2, 'Warteschlange bleibt erhalten');
   assert.equal(own(G), 0);
   assert.equal(G.repairCost(), C.REPAIR_COST);
-  while (G.S.waveNo === 1) G.tick(0.05);
+  while (G.S.waveNo === 1 && G.S.status === 'running') G.tick(0.05);
   assert.equal(own(G), 2, 'rückt mit der folgenden Welle aus');
 });

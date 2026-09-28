@@ -43,8 +43,10 @@ function freshState(diff, seed){
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
     lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
-    sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9 })), enemyBaseHp: d.enemyBaseHp,
-    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, hold: false, nextEnemy: [], enemyQueue: [], queue: [], units: [], nextId: 1,
+    sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9, repairCd: 0 })), enemyBaseHp: d.enemyBaseHp,
+    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, hold: false, nextEnemy: [], nextEnemySiege: false,
+    // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
+    siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
@@ -117,9 +119,12 @@ function create(){
   const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane)) * mMul('turretDmg');
   const turretRange  = lane => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane));
   const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane)));
-  const escalation   = () => Math.pow(1 + C.ESCALATION_RATE, Math.max(0, S.t / 60 - C.ESCALATION_START_MIN));
-  const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60) * mMul('enemyHp') * escalation();
-  const enemyDmgMult = () => (1 + diffCfg().dmgGrowth * S.t / 60) * escalation();
+  /* Gegnerstärke wächst linear; nach der Belagerungswelle kommt POST_SIEGE_GROWTH je Minute hinzu (REQ-19.4) */
+  const postSiege    = () => S.siegeDone ? C.POST_SIEGE_GROWTH * Math.max(0, S.t - S.siegeWaveT) / 60 : 0;
+  const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60 + postSiege()) * mMul('enemyHp');
+  const enemyDmgMult = () => 1 + diffCfg().dmgGrowth * S.t / 60 + postSiege();
+  const siegeIn      = () => S.siegeDone ? null : Math.max(0, S.siegeWaveT - S.t);
+  const siegeAnnounced = () => !S.siegeDone && S.siegeAnnouncedAt !== null;
   const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost')));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
@@ -220,8 +225,9 @@ function create(){
   function repair(i){
     if (i === undefined) i = GATE;
     const s = S.sections[i];
-    if (S.status !== 'running' || !s || S.material < repairCost() || s.hp >= sectionMax(i)) return false;
+    if (S.status !== 'running' || !s || S.material < repairCost() || s.hp >= sectionMax(i) || s.repairCd > 0) return false;
     S.material -= repairCost();
+    s.repairCd = C.REPAIR_COOLDOWN_S;
     s.hp = Math.min(sectionMax(i), s.hp + C.REPAIR_AMOUNT);
     return true;
   }
@@ -257,6 +263,7 @@ function create(){
   /* Nächste Gegnerwelle: Zusammensetzung und Lanes entstehen zu Beginn des Countdowns über den Spielzufall (REQ-14.3) */
   function rollEnemyWave(){
     const d = diffCfg(), min = S.nextWave / 60;
+    S.nextEnemySiege = !S.siegeDone && S.nextWave >= S.siegeWaveT;
     const size = Math.max(1, Math.round(d.waveBase + d.waveGrowth * min));
     const out = [];
     for (let i = 0; i < size; i++){
@@ -294,10 +301,20 @@ function create(){
         S.units.push(makeUnit('p', q.type, q.lane, deployX(q.lane) - q.k * C.ALLY_GAP));
       S.queue = [];
     }
-    // Gegnerwelle: rückt geschlossen aus; was wegen Feldgrenze oder Belagerung nicht passt, folgt später
+    // Gegnerwelle: rückt geschlossen aus; was wegen Feldgrenze oder Belagerung nicht passt, folgt später.
+    // Die Belagerungswelle rückt immer vollständig aus.
+    const siege = S.nextEnemySiege;
+    if (siege){ S.siegeDone = true; S.siegeWaveT = S.t; log('log.siege'); }
+    rescaleEnemies();
     let field = S.units.filter(u => u.side === 'e').length;
     for (const q of formation(enemy)){
-      if (field < diffCfg().maxField && !gateHeld(q.lane)){ S.units.push(makeUnit('e', q.type, q.lane, W - EBW + q.k * C.ALLY_GAP)); field++; }
+      if (siege || (field < diffCfg().maxField && !gateHeld(q.lane))){
+        const u = makeUnit('e', q.type, q.lane, W - EBW + q.k * C.ALLY_GAP);
+        // Belagerungswelle: jede Einheit mit SIEGE_STRENGTH-facher Stärke. In der Kolonne kämpfen nur die vordersten
+        // Einheiten, deshalb wirkt Stärke je Einheit, eine größere Anzahl dagegen kaum (REQ-19.2, Auslegung).
+        if (siege){ u.siege = true; u.hp *= C.SIEGE_STRENGTH; u.maxHp *= C.SIEGE_STRENGTH; u.dmg *= C.SIEGE_STRENGTH; }
+        S.units.push(u); field++;
+      }
       else S.enemyQueue.push({ type: q.type, lane: q.lane, at: S.t });
     }
     if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('log.firstWave'); }
@@ -306,6 +323,17 @@ function create(){
     S.nextEnemy = rollEnemyWave();
   }
   const waveIn = () => Math.max(0, S.nextWave - S.t);
+  /* Mit jeder Welle erreicht das Stärkewachstum auch die Gegner im Feld. Sonst hält ein Stau alter, schwacher Einheiten
+     die Feldgrenze besetzt, und das Wachstum kommt nie an der Front an (Patt in der Simulation). */
+  function rescaleEnemies(){
+    const hpM = enemyHpMult(), dmgM = enemyDmgMult();
+    for (const u of S.units){
+      if (u.side !== 'e' || u.hp <= 0) continue;
+      const k = u.siege ? C.SIEGE_STRENGTH : 1, max = C.UNITS[u.type].hp * hpM * k;
+      if (max > u.maxHp){ u.hp *= max / u.maxHp; u.maxHp = max; }
+      u.dmg = Math.max(u.dmg, C.UNITS[u.type].dmg * dmgM * k);
+    }
+  }
   /* Aufstellpunkt einer Lane: am Tor, mit Vorposten weiter vorn, aber nie hinter der vordersten gegnerischen Einheit */
   function deployX(lane){
     let x = spawnX();
@@ -528,6 +556,7 @@ function create(){
     S.t += dt;
     S.stats.prod[phase()].time += dt;
     addMaterial(matRate() * dt);
+    for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
     // Maurerkolonne: stehende Mauern heilen, wenn sie WALL_REGEN_DELAY_S nicht getroffen wurden; das Tor nie (REQ-18.6)
     const wallRegen = mAdd('wallRegenPct') / 100;
@@ -544,7 +573,8 @@ function create(){
       }
     }
     if (S.t >= S.nextWave) launchWave();
-    if (!S.escalated && S.t / 60 >= C.ESCALATION_START_MIN){ S.escalated = true; log('log.escalation'); }
+    // Ankündigung SIEGE_WARNING_S vor der Belagerungswelle (REQ-19.3)
+    if (!S.siegeDone && S.siegeAnnouncedAt === null && S.t >= S.siegeWaveT - C.SIEGE_WARNING_S - 1e-9){ S.siegeAnnouncedAt = S.t; log('log.siegeWarning'); }
 
     const eFrac = S.enemyBaseHp / diffCfg().enemyBaseHp;
     let alarmLevel = 0;
@@ -578,9 +608,11 @@ function create(){
     modCache = { ver: -1, key: null, mul: {}, add: {} };
     S.lvl = Object.assign(freshState(saved.diff, 1).lvl, saved.lvl || {});
     if (!Array.isArray(S.slots) || S.slots.length !== SLOTS) S.slots = new Array(SLOTS).fill(null);
-    S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -1e9 }));
+    S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -1e9, repairCd: 0 }));
     if (!Array.isArray(S.queue)) S.queue = [];
-    S.nextWave = Math.max(S.nextWave, S.t + C.RELOAD_WAVE_DELAY_S);
+    const shift = Math.max(0, S.t + C.RELOAD_WAVE_DELAY_S - S.nextWave);
+    S.nextWave += shift;
+    if (!S.siegeDone) S.siegeWaveT += shift;       // Belagerungswelle bleibt eine reguläre Welle im Takt
     if (!Array.isArray(S.nextEnemy) || !S.nextEnemy.length) S.nextEnemy = rollEnemyWave();
   }
   /* Abwesenheit: nur Material wird nachgerechnet, die Front steht still */
@@ -598,7 +630,7 @@ function create(){
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit, setHold,
-    supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength,
+    supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, refundFor, interestRate,

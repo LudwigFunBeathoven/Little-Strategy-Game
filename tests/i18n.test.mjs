@@ -36,5 +36,5 @@ test('ui.js und core.js enthalten keine fest codierten Sätze', () => {
 test('index.html lädt alle Spieldateien in der richtigen Reihenfolge', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const srcs = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]);
-  assert.deepEqual(srcs, ['config.js', 'i18n/de.js', 'i18n/en.js', 'data/draft-options.js', 'core.js', 'ui.js']);
+  assert.deepEqual(srcs, ['config.js', 'i18n/de.js', 'i18n/en.js', 'data/draft-options.js', 'hints.js', 'core.js', 'ui.js']);
 });

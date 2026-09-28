@@ -6,6 +6,7 @@ const KF_CONFIG = {
   SAVE_KEY: 'klammerfront.save.v4',
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
+  HINTS_KEY: 'klammerfront.hints.v1',   // gesehene Erstkontakt-Hinweise (REQ-20.3)
   LANGUAGES: ['de', 'en'],
   FALLBACK_LANG: 'en',
 
@@ -45,10 +46,12 @@ const KF_CONFIG = {
   ALARM_SPACING_S: 0.4,
   ALARM_THRESHOLDS: [2 / 3, 1 / 3],
   ALARM_WERFER_EVERY: 3,
-  /* Eskalation gegen Patts: ab ESCALATION_START_MIN wird der Gegner jede Minute um ESCALATION_RATE stärker (Zinseszins).
-     Wer seine Überlegenheit nicht in einen Durchbruch umsetzt, verliert irgendwann. */
-  ESCALATION_START_MIN: 16,
-  ESCALATION_RATE: 0.4,
+  /* Belagerungswelle statt Eskalation (REQ-19): in Minute SIEGE_MINUTE greift eine Welle mit SIEGE_STRENGTH-facher Größe an,
+     SIEGE_WARNING_S vorher angekündigt. Danach wächst die Gegnerstärke linear um POST_SIEGE_GROWTH je Minute. */
+  SIEGE_MINUTE: 16,
+  SIEGE_STRENGTH: 3,
+  SIEGE_WARNING_S: 60,
+  POST_SIEGE_GROWTH: 0.10,
   RELOAD_WAVE_DELAY_S: 5,
 
   /* Wellen (REQ-14/15): eigene und gegnerische Wellen rücken im selben Takt aus */
@@ -61,6 +64,7 @@ const KF_CONFIG = {
   SECTION_HP: [400, 600, 400],
   REPAIR_COST: 60,
   REPAIR_AMOUNT: 100,
+  REPAIR_COOLDOWN_S: 5,         // je Abschnitt; ohne Grenze repariert ein reicher Spieler schneller, als der Gegner Schaden macht (Patt)
   TOWER_LANES: [0, 2],          // Turm oben auf der Mauer oben, Turm unten auf der Mauer unten
 
   /* Einheiten */

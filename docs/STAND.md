@@ -10,8 +10,8 @@ Grundlage: `docs/anforderungen-iteration-3.md`. Jedes Inkrement erfüllt die Def
 | I2 | Wellen mit Versorgungslimit, Wellenbefehl „Halten“ (REQ-14–15) | fertig |
 | I3 | 3×3-Raster, Fabriken, Umbau von Kaserne und Schmiede (REQ-16–17) | fertig |
 | I4 | Spezialkarten mit Stufen (REQ-18) | fertig |
-| I5 | Belagerungswelle statt Eskalation (REQ-19) | offen |
-| I6 | Erklärzeilen, Erstkontakt-Hinweise (REQ-20) | offen |
+| I5 | Belagerungswelle statt Eskalation (REQ-19) | fertig |
+| I6 | Erklärzeilen, Erstkontakt-Hinweise (REQ-20) | fertig |
 | I7 | Simulation, Balancing, Bericht (REQ-21) | offen |
 
 ## Prüfung je Inkrement
@@ -31,6 +31,9 @@ KF_OVERRIDE='{"FX_QUALITAET":0.2}' node tools/simulate.mjs --suite kurz   # Bala
   Ohne Schmiede (`--suite ohneSchmiede`, 40 Partien Normal): 19 Siege = 48 % (Soll ≥ 30 %). Dafür wächst die Gegnerwelle auf Normal
   mit 0,6 statt 0,8 Einheiten pro Minute. Feinabstimmung auf die Zielkorridore folgt in I7.
 - I4: `npm test` 45/45 grün. Kurzsimulation: 20 Siege, 0 offen, Median 5:59.
+- I5 und I6 (ein gemeinsamer Commit, weil I6 entstand, während die Simulationen zu I5 liefen): `npm test` 53/53 grün,
+  `npm run test:browser` grün in beiden Sprachen. Kurzsimulation: 20 Siege, 0 offen.
+  Auf Schwer bleiben nach I5 noch einzelne Partien nach 30 Minuten offen; das ist Gegenstand von I7.
 
 ## Abweichungen und Auslegungen
 1. **„Tor belagert“ entfällt bereits in I1** statt in I2 (REQ-14.5). Je Lane angewandt, blockierte die Regel die Warteschlange dauerhaft: Die Übergangsregel 12.2 füllt sie zyklisch, belagerte Lanes stauen sich. Die Kurzsimulation endete dadurch im Patt.
@@ -68,3 +71,15 @@ KF_OVERRIDE='{"FX_QUALITAET":0.2}' node tools/simulate.mjs --suite kurz   # Bala
 18. **Turmkanoniere** werden wie Scharfschützen nur angeboten, wenn ein Turm steht. Ohne Turm wäre die Karte wirkungslos.
 19. **Schwere Pressen und Vorposten** senken die Lebenspunkte aller drei Abschnitte. „Mauerabschnitte“ umfasst im Dokument das Tor (bei der Maurerkolonne ist es ausdrücklich ausgenommen).
 20. **Maurerkolonne** heilt nur stehende Mauern. Eine gefallene Mauer braucht weiter eine Reparatur, sonst würde der Turm ohne Reparatur wieder aktiv (13.2).
+21. **Belagerungswelle (19.2): „dreifache Stärke“ = dreifache Lebenspunkte und dreifacher Schaden je Einheit**, bei normaler Wellengröße.
+    Mit dreifacher *Anzahl* bleibt die Welle fast wirkungslos: In der Kolonne greifen nur die vordersten Einheiten an (12.4).
+    Gemessen: Torschaden 21 LP/s gegen Reparatur und Regeneration 23 LP/s, die Partie blieb offen.
+22. **Stärkewachstum erreicht die Gegner im Feld:** Mit jeder Welle werden gegnerische Einheiten, die schon kämpfen, auf die aktuelle
+    Stärke angehoben (nie abgesenkt). Sonst belegt ein Stau alter, schwacher Einheiten die Feldgrenze, und das Wachstum kommt nie an.
+23. **Reparatur mit Abklingzeit:** je Abschnitt höchstens alle 5 s (`REPAIR_COOLDOWN_S`). Ohne Grenze repariert ein Spieler mit
+    hohem Materialfluss schneller, als der Gegner Schaden macht. Das ist eine neue Regel gegen Patts und braucht die Zustimmung des PO.
+24. **Hinweise (20.2):** erscheinen als Leiste am unteren Rand über allen Fenstern und bleiben, bis „Verstanden“ geklickt wird.
+    Auslöser: Abmarsch der ersten Welle, erste Kartenwahl, erster „Halten“-Befehl, Öffnen der ersten Abriss-Bestätigung, Ankündigung der
+    Belagerungswelle. Ein Hinweis gilt als gesehen, sobald er erscheint.
+25. **Erklärzeilen (20.1)** tragen alle Knöpfe, auch Sprache, Schwierigkeit und Dialogknöpfe. Wo nichts kostet, steht die Wirkung allein
+    oder „kostenlos“. Die Browser-Prüfung zählt Knöpfe ohne Zeile (`__kf.explAudit()`, im Entwicklungsmodus `?dev=1` auch in der Konsole).
