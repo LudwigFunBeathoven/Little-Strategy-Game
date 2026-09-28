@@ -1,0 +1,27 @@
+60 Partien auf 2 Kernen …
+fertig in 37 s
+
+STRATEGIE – Zufall gegen gierige Heuristik (Spielertyp durchschnitt)
+
+Schwierigkeit | Strategie | Siegquote | Median Sieg | Abrisse/Partie
+leicht        | zufall    |      90 % |        6:20 |     0.30
+leicht        | gierig    |     100 % |        9:33 |     0.00
+normal        | zufall    |      90 % |       20:23 |     1.90
+normal        | gierig    |     100 % |       24:14 |     0.00
+schwer        | zufall    |       0 % |           – |     5.10
+schwer        | gierig    |      30 % |       29:51 |     0.00
+
+Wahlrate je Gebäudetyp (Anteil der Partien, in denen der Typ gebaut wurde)
+Strategie | fabrik       | schmiede     | kaserne      | universitaet | kontor      
+zufall    | 63 %         | 87 %         | 67 %         | 57 %         | 0 %         
+gierig    | 100 %        | 87 %         | 40 %         | 50 %         | 0 %         
+
+Siegquote je Gebäudekombination am Partieende (beide Strategien, alle Schwierigkeitsgrade, mind. 3 Partien)
+fabrik+schmiede+universitaet               17 Partien  Siegquote  53 %
+fabrik+kaserne+schmiede                    15 Partien  Siegquote  80 %
+fabrik+schmiede                             5 Partien  Siegquote 100 %
+schmiede                                    4 Partien  Siegquote 100 %
+fabrik+kaserne+universitaet                 4 Partien  Siegquote   0 %
+schmiede+universitaet                       3 Partien  Siegquote  67 %
+kaserne+schmiede                            3 Partien  Siegquote  67 %
+

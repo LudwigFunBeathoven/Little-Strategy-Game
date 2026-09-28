@@ -71,8 +71,10 @@ const DESC_PARAMS = {
   klingen:    () => ({ percent: pct(C.FX_KLINGEN - 1) }),
   ruestung:   () => ({ percent: pct(C.FX_RUESTUNG - 1) }),
   drill:      () => ({ percent: pct(1 - C.FX_DRILL) }),
-  logistik:   () => ({ percent: pct(C.FX_LOGISTIK) }),
-  beute:      () => ({ percent: pct(C.FX_BEUTE) }),
+  rekrutierung:  () => ({ percent: pct(C.FX_REKRUTIERUNG) }),
+  exerzierplatz: () => ({ percent: pct(1 - C.FX_EXERZIER) }),
+  stube:         () => ({ n: C.FX_STUBE }),
+  zinseszins:    () => ({ percent: fmt1(C.FX_ZINSESZINS * 100) }),
   nacht:      () => ({ n: C.FX_NACHT_HOURS }),
   mauer:      () => ({ n: C.FX_MAUER_HP }),
   stacheln:   () => ({ n: C.FX_STACHELN_DMG }),
@@ -97,8 +99,10 @@ const METRICS = {
   klingen:    ['tip.m.dmg',          () => C.UNITS.laeufer.dmg * G.dmgMultP(), v => fmt1(v)],
   ruestung:   ['tip.m.hp',           () => C.UNITS.laeufer.hp * G.hpMultP(), v => fmt(v)],
   drill:      ['tip.m.atkRate',      () => 1 / (C.UNITS.laeufer.cd * G.cdMultP()), v => fmt1(v)],
-  logistik:   ['tip.m.unitCost',     () => G.unitCost('laeufer'), v => fmt(v)],
-  beute:      ['tip.m.bounty',       () => C.UNITS.laeufer.bounty * G.bountyMult(), v => fmt1(v)],
+  rekrutierung:  ['tip.m.unitCost',  () => G.unitCost('laeufer'), v => fmt(v)],
+  exerzierplatz: ['tip.m.spawnGap',  () => G.spawnGap(), v => fmt1(v)],
+  stube:         ['tip.m.queueMax',  () => G.queueMax(), v => fmt(v)],
+  zinseszins:    ['tip.m.interest',  () => G.interestRate() * 100, v => fmt1(v) + ' %'],
   nacht:      ['tip.m.offline',      () => G.offlineHours(), v => fmt(v)],
   mauer:      ['tip.m.baseMax',      () => G.baseMax(), v => fmt(v)],
   stacheln:   ['tip.m.thorns',       () => C.FX_STACHELN_DMG * G.S.lvl.stacheln, v => fmt(v)],
@@ -113,6 +117,16 @@ function previewUpgrade(id){
   return [t(label), `${show(before)} → ${show(after)}`];
 }
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
+function buildReason(block, cost){
+  switch (block){
+    case null: return null;
+    case 'notRunning': return t('tip.notRunning');
+    case 'locked': return t('build.reason.locked');
+    case 'standing': return t('build.reason.standing');
+    case 'material': return missing('material', cost, G.S.material);
+  }
+  return null;
+}
 function upgradeReason(id){
   const S = G.S, u = C.UPGRADES[id];
   if (S.status !== 'running') return t('tip.notRunning');
@@ -125,7 +139,7 @@ function upgradeReason(id){
 function unitReason(id){
   const S = G.S, c = G.unitCost(id);
   if (S.status !== 'running') return t('tip.notRunning');
-  if (S.queue.length >= C.QUEUE_MAX) return t('tip.queueFull');
+  if (S.queue.length >= G.queueMax()) return t('tip.queueFull');
   if (S.material < c) return missing('material', c, S.material);
   return null;
 }
@@ -142,7 +156,7 @@ function tipContent(id){
     }
     case 'unit': {
       const spec = C.UNITS[a];
-      return { title: t(`unit.${a}.name`), body: t('tip.unit.body', { max: C.QUEUE_MAX, k: spec.key }),
+      return { title: t(`unit.${a}.name`), body: t('tip.unit.body', { max: G.queueMax(), k: spec.key }),
                rows: [[t('tip.m.unitHp'), fmt(spec.hp * G.hpMultP())], [t('tip.m.unitDmg'), fmt1(spec.dmg * G.dmgMultP())],
                       [t('tip.m.range'), fmt(spec.range)], [t('tip.cost'), costText('material', G.unitCost(a))]],
                reason: unitReason(a) };
@@ -150,19 +164,27 @@ function tipContent(id){
     case 'repair': {
       const after = Math.min(G.baseMax(), S.baseHp + C.REPAIR_AMOUNT);
       const reason = S.status !== 'running' ? t('tip.notRunning') : S.baseHp >= G.baseMax() ? t('tip.baseFull')
-        : S.scrap < C.REPAIR_COST ? missing('scrap', C.REPAIR_COST, S.scrap) : null;
+        : S.material < C.REPAIR_COST ? missing('material', C.REPAIR_COST, S.material) : null;
       return { title: t('repair.name'), body: t('tip.repair.body'),
-               rows: [[t('tip.m.baseHp'), `${fmt(S.baseHp)} → ${fmt(after)}`], [t('tip.cost'), costText('scrap', C.REPAIR_COST)]], reason };
+               rows: [[t('tip.m.baseHp'), `${fmt(S.baseHp)} → ${fmt(after)}`], [t('tip.cost'), costText('material', C.REPAIR_COST)]], reason };
     }
     case 'click':
       return { title: t('btn.click'), body: t('tip.click.body'), rows: [[t('tip.m.perClick'), fmt(G.clickPower())]],
                reason: S.status !== 'running' ? t('tip.notRunning') : null };
-    case 'bld': {
-      const cost = G.nextSlotCost();
-      return { title: t(`bld.${a}.name`), body: t('tip.slotBuild.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }),
-               rows: [[t('tip.cost'), costText('material', cost)]],
-               reason: S.status !== 'running' ? t('tip.notRunning') : S.material < cost ? missing('material', cost, S.material) : null };
+    case 'slot': {
+      const sl = S.slots[a];
+      if (!sl) return { title: t('slot.label', { n: Number(a) + 1 }), body: t('tip.slot.empty'), rows: [[t('tip.cost'), costText('material', G.nextSlotCost())]] };
+      return { title: t(`bld.${sl.type}.name`), body: t('tip.slot.built'),
+               rows: [[t('tip.refund'), costText('material', G.refundFor(Number(a)))]] };
     }
+    case 'pick': {
+      const cost = G.nextSlotCost(), block = G.buildBlock(Number(b), a);
+      return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }),
+               rows: [[t('tip.cost'), costText('material', cost)]], reason: buildReason(block, cost) };
+    }
+    case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), costText('material', G.refundFor(Number(a)))]] };
+    case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: costText('material', G.refundFor(Number(a))) }) };
+    case 'cancel': return { title: t('slot.cancel'), body: t('tip.cancel.body') };
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
     case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };
     case 'diff':  return { title: t(`diff.${a}.name`), body: t(`diff.${a}.desc`) };
@@ -391,16 +413,17 @@ function makeOpt(parent, cls, tip, onClick){
   parent.appendChild(b);
   return { btn: b, name: b.children[0], cost: b.children[1] };
 }
-const GROUP_BOX = { fertigung: 'optsFertigung', fabrik: 'optsFabrik', schmiede: 'optsSchmiede', universitaet: 'optsUni', mauer: 'optsMauer', turm: 'optsTurm' };
+const GROUP_BOX = { fertigung: 'optsFertigung', fabrik: 'optsFabrik', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm: 'optsTurm' };
 
 function buildUI(){
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
   for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   optEls.repair = makeOpt($('optsRepair'), '', 'repair', () => G.repair());
   for (let i = 0; i < C.BUILDING_SLOTS; i++){
-    const card = document.createElement('div');
-    card.className = 'slot';
-    card.innerHTML = '<div class="slot-head"><span class="slot-no"></span><span class="slot-cost"></span></div><div class="slot-body"></div>';
+    const card = document.createElement('button');
+    card.type = 'button'; card.className = 'slot slot-btn'; card.dataset.tooltip = 'slot:' + i;
+    card.innerHTML = '<span class="slot-head"><span class="slot-no"></span><span class="slot-cost"></span></span><span class="slot-body"></span>';
+    card.addEventListener('click', () => { if (!isDis(card)) openSlotDialog(i); });
     $('slots').appendChild(card);
   }
   $('clickBtn').addEventListener('click', () => { if (!isDis($('clickBtn'))){ G.doClick(); render(); } });
@@ -413,40 +436,80 @@ function buildUI(){
 
 let slotKey = '';
 function renderSlots(){
-  const S = G.S, n = G.builtCount(), cost = G.nextSlotCost();
-  const key = lang + S.slots.join(',') + '|' + (S.material >= cost) + '|' + S.status;
+  const S = G.S, cost = G.nextSlotCost();
+  const key = lang + JSON.stringify(S.slots) + '|' + cost + '|' + S.status;
   if (key === slotKey) return;
   slotKey = key;
   const cards = $('slots').children;
   for (let i = 0; i < cards.length; i++){
     const card = cards[i], body = card.querySelector('.slot-body'), costEl = card.querySelector('.slot-cost');
     card.querySelector('.slot-no').textContent = t('slot.label', { n: i + 1 });
-    const b = S.slots[i];
+    const sl = S.slots[i];
     body.innerHTML = '';
-    if (b){
-      card.className = 'slot built';
+    setDis(card, S.status !== 'running');
+    if (sl){
+      card.className = 'slot slot-btn built';
       costEl.textContent = t('slot.built');
-      const nm = document.createElement('div'); nm.className = 'slot-name'; nm.textContent = t(`bld.${b}.name`);
-      const ds = document.createElement('div'); ds.className = 'slot-desc'; ds.textContent = t(`bld.${b}.desc`);
-      body.append(nm, ds);
-    } else if (i === n){
-      card.className = 'slot';
-      costEl.textContent = costText('material', C.BUILD_COSTS[i]);
-      const ch = document.createElement('div'); ch.className = 'slot-choices';
-      for (const k of C.BUILDINGS){
-        if (G.has(k)) continue;
-        const btn = mkButton('chip', t('slot.buildBtn', { name: t(`bld.${k}.name`) }), () => { G.build(k); slotKey = ''; render(); }, `bld:${k}:${i}`);
-        setDis(btn, S.status !== 'running' || S.material < cost);
-        ch.appendChild(btn);
-      }
-      body.appendChild(ch);
+      const nm = document.createElement('span'); nm.className = 'slot-name'; nm.textContent = t(`bld.${sl.type}.name`);
+      body.appendChild(nm);
     } else {
-      card.className = 'slot locked';
-      costEl.textContent = costText('material', C.BUILD_COSTS[i]);
-      const ds = document.createElement('div'); ds.className = 'slot-desc'; ds.textContent = t('slot.locked', { n: i });
-      body.appendChild(ds);
+      card.className = 'slot slot-btn';
+      costEl.textContent = costText('material', cost);
+      const cta = document.createElement('span'); cta.className = 'slot-cta'; cta.textContent = t('slot.choose');
+      body.appendChild(cta);
     }
   }
+}
+
+/* Dialoge für Bauplätze (REQ-01.5 / 01.6) */
+function showDialog({ eyebrow, title, text, body, actions, focus }){
+  Tip.hide();
+  modalOpen = true;
+  $('mEyebrow').textContent = eyebrow || '';
+  $('mTitle').textContent = title;
+  $('mText').textContent = text || '';
+  const mb = $('mBody'); mb.innerHTML = ''; (body || []).forEach(n => mb.appendChild(n));
+  const act = $('mActions'); act.innerHTML = ''; (actions || []).forEach(n => act.appendChild(n));
+  $('modal').hidden = false;
+  (focus || act.lastChild || mb.firstChild)?.focus();
+}
+function openSlotDialog(i){
+  const S = G.S, sl = S.slots[i];
+  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel');
+  if (!sl){
+    const cost = G.nextSlotCost(), list = document.createElement('div'); list.className = 'diffs';
+    for (const type of C.BUILDINGS){
+      const block = G.buildBlock(i, type);
+      if (block === 'standing') continue;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `pick:${type}:${i}`;
+      const nm = document.createElement('b'); nm.textContent = t(`bld.${type}.name`);
+      const c = document.createElement('span'); c.className = 'c'; c.textContent = costText('material', cost);
+      const d = document.createElement('span'); d.className = 'd'; d.textContent = t(`bld.${type}.desc`);
+      b.append(nm, c, d);
+      const why = buildReason(block, cost);
+      if (why){ const w = document.createElement('span'); w.className = 'w'; w.textContent = why; b.appendChild(w); }
+      setDis(b, !!block);
+      b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ slotKey = ''; closeModal(); render(); } });
+      list.appendChild(b);
+    }
+    showDialog({ eyebrow: t('yard.title'), title: t('slot.label', { n: i + 1 }), text: t('slot.dialogText', { cost: costText('material', cost) }),
+                 body: [list], actions: [cancel], focus: list.querySelector('.pick:not([aria-disabled="true"])') || cancel });
+  } else {
+    const refund = costText('material', G.refundFor(i));
+    const del = mkButton('btn-ghost', t('slot.demolish'), () => openDemolishConfirm(i), 'demolish:' + i);
+    showDialog({ eyebrow: t('slot.label', { n: i + 1 }), title: t(`bld.${sl.type}.name`),
+                 text: t('slot.bldText', { desc: t(`bld.${sl.type}.desc`), refund }), actions: [del, cancel], focus: cancel });
+  }
+}
+function openDemolishConfirm(i){
+  const sl = G.S.slots[i];
+  if (!sl) return closeModal();
+  const refund = costText('material', G.refundFor(i));
+  const ok = mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); slotKey = ''; closeModal(); render(); }, 'confirmDemolish:' + i);
+  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel');
+  showDialog({ eyebrow: t('slot.label', { n: i + 1 }), title: t('demolish.title', { name: t(`bld.${sl.type}.name`) }),
+               text: t('demolish.text', { refund, percent: pct(C.REFUND_RATE) }), actions: [cancel, ok], focus: cancel });
 }
 
 function logParams(entry){
@@ -468,7 +531,7 @@ function render(){
   $('kills').textContent = fmt(S.kills);
   $('ownCount').textContent = S.units.filter(u => u.side === 'p').length;
   $('losses').textContent = fmt(S.losses);
-  $('queue').textContent = `${S.queue.length}/${C.QUEUE_MAX}`;
+  $('queue').textContent = `${S.queue.length}/${G.queueMax()}`;
   $('diffLabel').textContent = S.status === 'setup' ? '' : t(`diff.${S.diff}.name`);
   $('eraLabel').textContent = t(S.eraReached ? 'hdr.era2' : 'hdr.era1');
   setDis($('clickBtn'), !running);
@@ -494,12 +557,16 @@ function render(){
   const r = optEls.repair;
   r.btn.hidden = !S.revealed.repair;
   r.name.textContent = t('repair.name');
-  r.cost.textContent = costText('scrap', C.REPAIR_COST);
-  setDis(r.btn, !running || S.scrap < C.REPAIR_COST || S.baseHp >= G.baseMax());
+  r.cost.textContent = costText('material', C.REPAIR_COST);
+  setDis(r.btn, !running || S.material < C.REPAIR_COST || S.baseHp >= G.baseMax());
 
   $('hintFabrik').hidden = G.has('fabrik');
   $('hintSchmiede').hidden = G.has('schmiede');
   $('hintUni').hidden = G.has('universitaet');
+  $('hintKaserne').hidden = G.has('kaserne');
+  const kontorKnown = G.has('kontor') || !!S.unlocked.kontor;
+  $('hintKontor').hidden = kontorKnown;
+  $('subKontor').hidden = false;
 
   const eMax = G.diffCfg().enemyBaseHp;
   $('hpP').textContent = `${fmt(Math.max(0, S.baseHp))} / ${fmt(G.baseMax())}`;
@@ -567,6 +634,17 @@ function drawBuilding(kind, cx, gy, s){
     ctx.beginPath(); ctx.moveTo(x - 2 * s, gy - h); ctx.lineTo(cx, gy - h - 8 * s); ctx.lineTo(x + w + 2 * s, gy - h); ctx.fill();
     ctx.fillRect(x + 3 * s, gy - h - 9 * s, 3 * s, 6 * s);
     ctx.fillStyle = COL.brass; ctx.fillRect(cx - 2.5 * s, gy - 6 * s, 5 * s, 6 * s);
+  } else if (kind === 'kaserne'){
+    const w = 20 * s, h = 10 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.fillRect(x + 2 * s, gy - h - 4 * s, w - 4 * s, 4 * s);
+    ctx.fillRect(cx - 0.8 * s, gy - h - 16 * s, 1.6 * s, 12 * s);          // Fahnenmast
+    ctx.fillStyle = COL.brass; ctx.fillRect(cx + 0.8 * s, gy - h - 16 * s, 6 * s, 4 * s);
+  } else if (kind === 'kontor'){
+    const w = 16 * s, h = 14 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.beginPath(); ctx.moveTo(x - 1 * s, gy - h); ctx.lineTo(x + w / 2, gy - h - 5 * s); ctx.lineTo(x + w + 1 * s, gy - h); ctx.fill();
+    ctx.fillStyle = COL.brass; ctx.beginPath(); ctx.arc(cx, gy - h / 2, 3 * s, 0, Math.PI * 2); ctx.fill();   // Münze
   } else if (kind === 'universitaet'){
     const w = 20 * s, x = cx - w / 2;
     ctx.fillRect(x, gy - 3 * s, w, 3 * s);
@@ -579,7 +657,7 @@ function drawPlayerBase(){
   const S = G.S, sx = cw / W, gy = GY(), s = Math.max(0.7, Math.min(1.25, sx * 1.15));
   const slotX = [14, 37, 60];
   for (let i = 0; i < C.BUILDING_SLOTS; i++){
-    const cx = slotX[i] * sx, b = S.slots[i];
+    const cx = slotX[i] * sx, b = S.slots[i] && S.slots[i].type;
     if (b) drawBuilding(b, cx, gy, s);
     else {
       ctx.strokeStyle = COL['rule-strong']; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
