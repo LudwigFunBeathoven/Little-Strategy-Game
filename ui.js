@@ -185,6 +185,17 @@ function tipContent(id){
     case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), costText('material', G.refundFor(Number(a)))]] };
     case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: costText('material', G.refundFor(Number(a))) }) };
     case 'cancel': return { title: t('slot.cancel'), body: t('tip.cancel.body') };
+    case 'draftopt': {
+      const d = S.pendingDraft; if (!d) return { title: '' };
+      const o = G.OPT[d.options[a]];
+      return { title: t(o.nameKey), body: t(o.descKey, optParams(o)),
+               rows: [[t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.limit'), optLimit(o)]],
+               reason: null, foot: t('tip.draft.choose') };
+    }
+    case 'chosen': {
+      const o = G.OPT[a];
+      return { title: t(o.nameKey), body: t(o.descKey, optParams(o)) };
+    }
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
     case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };
     case 'diff':  return { title: t(`diff.${a}.name`), body: t(`diff.${a}.desc`) };
@@ -227,6 +238,7 @@ const Tip = (() => {
       el.appendChild(r);
     }
     if (c.reason) add('tw', c.reason);
+    if (c.foot) add('tb', c.foot);
   }
   function place(){
     const r = el.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, m = C.TOOLTIP_MARGIN;
@@ -461,10 +473,61 @@ function renderSlots(){
   }
 }
 
+/* Draft (REQ-02) */
+function optParams(o){
+  const val = e => e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? e.add : e.seconds !== undefined ? e.seconds : '';
+  const p = {};
+  if (o.effect && o.effect[0]) p.e1 = val(o.effect[0]);
+  if (o.drawback && o.drawback[0]) p.d1 = val(o.drawback[0]);
+  if (o.condition && o.condition.value !== undefined) p.c1 = pct(o.condition.value);
+  return p;
+}
+function optLimit(o){
+  const n = (G.S.draft.stacks[o.id] || 0) + 1;
+  return o.unique ? t('draft.unique') : t('draft.stack', { n, max: o.maxStacks });
+}
+let chosenKey = '';
+function renderChosen(){
+  const st = G.S.draft.stacks, key = lang + JSON.stringify(st);
+  if (key === chosenKey) return;
+  chosenKey = key;
+  const box = $('chosen'); box.innerHTML = '';
+  const ids = Object.keys(st).filter(id => st[id] > 0);
+  if (!ids.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('level.none'); box.appendChild(e); return; }
+  for (const id of ids){
+    const o = G.OPT[id], tag = document.createElement('span');
+    tag.className = 'opt-tag'; tag.dataset.tooltip = 'chosen:' + id;
+    const b = document.createElement('b'); b.textContent = t(o.nameKey);
+    tag.appendChild(b);
+    if (st[id] > 1) tag.appendChild(document.createTextNode(` ×${st[id]}`));
+    box.appendChild(tag);
+  }
+}
+function openDraft(){
+  const S = G.S, d = S.pendingDraft;
+  const list = document.createElement('div'); list.className = 'diffs';
+  d.options.forEach((id, i) => {
+    const o = G.OPT[id];
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = 'draftopt:' + i;
+    const nm = document.createElement('b'); nm.textContent = t(o.nameKey);
+    const k = document.createElement('span'); k.className = 'k'; k.textContent = t('draft.cat.' + o.category);
+    const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(o.descKey, optParams(o));
+    b.append(nm, k, ds);
+    b.addEventListener('click', () => { if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; closeModal(); render(); } });
+    list.appendChild(b);
+  });
+  const more = S.pendingLevels - 1;
+  showDialog({ eyebrow: t('draft.eyebrow', { n: d.level }), title: t('draft.title'),
+               text: t('draft.text') + (more > 0 ? ' ' + t('draft.queue', { n: more }) : ''), body: [list], actions: [], wide: true,
+               focus: list.firstChild });
+}
+
 /* Dialoge für Bauplätze (REQ-01.5 / 01.6) */
-function showDialog({ eyebrow, title, text, body, actions, focus }){
+function showDialog({ eyebrow, title, text, body, actions, focus, wide }){
   Tip.hide();
   modalOpen = true;
+  document.querySelector('#modal .card').classList.toggle('wide', !!wide);
   $('mEyebrow').textContent = eyebrow || '';
   $('mTitle').textContent = title;
   $('mText').textContent = text || '';
@@ -524,8 +587,9 @@ function render(){
   const S = G.S, running = S.status === 'running';
   $('material').textContent = fmt(S.material);
   $('rate').textContent = t('hud.perSecond', { n: fmt1(G.matRate()) });
-  $('perClick').textContent = t('hud.perClick', { n: fmt(G.clickPower()) });
-  $('clickHint').textContent = fmt(G.clickPower());
+  const cp = G.clickPower(), cpText = cp < 10 && cp % 1 ? fmt1(cp) : fmt(cp);
+  $('perClick').textContent = t('hud.perClick', { n: cpText });
+  $('clickHint').textContent = cpText;
   $('scrap').textContent = fmt(S.scrap);
   $('clock').textContent = clock(S.t);
   $('kills').textContent = fmt(S.kills);
@@ -533,7 +597,8 @@ function render(){
   $('losses').textContent = fmt(S.losses);
   $('queue').textContent = `${S.queue.length}/${G.queueMax()}`;
   $('diffLabel').textContent = S.status === 'setup' ? '' : t(`diff.${S.diff}.name`);
-  $('eraLabel').textContent = t(S.eraReached ? 'hdr.era2' : 'hdr.era1');
+  $('eraLabel').textContent = S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) });
+  $('scrapLabel').textContent = t('hud.scrapLevel', { n: S.level });
   setDis($('clickBtn'), !running);
 
   for (const id in C.UPGRADES){
@@ -562,7 +627,6 @@ function render(){
 
   $('hintFabrik').hidden = G.has('fabrik');
   $('hintSchmiede').hidden = G.has('schmiede');
-  $('hintUni').hidden = G.has('universitaet');
   $('hintKaserne').hidden = G.has('kaserne');
   const kontorKnown = G.has('kontor') || !!S.unlocked.kontor;
   $('hintKontor').hidden = kontorKnown;
@@ -573,8 +637,12 @@ function render(){
   $('hpE').textContent = `${fmt(Math.max(0, S.enemyBaseHp))} / ${fmt(eMax)}`;
   $('barP').style.width = (100 * Math.max(0, S.baseHp) / G.baseMax()) + '%';
   $('barE').style.width = (100 * Math.max(0, S.enemyBaseHp) / eMax) + '%';
-  $('eraProg').textContent = `${fmt(Math.min(S.scrapTotal, C.ERA2_AT))} / ${fmt(C.ERA2_AT)}`;
-  $('barEra').style.width = (100 * Math.min(1, S.scrapTotal / C.ERA2_AT)) + '%';
+  const xp = G.xpProgress();
+  $('lvlLabel').textContent = t('level.progress', { n: xp.level + 1 });
+  $('lvlProg').textContent = `${fmt(Math.max(0, xp.cur))} / ${fmt(xp.need)}`;
+  $('barLvl').style.width = (100 * Math.max(0, Math.min(1, xp.cur / xp.need))) + '%';
+  $('uniInfo').textContent = t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() });
+  renderChosen();
 
   renderSlots();
   Tip.refresh();
@@ -590,6 +658,7 @@ function render(){
       ol.appendChild(li);
     }
   }
+  if (S.status === 'running' && S.pendingDraft && !modalOpen) openDraft();
   if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t && !modalOpen){
     resultShownFor = S.t;
     save();
