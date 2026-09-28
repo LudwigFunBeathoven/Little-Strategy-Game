@@ -72,7 +72,6 @@ const DESC_PARAMS = {
   ruestung:   () => ({ percent: pct(C.FX_RUESTUNG - 1) }),
   drill:      () => ({ percent: pct(1 - C.FX_DRILL) }),
   rekrutierung:  () => ({ percent: pct(C.FX_REKRUTIERUNG) }),
-  exerzierplatz: () => ({ percent: pct(1 - C.FX_EXERZIER) }),
   stube:         () => ({ n: C.FX_STUBE }),
   zinseszins:    () => ({ percent: fmt1(C.FX_ZINSESZINS * 100) }),
   nacht:      () => ({ n: C.FX_NACHT_HOURS }),
@@ -100,8 +99,7 @@ const METRICS = {
   ruestung:   ['tip.m.hp',           () => C.UNITS.laeufer.hp * G.hpMultP(), v => fmt(v)],
   drill:      ['tip.m.atkRate',      () => 1 / (C.UNITS.laeufer.cd * G.cdMultP()), v => fmt1(v)],
   rekrutierung:  ['tip.m.unitCost',  () => G.unitCost('laeufer'), v => fmt(v)],
-  exerzierplatz: ['tip.m.spawnGap',  () => G.spawnGap(), v => fmt1(v)],
-  stube:         ['tip.m.queueMax',  () => G.queueMax(), v => fmt(v)],
+  stube:         ['tip.m.queueMax',  () => G.supplyCap(), v => fmt(v)],
   zinseszins:    ['tip.m.interest',  () => G.interestRate() * 100, v => fmt1(v) + ' %'],
   nacht:      ['tip.m.offline',      () => G.offlineHours(), v => fmt(v)],
   mauer:      ['tip.m.baseMax',      () => G.sectionMax(C.GATE_LANE), v => fmt(v)],
@@ -125,6 +123,7 @@ function explUpgrade(id){
   return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
 }
 function explUnit(id){
+  if (G.supplyFull()) return t('tip.supplyFull', { n: G.S.queue.length, max: G.supplyCap() });   // Grund der Sperre (REQ-14.2)
   const spec = C.UNITS[id], hp = spec.hp * G.hpMultP() * G.mMul('unitHp') * (id === 'werfer' ? G.mMul('werferHp') : 1);
   return t('ex.unit', { role: t(G.unitRange('p', id) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitCost(id)) });
 }
@@ -158,7 +157,7 @@ function repairReason(i){
 function unitReason(id){
   const S = G.S, c = G.unitCost(id);
   if (S.status !== 'running') return t('tip.notRunning');
-  if (S.queue.length >= G.queueMax()) return t('tip.queueFull');
+  if (G.supplyFull()) return t('tip.supplyFull', { n: S.queue.length, max: G.supplyCap() });
   if (S.material < c) return missing('material', c, S.material);
   return null;
 }
@@ -176,7 +175,7 @@ function tipContent(id){
     }
     case 'unit': {
       const spec = C.UNITS[a];
-      return { title: t(`unit.${a}.name`), body: t('tip.unit.body', { max: G.queueMax(), k: spec.key }),
+      return { title: t(`unit.${a}.name`), body: t('tip.unit.body', { max: G.supplyCap(), k: spec.key }),
                rows: [[t('tip.m.role'), t(G.unitRange('p', a) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee')],
                       [t('tip.m.unitHp'), fmt(spec.hp * G.hpMultP() * G.mMul('unitHp') * (a === 'werfer' ? G.mMul('werferHp') : 1))],
                       [t('tip.m.unitDmg'), fmt1(spec.dmg * G.dmgMultP())],
@@ -216,6 +215,11 @@ function tipContent(id){
     case 'chosen': {
       const o = G.OPT[a];
       return { title: t(o.nameKey), body: t(o.descKey, optParams(o)) };
+    }
+    case 'hold': {
+      const on = a === 'hold';
+      return { title: t('hold.' + a), body: t(on ? 'tip.hold.hold.body' : 'tip.hold.go.body', { percent: pct(C.HOLD_DISCOUNT) }),
+               rows: [[t('tip.hold.now'), t(S.hold ? 'hold.hold' : 'hold.go')]], reason: S.status !== 'running' ? t('tip.notRunning') : null };
     }
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
     case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };
@@ -460,6 +464,8 @@ function buildUI(){
     $('slots').appendChild(card);
   }
   $('clickBtn').addEventListener('click', () => { if (!isDis($('clickBtn'))){ G.doClick(); render(); } });
+  $('hold_go').addEventListener('click', () => { if (!isDis($('hold_go'))){ G.setHold(false); render(); } });
+  $('hold_hold').addEventListener('click', () => { if (!isDis($('hold_hold'))){ G.setHold(true); render(); } });
   $('newBtn').addEventListener('click', () => openStart(G.S.status === 'running'));
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -596,6 +602,22 @@ function openDemolishConfirm(i){
                text: t('demolish.text', { refund, percent: pct(C.REFUND_RATE) }), actions: [cancel, ok], focus: cancel });
 }
 
+/* Wellen-Leiste über dem Schlachtfeld: Countdown und Befehl (REQ-14.1, REQ-15.4) */
+function renderWave(){
+  const S = G.S, hold = S.hold, running = S.status === 'running';
+  $('waveBar').classList.toggle('hold', hold);
+  $('waveLabel').textContent = t('wave.next', { n: S.waveNo + 1 });
+  $('waveIn').textContent = clock(Math.ceil(G.waveIn()));
+  $('waveCmd').textContent = t(hold ? 'wave.cmd.hold' : 'wave.cmd.go');
+  for (const k of ['go', 'hold']){
+    const b = $('hold_' + k), pressed = (k === 'hold') === hold;
+    b.setAttribute('aria-pressed', String(pressed));
+    setDis(b, !running);
+    b.querySelector('.hold-name').textContent = t('hold.' + k);
+    b.querySelector('.expl').textContent = t('ex.hold.' + k, { percent: pct(C.HOLD_DISCOUNT) });
+  }
+}
+
 function logParams(entry){
   const p = Object.assign({}, entry.params);
   if (p.seconds !== undefined) p.duration = dur(p.seconds);
@@ -616,7 +638,8 @@ function render(){
   $('kills').textContent = fmt(S.kills);
   $('ownCount').textContent = S.units.filter(u => u.side === 'p').length;
   $('losses').textContent = fmt(S.losses);
-  $('queue').textContent = `${S.queue.length}/${G.queueMax()}`;
+  $('queue').textContent = `${S.queue.length}/${G.supplyCap()}`;
+  renderWave();
   $('diffLabel').textContent = S.status === 'setup' ? '' : t(`diff.${S.diff}.name`);
   $('eraLabel').textContent = S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) });
   $('scrapLabel').textContent = t('hud.scrapLevel', { n: S.level });
@@ -814,6 +837,51 @@ function drawUnit(u, now){
     ctx.fillStyle = u.side === 'p' ? COL.steel : COL.rust; ctx.fillRect(px - w / 2, y, w * Math.max(0, u.hp / u.maxHp), 2);
   }
 }
+/* Vorschau je Lane (REQ-14.3): rechts die angekündigte Gegnerwelle, links die geplante eigene Welle.
+   Symbol je Einheitentyp und Anzahl. */
+function miniIcon(type, x, y, col){
+  ctx.fillStyle = col;
+  if (C.UNITS[type].range > C.RANGED_MIN_RANGE){ ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + 4, y); ctx.lineTo(x, y - 8); ctx.closePath(); ctx.fill(); }
+  else ctx.fillRect(x - 3.5, y - 8, 7, 8);
+}
+function previewCounts(group){
+  const c = Array.from({ length: C.LANE_COUNT }, () => ({}));
+  for (const q of group) c[q.lane][q.type] = (c[q.lane][q.type] || 0) + 1;
+  return c;
+}
+function drawPreviews(){
+  const S = G.S, sx = cw / W;
+  if (S.status === 'setup') return;
+  ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textBaseline = 'alphabetic';
+  const enemy = previewCounts(S.nextEnemy || []);
+  const own = S.hold ? previewCounts([]) : previewCounts(G.assignLanes(S.queue.map(q => q.type), G.strongerLane(S.nextEnemy || [])));
+  for (let l = 0; l < C.LANE_COUNT; l++){
+    const y = laneTop(l) + 18;
+    let x = (W - EBW) * sx - 8;
+    ctx.textAlign = 'right';
+    for (const type of Object.keys(C.UNITS).reverse()){
+      const n = enemy[l][type]; if (!n) continue;
+      ctx.fillStyle = COL.rust; ctx.fillText('×' + n, x, y);
+      x -= ctx.measureText('×' + n).width + 8;
+      miniIcon(type, x, y, COL.rust); x -= 10;
+    }
+    x = PBW * sx + 10;
+    ctx.textAlign = 'left';
+    for (const type of Object.keys(C.UNITS)){
+      const n = own[l][type]; if (!n) continue;
+      miniIcon(type, x, y, COL.steel); x += 7;
+      ctx.fillStyle = COL.steel; ctx.fillText('×' + n, x, y);
+      x += ctx.measureText('×' + n).width + 10;
+    }
+  }
+  if (S.hold){
+    // Basis-Symbol für „Halten“: Schild am Tor (REQ-15.4)
+    const w = Math.max(18, PBW * sx * 0.55), cx = PBW * sx - w / 2, cy = laneTop(GATE) + 28;
+    ctx.fillStyle = COL.brass;
+    ctx.beginPath(); ctx.moveTo(cx - 8, cy - 9); ctx.lineTo(cx + 8, cy - 9); ctx.lineTo(cx + 8, cy); ctx.quadraticCurveTo(cx + 8, cy + 8, cx, cy + 11);
+    ctx.quadraticCurveTo(cx - 8, cy + 8, cx - 8, cy); ctx.closePath(); ctx.fill();
+  }
+}
 function draw(realDt, now){
   const FX = G.FX;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -825,6 +893,7 @@ function draw(realDt, now){
   for (let l = 0; l < C.LANE_COUNT; l++) FX.baseFlash.p[l] = Math.max(0, FX.baseFlash.p[l] - realDt);
   FX.baseFlash.e = Math.max(0, FX.baseFlash.e - realDt);
   for (const u of G.S.units) drawUnit(u, now);
+  drawPreviews();
   FX.shots = FX.shots.filter(s => (s.t += realDt) < s.dur);
   for (const s of FX.shots){
     const p = s.t / s.dur, gy = groundY(s.lane);

@@ -42,7 +42,6 @@ const KF_CONFIG = {
   TARGET_BEHIND_TOLERANCE: 6,
   RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
   GATE_HOLD_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
-  ENEMY_QUEUE_SPACING_S: 0.7,
   ALARM_SPACING_S: 0.4,
   ALARM_THRESHOLDS: [2 / 3, 1 / 3],
   ALARM_WERFER_EVERY: 3,
@@ -52,6 +51,11 @@ const KF_CONFIG = {
   ESCALATION_RATE: 0.4,
   RELOAD_WAVE_DELAY_S: 5,
 
+  /* Wellen (REQ-14/15): eigene und gegnerische Wellen rücken im selben Takt aus */
+  WAVE_INTERVAL_S: 20,
+  SUPPLY_CAP_START: 3,          // Versorgungslimit: Höchstzahl an Einheiten pro Welle
+  HOLD_DISCOUNT: 0.3,           // „Halten“: Turm, Mauer und Reparatur so viel günstiger
+
   /* Basis: drei Abschnitte am Ende der Lanes (REQ-13). Mauer oben, Tor, Mauer unten.
      Reparatur je Abschnitt, Kosten in Material. */
   SECTION_HP: [400, 600, 400],
@@ -60,8 +64,6 @@ const KF_CONFIG = {
   TOWER_LANES: [0, 2],          // Turm oben auf der Mauer oben, Turm unten auf der Mauer unten
 
   /* Einheiten */
-  SPAWN_GAP_S: 0.5,
-  QUEUE_MAX: 5,
   UNITS: {
     laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, speed: 38, range: 14,  bounty: 8 },
     werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, speed: 30, range: 105, bounty: 15 },
@@ -89,7 +91,6 @@ const KF_CONFIG = {
     ruestung:   { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
     drill:      { group: 'schmiede',     baseCost: 150, growth: 2.0,  cur: 'material', max: 5 },
     rekrutierung:  { group: 'kaserne',   baseCost: 80,  growth: 1.8,  cur: 'material', max: 5 },
-    exerzierplatz: { group: 'kaserne',   baseCost: 120, growth: 1.9,  cur: 'material', max: 4 },
     stube:         { group: 'kaserne',   baseCost: 150, growth: 2.2,  cur: 'material', max: 3 },
     zinseszins: { group: 'kontor',       baseCost: 300, growth: 2.0,  cur: 'material', max: 4 },
     mauer:      { group: 'mauer',        baseCost: 120, growth: 1.6,  cur: 'material' },
@@ -117,8 +118,7 @@ const KF_CONFIG = {
   FX_RUESTUNG: 1.2,
   FX_DRILL: 0.9,
   FX_REKRUTIERUNG: 0.08,        // Einheiten je Stufe günstiger
-  FX_EXERZIER: 0.85,            // Aufstellabstand je Stufe
-  FX_STUBE: 1,                  // Warteschlangenplätze je Stufe
+  FX_STUBE: 1,                  // Versorgungslimit je Stufe
   FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_NACHT_HOURS: 4,
   FX_MAUER_HP: 150,             // je Abschnitt
@@ -147,13 +147,14 @@ const KF_CONFIG = {
   MAX_CLICKS_PER_SECOND: 10,    // darüber hinausgehende Klicks verfallen (Schutz gegen Autoklicker)
 
   /* Schwierigkeitsgrade: verändern nur den Gegner. xpMult gleicht aus, dass leichte Stufen weniger Abschüsse liefern,
-     damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen. */
+     damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen.
+     Gegnerwelle: waveBase + waveGrowth × Minute Einheiten (gerundet), Lanes zufällig über den Spielzufall. */
   DIFFICULTY: {
-    leicht: { enemyBaseHp: 1500, firstWave: 20, intervalStart: 13, intervalMin: 5,   intervalDrop: 0.5, waveEvery: 7,
+    leicht: { enemyBaseHp: 1500, waveBase: 1.5, waveGrowth: 0.4,
               werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.03, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
-    normal: { enemyBaseHp: 2200, firstWave: 12, intervalStart: 10, intervalMin: 4,   intervalDrop: 0.6, waveEvery: 5,
+    normal: { enemyBaseHp: 2200, waveBase: 2,   waveGrowth: 0.8,
               werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
-    schwer: { enemyBaseHp: 3800, firstWave: 10, intervalStart: 9,  intervalMin: 3,   intervalDrop: 0.8, waveEvery: 4,
+    schwer: { enemyBaseHp: 3800, waveBase: 2,   waveGrowth: 1.3,
               werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.17, dmgGrowth: 0.10, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
   },
   DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],

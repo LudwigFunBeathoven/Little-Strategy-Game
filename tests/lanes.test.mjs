@@ -42,13 +42,6 @@ test('Verteilung für n = 1 bis 6 nach REQ-12.1', () => {
   assert.deepEqual(Array.from(K.distribute(6, BOT)), [MID, TOP, BOT, MID, TOP, BOT]);
 });
 
-test('Übergangsregel 12.2: jede gekaufte Einheit bekommt die nächste Lane Mitte, oben, unten', () => {
-  const { G } = game();
-  G.S.material = 1e6;
-  for (let i = 0; i < 4; i++) assert.ok(G.spawn(i % 2 ? 'werfer' : 'laeufer'));
-  assert.deepEqual(Array.from(G.S.queue.map(q => q.lane)), [MID, TOP, BOT, MID]);
-});
-
 test('Fernkämpfer mit einer Einheit vor sich greift an, mit zwei nicht', () => {
   for (const [ahead, expectHit] of [[1, true], [2, false]]){
     const { G } = game();

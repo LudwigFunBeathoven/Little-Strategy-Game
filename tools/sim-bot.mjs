@@ -15,7 +15,7 @@ export const PROFILES = {
 };
 
 const MAT_PRIO = ['fertiger', 'presse', 'druckluft', 'takt', 'serie', 'klingen', 'ruestung', 'drill',
-                  'rekrutierung', 'exerzierplatz', 'stube', 'zinseszins', 'turm_0', 'turm_2', 'mauer', 'kadenz_0', 'kadenz_2',
+                  'rekrutierung', 'stube', 'zinseszins', 'turm_0', 'turm_2', 'mauer', 'kadenz_0', 'kadenz_2',
                   'reichweite_0', 'reichweite_2', 'stacheln', 'moertel', 'nacht'];
 const GATE = C.GATE_LANE;
 /* Anteil der Lebenspunkte je Abschnitt; das Tor zählt doppelt, weil es die Partie entscheidet */
@@ -170,7 +170,7 @@ export class Bot {
     const slotTarget = !o.noBuild && S.slots.some(x => !x) ? G.nextSlotCost() : Infinity;
     const econTarget = Math.min(G.upCost('fertiger'), slotTarget);
     const reserve = threat ? 0 : econTarget * 0.7;
-    while (S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && S.queue.length < G.queueMax()){
+    while (S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
       const q = S.queue.length; trySpawn(1); if (S.queue.length === q) break;
     }
   }

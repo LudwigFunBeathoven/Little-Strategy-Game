@@ -44,9 +44,8 @@ function freshState(diff, seed){
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
     lvl, slots: new Array(C.BUILDING_SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -Infinity })), enemyBaseHp: d.enemyBaseHp,
-    nextWave: d.firstWave, enemyQueue: [], queue: [], units: [], nextId: 1,
-    laneCycle: 0, enemyLaneCycle: 0,
-    spawnCd: 0, turretCd: {}, enemyTurretCd: 0,
+    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, hold: false, nextEnemy: [], enemyQueue: [], queue: [], units: [], nextId: 1,
+    turretCd: {}, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
     clickTimes: [],
@@ -119,14 +118,17 @@ function create(){
   const rangedRows   = side => C.RANGED_RANGE_ROWS + (side === 'p' ? mAdd('rangedRows') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpThreshold(S.level), need: xpStep(S.level + 1) });
-  const spawnGap     = () => C.SPAWN_GAP_S * Math.pow(C.FX_EXERZIER, lv('exerzierplatz'));
-  const queueMax     = () => C.QUEUE_MAX + C.FX_STUBE * lv('stube');
+  const supplyCap    = () => C.SUPPLY_CAP_START + C.FX_STUBE * lv('stube') + mAdd('supply');
+  // „Halten“ verbilligt Turm, Mauer und Reparatur (REQ-15.3)
+  const holdFactor   = () => S.hold ? 1 - C.HOLD_DISCOUNT : 1;
+  const holdDiscounted = id => { const g = C.UPGRADES[id].group; return g === 'mauer' || C.UPGRADES[id].tower !== undefined; };
   const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
 
   function upCost(id){
     const u = C.UPGRADES[id];
     let c = u.baseCost * Math.pow(u.growth, S.lvl[id]);
     if (id === 'fertiger') c *= (1 - C.FX_SERIE * lv('serie'));
+    if (holdDiscounted(id)) c *= holdFactor();
     return Math.ceil(c);
   }
   const isMaxed = id => C.UPGRADES[id].max !== undefined && S.lvl[id] >= C.UPGRADES[id].max;
@@ -203,7 +205,7 @@ function create(){
     return true;
   }
   function unlockBuilding(type){ S.unlocked[type] = true; }
-  const repairCost = () => C.REPAIR_COST;
+  const repairCost = () => Math.ceil(C.REPAIR_COST * holdFactor());
   /* Reparatur je Abschnitt (REQ-13.6). Ein gefallener Abschnitt steht danach wieder, sein Turm feuert wieder. */
   function repair(i){
     if (i === undefined) i = GATE;
@@ -222,34 +224,83 @@ function create(){
       cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, moving: false, bob: rnd() * 6, rank: 0,
     };
   }
-  const spawnBlocked = (side, lane) => S.units.some(u => u.side === side && u.lane === lane &&
-    Math.abs(u.x - (side === 'p' ? spawnX() : W - EBW)) < C.SPAWN_BLOCK_DIST);
+  const spawnBlocked = lane => S.units.some(u => u.side === 'e' && u.lane === lane && Math.abs(u.x - (W - EBW)) < C.SPAWN_BLOCK_DIST);
   const gateHeld = lane => S.units.some(u => u.side === 'p' && u.lane === lane && u.hp > 0 && u.x >= W - EBW - C.GATE_HOLD_DIST);
 
-  /* Übergangsregel bis zu den Wellen (REQ-12.2): jede gekaufte Einheit bekommt die nächste Lane in der Reihenfolge Mitte, oben, unten */
-  function nextLane(key){
-    const lane = C.LANE_ORDER[S[key] % C.LANE_ORDER.length];
-    S[key]++;
-    return lane;
-  }
+  /* Kauf legt die Einheit in die Warteschlange; sie rückt mit der nächsten Welle aus (REQ-14.1/14.2) */
+  const supplyFull = () => S.queue.length >= supplyCap();
   function spawn(type){
     const cost = unitCost(type);
-    if (S.status !== 'running' || S.queue.length >= queueMax() || S.material < cost) return false;
+    if (S.status !== 'running' || supplyFull() || S.material < cost) return false;
     S.material -= cost;
-    S.queue.push({ type, lane: nextLane('laneCycle') });
+    S.queue.push({ type });
+    return true;
+  }
+  /* Wellenbefehl für die nächste Welle: Ausrücken (false) oder Halten (true) (REQ-15.1) */
+  function setHold(on){
+    if (S.status !== 'running') return false;
+    S.hold = !!on;
     return true;
   }
 
-  /* ---------- Simulation ---------- */
-  function scheduleWave(){
-    const d = diffCfg(), min = S.t / 60;
-    const size = 1 + Math.floor(min / d.waveEvery);
+  /* ---------- Wellen ---------- */
+  /* Nächste Gegnerwelle: Zusammensetzung und Lanes entstehen zu Beginn des Countdowns über den Spielzufall (REQ-14.3) */
+  function rollEnemyWave(){
+    const d = diffCfg(), min = S.nextWave / 60;
+    const size = Math.max(1, Math.round(d.waveBase + d.waveGrowth * min));
+    const out = [];
     for (let i = 0; i < size; i++){
       const type = (min >= d.werferFrom && rnd() < d.werferShare) ? 'werfer' : 'laeufer';
-      S.enemyQueue.push({ type, lane: nextLane('enemyLaneCycle'), at: S.t + i * C.ENEMY_QUEUE_SPACING_S });
+      out.push({ type, lane: Math.floor(rnd() * LANES) });
+    }
+    return out;
+  }
+  const laneStrength = (wave, lane) => wave.reduce((a, q) => a + (q.lane === lane ? C.UNITS[q.type].cost : 0), 0);
+  /* Lane oben oder unten mit der stärkeren angekündigten Gegnerwelle, bei Gleichstand oben (REQ-12.1) */
+  const strongerLane = wave => laneStrength(wave, 2) > laneStrength(wave, 0) ? 2 : 0;
+  /* Lanes für eine Gruppe: erst die Nahkämpfer, dann die Fernkämpfer, jeweils nach REQ-12.1 */
+  function assignLanes(types, strong){
+    const melee = types.filter(t => !isRangedType(t)), ranged = types.filter(isRangedType);
+    const lm = distribute(melee.length, strong), lr = distribute(ranged.length, strong);
+    return [...melee.map((type, i) => ({ type, lane: lm[i] })), ...ranged.map((type, i) => ({ type, lane: lr[i] }))];
+  }
+  /* Aufstellung in Formation: je Lane Nahkämpfer vorn, Fernkämpfer dahinter (REQ-12.3) */
+  function formation(group){
+    const byLane = {};
+    for (const g of group) (byLane[g.lane] ||= []).push(g);
+    const out = [];
+    for (const lane in byLane){
+      const g = byLane[lane].sort((a, b) => isRangedType(a.type) - isRangedType(b.type));
+      g.forEach((q, k) => out.push(Object.assign({}, q, { lane: Number(lane), k })));
+    }
+    return out;
+  }
+  function launchWave(){
+    const enemy = S.nextEnemy;
+    // Eigene Welle: bei „Halten“ bleibt die Warteschlange stehen; der Befehl springt danach zurück (REQ-15.1/15.2)
+    if (S.hold){ S.hold = false; if (S.queue.length) log('log.held', { n: S.queue.length }); }
+    else if (S.queue.length){
+      for (const q of formation(assignLanes(S.queue.map(q => q.type), strongerLane(enemy))))
+        S.units.push(makeUnit('p', q.type, q.lane, deployX(q.lane) - q.k * C.ALLY_GAP));
+      S.queue = [];
+    }
+    // Gegnerwelle: rückt geschlossen aus; was wegen Feldgrenze oder Belagerung nicht passt, folgt später
+    let field = S.units.filter(u => u.side === 'e').length;
+    for (const q of formation(enemy)){
+      if (field < diffCfg().maxField && !gateHeld(q.lane)){ S.units.push(makeUnit('e', q.type, q.lane, W - EBW + q.k * C.ALLY_GAP)); field++; }
+      else S.enemyQueue.push({ type: q.type, lane: q.lane, at: S.t });
     }
     if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('log.firstWave'); }
-    S.nextWave = S.t + Math.max(d.intervalMin, d.intervalStart - d.intervalDrop * min);
+    S.waveNo++;
+    S.nextWave += C.WAVE_INTERVAL_S;
+    S.nextEnemy = rollEnemyWave();
+  }
+  const waveIn = () => Math.max(0, S.nextWave - S.t);
+  /* Aufstellpunkt einer Lane: am Tor, mit Vorposten weiter vorn, aber nie hinter der vordersten gegnerischen Einheit */
+  function deployX(lane){
+    let x = spawnX();
+    for (const u of S.units) if (u.side === 'e' && u.lane === lane && u.hp > 0) x = Math.min(x, u.x - C.ALLY_GAP);
+    return Math.max(PBW, x);
   }
   function nearestInLane(side, lane, x, range){
     let best = null, bd = Infinity;
@@ -292,14 +343,16 @@ function create(){
     }
   }
 
-  /* Rang in der Lane-Kolonne: 0 = vorderste Einheit. Bei gleicher Position stehen Nahkämpfer vorn (REQ-12.3). */
+  /* Rang in der Lane-Kolonne: Zahl der eigenen Einheiten, die zwischen der Einheit und ihrem Ziel stehen (0 = vorn).
+     Einheiten, die schon an der gegnerischen Kolonne vorbei sind, zählen nicht mit. */
   function computeRanks(){
-    const groups = {};
-    for (const u of S.units) if (u.hp > 0) (groups[u.side + u.lane] ||= []).push(u);
-    for (const k in groups){
-      const g = groups[k], dir = k[0] === 'p' ? 1 : -1;
-      g.sort((a, b) => (b.x - a.x) * dir || (a.ranged - b.ranged));
-      g.forEach((u, i) => { u.rank = i; });
+    for (const u of S.units){
+      if (u.hp <= 0) continue;
+      const dir = u.side === 'p' ? 1 : -1;
+      let reach = ((u.side === 'p' ? W - EBW : PBW) - u.x) * dir, rank = 0;
+      for (const o of S.units) if (o.hp > 0 && o.lane === u.lane && o.side !== u.side){ const dd = (o.x - u.x) * dir; if (dd > -C.TARGET_BEHIND_TOLERANCE && dd < reach) reach = dd; }
+      for (const o of S.units) if (o !== u && o.hp > 0 && o.lane === u.lane && o.side === u.side){ const dd = (o.x - u.x) * dir; if (dd > 0 && dd <= reach) rank++; }
+      u.rank = rank;
     }
   }
   /* In der Kolonne kämpft vorn nur die vorderste Einheit; Fernkämpfer auch mit bis zu RANGED_RANGE_ROWS Einheiten vor sich (REQ-12.4) */
@@ -446,20 +499,13 @@ function create(){
     }
   }
 
-  function spawnPlayer(){
-    if (!S.queue.length || S.spawnCd > 0) return;
-    const i = S.queue.findIndex(q => !spawnBlocked('p', q.lane));
-    if (i < 0) return;
-    const q = S.queue.splice(i, 1)[0];
-    S.units.push(makeUnit('p', q.type, q.lane));
-    S.spawnCd = spawnGap();
-  }
+  /* Nachzügler der Gegnerwellen und Notaufgebot */
   function spawnEnemies(){
     let field = S.units.filter(u => u.side === 'e').length;
     for (let i = 0; i < S.enemyQueue.length; i++){
       const q = S.enemyQueue[i];
       if (q.at > S.t) continue;
-      if (spawnBlocked('e', q.lane)) continue;
+      if (spawnBlocked(q.lane)) continue;
       if (!q.alarm && (gateHeld(q.lane) || field >= diffCfg().maxField)) continue;
       S.units.push(makeUnit('e', q.type, q.lane));
       S.enemyQueue.splice(i, 1); i--; field++;
@@ -471,9 +517,7 @@ function create(){
     S.t += dt;
     S.stats.prod[phase()].time += dt;
     addMaterial(matRate() * dt);
-    S.spawnCd = Math.max(0, S.spawnCd - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
-    spawnPlayer();
     // Handelskontor: Zinsen auf den Materialbestand, gedeckelt
     if (has('kontor')){
       S.kontorT += dt;
@@ -483,7 +527,7 @@ function create(){
         addMaterial(Math.min(cap, S.material * interestRate()));
       }
     }
-    if (S.t >= S.nextWave) scheduleWave();
+    if (S.t >= S.nextWave) launchWave();
     if (!S.escalated && S.t / 60 >= C.ESCALATION_START_MIN){ S.escalated = true; log('log.escalation'); }
 
     const eFrac = S.enemyBaseHp / diffCfg().enemyBaseHp;
@@ -508,6 +552,7 @@ function create(){
   /* Neue Partie bzw. Spielstand übernehmen */
   function newGame(diff, seed){
     S = freshState(diff, seed);
+    S.nextEnemy = rollEnemyWave();
     FX.shots = []; FX.fx = [];
     log('log.start', { diff: '@diff.' + diff + '.name' });
   }
@@ -518,7 +563,8 @@ function create(){
     S.lvl = Object.assign(freshState(saved.diff, 1).lvl, saved.lvl || {});
     S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -Infinity }));
     if (!Array.isArray(S.queue)) S.queue = [];
-    S.nextWave = S.t + C.RELOAD_WAVE_DELAY_S;
+    S.nextWave = Math.max(S.nextWave, S.t + C.RELOAD_WAVE_DELAY_S);
+    if (!Array.isArray(S.nextEnemy) || !S.nextEnemy.length) S.nextEnemy = rollEnemyWave();
   }
   /* Abwesenheit: nur Material wird nachgerechnet, die Front steht still */
   function applyAway(seconds){
@@ -534,9 +580,10 @@ function create(){
   return {
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
-    doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
+    doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit, setHold,
+    supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength,
     canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has, lv,
-    buildBlock, isBuildable, refundFor, spawnGap, queueMax, interestRate,
+    buildBlock, isBuildable, refundFor, interestRate,
     chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT,
     clickPower, matRate, fertigerRate, milestoneMult, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, computeRanks, canAttack,
