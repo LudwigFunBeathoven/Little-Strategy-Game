@@ -113,8 +113,20 @@ const KF_CONFIG = {
   PLAYER_TURRET: { dmgPerLevel: 5, cd: 1.0, range: 120, rangePerLevel: 20, cdFactor: 0.87 },
   ENEMY_TURRET:  { cd: 1.2, range: 95 },
 
-  /* Zeitalter (wird in REQ-02 durch Stufen ersetzt) */
-  ERA2_AT: 500,
+  /* Altmetall-Stufen und Draft (REQ-02). Altmetall wird nur gesammelt, nicht ausgegeben.
+     Stufe n verlangt XP_BASE × XP_GROWTH^(n−1) Altmetall zusätzlich zur vorigen Stufe (kumulierte Summe). */
+  XP_BASE: 40,
+  XP_GROWTH: 1.4,
+  DRAFT_OPTIONS_BASE: 2,
+  DRAFT_OPTIONS_UNIVERSITY: 3,
+  DRAFT_INTERVAL_MIN_S: 45,
+  DRAFT_INTERVAL_MAX_S: 150,
+  GRANT_MIN_RATE: 1,            // Kriegsanleihe: mindestens so viel Material pro Sekunde wird gutgeschrieben
+  SIEGE_LANE_FRACTION: 0.5,     // Sappeure: ab dieser Lane-Position steht eine Einheit in der gegnerischen Hälfte
+
+  /* Spielphasen (REQ-03), abgeleitet aus der Stufe */
+  PHASE_MID_LEVEL: 2,
+  PHASE_LATE_LEVEL: 5,
 
   /* Schwierigkeitsgrade: verändern nur den Gegner */
   DIFFICULTY: {

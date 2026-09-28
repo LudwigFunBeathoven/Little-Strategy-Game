@@ -98,7 +98,7 @@ export class Bot {
       for (const id of offer) stats.offered[id] = (stats.offered[id] || 0) + 1;
       const id = offer[pick];
       stats.picked[id] = (stats.picked[id] || 0) + 1;
-      stats.draftTimes.push({ t: G.S.t, phase: G.phase() });
+      stats.draftTimes.push({ t: G.S.t, level: G.S.pendingDraft.level });
     }
     G.chooseDraft(pick);
   }

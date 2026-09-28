@@ -5,6 +5,11 @@ const KlammerCore = (() => {
 'use strict';
 const C = KF_CONFIG;
 const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH;
+const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [];
+const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
+/* Stufenschwellen: kumuliertes Altmetall für Stufe n */
+const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
+function xpThreshold(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
 function nextRandom(state){
@@ -27,7 +32,8 @@ function freshState(diff, seed){
     baseHp: C.BASE_HP, enemyBaseHp: d.enemyBaseHp,
     nextWave: d.firstWave, enemyQueue: [], queue: [], units: [], nextId: 1,
     spawnCd: 0, turretCd: 0, enemyTurretCd: 0,
-    clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, eraReached: false, alarms: 0,
+    clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
+    level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
     log: [], savedAt: 0,
   };
 }
@@ -42,26 +48,50 @@ function create(){
     if (S.log.length > C.LOG_LINES) S.log.length = C.LOG_LINES;
   }
 
+  /* ---------- Draft-Modifikatoren (zwischengespeichert, bis sich die Wahl ändert) ---------- */
+  let modCache = { ver: -1, key: null, mul: {}, add: {} };
+  function mods(){
+    const key = S.draft;
+    if (modCache.key === key && modCache.ver === S.draft.ver) return modCache;
+    const mul = {}, add = {};
+    for (const [id, n] of Object.entries(S.draft.stacks)){
+      const o = OPT[id]; if (!o || !n) continue;
+      for (const e of [...(o.effect || []), ...(o.drawback || [])]){
+        if (!e.stat) continue;
+        if (e.mul !== undefined) mul[e.stat] = (mul[e.stat] ?? 1) * Math.pow(e.mul, n);
+        if (e.add !== undefined) add[e.stat] = (add[e.stat] ?? 0) + e.add * n;
+      }
+    }
+    modCache = { ver: S.draft.ver, key, mul, add };
+    return modCache;
+  }
+  const mMul = stat => mods().mul[stat] ?? 1;
+  const mAdd = stat => mods().add[stat] ?? 0;
+
   /* ---------- abgeleitete Werte ---------- */
   const has = b => S.slots.some(s => s && s.type === b);
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
   const diffCfg      = () => C.DIFFICULTY[S.diff];
-  const clickPower   = () => Math.floor((1 + C.FX_PRESSE * lv('presse')) * (1 + C.FX_HYDRAULIK * lv('hydraulik')));
+  const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * (1 + C.FX_HYDRAULIK * lv('hydraulik')) * mMul('clickYield');
   const fertigerRate = () => C.FX_FERTIGER_RATE * (1 + C.FX_TAKT * lv('takt'));
-  const matRate      = () => lv('fertiger') * fertigerRate();
+  const matRate      = () => lv('fertiger') * fertigerRate() * mMul('autoProd');
   const hpMultP      = () => Math.pow(C.FX_RUESTUNG, lv('ruestung'));
   const dmgMultP     = () => Math.pow(C.FX_KLINGEN, lv('klingen'));
   const cdMultP      = () => Math.pow(C.FX_DRILL, lv('drill'));
-  const bountyMult   = () => 1;
-  const baseMax      = () => C.BASE_HP + C.FX_MAUER_HP * lv('mauer');
+  const bountyMult   = () => mMul('scrapGain');
+  const baseMax      = () => (C.BASE_HP + C.FX_MAUER_HP * lv('mauer')) * mMul('wallHp');
   const offlineHours = () => C.OFFLINE_HOURS + C.FX_NACHT_HOURS * lv('nacht');
   const turretDmg    = () => C.PLAYER_TURRET.dmgPerLevel * lv('turm');
   const turretRange  = () => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv('reichweite');
   const turretCd     = () => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv('kadenz'));
-  const enemyHpMult  = () => 1 + diffCfg().hpGrowth  * S.t / 60;
+  const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60) * mMul('enemyHp');
   const enemyDmgMult = () => 1 + diffCfg().dmgGrowth * S.t / 60;
-  const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * (1 - C.FX_REKRUTIERUNG * lv('rekrutierung'))));
+  const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * (1 - C.FX_REKRUTIERUNG * lv('rekrutierung')) * mMul('unitCost')));
+  const spawnX       = () => PBW + mAdd('spawnOffset');
+  const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
+  const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
+  const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpThreshold(S.level), need: xpStep(S.level + 1) });
   const spawnGap     = () => C.SPAWN_GAP_S * Math.pow(C.FX_EXERZIER, lv('exerzierplatz'));
   const queueMax     = () => C.QUEUE_MAX + C.FX_STUBE * lv('stube');
   const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
@@ -144,15 +174,15 @@ function create(){
   }
   function makeUnit(side, type){
     const spec = C.UNITS[type], p = side === 'p';
-    const hp = spec.hp * (p ? hpMultP() : enemyHpMult());
+    const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
     return {
-      id: S.nextId++, side, type, x: p ? PBW : W - EBW,
+      id: S.nextId++, side, type, x: p ? spawnX() : W - EBW, range: unitRange(side, type),
       hp, maxHp: hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()),
       cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, moving: false, bob: rnd() * 6,
     };
   }
   const spawnBlocked = side => S.units.some(u => u.side === side &&
-    (side === 'p' ? u.x - PBW : (W - EBW) - u.x) < C.SPAWN_BLOCK_DIST);
+    Math.abs(u.x - (side === 'p' ? spawnX() : W - EBW)) < C.SPAWN_BLOCK_DIST);
   const gateHeld = () => S.units.some(u => u.side === 'p' && u.hp > 0 && u.x >= W - EBW - C.GATE_HOLD_DIST);
 
   function spawn(type){
@@ -200,7 +230,7 @@ function create(){
       if (S.turretCd <= 0){
         const tgt = nearest('e', PBW, turretRange());
         if (tgt){
-          tgt.hp -= turretDmg(); tgt.flash = 0.12;
+          tgt.hp -= turretDmg() * (tgt.type === 'werfer' ? mMul('turretVsRanged') : 1); tgt.flash = 0.12;
           shot({ x0: PBW - 9, x1: tgt.x, t: 0, dur: 0.18, turret: true });
           S.turretCd = turretCd();
         }
@@ -224,17 +254,18 @@ function create(){
         else if (dd > 0 && dd < allyGap) allyGap = dd;
       }
       const baseDist = ((u.side === 'p' ? W - EBW : PBW) - u.x) * dir;
-      const ranged = spec.range > C.RANGED_MIN_RANGE;
-      if (target && dist <= spec.range){
+      const range = u.range ?? spec.range;
+      const ranged = range > C.RANGED_MIN_RANGE;
+      if (target && dist <= range){
         if (u.cd <= 0){
           u.cd = u.cdMax;
-          target.hp -= u.dmg; target.flash = 0.12;
+          target.hp -= u.dmg * (u.side === 'p' ? mMul('dmgVsUnits') : 1); target.flash = 0.12;
           if (ranged) shot({ x0: u.x, x1: target.x, t: 0, dur: 0.3 });
         }
-      } else if (baseDist <= spec.range){
+      } else if (baseDist <= range){
         if (u.cd <= 0){
           u.cd = u.cdMax;
-          if (u.side === 'p'){ S.enemyBaseHp -= u.dmg; FX.baseFlash.e = 0.12; }
+          if (u.side === 'p'){ S.enemyBaseHp -= u.dmg * mMul('dmgVsBase'); FX.baseFlash.e = 0.12; }
           else {
             S.baseHp -= u.dmg; FX.baseFlash.p = 0.12;
             if (!ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
@@ -252,8 +283,8 @@ function create(){
       if (u.hp > 0 || u.dead) continue;
       u.dead = true;
       if (u.side === 'e'){
-        const b = C.UNITS[u.type].bounty * bountyMult();
-        S.scrap += b; S.scrapTotal += b; S.kills++;
+        gainScrap(C.UNITS[u.type].bounty * bountyMult());
+        S.kills++;
       } else S.losses++;
       if (FX.on) FX.fx.push({ x: u.x, t: 0, side: u.side });
     }
@@ -270,12 +301,74 @@ function create(){
     }
     if (!S.revealed.repair && S.baseHp < baseMax()) S.revealed.repair = true;
   }
-  function checkEra(){
-    if (!S.eraReached && S.scrapTotal >= C.ERA2_AT){ S.eraReached = true; log('log.era2'); }
+  /* ---------- Altmetall-Stufen und Draft (REQ-02) ---------- */
+  function gainScrap(b){
+    S.scrap += b; S.scrapTotal += b;
+    while (S.scrapTotal >= xpThreshold(S.level + 1)){
+      S.level++; S.pendingLevels++;
+      log('log.levelUp', { n: S.level });
+    }
+    if (!S.pendingDraft && S.pendingLevels > 0) offerDraft();
+  }
+  function optionAvailable(o){
+    const n = S.draft.stacks[o.id] || 0;
+    if (o.unique && n > 0) return false;
+    if (o.maxStacks !== undefined && n >= o.maxStacks) return false;
+    if (o.requires){
+      if (o.requires.upgrade && S.lvl[o.requires.upgrade] <= 0) return false;
+      if (o.requires.building && !has(o.requires.building)) return false;
+    }
+    for (const e of o.effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
+    return true;
+  }
+  const draftSize = () => has('universitaet') ? C.DRAFT_OPTIONS_UNIVERSITY : C.DRAFT_OPTIONS_BASE;
+  /* Gewichtete Ziehung ohne Zurücklegen, über den seedbaren Spielzufall */
+  function drawOptions(k){
+    const pool = OPTIONS.filter(optionAvailable), out = [];
+    while (out.length < k && pool.length){
+      const total = pool.reduce((a, o) => a + o.weight, 0);
+      let r = rnd() * total, i = 0;
+      while (i < pool.length - 1 && r >= pool[i].weight){ r -= pool[i].weight; i++; }
+      out.push(pool[i].id);
+      pool.splice(i, 1);
+    }
+    return out;
+  }
+  function offerDraft(){
+    const options = drawOptions(draftSize());
+    if (!options.length){ S.pendingLevels = 0; return; }
+    S.pendingDraft = { level: S.level - S.pendingLevels + 1, options };
+  }
+  function chooseDraft(i){
+    const d = S.pendingDraft;
+    if (!d || i < 0 || i >= d.options.length) return false;
+    const o = OPT[d.options[i]];
+    S.draft.stacks[o.id] = (S.draft.stacks[o.id] || 0) + 1;
+    S.draft.ver++;
+    for (const e of o.effect || []){
+      if (e.unlock){ unlockBuilding(e.unlock); log('log.unlocked', { building: '@bld.' + e.unlock + '.name' }); }
+      if (e.grant === 'production') addMaterial(Math.max(matRate(), C.GRANT_MIN_RATE) * e.seconds);
+    }
+    S.baseHp = Math.min(S.baseHp, baseMax());
+    log('log.draft', { name: '@' + o.nameKey });
+    S.pendingDraft = null;
+    S.pendingLevels--;
+    if (S.pendingLevels > 0) offerDraft();
+    return true;
+  }
+  /* Bedingte Wirkungen */
+  function applyConditionals(dt){
+    const siege = mAdd('siegeDps');
+    if (siege > 0 && S.units.some(u => u.side === 'p' && u.x >= W * C.SIEGE_LANE_FRACTION)) S.enemyBaseHp -= siege * dt;
+    const charges = mAdd('emergencyRepair') - S.emergencyUsed;
+    if (charges > 0){
+      const th = (OPT.notreserve && OPT.notreserve.condition.value) || 0;
+      if (S.baseHp > 0 && S.baseHp < baseMax() * th){ S.baseHp = baseMax(); S.emergencyUsed++; log('log.emergency'); }
+    }
   }
 
   function tick(dt){
-    if (S.status !== 'running') return;
+    if (S.status !== 'running' || S.pendingDraft) return;   // Draft pausiert das Spiel
     S.t += dt;
     addMaterial(matRate() * dt);
     S.spawnCd = Math.max(0, S.spawnCd - dt);
@@ -310,8 +403,8 @@ function create(){
     }
     updateTurrets(dt);
     updateUnits(dt);
+    applyConditionals(dt);
     checkReveals();
-    checkEra();
     if (S.enemyBaseHp <= 0){ S.enemyBaseHp = 0; S.status = 'won';  log('log.won'); }
     else if (S.baseHp <= 0){ S.baseHp = 0;     S.status = 'lost'; log('log.lost'); }
   }
@@ -325,6 +418,7 @@ function create(){
   function adopt(saved){
     const base = freshState(saved.diff, saved.rng);
     S = Object.assign(base, saved, { units: [], enemyQueue: [] });
+    modCache = { ver: -1, key: null, mul: {}, add: {} };
     S.lvl = Object.assign(freshState(saved.diff, 1).lvl, saved.lvl || {});
     if (!Array.isArray(S.queue)) S.queue = [];
     S.nextWave = S.t + C.RELOAD_WAVE_DELAY_S;
@@ -346,10 +440,11 @@ function create(){
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, spawn,
     canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has, lv,
     buildBlock, isBuildable, refundFor, spawnGap, queueMax, interestRate,
+    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, OPT,
     clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, baseMax, diffCfg,
     offlineHours, turretDmg, turretRange, turretCd,
   };
 }
 
-return { create, freshState, nextRandom };
+return { create, freshState, nextRandom, xpThreshold, xpStep };
 })();

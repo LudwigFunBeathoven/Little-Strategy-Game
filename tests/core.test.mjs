@@ -71,3 +71,78 @@ test('Preis richtet sich nach der Zahl stehender Gebäude, Abriss macht den Plat
   assert.equal(G.nextSlotCost(), C.BUILD_COSTS[1]);
   assert.equal(G.buildBlock(0, 'kaserne'), null);
 });
+
+/* ---------- REQ-02 Draft ---------- */
+function toLevel(G, n){ const { KlammerCore } = loadCore(); G.S.scrapTotal = KlammerCore.xpThreshold(n) - 1; G.S.scrap = G.S.scrapTotal; }
+function killFor(G, amount){ // Altmetall über den regulären Weg gutschreiben
+  G.S.units.push({ id: 999, side: 'e', type: 'laeufer', x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0, moving: false, bob: 0 });
+  G.tick(0.05);
+}
+
+test('Stufenaufstieg pausiert das Spiel und bietet 2 Optionen, mit Universität 3', () => {
+  const { G, C } = game();
+  toLevel(G, 1); killFor(G);
+  assert.equal(G.S.level, 1);
+  assert.ok(G.S.pendingDraft, 'Draft offen');
+  assert.equal(G.S.pendingDraft.options.length, C.DRAFT_OPTIONS_BASE);
+  const t = G.S.t; G.tick(0.05); G.tick(0.05);
+  assert.equal(G.S.t, t, 'Spielzeit steht während des Drafts');
+  G.chooseDraft(0);
+  assert.equal(G.S.pendingDraft, null);
+  G.S.material = 1e6; G.buildAt(0, 'universitaet');
+  toLevel(G, 2); killFor(G);
+  assert.equal(G.S.pendingDraft.options.length, C.DRAFT_OPTIONS_UNIVERSITY);
+});
+
+test('Gleicher Seed ergibt dieselbe Angebotsfolge', () => {
+  const seq = seed => {
+    const { G } = game('normal', seed), out = [];
+    for (let lvl = 1; lvl <= 6; lvl++){ toLevel(G, lvl); killFor(G); out.push(Array.from(G.S.pendingDraft.options).join(',')); G.chooseDraft(0); }
+    return out;
+  };
+  assert.deepEqual(seq(12345), seq(12345));
+  assert.notDeepEqual(seq(12345), seq(54321));
+});
+
+test('Kein Angebot enthält eine Option doppelt; einmalige Optionen erscheinen nach der Wahl nie wieder', () => {
+  const { KF_DRAFT_OPTIONS } = loadCore();
+  for (let seed = 1; seed <= 40; seed++){
+    const { G } = game('normal', seed);
+    G.S.material = 1e6; G.buildAt(0, 'universitaet');
+    const takenUnique = new Set();
+    for (let lvl = 1; lvl <= 12; lvl++){
+      toLevel(G, lvl); killFor(G);
+      const d = G.S.pendingDraft; if (!d) break;
+      const opts = Array.from(d.options);
+      assert.equal(new Set(opts).size, opts.length, 'Duplikat im Angebot');
+      for (const id of opts) assert.ok(!takenUnique.has(id), `einmalige Option ${id} erneut angeboten`);
+      const pick = opts[0];
+      if (KF_DRAFT_OPTIONS.find(o => o.id === pick).unique) takenUnique.add(pick);
+      G.chooseDraft(0);
+      for (const [id, n] of Object.entries(G.S.draft.stacks)){
+        const o = KF_DRAFT_OPTIONS.find(x => x.id === id);
+        if (o.maxStacks) assert.ok(n <= o.maxStacks, `${id} über Obergrenze`);
+      }
+    }
+  }
+});
+
+test('Handelskontor erst nach Wahl der Draft-Option baubar', () => {
+  const { G } = game();
+  G.S.material = 1e6;
+  assert.equal(G.buildBlock(0, 'kontor'), 'locked');
+  // Draft mit Handelskontor erzwingen
+  G.S.pendingDraft = { level: 1, options: ['handelskontor'] }; G.S.pendingLevels = 1;
+  G.chooseDraft(0);
+  assert.equal(G.buildBlock(0, 'kontor'), null);
+});
+
+test('Optionsdaten sind vollständig und deklarativ', () => {
+  const { KF_DRAFT_OPTIONS } = loadCore();
+  assert.ok(KF_DRAFT_OPTIONS.length >= 10 && KF_DRAFT_OPTIONS.length <= 12);
+  for (const o of KF_DRAFT_OPTIONS){
+    for (const f of ['id', 'category', 'nameKey', 'descKey', 'effect', 'weight']) assert.ok(o[f] !== undefined, `${o.id}: ${f} fehlt`);
+    assert.ok(o.unique || o.maxStacks, `${o.id}: unique oder maxStacks nötig`);
+    assert.ok(['upgrade', 'building'].includes(o.category));
+  }
+});

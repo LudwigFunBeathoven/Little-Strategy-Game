@@ -116,7 +116,9 @@ if (!isMainThread){
       for (const r of T){
         const d = r.draftTimes;
         if (d.length) first.push(d[0].t);
-        for (let i = 1; i < d.length; i++) gaps[d[i].phase].push(d[i].t - d[i - 1].t);
+        // Abstand zählt zu der Phase, in der der Spieler zwischen beiden Drafts war (Stufe des vorigen Drafts)
+        const phaseOf = lvl => lvl < C.PHASE_MID_LEVEL ? 'early' : lvl < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
+        for (let i = 1; i < d.length; i++) gaps[phaseOf(d[i - 1].level)].push(d[i].t - d[i - 1].t);
       }
       report.draftGaps = {};
       for (const ph of ['early', 'mid', 'late']){
