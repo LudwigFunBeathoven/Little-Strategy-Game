@@ -1,0 +1,60 @@
+300 Partien auf 2 Kernen …
+fertig in 205 s
+
+STRATEGIE – Zufall gegen gierige Heuristik (Spielertyp durchschnitt)
+
+Schwierigkeit | Strategie | Siegquote | Median Sieg | Abrisse/Partie
+leicht        | zufall    |     100 % |        5:59 |     0.02
+leicht        | gierig    |     100 % |        5:54 |     0.00
+normal        | zufall    |      52 % |       13:51 |     2.92
+normal        | gierig    |      84 % |       10:33 |     0.32
+schwer        | zufall    |      28 % |       14:58 |     3.44
+schwer        | gierig    |      70 % |       12:59 |     0.50
+
+Wahlrate je Gebäudetyp (Anteil der Partien, in denen der Typ gebaut wurde)
+Strategie | fabrik       | schmiede     | kaserne      | universitaet | kontor      
+zufall    | 63 %         | 75 %         | 65 %         | 67 %         | 36 %        
+gierig    | 84 %         | 75 %         | 21 %         | 61 %         | 33 %        
+
+Siegquote je Gebäudekombination am Partieende (beide Strategien, alle Schwierigkeitsgrade, mind. 3 Partien)
+fabrik+schmiede+universitaet               39 Partien  Siegquote  95 %
+fabrik+kontor+schmiede                     39 Partien  Siegquote  85 %
+fabrik+schmiede                            26 Partien  Siegquote 100 %
+fabrik+kaserne+schmiede                    22 Partien  Siegquote  73 %
+fabrik+kaserne+universitaet                16 Partien  Siegquote  50 %
+schmiede                                   15 Partien  Siegquote 100 %
+universitaet                               15 Partien  Siegquote 100 %
+fabrik+universitaet                        14 Partien  Siegquote 100 %
+fabrik+kontor+universitaet                 14 Partien  Siegquote   7 %
+kaserne                                    12 Partien  Siegquote 100 %
+schmiede+universitaet                      12 Partien  Siegquote  67 %
+kaserne+schmiede                           11 Partien  Siegquote  45 %
+kaserne+schmiede+universitaet              10 Partien  Siegquote  10 %
+kontor+schmiede+universitaet                9 Partien  Siegquote  44 %
+kaserne+universitaet                        8 Partien  Siegquote  63 %
+fabrik                                      8 Partien  Siegquote 100 %
+kaserne+kontor+schmiede                     8 Partien  Siegquote  38 %
+kaserne+kontor+universitaet                 7 Partien  Siegquote  14 %
+fabrik+kaserne+kontor                       7 Partien  Siegquote   0 %
+fabrik+kaserne                              4 Partien  Siegquote 100 %
+
+Draft-Wahlrate je Option (gierige Heuristik; Soll 5–60 %)
+akkordlohn           angeboten  331  gewählt  100   30 %
+belagerungsgeraet    angeboten  271  gewählt  110   41 %
+doppelschicht        angeboten  272  gewählt  161   59 %
+handelskontor        angeboten  237  gewählt   70   30 %
+kriegsanleihe        angeboten  272  gewählt  190   70 %  ← außerhalb
+langeWurfarme        angeboten  282  gewählt   44   16 %
+notreserve           angeboten  232  gewählt   57   25 %
+sappeure             angeboten  156  gewählt   94   60 %  ← außerhalb
+scharfschuetzen      angeboten  187  gewählt   57   30 %
+schrottsammler       angeboten  262  gewählt   83   32 %
+schwerePressen       angeboten  281  gewählt  213   76 %  ← außerhalb
+vorposten            angeboten  206  gewählt   57   28 %
+
+Median-Abstand zwischen zwei Drafts je Phase (Soll 45–150 s; beide Strategien)
+early     56 s  (300 Abstände)
+mid       59 s  (892 Abstände)
+late      94 s  (1145 Abstände)
+Erster Draft (Median): 63 s (Soll 60–90 s)
+

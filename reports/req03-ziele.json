@@ -1,0 +1,128 @@
+{
+  "runs": 50,
+  "suite": "ziele",
+  "report": {
+    "ziele": [
+      {
+        "diff": "leicht",
+        "profile": "aktiv",
+        "games": 50,
+        "won": 50,
+        "lost": 0,
+        "open": 0,
+        "medWin": 319.2500000000383,
+        "medLoss": null
+      },
+      {
+        "diff": "leicht",
+        "profile": "durchschnitt",
+        "games": 50,
+        "won": 50,
+        "lost": 0,
+        "open": 0,
+        "medWin": 339.950000000043,
+        "medLoss": null
+      },
+      {
+        "diff": "leicht",
+        "profile": "gelegentlich",
+        "games": 50,
+        "won": 41,
+        "lost": 9,
+        "open": 0,
+        "medWin": 609.5999999999933,
+        "medLoss": 1201.8499999994547
+      },
+      {
+        "diff": "leicht",
+        "profile": "passiv",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 141.59999999999795
+      },
+      {
+        "diff": "normal",
+        "profile": "aktiv",
+        "games": 50,
+        "won": 45,
+        "lost": 5,
+        "open": 0,
+        "medWin": 499.4500000000793,
+        "medLoss": 1597.6999999990946
+      },
+      {
+        "diff": "normal",
+        "profile": "durchschnitt",
+        "games": 50,
+        "won": 43,
+        "lost": 7,
+        "open": 0,
+        "medWin": 624.9999999999793,
+        "medLoss": 1372.6999999992993
+      },
+      {
+        "diff": "normal",
+        "profile": "gelegentlich",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 137.54999999999703
+      },
+      {
+        "diff": "normal",
+        "profile": "passiv",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 133.59999999999613
+      },
+      {
+        "diff": "schwer",
+        "profile": "aktiv",
+        "games": 50,
+        "won": 32,
+        "lost": 17,
+        "open": 1,
+        "medWin": 713.9499999998984,
+        "medLoss": 1598.9499999990935
+      },
+      {
+        "diff": "schwer",
+        "profile": "durchschnitt",
+        "games": 50,
+        "won": 39,
+        "lost": 11,
+        "open": 0,
+        "medWin": 747.9499999998675,
+        "medLoss": 1349.5499999993203
+      },
+      {
+        "diff": "schwer",
+        "profile": "gelegentlich",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 115.79999999999556
+      },
+      {
+        "diff": "schwer",
+        "profile": "passiv",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 109.19999999999594
+      }
+    ]
+  }
+}

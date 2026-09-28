@@ -1,0 +1,153 @@
+/* Klammerfront – zentrale Konfiguration.
+   Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
+   Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
+const KF_CONFIG = {
+  VERSION: '0.3',
+  SAVE_KEY: 'klammerfront.save.v3',
+  RECORDS_KEY: 'klammerfront.records.v1',
+  LANG_KEY: 'klammerfront.lang',
+  LANGUAGES: ['de', 'en'],
+  FALLBACK_LANG: 'en',
+
+  /* Zeit und Ablauf */
+  TICK_S: 0.05,                 // 20 Logik-Schritte pro Sekunde
+  MAX_FRAME_S: 1,               // längster Frame, der nachgeholt wird
+  UI_REFRESH_S: 0.1,
+  AUTOSAVE_MS: 5000,
+  OFFLINE_MIN_S: 10,
+  OFFLINE_HOURS: 8,
+  LOG_LINES: 5,
+
+  /* Tooltips (REQ-05) */
+  TOOLTIP_DELAY_MS: 1000,       // Entscheidung Product Owner: 1000 statt 2000 ms
+  TOUCH_TOOLTIP_MS: 500,
+  TOOLTIP_OFFSET_X: 14,
+  TOOLTIP_OFFSET_Y: 18,
+  TOOLTIP_MARGIN: 8,
+  TOUCH_MOVE_TOLERANCE_PX: 10,
+  TOUCH_MOUSE_GUARD_MS: 800,
+  DEV_AUDIT_MS: 2000,
+
+  /* Schlachtfeld */
+  LANE: 1000,
+  PLAYER_BASE_WIDTH: 92,
+  ENEMY_BASE_WIDTH: 44,
+  SPAWN_BLOCK_DIST: 12,
+  ALLY_GAP: 15,
+  MELEE_STOP_DIST: 12,
+  TARGET_BEHIND_TOLERANCE: 6,
+  RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
+  GATE_HOLD_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
+  PLAYER_GATE_SIEGE_COUNT: 3,   // Gegenstück: so viele Gegner nahe dem eigenen Aufstellpunkt …
+  PLAYER_GATE_SIEGE_RANGE: 60,  // … in diesem Abstand blockieren das Aufstellen eigener Einheiten
+  ENEMY_QUEUE_SPACING_S: 0.7,
+  ALARM_SPACING_S: 0.4,
+  ALARM_THRESHOLDS: [2 / 3, 1 / 3],
+  ALARM_WERFER_EVERY: 3,
+  /* Eskalation gegen Patts: ab ESCALATION_START_MIN wird der Gegner jede Minute um ESCALATION_RATE stärker (Zinseszins).
+     Wer seine Überlegenheit nicht in einen Durchbruch umsetzt, verliert irgendwann. */
+  ESCALATION_START_MIN: 16,
+  ESCALATION_RATE: 0.4,
+  RELOAD_WAVE_DELAY_S: 5,
+
+  /* Basis (Reparatur kostet seit REQ-01 Material statt Altmetall) */
+  BASE_HP: 600,
+  REPAIR_COST: 60,
+  REPAIR_AMOUNT: 100,
+
+  /* Einheiten */
+  SPAWN_GAP_S: 0.5,
+  QUEUE_MAX: 5,
+  UNITS: {
+    laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, speed: 38, range: 14,  bounty: 8 },
+    werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, speed: 30, range: 105, bounty: 15 },
+  },
+
+  /* Bauplätze (REQ-01). Der Preis richtet sich nach der Zahl der stehenden Gebäude.
+     Abriss erstattet REFUND_RATE des tatsächlich gezahlten Preises; Upgrades ruhen und leben beim Neubau wieder auf. */
+  BUILDING_SLOTS: 3,
+  MAX_PER_TYPE: 1,
+  REFUND_RATE: 0.5,
+  BUILD_COSTS: [40, 350, 1200],
+  BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet', 'kontor'],
+  START_BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet'],   // Handelskontor nur per Draft (REQ-02)
+  KONTOR: { intervalS: 10, rate: 0.01, capSeconds: 30, capMin: 20 },   // Zinsen: alle intervalS Sekunden rate × Bestand, höchstens capSeconds Automatik-Ertrag
+
+  /* Upgrades. group = Gebäude oder Bereich; cur = Währung; max = Höchststufe; needs = Voraussetzung */
+  UPGRADES: {
+    fertiger:   { group: 'fertigung',    baseCost: 25,  growth: 1.25, cur: 'material' },
+    presse:     { group: 'fertigung',    baseCost: 15,  growth: 2.5,  cur: 'material', max: 2 },     // Klickwert gedeckelt (REQ-03.3)
+    druckluft:  { group: 'fabrik',       baseCost: 250, growth: 2.1,  cur: 'material', max: 6 },     // ersetzt Hydraulik: skaliert Fertiger statt Klick
+    takt:       { group: 'fabrik',       baseCost: 150, growth: 2.0,  cur: 'material', max: 8 },
+    serie:      { group: 'fabrik',       baseCost: 200, growth: 2.2,  cur: 'material', max: 5 },
+    nacht:      { group: 'fabrik',       baseCost: 400, growth: 2.2,  cur: 'material', max: 4 },
+    klingen:    { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
+    ruestung:   { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
+    drill:      { group: 'schmiede',     baseCost: 150, growth: 2.0,  cur: 'material', max: 5 },
+    rekrutierung:  { group: 'kaserne',   baseCost: 80,  growth: 1.8,  cur: 'material', max: 5 },
+    exerzierplatz: { group: 'kaserne',   baseCost: 120, growth: 1.9,  cur: 'material', max: 4 },
+    stube:         { group: 'kaserne',   baseCost: 150, growth: 2.2,  cur: 'material', max: 3 },
+    zinseszins: { group: 'kontor',       baseCost: 300, growth: 2.0,  cur: 'material', max: 4 },
+    mauer:      { group: 'mauer',        baseCost: 120, growth: 1.6,  cur: 'material' },
+    stacheln:   { group: 'mauer',        baseCost: 150, growth: 1.8,  cur: 'material', max: 5 },
+    moertel:    { group: 'mauer',        baseCost: 180, growth: 1.9,  cur: 'material', max: 5 },
+    turm:       { group: 'turm',         baseCost: 100, growth: 1.9,  cur: 'material' },
+    reichweite: { group: 'turm',         baseCost: 160, growth: 1.8,  cur: 'material', max: 4, needs: 'turm' },
+    kadenz:     { group: 'turm',         baseCost: 200, growth: 1.9,  cur: 'material', max: 5, needs: 'turm' },
+  },
+  REVEAL_AT: 0.5,               // Option erscheint, sobald die Hälfte des Preises vorhanden ist
+
+  /* Wirkungen der Upgrades */
+  FX_FERTIGER_RATE: 1.0,
+  FX_FERTIGER_MILESTONE: 15,    // je 15 Fertiger verdoppelt sich ihr Ausstoß
+  FX_MILESTONE_MULT: 2,
+  FX_TAKT: 1.4,                 // Faktor je Stufe
+  FX_DRUCKLUFT: 1.3,            // Faktor je Stufe
+  FX_SERIE: 0.10,
+  FX_PRESSE: 1,
+  FX_KLINGEN: 1.2,
+  FX_RUESTUNG: 1.2,
+  FX_DRILL: 0.9,
+  FX_REKRUTIERUNG: 0.08,        // Einheiten je Stufe günstiger
+  FX_EXERZIER: 0.85,            // Aufstellabstand je Stufe
+  FX_STUBE: 1,                  // Warteschlangenplätze je Stufe
+  FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
+  FX_NACHT_HOURS: 4,
+  FX_MAUER_HP: 150,
+  FX_STACHELN_DMG: 4,
+  FX_MOERTEL_REGEN: 1,
+
+  /* Türme */
+  PLAYER_TURRET: { dmgPerLevel: 5, cd: 1.0, range: 120, rangePerLevel: 20, cdFactor: 0.87 },
+  ENEMY_TURRET:  { cd: 1.2, range: 95 },
+
+  /* Altmetall-Stufen und Draft (REQ-02). Altmetall wird nur gesammelt, nicht ausgegeben.
+     Stufe n verlangt XP_BASE × XP_GROWTH^(n−1) Altmetall zusätzlich zur vorigen Stufe (kumulierte Summe). */
+  XP_BASE: 40,
+  XP_GROWTH: 1.4,
+  DRAFT_OPTIONS_BASE: 2,
+  DRAFT_OPTIONS_UNIVERSITY: 3,
+  DRAFT_INTERVAL_MIN_S: 45,
+  DRAFT_INTERVAL_MAX_S: 150,
+  GRANT_MIN_RATE: 1,            // Kriegsanleihe: mindestens so viel Material pro Sekunde wird gutgeschrieben
+  SIEGE_LANE_FRACTION: 0.5,     // Sappeure: ab dieser Lane-Position steht eine Einheit in der gegnerischen Hälfte
+
+  /* Spielphasen (REQ-03), abgeleitet aus der Stufe */
+  PHASE_MID_LEVEL: 2,
+  PHASE_LATE_LEVEL: 5,
+  SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
+  MAX_CLICKS_PER_SECOND: 10,    // darüber hinausgehende Klicks verfallen (Schutz gegen Autoklicker)
+
+  /* Schwierigkeitsgrade: verändern nur den Gegner. xpMult gleicht aus, dass leichte Stufen weniger Abschüsse liefern,
+     damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen. */
+  DIFFICULTY: {
+    leicht: { enemyBaseHp: 1500, firstWave: 20, intervalStart: 13, intervalMin: 5,   intervalDrop: 0.5, waveEvery: 7,
+              werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.03, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
+    normal: { enemyBaseHp: 2200, firstWave: 12, intervalStart: 10, intervalMin: 4,   intervalDrop: 0.6, waveEvery: 5,
+              werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
+    schwer: { enemyBaseHp: 3800, firstWave: 10, intervalStart: 9,  intervalMin: 3,   intervalDrop: 0.8, waveEvery: 4,
+              werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.17, dmgGrowth: 0.10, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
+  },
+  DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],
+  DEFAULT_DIFFICULTY: 'normal',
+};
