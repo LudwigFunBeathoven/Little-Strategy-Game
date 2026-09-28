@@ -125,6 +125,9 @@ const KF_CONFIG = {
   XP_GROWTH: 1.4,
   DRAFT_OPTIONS_BASE: 2,
   DRAFT_OPTIONS_UNIVERSITY: 3,
+  CARD_MAX_TIER: 3,             // Spezialkarten: höchstens Stufe III (REQ-18.2)
+  CARD_TIER_WEIGHT_BONUS: 1.5,  // Ziehgewicht der nächsten Stufe steigt je Wahl um diesen Faktor
+  WALL_REGEN_DELAY_S: 5,        // Maurerkolonne: so lange ohne Treffer, bevor eine Mauer heilt
   DRAFT_INTERVAL_MIN_S: 45,
   DRAFT_INTERVAL_MAX_S: 150,
   GRANT_MIN_RATE: 1,            // Kriegsanleihe: mindestens so viel Material pro Sekunde wird gutgeschrieben

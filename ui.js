@@ -191,14 +191,15 @@ function tipContent(id){
     case 'cancel': return { title: t('slot.cancel'), body: t('tip.cancel.body') };
     case 'draftopt': {
       const d = S.pendingDraft; if (!d) return { title: '' };
-      const o = G.OPT[d.options[a]];
-      return { title: t(o.nameKey), body: t(o.descKey, optParams(o)),
+      const o = G.OPT[d.options[a]], tier = G.cardTaken(o.id) + 1;
+      return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)),
                rows: [[t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.limit'), optLimit(o)]],
                reason: null, foot: t('tip.draft.choose') };
     }
     case 'chosen': {
-      const o = G.OPT[a];
-      return { title: t(o.nameKey), body: t(o.descKey, optParams(o)) };
+      const o = G.OPT[a], tier = G.cardTaken(a);
+      const rows = tier < o.tiers.length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
+      return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)), rows };
     }
     case 'hold': {
       const on = a === 'hold';
@@ -499,17 +500,22 @@ function renderSlots(){
 }
 
 /* Draft (REQ-02) */
-function optParams(o){
-  const val = e => e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? e.add : e.seconds !== undefined ? e.seconds : '';
-  const p = {};
-  if (o.effect && o.effect[0]) p.e1 = val(o.effect[0]);
-  if (o.drawback && o.drawback[0]) p.d1 = val(o.drawback[0]);
+/* Spezialkarten (REQ-18): Werte der gezeigten Stufe, Name mit römischer Stufenzahl */
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
+const cardName = (o, tier) => o.tiers.length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
+function optParams(o, tier){
+  const val = e => e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? fmtNum(e.add) : e.seconds !== undefined ? e.seconds : '';
+  const tr = o.tiers[Math.max(1, tier) - 1], p = {};
+  if (tr.effect && tr.effect[0]) p.e1 = val(tr.effect[0]);
+  if (tr.drawback && tr.drawback[0]) p.d1 = val(tr.drawback[0]);
   if (o.condition && o.condition.value !== undefined) p.c1 = pct(o.condition.value);
+  p.s = C.WALL_REGEN_DELAY_S;
   return p;
 }
+const fmtNum = n => n % 1 ? fmt1(n) : fmt(n);
 function optLimit(o){
-  const n = (G.S.draft.stacks[o.id] || 0) + 1;
-  return o.unique ? t('draft.unique') : t('draft.stack', { n, max: o.maxStacks });
+  const n = G.cardTaken(o.id) + 1;
+  return t('draft.tierOf', { n: ROMAN[n], max: ROMAN[o.tiers.length] });
 }
 let chosenKey = '';
 function renderChosen(){
@@ -522,9 +528,8 @@ function renderChosen(){
   for (const id of ids){
     const o = G.OPT[id], tag = document.createElement('span');
     tag.className = 'opt-tag'; tag.dataset.tooltip = 'chosen:' + id;
-    const b = document.createElement('b'); b.textContent = t(o.nameKey);
+    const b = document.createElement('b'); b.textContent = cardName(o, st[id]);
     tag.appendChild(b);
-    if (st[id] > 1) tag.appendChild(document.createTextNode(` ×${st[id]}`));
     box.appendChild(tag);
   }
 }
@@ -532,13 +537,14 @@ function openDraft(){
   const S = G.S, d = S.pendingDraft;
   const list = document.createElement('div'); list.className = 'diffs';
   d.options.forEach((id, i) => {
-    const o = G.OPT[id];
+    const o = G.OPT[id], tier = G.cardTaken(id) + 1;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = 'draftopt:' + i;
-    const nm = document.createElement('b'); nm.textContent = t(o.nameKey);
+    const nm = document.createElement('b'); nm.textContent = cardName(o, tier);
     const k = document.createElement('span'); k.className = 'k'; k.textContent = t('draft.cat.' + o.category);
-    const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(o.descKey, optParams(o));
-    b.append(nm, k, ds);
+    const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(o.descKey, optParams(o, tier));
+    const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.card', { tier: optLimit(o) });
+    b.append(nm, k, ds, ex);
     b.addEventListener('click', () => { if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; closeModal(); render(); } });
     list.appendChild(b);
   });
@@ -621,6 +627,7 @@ function logParams(entry){
   const p = Object.assign({}, entry.params);
   if (p.seconds !== undefined) p.duration = dur(p.seconds);
   if (p.amount !== undefined) p.amount = fmt(p.amount);
+  if (p.tier !== undefined) p.tier = ROMAN[p.tier];
   return p;
 }
 

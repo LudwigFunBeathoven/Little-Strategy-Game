@@ -43,7 +43,7 @@ function freshState(diff, seed){
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
     lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
-    sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -Infinity })), enemyBaseHp: d.enemyBaseHp,
+    sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9 })), enemyBaseHp: d.enemyBaseHp,
     nextWave: C.WAVE_INTERVAL_S, waveNo: 0, hold: false, nextEnemy: [], enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
@@ -70,18 +70,22 @@ function create(){
     const key = S.draft;
     if (modCache.key === key && modCache.ver === S.draft.ver) return modCache;
     const mul = {}, add = {};
+    // Es wirkt nur die höchste gewählte Stufe einer Karte; ihre Werte sind absolut (REQ-18.2/18.3)
     for (const [id, n] of Object.entries(S.draft.stacks)){
-      const o = OPT[id]; if (!o || !n) continue;
-      for (const e of [...(o.effect || []), ...(o.drawback || [])]){
+      const tier = cardTier(id, n); if (!tier) continue;
+      for (const e of [...(tier.effect || []), ...(tier.drawback || [])]){
         if (!e.stat) continue;
-        if (e.mul !== undefined) mul[e.stat] = (mul[e.stat] ?? 1) * Math.pow(e.mul, n);
-        if (e.add !== undefined) add[e.stat] = (add[e.stat] ?? 0) + e.add * n;
+        if (e.mul !== undefined) mul[e.stat] = (mul[e.stat] ?? 1) * e.mul;
+        if (e.add !== undefined) add[e.stat] = (add[e.stat] ?? 0) + e.add;
       }
     }
     modCache = { ver: S.draft.ver, key, mul, add };
     return modCache;
   }
   const mMul = stat => mods().mul[stat] ?? 1;
+  /* Stufe n (1-basiert) einer Karte; null, wenn es sie nicht gibt */
+  function cardTier(id, n){ const o = OPT[id]; return o && n > 0 ? o.tiers[Math.min(n, o.tiers.length) - 1] : null; }
+  const cardTaken = id => S.draft.stacks[id] || 0;
   const mAdd = stat => mods().add[stat] ?? 0;
 
   /* ---------- abgeleitete Werte ---------- */
@@ -110,7 +114,7 @@ function create(){
   const towerId      = (base, lane) => `${base}_${lane}`;
   const towerBuilt   = lane => lv(towerId('turm', lane)) > 0;
   const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
-  const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane));
+  const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane)) * mMul('turretDmg');
   const turretRange  = lane => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane));
   const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane)));
   const escalation   = () => Math.pow(1 + C.ESCALATION_RATE, Math.max(0, S.t / 60 - C.ESCALATION_START_MIN));
@@ -448,25 +452,26 @@ function create(){
     }
     if (!S.pendingDraft && S.pendingLevels > 0) offerDraft();
   }
+  /* Nach der höchsten Stufe erscheint eine Karte nicht mehr; sonst liegt genau die nächste Stufe im Pool (REQ-18.2) */
   function optionAvailable(o){
-    const n = S.draft.stacks[o.id] || 0;
-    if (o.unique && n > 0) return false;
-    if (o.maxStacks !== undefined && n >= o.maxStacks) return false;
+    const n = cardTaken(o.id);
+    if (n >= Math.min(o.tiers.length, C.CARD_MAX_TIER)) return false;
     if (o.requires){
       if (o.requires.upgrade && !Object.keys(C.UPGRADES).some(id => (C.UPGRADES[id].base || id) === o.requires.upgrade && S.lvl[id] > 0)) return false;
       if (o.requires.building && !has(o.requires.building)) return false;
     }
-    for (const e of o.effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
+    for (const e of o.tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
     return true;
   }
+  const cardWeight = o => o.weight * Math.pow(C.CARD_TIER_WEIGHT_BONUS, cardTaken(o.id));
   const draftSize = () => has('universitaet') ? C.DRAFT_OPTIONS_UNIVERSITY : C.DRAFT_OPTIONS_BASE;
   /* Gewichtete Ziehung ohne Zurücklegen, über den seedbaren Spielzufall */
   function drawOptions(k){
     const pool = OPTIONS.filter(optionAvailable), out = [];
     while (out.length < k && pool.length){
-      const total = pool.reduce((a, o) => a + o.weight, 0);
+      const total = pool.reduce((a, o) => a + cardWeight(o), 0);
       let r = rnd() * total, i = 0;
-      while (i < pool.length - 1 && r >= pool[i].weight){ r -= pool[i].weight; i++; }
+      while (i < pool.length - 1 && r >= cardWeight(pool[i])){ r -= cardWeight(pool[i]); i++; }
       out.push(pool[i].id);
       pool.splice(i, 1);
     }
@@ -481,14 +486,14 @@ function create(){
     const d = S.pendingDraft;
     if (!d || i < 0 || i >= d.options.length) return false;
     const o = OPT[d.options[i]];
-    S.draft.stacks[o.id] = (S.draft.stacks[o.id] || 0) + 1;
+    S.draft.stacks[o.id] = cardTaken(o.id) + 1;
     S.draft.ver++;
-    for (const e of o.effect || []){
+    for (const e of cardTier(o.id, S.draft.stacks[o.id]).effect || []){
       if (e.unlock){ unlockBuilding(e.unlock); log('log.unlocked', { building: '@bld.' + e.unlock + '.name' }); }
       if (e.grant === 'production') addMaterial(Math.max(matRate(), C.GRANT_MIN_RATE) * e.seconds);
     }
     clampSections();
-    log('log.draft', { name: '@' + o.nameKey });
+    log('log.draft', { name: '@' + o.nameKey, tier: S.draft.stacks[o.id] });
     S.pendingDraft = null;
     S.pendingLevels--;
     if (S.pendingLevels > 0) offerDraft();
@@ -500,7 +505,7 @@ function create(){
     if (siege > 0 && S.units.some(u => u.side === 'p' && u.x >= W * C.SIEGE_LANE_FRACTION)) S.enemyBaseHp -= siege * dt;
     const charges = mAdd('emergencyRepair') - S.emergencyUsed;
     if (charges > 0){
-      const th = (OPT.notreserve && OPT.notreserve.condition.value) || 0;
+      const th = (OPT.notreserve && OPT.notreserve.condition.value) || 0;   // Tor unter 25 %: einmal vollständig reparieren
       if (gateHp() > 0 && gateHp() < sectionMax(GATE) * th){ S.sections[GATE].hp = sectionMax(GATE); S.emergencyUsed++; log('log.emergency'); }
     }
   }
@@ -524,6 +529,11 @@ function create(){
     S.stats.prod[phase()].time += dt;
     addMaterial(matRate() * dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
+    // Maurerkolonne: stehende Mauern heilen, wenn sie WALL_REGEN_DELAY_S nicht getroffen wurden; das Tor nie (REQ-18.6)
+    const wallRegen = mAdd('wallRegenPct') / 100;
+    if (wallRegen > 0) S.sections.forEach((s, i) => {
+      if (i !== GATE && s.hp > 0 && S.t - s.lastHit >= C.WALL_REGEN_DELAY_S) s.hp = Math.min(sectionMax(i), s.hp + sectionMax(i) * wallRegen * dt);
+    });
     // Handelskontor: Zinsen auf den Materialbestand, gedeckelt
     if (has('kontor')){
       S.kontorT += dt;
@@ -568,7 +578,7 @@ function create(){
     modCache = { ver: -1, key: null, mul: {}, add: {} };
     S.lvl = Object.assign(freshState(saved.diff, 1).lvl, saved.lvl || {});
     if (!Array.isArray(S.slots) || S.slots.length !== SLOTS) S.slots = new Array(SLOTS).fill(null);
-    S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -Infinity }));
+    S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -1e9 }));
     if (!Array.isArray(S.queue)) S.queue = [];
     S.nextWave = Math.max(S.nextWave, S.t + C.RELOAD_WAVE_DELAY_S);
     if (!Array.isArray(S.nextEnemy) || !S.nextEnemy.length) S.nextEnemy = rollEnemyWave();
@@ -592,7 +602,7 @@ function create(){
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, refundFor, interestRate,
-    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT,
+    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, computeRanks, canAttack,
     offlineHours, turretDmg, turretRange, turretCd,

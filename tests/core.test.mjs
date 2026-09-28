@@ -162,45 +162,42 @@ test('Gleicher Seed ergibt dieselbe Angebotsfolge', () => {
   assert.notDeepEqual(seq(12345), seq(54321));
 });
 
-test('Kein Angebot enthält eine Option doppelt; einmalige Optionen erscheinen nach der Wahl nie wieder', () => {
+test('Kein Angebot enthält eine Karte doppelt; nach der höchsten Stufe erscheint eine Karte nie wieder', () => {
   const { KF_DRAFT_OPTIONS } = loadCore();
   for (let seed = 1; seed <= 40; seed++){
     const { G } = game('normal', seed);
-    G.S.material = 1e6; G.buildAt(0, 'universitaet');
-    const takenUnique = new Set();
-    for (let lvl = 1; lvl <= 12; lvl++){
+    G.S.material = 1e6; G.buildAt(0, 'universitaet'); G.buildAt(1, 'fabrik');
+    for (let lvl = 1; lvl <= 14; lvl++){
       toLevel(G, lvl); killFor(G);
       const d = G.S.pendingDraft; if (!d) break;
       const opts = Array.from(d.options);
       assert.equal(new Set(opts).size, opts.length, 'Duplikat im Angebot');
-      for (const id of opts) assert.ok(!takenUnique.has(id), `einmalige Option ${id} erneut angeboten`);
-      const pick = opts[0];
-      if (KF_DRAFT_OPTIONS.find(o => o.id === pick).unique) takenUnique.add(pick);
-      G.chooseDraft(0);
-      for (const [id, n] of Object.entries(G.S.draft.stacks)){
+      for (const id of opts){
         const o = KF_DRAFT_OPTIONS.find(x => x.id === id);
-        if (o.maxStacks) assert.ok(n <= o.maxStacks, `${id} über Obergrenze`);
+        assert.ok(G.cardTaken(id) < o.tiers.length, `${id} über der höchsten Stufe angeboten`);
       }
+      G.chooseDraft(0);
     }
   }
 });
 
-test('Handelskontor erst nach Wahl der Draft-Option baubar', () => {
+test('Handelskontor erst nach Wahl der Karte baubar', () => {
   const { G } = game();
   G.S.material = 1e6;
   assert.equal(G.buildBlock(0, 'kontor'), 'locked');
-  // Draft mit Handelskontor erzwingen
   G.S.pendingDraft = { level: 1, options: ['handelskontor'] }; G.S.pendingLevels = 1;
   G.chooseDraft(0);
   assert.equal(G.buildBlock(0, 'kontor'), null);
 });
 
-test('Optionsdaten sind vollständig und deklarativ', () => {
-  const { KF_DRAFT_OPTIONS } = loadCore();
+test('Kartendaten sind vollständig und deklarativ (tiers ersetzt maxStacks)', () => {
+  const { KF_DRAFT_OPTIONS, KF_CONFIG: C } = loadCore();
   assert.ok(KF_DRAFT_OPTIONS.length >= 10 && KF_DRAFT_OPTIONS.length <= 20);
   for (const o of KF_DRAFT_OPTIONS){
-    for (const f of ['id', 'category', 'nameKey', 'descKey', 'effect', 'weight']) assert.ok(o[f] !== undefined, `${o.id}: ${f} fehlt`);
-    assert.ok(o.unique || o.maxStacks, `${o.id}: unique oder maxStacks nötig`);
+    for (const f of ['id', 'category', 'nameKey', 'descKey', 'tiers', 'weight']) assert.ok(o[f] !== undefined, `${o.id}: ${f} fehlt`);
+    assert.ok(!('maxStacks' in o) && !('unique' in o) && !('effect' in o), `${o.id}: altes Format`);
+    assert.ok(o.tiers.length >= 1 && o.tiers.length <= C.CARD_MAX_TIER, `${o.id}: 1 bis ${C.CARD_MAX_TIER} Stufen`);
+    for (const tr of o.tiers) assert.ok(Array.isArray(tr.effect) && tr.effect.length, `${o.id}: Stufe ohne Wirkung`);
     assert.ok(['upgrade', 'building'].includes(o.category));
   }
 });

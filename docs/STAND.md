@@ -9,7 +9,7 @@ Grundlage: `docs/anforderungen-iteration-3.md`. Jedes Inkrement erfüllt die Def
 | I1 | Drei Lanes, Formation, Basis mit Abschnitten (REQ-11–13) | fertig |
 | I2 | Wellen mit Versorgungslimit, Wellenbefehl „Halten“ (REQ-14–15) | fertig |
 | I3 | 3×3-Raster, Fabriken, Umbau von Kaserne und Schmiede (REQ-16–17) | fertig |
-| I4 | Spezialkarten mit Stufen (REQ-18) | offen |
+| I4 | Spezialkarten mit Stufen (REQ-18) | fertig |
 | I5 | Belagerungswelle statt Eskalation (REQ-19) | offen |
 | I6 | Erklärzeilen, Erstkontakt-Hinweise (REQ-20) | offen |
 | I7 | Simulation, Balancing, Bericht (REQ-21) | offen |
@@ -30,6 +30,7 @@ KF_OVERRIDE='{"FX_QUALITAET":0.2}' node tools/simulate.mjs --suite kurz   # Bala
 - I3: `npm test` 38/38 grün. Kurzsimulation: 20 Siege, 0 offen, Median 5:57.
   Ohne Schmiede (`--suite ohneSchmiede`, 40 Partien Normal): 19 Siege = 48 % (Soll ≥ 30 %). Dafür wächst die Gegnerwelle auf Normal
   mit 0,6 statt 0,8 Einheiten pro Minute. Feinabstimmung auf die Zielkorridore folgt in I7.
+- I4: `npm test` 45/45 grün. Kurzsimulation: 20 Siege, 0 offen, Median 5:59.
 
 ## Abweichungen und Auslegungen
 1. **„Tor belagert“ entfällt bereits in I1** statt in I2 (REQ-14.5). Je Lane angewandt, blockierte die Regel die Warteschlange dauerhaft: Die Übergangsregel 12.2 füllt sie zyklisch, belagerte Lanes stauen sich. Die Kurzsimulation endete dadurch im Patt.
@@ -47,3 +48,23 @@ KF_OVERRIDE='{"FX_QUALITAET":0.2}' node tools/simulate.mjs --suite kurz   # Bala
 13. **Preise der Verstärkungsgebäude:** fest je Typ (Schmiede 200, Kaserne 150, Universität 300, Handelskontor 250). Das Dokument nennt nur die Fabrikpreise.
 14. **Ehemalige Fabrik-Upgrades als Karten (16.4):** Druckluft und Fließbandtakt gehen in „Bessere Fabriken“ auf (+25 % je Wahl, bis zu 3×), Serienbau wird „Fabriken −15 % Kosten“, Nachtschicht „+4 h Abwesenheit“. Die Fertiger entfallen ersatzlos.
 15. **Schlachtfeld ohne Gebäude:** Die Gebäude stehen nur noch im 3×3-Raster unter dem Schlachtfeld, nicht mehr im Bild. Neun Gebäude passen nicht sinnvoll neben die Mauer.
+16. **Stufen der übrigen Karten (18.6, Vorschlag):**
+
+    | Karte | Stufen | Wirkung I / II / III | Nachteil I / II / III |
+    |---|---|---|---|
+    | Scharfschützen | 1 | Turmschaden gegen Fernkämpfer +100 % | – |
+    | Schrottsammler | 2 | Altmetall +30 / +60 % | – |
+    | Belagerungsgerät | 2 | Schaden gegen Basen +60 / +120 % | gegen Einheiten −20 / −35 % |
+    | Sappeure | 2 | gegnerische Basis −2 / −5 LP/s | – |
+    | Vorposten | 1 | Start 150 weiter vorn | alle Abschnitte −15 % LP |
+    | Lange Wurfarme | 2 | Werfer-Reichweite +25 / +50 | Werfer −15 / −30 % LP |
+    | Doppelschicht | 2 | Fabrikproduktion +25 / +50 % | Klickertrag −50 / −75 % |
+    | Kriegsanleihe | 3 | Material für 60 / 90 / 120 s Produktion | Gegner +8 / +16 / +25 % LP |
+    | Serienbau | 2 | Fabriken −15 / −30 % Kosten | – |
+    | Nachtschicht | 2 | Abwesenheit +4 / +8 h | – |
+
+    Akkordlohn entfällt (ersetzt durch Aushebung).
+17. **Werte je Stufe sind absolut:** Stufe II „+60 %“ ersetzt Stufe I „+25 %“, statt sich zu multiplizieren.
+18. **Turmkanoniere** werden wie Scharfschützen nur angeboten, wenn ein Turm steht. Ohne Turm wäre die Karte wirkungslos.
+19. **Schwere Pressen und Vorposten** senken die Lebenspunkte aller drei Abschnitte. „Mauerabschnitte“ umfasst im Dokument das Tor (bei der Maurerkolonne ist es ausdrücklich ausgenommen).
+20. **Maurerkolonne** heilt nur stehende Mauern. Eine gefallene Mauer braucht weiter eine Reparatur, sonst würde der Turm ohne Reparatur wieder aktiv (13.2).
