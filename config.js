@@ -38,10 +38,16 @@ const KF_CONFIG = {
   TARGET_BEHIND_TOLERANCE: 6,
   RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
   GATE_HOLD_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
+  PLAYER_GATE_SIEGE_COUNT: 3,   // Gegenstück: so viele Gegner nahe dem eigenen Aufstellpunkt …
+  PLAYER_GATE_SIEGE_RANGE: 60,  // … in diesem Abstand blockieren das Aufstellen eigener Einheiten
   ENEMY_QUEUE_SPACING_S: 0.7,
   ALARM_SPACING_S: 0.4,
   ALARM_THRESHOLDS: [2 / 3, 1 / 3],
   ALARM_WERFER_EVERY: 3,
+  /* Eskalation gegen Patts: ab ESCALATION_START_MIN wird der Gegner jede Minute um ESCALATION_RATE stärker (Zinseszins).
+     Wer seine Überlegenheit nicht in einen Durchbruch umsetzt, verliert irgendwann. */
+  ESCALATION_START_MIN: 16,
+  ESCALATION_RATE: 0.4,
   RELOAD_WAVE_DELAY_S: 5,
 
   /* Basis (Reparatur kostet seit REQ-01 Material statt Altmetall) */
@@ -69,10 +75,10 @@ const KF_CONFIG = {
 
   /* Upgrades. group = Gebäude oder Bereich; cur = Währung; max = Höchststufe; needs = Voraussetzung */
   UPGRADES: {
-    fertiger:   { group: 'fertigung',    baseCost: 30,  growth: 1.3,  cur: 'material' },
-    presse:     { group: 'fertigung',    baseCost: 15,  growth: 1.6,  cur: 'material' },
-    hydraulik:  { group: 'fabrik',       baseCost: 120, growth: 2.0,  cur: 'material', max: 6 },
-    takt:       { group: 'fabrik',       baseCost: 150, growth: 1.9,  cur: 'material', max: 10 },
+    fertiger:   { group: 'fertigung',    baseCost: 25,  growth: 1.25, cur: 'material' },
+    presse:     { group: 'fertigung',    baseCost: 15,  growth: 2.5,  cur: 'material', max: 2 },     // Klickwert gedeckelt (REQ-03.3)
+    druckluft:  { group: 'fabrik',       baseCost: 250, growth: 2.1,  cur: 'material', max: 6 },     // ersetzt Hydraulik: skaliert Fertiger statt Klick
+    takt:       { group: 'fabrik',       baseCost: 150, growth: 2.0,  cur: 'material', max: 8 },
     serie:      { group: 'fabrik',       baseCost: 200, growth: 2.2,  cur: 'material', max: 5 },
     nacht:      { group: 'fabrik',       baseCost: 400, growth: 2.2,  cur: 'material', max: 4 },
     klingen:    { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
@@ -93,10 +99,12 @@ const KF_CONFIG = {
 
   /* Wirkungen der Upgrades */
   FX_FERTIGER_RATE: 1.0,
-  FX_TAKT: 0.25,
+  FX_FERTIGER_MILESTONE: 15,    // je 15 Fertiger verdoppelt sich ihr Ausstoß
+  FX_MILESTONE_MULT: 2,
+  FX_TAKT: 1.4,                 // Faktor je Stufe
+  FX_DRUCKLUFT: 1.3,            // Faktor je Stufe
   FX_SERIE: 0.10,
   FX_PRESSE: 1,
-  FX_HYDRAULIK: 0.25,
   FX_KLINGEN: 1.2,
   FX_RUESTUNG: 1.2,
   FX_DRILL: 0.9,
@@ -127,15 +135,18 @@ const KF_CONFIG = {
   /* Spielphasen (REQ-03), abgeleitet aus der Stufe */
   PHASE_MID_LEVEL: 2,
   PHASE_LATE_LEVEL: 5,
+  SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
+  MAX_CLICKS_PER_SECOND: 10,    // darüber hinausgehende Klicks verfallen (Schutz gegen Autoklicker)
 
-  /* Schwierigkeitsgrade: verändern nur den Gegner */
+  /* Schwierigkeitsgrade: verändern nur den Gegner. xpMult gleicht aus, dass leichte Stufen weniger Abschüsse liefern,
+     damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen. */
   DIFFICULTY: {
-    leicht: { enemyBaseHp: 1100, firstWave: 15, intervalStart: 11, intervalMin: 5,   intervalDrop: 0.5, waveEvery: 6,
-              werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.03, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4 },
+    leicht: { enemyBaseHp: 1500, firstWave: 20, intervalStart: 13, intervalMin: 5,   intervalDrop: 0.5, waveEvery: 7,
+              werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.03, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
     normal: { enemyBaseHp: 2200, firstWave: 12, intervalStart: 10, intervalMin: 4,   intervalDrop: 0.6, waveEvery: 5,
-              werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6 },
-    schwer: { enemyBaseHp: 2800, firstWave: 10, intervalStart: 9,  intervalMin: 3,   intervalDrop: 0.8, waveEvery: 4,
-              werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.14, dmgGrowth: 0.10, turretDmg: 7, maxField: 30, alarmSize: 10 },
+              werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
+    schwer: { enemyBaseHp: 3800, firstWave: 10, intervalStart: 9,  intervalMin: 3,   intervalDrop: 0.8, waveEvery: 4,
+              werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.17, dmgGrowth: 0.10, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
   },
   DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],
   DEFAULT_DIFFICULTY: 'normal',

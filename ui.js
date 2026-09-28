@@ -63,10 +63,10 @@ function dur(sec){
 const pct = x => Math.round(x * 100);
 /* Kennzahlen für die Beschreibungen, direkt aus der Konfiguration */
 const DESC_PARAMS = {
-  fertiger:   () => ({ n: fmt1(C.FX_FERTIGER_RATE) }),
+  fertiger:   () => ({ n: fmt1(C.FX_FERTIGER_RATE), m: C.FX_FERTIGER_MILESTONE }),
   presse:     () => ({ n: C.FX_PRESSE }),
-  hydraulik:  () => ({ percent: pct(C.FX_HYDRAULIK) }),
-  takt:       () => ({ percent: pct(C.FX_TAKT) }),
+  druckluft:  () => ({ percent: pct(C.FX_DRUCKLUFT - 1) }),
+  takt:       () => ({ percent: pct(C.FX_TAKT - 1) }),
   serie:      () => ({ percent: pct(C.FX_SERIE) }),
   klingen:    () => ({ percent: pct(C.FX_KLINGEN - 1) }),
   ruestung:   () => ({ percent: pct(C.FX_RUESTUNG - 1) }),
@@ -93,7 +93,7 @@ function setDis(el, d){ el.setAttribute('aria-disabled', d ? 'true' : 'false'); 
 const METRICS = {
   fertiger:   ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
   presse:     ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
-  hydraulik:  ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
+  druckluft:  ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
   takt:       ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
   serie:      ['tip.m.fertigerCost', () => G.upCost('fertiger'), v => fmt(v)],
   klingen:    ['tip.m.dmg',          () => C.UNITS.laeufer.dmg * G.dmgMultP(), v => fmt1(v)],
@@ -600,6 +600,7 @@ function render(){
   $('eraLabel').textContent = S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) });
   $('scrapLabel').textContent = t('hud.scrapLevel', { n: S.level });
   setDis($('clickBtn'), !running);
+  $('clickBtn').classList.toggle('late', G.phase() === 'late');   // REQ-03.5: tritt in Phase Spät zurück
 
   for (const id in C.UPGRADES){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];

@@ -3,6 +3,7 @@
 import { loadCore } from './load-core.mjs';
 
 const { KlammerCore, KF_CONFIG: C } = loadCore();
+export const CONFIG = C;
 const DT = C.TICK_S;
 
 /* Spielertypen: Klicks/s, Reaktionsintervall (s), Einheiten-Limit */
@@ -13,7 +14,7 @@ export const PROFILES = {
   passiv:       { cps: 0.3, every: 3,    cap: 10, useWall: false, noBuild: true, noUpgrades: true },
 };
 
-const MAT_PRIO = ['fertiger', 'presse', 'druckluft', 'hydraulik', 'takt', 'serie', 'klingen', 'ruestung', 'drill',
+const MAT_PRIO = ['fertiger', 'presse', 'druckluft', 'takt', 'serie', 'klingen', 'ruestung', 'drill',
                   'rekrutierung', 'exerzierplatz', 'stube', 'zinseszins', 'turm', 'mauer', 'kadenz', 'reichweite', 'stacheln', 'moertel', 'nacht'];
 
 /* Kleiner, seedbarer Zufall für Bot-Entscheidungen (getrennt vom Spielzufall) */
@@ -45,7 +46,7 @@ function score(G){
 export class Bot {
   constructor(opts){
     this.o = Object.assign({ cps: 1.5, every: 1, cap: 22, useWall: true, strategy: 'gierig', clickPolicy: 'always',
-                             horizon: 45, lookahead: true }, opts);
+                             horizon: 45, buildHorizon: 120, lookahead: true }, opts);
     this.rng = botRng(opts.seed || 1);
     this.clickAcc = 0; this.actAcc = 0; this.mix = 0;
   }
@@ -73,7 +74,8 @@ export class Bot {
       const F = forkGame(G);
       F.buildAt(slot, type);
       const sub = new Bot(Object.assign({}, this.o, { lookahead: false, strategy: 'zufall', seed: 99 }));
-      for (let t = 0; t < this.o.horizon / DT && F.S.status === 'running'; t++) sub.step(F, null);
+      // Gebäude wirken langsamer als Draft-Optionen: längere Vorausschau
+      for (let t = 0; t < this.o.buildHorizon / DT && F.S.status === 'running'; t++) sub.step(F, null);
       const sc = score(F);
       if (sc > bestScore){ bestScore = sc; best = type; }
     }
