@@ -1,0 +1,216 @@
+{
+  "runs": 50,
+  "suite": "strategie",
+  "report": {
+    "strategie": [
+      {
+        "diff": "leicht",
+        "strategy": "zufall",
+        "winRate": 1,
+        "medWin": 359.2500000000474,
+        "demolished": 0.02
+      },
+      {
+        "diff": "leicht",
+        "strategy": "gierig",
+        "winRate": 1,
+        "medWin": 353.65000000004613,
+        "demolished": 0
+      },
+      {
+        "diff": "normal",
+        "strategy": "zufall",
+        "winRate": 0.52,
+        "medWin": 831.0999999997919,
+        "demolished": 2.92
+      },
+      {
+        "diff": "normal",
+        "strategy": "gierig",
+        "winRate": 0.84,
+        "medWin": 632.5999999999724,
+        "demolished": 0.32
+      },
+      {
+        "diff": "schwer",
+        "strategy": "zufall",
+        "winRate": 0.28,
+        "medWin": 898.2999999997307,
+        "demolished": 3.44
+      },
+      {
+        "diff": "schwer",
+        "strategy": "gierig",
+        "winRate": 0.7,
+        "medWin": 779.3999999998389,
+        "demolished": 0.5
+      }
+    ],
+    "buildRates": {
+      "zufall": {
+        "fabrik": 0.6266666666666667,
+        "schmiede": 0.7466666666666667,
+        "kaserne": 0.6533333333333333,
+        "universitaet": 0.6733333333333333,
+        "kontor": 0.36
+      },
+      "gierig": {
+        "fabrik": 0.84,
+        "schmiede": 0.7466666666666667,
+        "kaserne": 0.21333333333333335,
+        "universitaet": 0.6133333333333333,
+        "kontor": 0.3333333333333333
+      }
+    },
+    "combos": {
+      "fabrik+schmiede+universitaet": {
+        "games": 39,
+        "winRate": 0.9487179487179487
+      },
+      "fabrik+kontor+schmiede": {
+        "games": 39,
+        "winRate": 0.8461538461538461
+      },
+      "fabrik+schmiede": {
+        "games": 26,
+        "winRate": 1
+      },
+      "fabrik+kaserne+schmiede": {
+        "games": 22,
+        "winRate": 0.7272727272727273
+      },
+      "fabrik+kaserne+universitaet": {
+        "games": 16,
+        "winRate": 0.5
+      },
+      "schmiede": {
+        "games": 15,
+        "winRate": 1
+      },
+      "universitaet": {
+        "games": 15,
+        "winRate": 1
+      },
+      "fabrik+universitaet": {
+        "games": 14,
+        "winRate": 1
+      },
+      "fabrik+kontor+universitaet": {
+        "games": 14,
+        "winRate": 0.07142857142857142
+      },
+      "kaserne": {
+        "games": 12,
+        "winRate": 1
+      },
+      "schmiede+universitaet": {
+        "games": 12,
+        "winRate": 0.6666666666666666
+      },
+      "kaserne+schmiede": {
+        "games": 11,
+        "winRate": 0.45454545454545453
+      },
+      "kaserne+schmiede+universitaet": {
+        "games": 10,
+        "winRate": 0.1
+      },
+      "kontor+schmiede+universitaet": {
+        "games": 9,
+        "winRate": 0.4444444444444444
+      },
+      "kaserne+universitaet": {
+        "games": 8,
+        "winRate": 0.625
+      },
+      "fabrik": {
+        "games": 8,
+        "winRate": 1
+      },
+      "kaserne+kontor+schmiede": {
+        "games": 8,
+        "winRate": 0.375
+      },
+      "kaserne+kontor+universitaet": {
+        "games": 7,
+        "winRate": 0.14285714285714285
+      },
+      "fabrik+kaserne+kontor": {
+        "games": 7,
+        "winRate": 0
+      },
+      "fabrik+kaserne": {
+        "games": 4,
+        "winRate": 1
+      }
+    },
+    "pickRates": {
+      "akkordlohn": {
+        "offered": 331,
+        "picked": 100,
+        "rate": 0.3021148036253776
+      },
+      "belagerungsgeraet": {
+        "offered": 271,
+        "picked": 110,
+        "rate": 0.4059040590405904
+      },
+      "doppelschicht": {
+        "offered": 272,
+        "picked": 161,
+        "rate": 0.5919117647058824
+      },
+      "handelskontor": {
+        "offered": 237,
+        "picked": 70,
+        "rate": 0.29535864978902954
+      },
+      "kriegsanleihe": {
+        "offered": 272,
+        "picked": 190,
+        "rate": 0.6985294117647058
+      },
+      "langeWurfarme": {
+        "offered": 282,
+        "picked": 44,
+        "rate": 0.15602836879432624
+      },
+      "notreserve": {
+        "offered": 232,
+        "picked": 57,
+        "rate": 0.24568965517241378
+      },
+      "sappeure": {
+        "offered": 156,
+        "picked": 94,
+        "rate": 0.6025641025641025
+      },
+      "scharfschuetzen": {
+        "offered": 187,
+        "picked": 57,
+        "rate": 0.3048128342245989
+      },
+      "schrottsammler": {
+        "offered": 262,
+        "picked": 83,
+        "rate": 0.31679389312977096
+      },
+      "schwerePressen": {
+        "offered": 281,
+        "picked": 213,
+        "rate": 0.7580071174377224
+      },
+      "vorposten": {
+        "offered": 206,
+        "picked": 57,
+        "rate": 0.2766990291262136
+      }
+    },
+    "draftGaps": {
+      "early": 56.14999999999681,
+      "mid": 59.15000000001186,
+      "late": 94.40000000002146
+    },
+    "firstDraft": 62.99999999999856
+  }
+}

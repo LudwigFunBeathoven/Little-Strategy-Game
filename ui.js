@@ -63,10 +63,10 @@ function dur(sec){
 const pct = x => Math.round(x * 100);
 /* Kennzahlen für die Beschreibungen, direkt aus der Konfiguration */
 const DESC_PARAMS = {
-  fertiger:   () => ({ n: fmt1(C.FX_FERTIGER_RATE) }),
+  fertiger:   () => ({ n: fmt1(C.FX_FERTIGER_RATE), m: C.FX_FERTIGER_MILESTONE }),
   presse:     () => ({ n: C.FX_PRESSE }),
-  hydraulik:  () => ({ percent: pct(C.FX_HYDRAULIK) }),
-  takt:       () => ({ percent: pct(C.FX_TAKT) }),
+  druckluft:  () => ({ percent: pct(C.FX_DRUCKLUFT - 1) }),
+  takt:       () => ({ percent: pct(C.FX_TAKT - 1) }),
   serie:      () => ({ percent: pct(C.FX_SERIE) }),
   klingen:    () => ({ percent: pct(C.FX_KLINGEN - 1) }),
   ruestung:   () => ({ percent: pct(C.FX_RUESTUNG - 1) }),
@@ -93,7 +93,7 @@ function setDis(el, d){ el.setAttribute('aria-disabled', d ? 'true' : 'false'); 
 const METRICS = {
   fertiger:   ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
   presse:     ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
-  hydraulik:  ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
+  druckluft:  ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
   takt:       ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
   serie:      ['tip.m.fertigerCost', () => G.upCost('fertiger'), v => fmt(v)],
   klingen:    ['tip.m.dmg',          () => C.UNITS.laeufer.dmg * G.dmgMultP(), v => fmt1(v)],
@@ -157,8 +157,10 @@ function tipContent(id){
     case 'unit': {
       const spec = C.UNITS[a];
       return { title: t(`unit.${a}.name`), body: t('tip.unit.body', { max: G.queueMax(), k: spec.key }),
-               rows: [[t('tip.m.unitHp'), fmt(spec.hp * G.hpMultP())], [t('tip.m.unitDmg'), fmt1(spec.dmg * G.dmgMultP())],
-                      [t('tip.m.range'), fmt(spec.range)], [t('tip.cost'), costText('material', G.unitCost(a))]],
+               rows: [[t('tip.m.role'), t(G.unitRange('p', a) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee')],
+                      [t('tip.m.unitHp'), fmt(spec.hp * G.hpMultP() * G.mMul('unitHp') * (a === 'werfer' ? G.mMul('werferHp') : 1))],
+                      [t('tip.m.unitDmg'), fmt1(spec.dmg * G.dmgMultP())],
+                      [t('tip.m.range'), fmt(G.unitRange('p', a))], [t('tip.cost'), costText('material', G.unitCost(a))]],
                reason: unitReason(a) };
     }
     case 'repair': {
@@ -169,7 +171,7 @@ function tipContent(id){
                rows: [[t('tip.m.baseHp'), `${fmt(S.baseHp)} → ${fmt(after)}`], [t('tip.cost'), costText('material', C.REPAIR_COST)]], reason };
     }
     case 'click':
-      return { title: t('btn.click'), body: t('tip.click.body'), rows: [[t('tip.m.perClick'), fmt(G.clickPower())]],
+      return { title: t('btn.click'), body: t('tip.click.body', { max: C.MAX_CLICKS_PER_SECOND }), rows: [[t('tip.m.perClick'), fmt1(G.clickPower())], [t('tip.m.matRate'), fmt1(G.matRate())]],
                reason: S.status !== 'running' ? t('tip.notRunning') : null };
     case 'slot': {
       const sl = S.slots[a];
@@ -600,6 +602,7 @@ function render(){
   $('eraLabel').textContent = S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) });
   $('scrapLabel').textContent = t('hud.scrapLevel', { n: S.level });
   setDis($('clickBtn'), !running);
+  $('clickBtn').classList.toggle('late', G.phase() === 'late');   // REQ-03.5: tritt in Phase Spät zurück
 
   for (const id in C.UPGRADES){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];

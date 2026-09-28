@@ -34,6 +34,8 @@ function freshState(diff, seed){
     spawnCd: 0, turretCd: 0, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
+    clickTimes: [],
+    stats: { prod: { early: { click: 0, auto: 0, time: 0 }, mid: { click: 0, auto: 0, time: 0 }, late: { click: 0, auto: 0, time: 0 } } },
     log: [], savedAt: 0,
   };
 }
@@ -73,8 +75,10 @@ function create(){
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
   const diffCfg      = () => C.DIFFICULTY[S.diff];
-  const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * (1 + C.FX_HYDRAULIK * lv('hydraulik')) * mMul('clickYield');
-  const fertigerRate = () => C.FX_FERTIGER_RATE * (1 + C.FX_TAKT * lv('takt'));
+  // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Automatik skaliert über Fertiger, Fabrik und Draft
+  const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * mMul('clickYield');
+  const milestoneMult = () => Math.pow(C.FX_MILESTONE_MULT, Math.floor(lv('fertiger') / C.FX_FERTIGER_MILESTONE));
+  const fertigerRate = () => C.FX_FERTIGER_RATE * Math.pow(C.FX_TAKT, lv('takt')) * Math.pow(C.FX_DRUCKLUFT, lv('druckluft')) * milestoneMult();
   const matRate      = () => lv('fertiger') * fertigerRate() * mMul('autoProd');
   const hpMultP      = () => Math.pow(C.FX_RUESTUNG, lv('ruestung'));
   const dmgMultP     = () => Math.pow(C.FX_KLINGEN, lv('klingen'));
@@ -85,8 +89,9 @@ function create(){
   const turretDmg    = () => C.PLAYER_TURRET.dmgPerLevel * lv('turm');
   const turretRange  = () => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv('reichweite');
   const turretCd     = () => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv('kadenz'));
-  const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60) * mMul('enemyHp');
-  const enemyDmgMult = () => 1 + diffCfg().dmgGrowth * S.t / 60;
+  const escalation   = () => Math.pow(1 + C.ESCALATION_RATE, Math.max(0, S.t / 60 - C.ESCALATION_START_MIN));
+  const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60) * mMul('enemyHp') * escalation();
+  const enemyDmgMult = () => (1 + diffCfg().dmgGrowth * S.t / 60) * escalation();
   const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * (1 - C.FX_REKRUTIERUNG * lv('rekrutierung')) * mMul('unitCost')));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
@@ -126,12 +131,21 @@ function create(){
     return null;
   }
 
-  function addMaterial(n){ S.material += n; S.materialTotal += n; }
+  function addMaterial(n, source){
+    S.material += n; S.materialTotal += n;
+    const p = S.stats.prod[phase()];
+    if (source === 'click') p.click += n; else p.auto += n;
+  }
 
   /* ---------- Aktionen ---------- */
+  /* Höchstens MAX_CLICKS_PER_SECOND Klicks je Sekunde Spielzeit zählen (REQ-03.4) */
   function doClick(){
-    if (S.status !== 'running') return false;
-    addMaterial(clickPower());
+    if (S.status !== 'running' || S.pendingDraft) return false;
+    const ct = S.clickTimes;
+    while (ct.length && ct[0] <= S.t - 1) ct.shift();
+    if (ct.length >= C.MAX_CLICKS_PER_SECOND) return false;
+    ct.push(S.t);
+    addMaterial(clickPower(), 'click');
     S.clicks++;
     return true;
   }
@@ -184,6 +198,8 @@ function create(){
   const spawnBlocked = side => S.units.some(u => u.side === side &&
     Math.abs(u.x - (side === 'p' ? spawnX() : W - EBW)) < C.SPAWN_BLOCK_DIST);
   const gateHeld = () => S.units.some(u => u.side === 'p' && u.hp > 0 && u.x >= W - EBW - C.GATE_HOLD_DIST);
+  // Belagert der Gegner das eigene Tor, lassen sich keine Einheiten aufstellen (verhindert endlose Fleischwolf-Patts)
+  const gateBesieged = () => S.units.filter(u => u.side === 'e' && u.hp > 0 && u.x - spawnX() < C.PLAYER_GATE_SIEGE_RANGE).length >= C.PLAYER_GATE_SIEGE_COUNT;
 
   function spawn(type){
     const cost = unitCost(type);
@@ -283,7 +299,7 @@ function create(){
       if (u.hp > 0 || u.dead) continue;
       u.dead = true;
       if (u.side === 'e'){
-        gainScrap(C.UNITS[u.type].bounty * bountyMult());
+        gainScrap(C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult);
         S.kills++;
       } else S.losses++;
       if (FX.on) FX.fx.push({ x: u.x, t: 0, side: u.side });
@@ -370,10 +386,11 @@ function create(){
   function tick(dt){
     if (S.status !== 'running' || S.pendingDraft) return;   // Draft pausiert das Spiel
     S.t += dt;
+    S.stats.prod[phase()].time += dt;
     addMaterial(matRate() * dt);
     S.spawnCd = Math.max(0, S.spawnCd - dt);
     if (lv('moertel') > 0) S.baseHp = Math.min(baseMax(), S.baseHp + C.FX_MOERTEL_REGEN * lv('moertel') * dt);
-    if (S.queue.length && S.spawnCd <= 0 && !spawnBlocked('p')){
+    if (S.queue.length && S.spawnCd <= 0 && !spawnBlocked('p') && !gateBesieged()){
       S.units.push(makeUnit('p', S.queue.shift()));
       S.spawnCd = spawnGap();
     }
@@ -387,6 +404,7 @@ function create(){
       }
     }
     if (S.t >= S.nextWave) scheduleWave();
+    if (!S.escalated && S.t / 60 >= C.ESCALATION_START_MIN){ S.escalated = true; log('log.escalation'); }
 
     const eFrac = S.enemyBaseHp / diffCfg().enemyBaseHp;
     let alarmLevel = 0;
@@ -439,9 +457,9 @@ function create(){
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, spawn,
     canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has, lv,
-    buildBlock, isBuildable, refundFor, spawnGap, queueMax, interestRate,
+    buildBlock, isBuildable, refundFor, spawnGap, queueMax, interestRate, gateBesieged,
     chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, OPT,
-    clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, baseMax, diffCfg,
+    clickPower, matRate, fertigerRate, milestoneMult, hpMultP, dmgMultP, cdMultP, bountyMult, baseMax, diffCfg,
     offlineHours, turretDmg, turretRange, turretCd,
   };
 }

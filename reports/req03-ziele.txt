@@ -1,0 +1,19 @@
+600 Partien auf 2 Kernen …
+fertig in 360 s
+
+ZIELE – Siegquote und Dauer (gierige Heuristik)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+leicht        | aktiv        |    50 |        0 |     0 |        5:19 |          –
+leicht        | durchschnitt |    50 |        0 |     0 |        5:40 |          –
+leicht        | gelegentlich |    41 |        9 |     0 |       10:10 |      20:02
+leicht        | passiv       |     0 |       50 |     0 |           – |       2:22
+normal        | aktiv        |    45 |        5 |     0 |        8:19 |      26:38
+normal        | durchschnitt |    43 |        7 |     0 |       10:25 |      22:53
+normal        | gelegentlich |     0 |       50 |     0 |           – |       2:18
+normal        | passiv       |     0 |       50 |     0 |           – |       2:14
+schwer        | aktiv        |    32 |       17 |     1 |       11:54 |      26:39
+schwer        | durchschnitt |    39 |       11 |     0 |       12:28 |      22:30
+schwer        | gelegentlich |     0 |       50 |     0 |           – |       1:56
+schwer        | passiv       |     0 |       50 |     0 |           – |       1:49
+

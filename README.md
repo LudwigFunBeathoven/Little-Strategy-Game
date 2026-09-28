@@ -1,27 +1,21 @@
 # Klammerfront
 
-Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fertigen, Fabrik, Schmiede und Universität bauen, Einheiten an die Front schicken, die gegnerische Basis zerstören.
+Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fertigen, Gebäude wählen, Einheiten an die Front schicken, bei jedem Stufenaufstieg eine Verstärkung wählen und die gegnerische Basis zerstören.
 
-**Spielen:** `index.html` im Browser öffnen. Keine Installation nötig.
+**Spielen:** `index.html` im Browser öffnen. Keine Installation nötig. Sprache (Deutsch/English) und Schwierigkeit werden auf dem Startbildschirm gewählt.
 
-## Steuerung
-- **Fertigen** klicken für Material. Fertiger produzieren automatisch.
-- **Tasten 1 und 2** stellen Läufer und Werfer in die Warteschlange (max. 5).
-- Drei **Bauplätze** in der eigenen Basis: Fabrik, Schmiede, Universität. Die Reihenfolge ist die Strategie.
-- **Mauer & Turm** werden mit Altmetall ausgebaut. Altmetall gibt es für Abschüsse.
+## Spielprinzip
+- **Fertigen** erzeugt Material. Zu Beginn die wichtigste Einnahme, danach tragen Fertiger und Fabrik die Produktion. Höchstens 10 Klicks pro Sekunde zählen.
+- **Einheiten** (Tasten 1 und 2) werden bezahlt und in eine Warteschlange gestellt.
+- **Drei Bauplätze**, fünf Gebäudetypen: Fabrik, Schmiede, Kaserne, Universität, Handelskontor (nur per Draft). Abriss erstattet die Hälfte des Baupreises; gekaufte Upgrades ruhen und wirken nach einem Neubau wieder.
+- **Altmetall** aus Abschüssen zählt als Erfahrung. Jede Stufe öffnet einen **Draft** mit 2 Optionen, mit Universität 3.
+- **Phasen:** Früh (Stufe 0–1), Mitte (2–4), Spät (ab 5). Im Spätspiel zählen Entscheidungen, nicht Klicks.
+- Jedes Bedienelement hat einen **Tooltip** (1 s Hover, auf Touch-Geräten langes Drücken).
 
-## Balancing prüfen
+## Entwicklung
 ```
-node tools/simulate.mjs 10
+npm test                                   # Logik- und Sprachtests (ohne Abhängigkeiten)
+npm run test:browser                       # optional, braucht Playwright
+node tools/simulate.mjs --runs 20          # Balancing-Simulation, alle Berichte
 ```
-Lässt vier Bot-Spielertypen je 10 Partien pro Schwierigkeitsgrad spielen.
-
-Letzte Messung (v0.2, 10 Partien je Feld, Median):
-
-| Schwierigkeit | aktiv | durchschnitt | gelegentlich | passiv |
-|---|---|---|---|---|
-| Leicht | Sieg 5:09 | Sieg 6:27 | Sieg 14:18 | Niederlage 2:21 |
-| Normal | Sieg 6:55 | Sieg 9:10 | Niederlage 9:11 | Niederlage 2:17 |
-| Schwer | Sieg 8:47 | Sieg 16:24 | Niederlage 2:14 | Niederlage 2:15 |
-
-Spielertypen: aktiv = 3 Klicks/s, reagiert sofort · durchschnitt = 1,5 Klicks/s, reagiert jede Sekunde · gelegentlich = 0,7 Klicks/s, alle 3 Sekunden · passiv = 0,3 Klicks/s, baut nichts.
+Projektregeln und Zielwerte stehen in `CLAUDE.md`. Anforderungen und Umsetzungsbericht der Iteration 2 liegen in `docs/`.

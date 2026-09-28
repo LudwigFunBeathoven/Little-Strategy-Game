@@ -1,5 +1,5 @@
 // Klammerfront – Balancing-Simulation (7.1)
-// Aufruf:  node tools/simulate.mjs [--runs 20] [--suite alle|ziele|strategie|phasen] [--json ergebnis.json]
+// Aufruf:  node tools/simulate.mjs [--runs 20] [--suite alle|ziele|strategie|phasen] [--diff leicht,normal] [--json ergebnis.json]
 //   ziele      Siegquote und Dauer je Schwierigkeitsgrad und Spielertyp (gierige Heuristik)
 //   strategie  Zufall gegen gierige Heuristik: Gebäudewahl, Gebäudekombinationen, Draft-Wahlraten, Draft-Abstände
 //   phasen     REQ-03: Klickanteil je Phase (SIM_CLICK_RATE) sowie Dauerklick / Stopp ab Phase Spät / nie klicken
@@ -18,7 +18,7 @@ if (!isMainThread){
   const RUNS = Number(arg('runs', 20));
   const SUITE = arg('suite', 'alle');
   const JSON_OUT = arg('json', null);
-  const DIFFS = C.DIFFICULTY_ORDER;
+  const DIFFS = arg('diff', null) ? arg('diff').split(',') : C.DIFFICULTY_ORDER;
   const CPS = C.SIM_CLICK_RATE ?? 6;
 
   const jobs = [];
