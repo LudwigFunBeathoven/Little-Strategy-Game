@@ -1,0 +1,96 @@
+{
+  "runs": 10,
+  "suite": "strategie",
+  "report": {
+    "strategie": [
+      {
+        "diff": "leicht",
+        "strategy": "zufall",
+        "winRate": 0.9,
+        "medWin": 379.550000000052,
+        "demolished": 0.3
+      },
+      {
+        "diff": "leicht",
+        "strategy": "gierig",
+        "winRate": 1,
+        "medWin": 573.4500000000262,
+        "demolished": 0
+      },
+      {
+        "diff": "normal",
+        "strategy": "zufall",
+        "winRate": 0.9,
+        "medWin": 1223.2999999994352,
+        "demolished": 1.9
+      },
+      {
+        "diff": "normal",
+        "strategy": "gierig",
+        "winRate": 1,
+        "medWin": 1454.249999999225,
+        "demolished": 0
+      },
+      {
+        "diff": "schwer",
+        "strategy": "zufall",
+        "winRate": 0,
+        "medWin": null,
+        "demolished": 5.1
+      },
+      {
+        "diff": "schwer",
+        "strategy": "gierig",
+        "winRate": 0.3,
+        "medWin": 1790.749999998919,
+        "demolished": 0
+      }
+    ],
+    "buildRates": {
+      "zufall": {
+        "fabrik": 0.6333333333333333,
+        "schmiede": 0.8666666666666667,
+        "kaserne": 0.6666666666666666,
+        "universitaet": 0.5666666666666667,
+        "kontor": 0
+      },
+      "gierig": {
+        "fabrik": 1,
+        "schmiede": 0.8666666666666667,
+        "kaserne": 0.4,
+        "universitaet": 0.5,
+        "kontor": 0
+      }
+    },
+    "combos": {
+      "fabrik+schmiede+universitaet": {
+        "games": 17,
+        "winRate": 0.5294117647058824
+      },
+      "fabrik+kaserne+schmiede": {
+        "games": 15,
+        "winRate": 0.8
+      },
+      "fabrik+schmiede": {
+        "games": 5,
+        "winRate": 1
+      },
+      "schmiede": {
+        "games": 4,
+        "winRate": 1
+      },
+      "fabrik+kaserne+universitaet": {
+        "games": 4,
+        "winRate": 0
+      },
+      "schmiede+universitaet": {
+        "games": 3,
+        "winRate": 0.6666666666666666
+      },
+      "kaserne+schmiede": {
+        "games": 3,
+        "winRate": 0.6666666666666666
+      }
+    }
+  }
+}

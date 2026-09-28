@@ -23,7 +23,7 @@ function freshState(diff, seed){
     v: 3, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
-    lvl, slots: new Array(C.BUILDING_SLOTS).fill(null), revealed: {},
+    lvl, slots: new Array(C.BUILDING_SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
     baseHp: C.BASE_HP, enemyBaseHp: d.enemyBaseHp,
     nextWave: d.firstWave, enemyQueue: [], queue: [], units: [], nextId: 1,
     spawnCd: 0, turretCd: 0, enemyTurretCd: 0,
@@ -43,29 +43,33 @@ function create(){
   }
 
   /* ---------- abgeleitete Werte ---------- */
-  const L = () => S.lvl;
+  const has = b => S.slots.some(s => s && s.type === b);
+  // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
+  const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
   const diffCfg      = () => C.DIFFICULTY[S.diff];
-  const has          = b => S.slots.includes(b);
-  const clickPower   = () => Math.floor((1 + C.FX_PRESSE * L().presse) * (1 + C.FX_HYDRAULIK * L().hydraulik));
-  const fertigerRate = () => C.FX_FERTIGER_RATE * (1 + C.FX_TAKT * L().takt);
-  const matRate      = () => L().fertiger * fertigerRate();
-  const hpMultP      = () => Math.pow(C.FX_RUESTUNG, L().ruestung);
-  const dmgMultP     = () => Math.pow(C.FX_KLINGEN, L().klingen);
-  const cdMultP      = () => Math.pow(C.FX_DRILL, L().drill);
-  const bountyMult   = () => 1 + C.FX_BEUTE * L().beute;
-  const baseMax      = () => C.BASE_HP + C.FX_MAUER_HP * L().mauer;
-  const offlineHours = () => C.OFFLINE_HOURS + C.FX_NACHT_HOURS * L().nacht;
-  const turretDmg    = () => C.PLAYER_TURRET.dmgPerLevel * L().turm;
-  const turretRange  = () => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * L().reichweite;
-  const turretCd     = () => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, L().kadenz);
+  const clickPower   = () => Math.floor((1 + C.FX_PRESSE * lv('presse')) * (1 + C.FX_HYDRAULIK * lv('hydraulik')));
+  const fertigerRate = () => C.FX_FERTIGER_RATE * (1 + C.FX_TAKT * lv('takt'));
+  const matRate      = () => lv('fertiger') * fertigerRate();
+  const hpMultP      = () => Math.pow(C.FX_RUESTUNG, lv('ruestung'));
+  const dmgMultP     = () => Math.pow(C.FX_KLINGEN, lv('klingen'));
+  const cdMultP      = () => Math.pow(C.FX_DRILL, lv('drill'));
+  const bountyMult   = () => 1;
+  const baseMax      = () => C.BASE_HP + C.FX_MAUER_HP * lv('mauer');
+  const offlineHours = () => C.OFFLINE_HOURS + C.FX_NACHT_HOURS * lv('nacht');
+  const turretDmg    = () => C.PLAYER_TURRET.dmgPerLevel * lv('turm');
+  const turretRange  = () => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv('reichweite');
+  const turretCd     = () => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv('kadenz'));
   const enemyHpMult  = () => 1 + diffCfg().hpGrowth  * S.t / 60;
   const enemyDmgMult = () => 1 + diffCfg().dmgGrowth * S.t / 60;
-  const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * (1 - C.FX_LOGISTIK * L().logistik)));
+  const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * (1 - C.FX_REKRUTIERUNG * lv('rekrutierung'))));
+  const spawnGap     = () => C.SPAWN_GAP_S * Math.pow(C.FX_EXERZIER, lv('exerzierplatz'));
+  const queueMax     = () => C.QUEUE_MAX + C.FX_STUBE * lv('stube');
+  const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
 
   function upCost(id){
     const u = C.UPGRADES[id];
     let c = u.baseCost * Math.pow(u.growth, S.lvl[id]);
-    if (id === 'fertiger') c *= (1 - C.FX_SERIE * L().serie);
+    if (id === 'fertiger') c *= (1 - C.FX_SERIE * lv('serie'));
     return Math.ceil(c);
   }
   const isMaxed = id => C.UPGRADES[id].max !== undefined && S.lvl[id] >= C.UPGRADES[id].max;
@@ -78,6 +82,19 @@ function create(){
   const canBuy = id => S.status === 'running' && isAvailable(id) && !isMaxed(id) && S[C.UPGRADES[id].cur] >= upCost(id);
   const builtCount = () => S.slots.filter(Boolean).length;
   const nextSlotCost = () => builtCount() < C.BUILDING_SLOTS ? C.BUILD_COSTS[builtCount()] : Infinity;
+  const isBuildable = type => C.START_BUILDINGS.includes(type) || !!S.unlocked[type];
+  const countType = type => S.slots.filter(s => s && s.type === type).length;
+  const refundFor = i => S.slots[i] ? Math.floor(S.slots[i].paid * C.REFUND_RATE) : 0;
+  /* Warum ein Gebäude nicht baubar ist (null = baubar) */
+  function buildBlock(i, type){
+    if (S.status !== 'running') return 'notRunning';
+    if (!C.BUILDINGS.includes(type)) return 'unknown';
+    if (!isBuildable(type)) return 'locked';
+    if (countType(type) >= C.MAX_PER_TYPE) return 'standing';
+    if (i < 0 || i >= C.BUILDING_SLOTS || S.slots[i]) return 'occupied';
+    if (S.material < nextSlotCost()) return 'material';
+    return null;
+  }
 
   function addMaterial(n){ S.material += n; S.materialTotal += n; }
 
@@ -96,18 +113,32 @@ function create(){
     if (id === 'turm' && S.lvl.turm === 1) log('log.turret');
     return true;
   }
-  function build(key){
-    if (S.status !== 'running' || !C.BUILDINGS.includes(key) || has(key)) return false;
-    const n = builtCount(), cost = nextSlotCost();
-    if (n >= C.BUILDING_SLOTS || S.material < cost) return false;
+  function buildAt(i, type){
+    if (buildBlock(i, type)) return false;
+    const cost = nextSlotCost();
     S.material -= cost;
-    S.slots[n] = key;
-    log('log.built', { building: '@bld.' + key + '.name', slot: n + 1 });
+    S.slots[i] = { type, paid: cost };
+    log('log.built', { building: '@bld.' + type + '.name', slot: i + 1 });
     return true;
   }
+  /* Baut in den ersten freien Platz (Kurzform für Bots und Tests) */
+  function build(type){
+    const i = S.slots.findIndex(x => !x);
+    return i >= 0 && buildAt(i, type);
+  }
+  function demolish(i){
+    if (S.status !== 'running' || !S.slots[i]) return false;
+    const refund = refundFor(i), type = S.slots[i].type;
+    S.material += refund;
+    S.slots[i] = null;
+    if (S.baseHp > baseMax()) S.baseHp = baseMax();
+    log('log.demolished', { building: '@bld.' + type + '.name', slot: i + 1, amount: refund });
+    return true;
+  }
+  function unlockBuilding(type){ S.unlocked[type] = true; }
   function repair(){
-    if (S.status !== 'running' || S.scrap < C.REPAIR_COST || S.baseHp >= baseMax()) return false;
-    S.scrap -= C.REPAIR_COST;
+    if (S.status !== 'running' || S.material < C.REPAIR_COST || S.baseHp >= baseMax()) return false;
+    S.material -= C.REPAIR_COST;
     S.baseHp = Math.min(baseMax(), S.baseHp + C.REPAIR_AMOUNT);
     return true;
   }
@@ -126,7 +157,7 @@ function create(){
 
   function spawn(type){
     const cost = unitCost(type);
-    if (S.status !== 'running' || S.queue.length >= C.QUEUE_MAX || S.material < cost) return false;
+    if (S.status !== 'running' || S.queue.length >= queueMax() || S.material < cost) return false;
     S.material -= cost;
     S.queue.push(type);
     return true;
@@ -164,7 +195,7 @@ function create(){
         S.enemyTurretCd = C.ENEMY_TURRET.cd;
       }
     }
-    if (L().turm > 0){
+    if (lv('turm') > 0){
       S.turretCd -= dt;
       if (S.turretCd <= 0){
         const tgt = nearest('e', PBW, turretRange());
@@ -206,7 +237,7 @@ function create(){
           if (u.side === 'p'){ S.enemyBaseHp -= u.dmg; FX.baseFlash.e = 0.12; }
           else {
             S.baseHp -= u.dmg; FX.baseFlash.p = 0.12;
-            if (!ranged && L().stacheln > 0){ u.hp -= C.FX_STACHELN_DMG * L().stacheln; u.flash = 0.12; }
+            if (!ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
           }
           if (ranged) shot({ x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, t: 0, dur: 0.3 });
         }
@@ -237,7 +268,7 @@ function create(){
         if (S.t > 1) log('log.newOption', { name: '@upg.' + id + (id === 'turm' && S.lvl.turm === 0 ? '.build' : '.name') });
       }
     }
-    if (!S.revealed.repair && S.baseHp < baseMax() && S.scrap > 0) S.revealed.repair = true;
+    if (!S.revealed.repair && S.baseHp < baseMax()) S.revealed.repair = true;
   }
   function checkEra(){
     if (!S.eraReached && S.scrapTotal >= C.ERA2_AT){ S.eraReached = true; log('log.era2'); }
@@ -248,10 +279,19 @@ function create(){
     S.t += dt;
     addMaterial(matRate() * dt);
     S.spawnCd = Math.max(0, S.spawnCd - dt);
-    if (L().moertel > 0) S.baseHp = Math.min(baseMax(), S.baseHp + C.FX_MOERTEL_REGEN * L().moertel * dt);
+    if (lv('moertel') > 0) S.baseHp = Math.min(baseMax(), S.baseHp + C.FX_MOERTEL_REGEN * lv('moertel') * dt);
     if (S.queue.length && S.spawnCd <= 0 && !spawnBlocked('p')){
       S.units.push(makeUnit('p', S.queue.shift()));
-      S.spawnCd = C.SPAWN_GAP_S;
+      S.spawnCd = spawnGap();
+    }
+    // Handelskontor: Zinsen auf den Materialbestand, gedeckelt
+    if (has('kontor')){
+      S.kontorT += dt;
+      if (S.kontorT >= C.KONTOR.intervalS){
+        S.kontorT -= C.KONTOR.intervalS;
+        const cap = Math.max(C.KONTOR.capMin, matRate() * C.KONTOR.capSeconds);
+        addMaterial(Math.min(cap, S.material * interestRate()));
+      }
     }
     if (S.t >= S.nextWave) scheduleWave();
 
@@ -303,8 +343,9 @@ function create(){
   return {
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
-    doClick, buy, build, repair, spawn,
-    canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has,
+    doClick, buy, build, buildAt, demolish, unlockBuilding, repair, spawn,
+    canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has, lv,
+    buildBlock, isBuildable, refundFor, spawnGap, queueMax, interestRate,
     clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, baseMax, diffCfg,
     offlineHours, turretDmg, turretRange, turretCd,
   };

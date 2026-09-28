@@ -44,9 +44,9 @@ const KF_CONFIG = {
   ALARM_WERFER_EVERY: 3,
   RELOAD_WAVE_DELAY_S: 5,
 
-  /* Basis */
+  /* Basis (Reparatur kostet seit REQ-01 Material statt Altmetall) */
   BASE_HP: 600,
-  REPAIR_COST: 25,
+  REPAIR_COST: 60,
   REPAIR_AMOUNT: 100,
 
   /* Einheiten */
@@ -57,10 +57,15 @@ const KF_CONFIG = {
     werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, speed: 30, range: 105, bounty: 15 },
   },
 
-  /* Bauplätze (Preis richtet sich nach der Zahl der bereits stehenden Gebäude) */
+  /* Bauplätze (REQ-01). Der Preis richtet sich nach der Zahl der stehenden Gebäude.
+     Abriss erstattet REFUND_RATE des tatsächlich gezahlten Preises; Upgrades ruhen und leben beim Neubau wieder auf. */
   BUILDING_SLOTS: 3,
+  MAX_PER_TYPE: 1,
+  REFUND_RATE: 0.5,
   BUILD_COSTS: [40, 350, 1200],
-  BUILDINGS: ['fabrik', 'schmiede', 'universitaet'],
+  BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet', 'kontor'],
+  START_BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet'],   // Handelskontor nur per Draft (REQ-02)
+  KONTOR: { intervalS: 10, rate: 0.01, capSeconds: 30, capMin: 20 },   // Zinsen: alle intervalS Sekunden rate × Bestand, höchstens capSeconds Automatik-Ertrag
 
   /* Upgrades. group = Gebäude oder Bereich; cur = Währung; max = Höchststufe; needs = Voraussetzung */
   UPGRADES: {
@@ -69,18 +74,20 @@ const KF_CONFIG = {
     hydraulik:  { group: 'fabrik',       baseCost: 120, growth: 2.0,  cur: 'material', max: 6 },
     takt:       { group: 'fabrik',       baseCost: 150, growth: 1.9,  cur: 'material', max: 10 },
     serie:      { group: 'fabrik',       baseCost: 200, growth: 2.2,  cur: 'material', max: 5 },
+    nacht:      { group: 'fabrik',       baseCost: 400, growth: 2.2,  cur: 'material', max: 4 },
     klingen:    { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
     ruestung:   { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
     drill:      { group: 'schmiede',     baseCost: 150, growth: 2.0,  cur: 'material', max: 5 },
-    logistik:   { group: 'universitaet', baseCost: 30,  growth: 1.8,  cur: 'scrap',    max: 5 },
-    beute:      { group: 'universitaet', baseCost: 40,  growth: 1.7,  cur: 'scrap',    max: 8 },
-    nacht:      { group: 'universitaet', baseCost: 50,  growth: 2.0,  cur: 'scrap',    max: 4 },
-    mauer:      { group: 'mauer',        baseCost: 40,  growth: 1.6,  cur: 'scrap' },
-    stacheln:   { group: 'mauer',        baseCost: 50,  growth: 1.8,  cur: 'scrap',    max: 5 },
-    moertel:    { group: 'mauer',        baseCost: 60,  growth: 1.9,  cur: 'scrap',    max: 5 },
-    turm:       { group: 'turm',         baseCost: 40,  growth: 1.9,  cur: 'scrap' },
-    reichweite: { group: 'turm',         baseCost: 60,  growth: 1.8,  cur: 'scrap',    max: 4, needs: 'turm' },
-    kadenz:     { group: 'turm',         baseCost: 70,  growth: 1.9,  cur: 'scrap',    max: 5, needs: 'turm' },
+    rekrutierung:  { group: 'kaserne',   baseCost: 80,  growth: 1.8,  cur: 'material', max: 5 },
+    exerzierplatz: { group: 'kaserne',   baseCost: 120, growth: 1.9,  cur: 'material', max: 4 },
+    stube:         { group: 'kaserne',   baseCost: 150, growth: 2.2,  cur: 'material', max: 3 },
+    zinseszins: { group: 'kontor',       baseCost: 300, growth: 2.0,  cur: 'material', max: 4 },
+    mauer:      { group: 'mauer',        baseCost: 120, growth: 1.6,  cur: 'material' },
+    stacheln:   { group: 'mauer',        baseCost: 150, growth: 1.8,  cur: 'material', max: 5 },
+    moertel:    { group: 'mauer',        baseCost: 180, growth: 1.9,  cur: 'material', max: 5 },
+    turm:       { group: 'turm',         baseCost: 100, growth: 1.9,  cur: 'material' },
+    reichweite: { group: 'turm',         baseCost: 160, growth: 1.8,  cur: 'material', max: 4, needs: 'turm' },
+    kadenz:     { group: 'turm',         baseCost: 200, growth: 1.9,  cur: 'material', max: 5, needs: 'turm' },
   },
   REVEAL_AT: 0.5,               // Option erscheint, sobald die Hälfte des Preises vorhanden ist
 
@@ -93,8 +100,10 @@ const KF_CONFIG = {
   FX_KLINGEN: 1.2,
   FX_RUESTUNG: 1.2,
   FX_DRILL: 0.9,
-  FX_LOGISTIK: 0.08,
-  FX_BEUTE: 0.2,
+  FX_REKRUTIERUNG: 0.08,        // Einheiten je Stufe günstiger
+  FX_EXERZIER: 0.85,            // Aufstellabstand je Stufe
+  FX_STUBE: 1,                  // Warteschlangenplätze je Stufe
+  FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_NACHT_HOURS: 4,
   FX_MAUER_HP: 150,
   FX_STACHELN_DMG: 4,
