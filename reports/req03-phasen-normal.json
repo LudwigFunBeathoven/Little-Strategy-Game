@@ -1,0 +1,20 @@
+{
+  "runs": 200,
+  "suite": "phasen",
+  "report": {
+    "clickShare": {
+      "normal": {
+        "early": 0.6764378706609352,
+        "mid": 0.1757862184777193,
+        "late": 0.000393563783541786
+      }
+    },
+    "clickPolicies": {
+      "normal": {
+        "always": 0.92,
+        "stopLate": 0.94,
+        "never": 0
+      }
+    }
+  }
+}

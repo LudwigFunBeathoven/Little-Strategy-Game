@@ -157,8 +157,10 @@ function tipContent(id){
     case 'unit': {
       const spec = C.UNITS[a];
       return { title: t(`unit.${a}.name`), body: t('tip.unit.body', { max: G.queueMax(), k: spec.key }),
-               rows: [[t('tip.m.unitHp'), fmt(spec.hp * G.hpMultP())], [t('tip.m.unitDmg'), fmt1(spec.dmg * G.dmgMultP())],
-                      [t('tip.m.range'), fmt(spec.range)], [t('tip.cost'), costText('material', G.unitCost(a))]],
+               rows: [[t('tip.m.role'), t(G.unitRange('p', a) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee')],
+                      [t('tip.m.unitHp'), fmt(spec.hp * G.hpMultP() * G.mMul('unitHp') * (a === 'werfer' ? G.mMul('werferHp') : 1))],
+                      [t('tip.m.unitDmg'), fmt1(spec.dmg * G.dmgMultP())],
+                      [t('tip.m.range'), fmt(G.unitRange('p', a))], [t('tip.cost'), costText('material', G.unitCost(a))]],
                reason: unitReason(a) };
     }
     case 'repair': {
@@ -169,7 +171,7 @@ function tipContent(id){
                rows: [[t('tip.m.baseHp'), `${fmt(S.baseHp)} → ${fmt(after)}`], [t('tip.cost'), costText('material', C.REPAIR_COST)]], reason };
     }
     case 'click':
-      return { title: t('btn.click'), body: t('tip.click.body'), rows: [[t('tip.m.perClick'), fmt(G.clickPower())]],
+      return { title: t('btn.click'), body: t('tip.click.body', { max: C.MAX_CLICKS_PER_SECOND }), rows: [[t('tip.m.perClick'), fmt1(G.clickPower())], [t('tip.m.matRate'), fmt1(G.matRate())]],
                reason: S.status !== 'running' ? t('tip.notRunning') : null };
     case 'slot': {
       const sl = S.slots[a];

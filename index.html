@@ -175,7 +175,8 @@
   .opt:active:not([aria-disabled="true"]), .chip:active:not([aria-disabled="true"]), .btn-ghost:active, .seg button:active, .diff:active{transform:translateY(1px); box-shadow:none;}
   [aria-disabled="true"]{opacity:.5; cursor:not-allowed !important;}
   .opt[aria-disabled="true"]:hover, .chip[aria-disabled="true"]:hover{border-color:var(--rule-strong); background:var(--surface);}
-  .opt{grid-template-columns:1fr auto; align-items:baseline;}
+  .opt{grid-template-columns:minmax(0, 1fr) auto; align-items:baseline;}
+  .opt-name{min-width:0; overflow-wrap:anywhere;}
   .opt-name em{font-style:normal; font-weight:400; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; font-size:11.5px; margin-left:6px;}
 
   /* Tooltip */

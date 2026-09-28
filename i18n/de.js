@@ -15,7 +15,6 @@ KF_I18N.de = {
   'hud.material': 'Material',
   'hud.perSecond': '{n}/s',
   'hud.perClick': '{n}/Klick',
-  'hud.scrap': 'Altmetall',
   'hud.baseP': 'Deine Basis',
   'hud.baseE': 'Gegnerische Basis',
 
@@ -34,8 +33,6 @@ KF_I18N.de = {
   'hint.schmiede': 'Benötigt eine Schmiede.',
 
   'btn.click': 'Fertigen',
-  'opt.level': 'Stufe {n}',
-  'opt.levelMax': 'Stufe {n}/{max}',
   'opt.max': 'Maximum',
   'cost.material': '{n} Material',
   'cost.scrap': '{n} Altmetall',
@@ -47,10 +44,8 @@ KF_I18N.de = {
   'unit.werfer.name': 'Werfer',
   'unit.role.melee': 'Nahkampf',
   'unit.role.ranged': 'Fernkampf',
-  'unit.stats': '{role} · {hp} LP · {dmg} Schaden',
 
   'repair.name': 'Basis reparieren',
-  'repair.desc': '+{n} Lebenspunkte, sofort',
 
   'bld.fabrik.name': 'Fabrik',
   'bld.fabrik.desc': 'Verbessert Presse und Fertiger.',
@@ -145,7 +140,6 @@ KF_I18N.de = {
   'tip.queueFull': 'Warteschlange voll',
   'tip.baseFull': 'Basis ist unbeschädigt',
   'tip.notRunning': 'Keine laufende Partie',
-  'tip.key': 'Taste {k}',
   'tip.m.matRate': 'Material/s',
   'tip.m.perClick': 'Material pro Klick',
   'tip.m.fertigerCost': 'Preis Fertiger',
@@ -164,7 +158,7 @@ KF_I18N.de = {
   'tip.m.unitHp': 'Lebenspunkte',
   'tip.m.unitDmg': 'Schaden',
   'tip.m.range': 'Reichweite',
-  'tip.click.body': 'Erzeugt Material. Zu Beginn die wichtigste Einnahme.',
+  'tip.click.body': 'Erzeugt Material. Zu Beginn die wichtigste Einnahme, später trägt die Automatik. Höchstens {max} Klicks pro Sekunde zählen.',
   'tip.unit.body': 'Wird sofort bezahlt und in die Warteschlange gestellt (höchstens {max}). Taste {k}.',
   'tip.repair.body': 'Repariert deine Basis sofort.',
   'tip.new.body': 'Öffnet den Startbildschirm mit Sprache und Schwierigkeit.',
@@ -192,7 +186,6 @@ KF_I18N.de = {
   'tip.m.spawnGap': 'Aufstellabstand (s)',
   'tip.m.queueMax': 'Plätze in der Warteschlange',
   'tip.m.interest': 'Zinssatz je Auszahlung',
-  'slot.empty': 'frei',
   'slot.choose': 'Gebäude wählen',
   'slot.dialogText': 'Preis für das nächste Gebäude: {cost}.',
   'slot.cancel': 'Abbrechen',
@@ -263,4 +256,5 @@ KF_I18N.de = {
   'draft.kriegsanleihe.name': 'Kriegsanleihe',
   'draft.kriegsanleihe.desc': 'Sofort Material für {e1} Sekunden Produktion. Nachteil: Gegner +{d1} % Lebenspunkte.',
   'log.escalation': 'Der Gegner mobilisiert: ab jetzt wird er jede Minute stärker.',
+  'tip.m.role': 'Art',
 };

@@ -146,3 +146,40 @@ test('Optionsdaten sind vollständig und deklarativ', () => {
     assert.ok(['upgrade', 'building'].includes(o.category));
   }
 });
+
+/* ---------- REQ-03 Phasen ---------- */
+test('Phasen folgen der Stufe: Früh < 2, Mitte < 5, Spät ab 5', () => {
+  const { G, C } = game();
+  const at = lvl => { G.S.level = lvl; return G.phase(); };
+  assert.equal(C.PHASE_MID_LEVEL, 2); assert.equal(C.PHASE_LATE_LEVEL, 5);
+  assert.deepEqual([0, 1, 2, 4, 5, 9].map(at), ['early', 'early', 'mid', 'mid', 'late', 'late']);
+});
+
+test('Höchstens MAX_CLICKS_PER_SECOND Klicks je Sekunde zählen', () => {
+  const { G, C } = game();
+  let counted = 0;
+  for (let i = 0; i < 25; i++) if (G.doClick()) counted++;
+  assert.equal(counted, C.MAX_CLICKS_PER_SECOND);
+  for (let i = 0; i < 21; i++) G.tick(0.05);          // gut eine Sekunde später
+  assert.ok(G.doClick(), 'nach einer Sekunde zählen Klicks wieder');
+});
+
+test('Klickwert ist gedeckelt; nur die Presse erhöht ihn', () => {
+  const { G, C } = game();
+  G.S.material = 1e9;
+  while (G.buy('presse'));
+  assert.equal(G.S.lvl.presse, C.UPGRADES.presse.max);
+  assert.equal(G.clickPower(), 1 + C.FX_PRESSE * C.UPGRADES.presse.max);
+  G.buildAt(0, 'fabrik');
+  const before = G.clickPower();
+  while (G.buy('druckluft') || G.buy('takt'));
+  assert.equal(G.clickPower(), before, 'Fabrik-Upgrades verändern den Klickwert nicht');
+  assert.ok(!('hydraulik' in C.UPGRADES), 'Hydraulik ist umgebaut');
+});
+
+test('Produktion wird je Phase getrennt nach Klick und Automatik erfasst', () => {
+  const { G } = game();
+  G.doClick(); G.S.material = 1e6; G.buy('fertiger'); G.tick(0.05);
+  const p = G.S.stats.prod.early;
+  assert.ok(p.click >= 1 && p.auto > 0);
+});

@@ -15,7 +15,6 @@ KF_I18N.en = {
   'hud.material': 'Material',
   'hud.perSecond': '{n}/s',
   'hud.perClick': '{n}/click',
-  'hud.scrap': 'Scrap',
   'hud.baseP': 'Your base',
   'hud.baseE': 'Enemy base',
 
@@ -34,8 +33,6 @@ KF_I18N.en = {
   'hint.schmiede': 'Requires a forge.',
 
   'btn.click': 'Produce',
-  'opt.level': 'Level {n}',
-  'opt.levelMax': 'Level {n}/{max}',
   'opt.max': 'Maximum',
   'cost.material': '{n} material',
   'cost.scrap': '{n} scrap',
@@ -47,10 +44,8 @@ KF_I18N.en = {
   'unit.werfer.name': 'Thrower',
   'unit.role.melee': 'Melee',
   'unit.role.ranged': 'Ranged',
-  'unit.stats': '{role} · {hp} HP · {dmg} damage',
 
   'repair.name': 'Repair base',
-  'repair.desc': '+{n} hit points, instantly',
 
   'bld.fabrik.name': 'Factory',
   'bld.fabrik.desc': 'Improves the press and fabricators.',
@@ -145,7 +140,6 @@ KF_I18N.en = {
   'tip.queueFull': 'Queue full',
   'tip.baseFull': 'Base is undamaged',
   'tip.notRunning': 'No game in progress',
-  'tip.key': 'Key {k}',
   'tip.m.matRate': 'Material/s',
   'tip.m.perClick': 'Material per click',
   'tip.m.fertigerCost': 'Fabricator price',
@@ -164,7 +158,7 @@ KF_I18N.en = {
   'tip.m.unitHp': 'Hit points',
   'tip.m.unitDmg': 'Damage',
   'tip.m.range': 'Range',
-  'tip.click.body': 'Produces material. Your main income early on.',
+  'tip.click.body': 'Produces material. Your main income early on; automation carries the late game. At most {max} clicks per second count.',
   'tip.unit.body': 'Paid immediately and added to the queue (max. {max}). Key {k}.',
   'tip.repair.body': 'Repairs your base instantly.',
   'tip.new.body': 'Opens the start screen with language and difficulty.',
@@ -192,7 +186,6 @@ KF_I18N.en = {
   'tip.m.spawnGap': 'Deploy interval (s)',
   'tip.m.queueMax': 'Queue slots',
   'tip.m.interest': 'Interest per payout',
-  'slot.empty': 'free',
   'slot.choose': 'Choose building',
   'slot.dialogText': 'Price of your next building: {cost}.',
   'slot.cancel': 'Cancel',
@@ -263,4 +256,5 @@ KF_I18N.en = {
   'draft.kriegsanleihe.name': 'War bonds',
   'draft.kriegsanleihe.desc': 'Instant material worth {e1} seconds of production. Drawback: enemies +{d1}% hit points.',
   'log.escalation': 'The enemy mobilises: from now on it grows stronger every minute.',
+  'tip.m.role': 'Type',
 };
