@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klammerfront</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F1F2ED; --surface:#FBFBF8; --surface-2:#E9EAE3;
+    --ink:#1B1E19; --ink-soft:#565A50; --ink-faint:#8B8F84;
+    --rule:#DBDCD3; --rule-strong:#C6C8BC;
+    --brass:#7C6A2E; --brass-ink:#FBFBF8; --brass-soft:#EFE7D2;
+    --steel:#3E5866; --steel-soft:#DEE7EA;
+    --rust:#9A4A2A; --rust-soft:#F2E0D6;
+    --ground:#BFC1B4; --scrim:rgba(241,242,237,.82);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15170F; --surface:#1C1F17; --surface-2:#262920;
+      --ink:#EAEBE3; --ink-soft:#AFB3A5; --ink-faint:#767A6C;
+      --rule:#33362A; --rule-strong:#464A38;
+      --brass:#D2B45C; --brass-ink:#15170F; --brass-soft:#3A3320;
+      --steel:#8FB4C4; --steel-soft:#233238;
+      --rust:#D98A68; --rust-soft:#3A2419;
+      --ground:#4A4E3E; --scrim:rgba(21,23,15,.82);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15170F; --surface:#1C1F17; --surface-2:#262920;
+    --ink:#EAEBE3; --ink-soft:#AFB3A5; --ink-faint:#767A6C;
+    --rule:#33362A; --rule-strong:#464A38;
+    --brass:#D2B45C; --brass-ink:#15170F; --brass-soft:#3A3320;
+    --steel:#8FB4C4; --steel-soft:#233238;
+    --rust:#D98A68; --rust-soft:#3A2419;
+    --ground:#4A4E3E; --scrim:rgba(21,23,15,.82);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:24px 16px 48px; display:flex; flex-direction:column; gap:14px;}
+  .num{font-family:"IBM Plex Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums;}
+  button{font:inherit; color:inherit;}
+  :focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+
+  /* Kopf */
+  .top{display:flex; justify-content:space-between; align-items:baseline; gap:10px 24px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+  h1{font-family:"Spectral", Georgia, serif; font-weight:600; font-size:30px; line-height:1; margin:0;}
+  .tag{font-family:"IBM Plex Mono", monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass);}
+  .meta{display:flex; gap:18px; align-items:baseline; flex-wrap:wrap; font-family:"IBM Plex Mono", monospace; font-size:13px; color:var(--ink-soft);}
+  .meta b{color:var(--ink); font-weight:500;}
+  .link{background:none; border:none; padding:0; color:var(--ink-faint); text-decoration:underline; text-underline-offset:3px; cursor:pointer;}
+  .link:hover{color:var(--ink);}
+
+  .log{list-style:none; margin:0; padding:0; font-family:"IBM Plex Mono", monospace; font-size:13px; color:var(--ink-faint); min-height:4.4em; display:flex; flex-direction:column; gap:1px;}
+  .log li:first-child{color:var(--ink);}
+  .log .ts{margin-right:10px; color:var(--ink-faint);}
+
+  /* Schlachtfeld */
+  .front{background:var(--surface); border:1px solid var(--rule); border-radius:6px; overflow:hidden;}
+  #lane{display:block; width:100%; height:210px;}
+  @media (max-width:640px){ #lane{height:170px;} }
+
+  /* HUD */
+  .hud{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr); gap:10px 24px; align-items:end; padding:4px 2px;}
+  @media (max-width:860px){ .hud{grid-template-columns:1fr 1fr;} }
+  .res{display:flex; flex-direction:column; gap:2px;}
+  .res .big{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; font-size:28px; font-weight:500; line-height:1.05;}
+  .res .lbl{font-size:12.5px; color:var(--ink-soft);}
+  .res .lbl .num{font-size:12px;}
+  .hp{display:flex; flex-direction:column; gap:5px;}
+  .hp-row{display:flex; justify-content:space-between; gap:8px; font-size:13px;}
+  .hp-row .num{font-size:12.5px; color:var(--ink-soft);}
+  .bar{height:7px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
+  .bar > i{display:block; height:100%; width:100%; border-radius:4px; transition:width .15s linear;}
+  .bar.steel > i{background:var(--steel);} .bar.rust > i{background:var(--rust);} .bar.brass > i{background:var(--brass);}
+
+  /* Baugelände */
+  .yard{display:flex; flex-direction:column; gap:8px;}
+  .yard-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;}
+  .slots{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px;}
+  @media (max-width:760px){ .slots{grid-template-columns:1fr;} }
+  .slot{border:1px dashed var(--rule-strong); border-radius:6px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; min-height:92px;}
+  .slot.built{border-style:solid; border-color:var(--rule); background:var(--surface);}
+  .slot.locked{opacity:.55;}
+  .slot-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .slot-no{font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .slot-cost{font-family:"IBM Plex Mono", monospace; font-size:12.5px; color:var(--ink-soft);}
+  .slot-name{font-weight:600; font-size:16px;}
+  .slot-desc{font-size:13px; color:var(--ink-soft);}
+  .slot-choices{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{border:1px solid var(--rule-strong); background:var(--surface); border-radius:4px; padding:5px 10px; font-size:13.5px; font-weight:500; cursor:pointer;}
+  .chip:hover:not(:disabled){border-color:var(--brass); background:var(--brass-soft);}
+  .chip:disabled{opacity:.45; cursor:default;}
+
+  /* Panels */
+  .grid{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px; align-items:start;}
+  @media (max-width:1100px){ .grid{grid-template-columns:repeat(2, minmax(0, 1fr));} }
+  @media (max-width:640px){ .grid{grid-template-columns:1fr;} }
+  .panel{background:var(--surface); border:1px solid var(--rule); border-radius:6px; padding:16px; display:flex; flex-direction:column; gap:10px;}
+  .ph{margin:0; font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;}
+  .ph.brass{color:var(--brass);} .ph.steel{color:var(--steel);} .ph.rust{color:var(--rust);} .ph.ink{color:var(--ink-soft);}
+  .sub{margin:6px 0 0; font-size:12px; font-weight:600; color:var(--ink-soft); letter-spacing:.02em;}
+  .hint{margin:0; font-size:13px; color:var(--ink-faint);}
+  .hint[hidden], .sub[hidden]{display:none;}
+
+  .btn-primary{
+    background:var(--brass); color:var(--brass-ink); border:none; border-radius:5px;
+    padding:14px 16px; font-size:17px; font-weight:600; cursor:pointer;
+    display:flex; justify-content:space-between; align-items:baseline;
+    transition:transform .06s ease, filter .12s ease; user-select:none; -webkit-user-select:none; touch-action:manipulation;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:active{transform:scale(.985);}
+  .btn-primary:disabled{opacity:.5; cursor:default;}
+  .btn-primary .plus{font-family:"IBM Plex Mono", monospace; font-size:14px; font-weight:500; opacity:.8;}
+
+  .opts{display:flex; flex-direction:column; gap:7px;}
+  .opt{
+    display:grid; grid-template-columns:1fr auto; gap:1px 10px; text-align:left;
+    background:var(--surface); border:1px solid var(--rule-strong); border-radius:5px; padding:8px 11px; cursor:pointer;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .opt:hover:not(:disabled){border-color:var(--brass); background:var(--brass-soft);}
+  .opt.unit:hover:not(:disabled){border-color:var(--steel); background:var(--steel-soft);}
+  .opt:disabled{cursor:default; opacity:.5;}
+  .opt[hidden]{display:none;}
+  .opt-name{font-weight:600; font-size:14px;}
+  .opt-name em{font-style:normal; font-weight:400; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; font-size:11.5px; margin-left:6px;}
+  .opt-name kbd{font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:500; border:1px solid var(--rule-strong); border-radius:3px; padding:0 5px; margin-right:7px; color:var(--ink-soft);}
+  .opt-cost{font-family:"IBM Plex Mono", monospace; font-size:12.5px; font-variant-numeric:tabular-nums; color:var(--ink-soft); white-space:nowrap;}
+  .opt-desc{grid-column:1 / -1; font-size:12.5px; color:var(--ink-soft);}
+  .statline{font-family:"IBM Plex Mono", monospace; font-size:12.5px; color:var(--ink-soft);}
+  .statline b{color:var(--ink); font-weight:500;}
+
+  /* Modal */
+  .modal{position:fixed; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--scrim);}
+  .modal[hidden]{display:none;}
+  .card{background:var(--surface); border:1px solid var(--rule-strong); border-radius:8px; padding:24px 26px; width:100%; max-width:460px; display:flex; flex-direction:column; gap:12px; box-shadow:0 12px 40px rgba(0,0,0,.12);}
+  .card h2{font-family:"Spectral", Georgia, serif; font-size:26px; margin:0; text-wrap:balance;}
+  .card p{margin:0; color:var(--ink-soft);}
+  .diffs{display:flex; flex-direction:column; gap:8px; margin-top:4px;}
+  .diff{display:grid; grid-template-columns:1fr auto; gap:2px 12px; text-align:left; padding:12px 14px; border:1px solid var(--rule-strong); border-radius:6px; background:var(--surface); cursor:pointer;}
+  .diff:hover{border-color:var(--brass); background:var(--brass-soft);}
+  .diff b{font-size:16px;}
+  .diff .rec{font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--ink-faint); align-self:center;}
+  .diff span.d{grid-column:1 / -1; font-size:13px; color:var(--ink-soft);}
+  .card-actions{display:flex; justify-content:flex-end; gap:12px;}
+
+  footer{font-size:12.5px; color:var(--ink-faint); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
+  @media (prefers-reduced-motion: reduce){ .btn-primary, .opt, .bar > i{transition:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Klammerfront</h1>
+      <span class="tag" id="eraLabel">Zeitalter 1 · Schrottzeit</span>
+      <span class="tag" id="diffLabel"></span>
+    </div>
+    <div class="meta">
+      <span>Spielzeit <b id="clock" class="num">0:00</b></span>
+      <span>Abschüsse <b id="kills" class="num">0</b></span>
+      <button class="link" id="newBtn" type="button">Neue Partie</button>
+    </div>
+  </header>
+
+  <ol class="log" id="log" aria-live="polite"></ol>
+
+  <section class="front" aria-label="Schlachtfeld">
+    <canvas id="lane" aria-label="Schlachtfeld: links deine Basis mit Bauplätzen, rechts die gegnerische Basis"></canvas>
+  </section>
+
+  <section class="hud" aria-label="Ressourcen und Lage">
+    <div class="res"><span class="big" id="material">0</span><span class="lbl">Material · <span class="num" id="rate">0,0</span>/s · <span class="num" id="perClick">1</span>/Klick</span></div>
+    <div class="res"><span class="big" id="scrap">0</span><span class="lbl">Altmetall</span></div>
+    <div class="hp">
+      <div class="hp-row"><span>Deine Basis</span><span class="num" id="hpP"></span></div>
+      <div class="bar steel"><i id="barP"></i></div>
+    </div>
+    <div class="hp">
+      <div class="hp-row"><span>Gegnerische Basis</span><span class="num" id="hpE"></span></div>
+      <div class="bar rust"><i id="barE"></i></div>
+    </div>
+  </section>
+
+  <section class="yard" aria-labelledby="h-yard">
+    <div class="yard-head">
+      <h2 class="ph ink" id="h-yard">Baugelände</h2>
+      <p class="hint">Drei Bauplätze, in fester Reihenfolge. Die Reihenfolge der Gebäude ist deine Strategie.</p>
+    </div>
+    <div class="slots" id="slots"></div>
+  </section>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="h-fert">
+      <h2 class="ph brass" id="h-fert">Fertigung</h2>
+      <button class="btn-primary" id="clickBtn" type="button">Fertigen <span class="plus">+<span id="clickHint">1</span></span></button>
+      <div class="opts" id="optsFertigung"></div>
+      <h3 class="sub">Fabrik</h3>
+      <p class="hint" id="hintFabrik">Baue eine Fabrik, um Presse und Fertiger weiter zu verbessern.</p>
+      <div class="opts" id="optsFabrik"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-front">
+      <h2 class="ph steel" id="h-front">Front</h2>
+      <div class="opts" id="optsUnits"></div>
+      <div class="statline">Warteschlange <b id="queue" class="num">0/5</b> · Im Feld <b id="ownCount" class="num">0</b> · Verluste <b id="losses" class="num">0</b></div>
+      <p class="hint">Tasten 1 und 2 stellen Einheiten in die Warteschlange.</p>
+      <h3 class="sub">Schmiede</h3>
+      <p class="hint" id="hintSchmiede">Baue eine Schmiede, um deine Einheiten zu verbessern.</p>
+      <div class="opts" id="optsSchmiede"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-wall">
+      <h2 class="ph rust" id="h-wall">Mauer &amp; Turm</h2>
+      <div class="opts" id="optsRepair"></div>
+      <h3 class="sub">Mauer</h3>
+      <div class="opts" id="optsMauer"></div>
+      <h3 class="sub">Turm</h3>
+      <div class="opts" id="optsTurm"></div>
+      <p class="hint" id="hintWall">Mauer und Turm kosten Altmetall. Altmetall gibt es für jeden Abschuss.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-uni">
+      <h2 class="ph ink" id="h-uni">Universität</h2>
+      <p class="hint" id="hintUni">Baue eine Universität für allgemeine Forschung. Forschung kostet Altmetall.</p>
+      <div class="opts" id="optsUni"></div>
+      <h3 class="sub">Zeitalter</h3>
+      <div class="hp">
+        <div class="hp-row"><span>Weg zu Zeitalter 2</span><span class="num" id="eraProg"></span></div>
+        <div class="bar brass"><i id="barEra"></i></div>
+      </div>
+      <p class="hint">Zählt alles jemals erbeutete Altmetall, auch ausgegebenes.</p>
+    </section>
+  </div>
+
+  <footer>
+    <span>Prototyp v0.2 · Zeitalter 1</span>
+    <span>Spielstand wird automatisch im Browser gespeichert.</span>
+  </footer>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <p class="tag" id="mEyebrow"></p>
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <div class="diffs" id="mDiffs"></div>
+    <div class="card-actions" id="mActions"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ==CORE-START==
+/* ================================================================
+   KERNLOGIK — kein Zugriff auf Seite oder Browser.
+   Wird auch vom Simulator (tools/simulate.mjs) geladen.
+   ================================================================ */
+
+/* ---------- Balancing: alle Spielwerte an einer Stelle ---------- */
+const CFG = {
+  lane: 1000,
+  offlineHours: 8,
+  playerBase: { hp:600, width:92 },
+  enemyBase:  { width:44 },
+  spawnGap: 0.5,
+  queueMax: 5,
+  repair: { cost:25, amount:100 },
+  units: {
+    laeufer: { name:'Läufer', key:'1', cost:12, hp:30, dmg:5, cd:0.8, speed:38, range:14,  bounty:8,  role:'Nahkampf' },
+    werfer:  { name:'Werfer', key:'2', cost:30, hp:18, dmg:7, cd:1.3, speed:30, range:105, bounty:15, role:'Fernkampf' },
+  },
+  slots: [ { cost:40 }, { cost:350 }, { cost:1200 } ],
+  buildings: {
+    fabrik:       { name:'Fabrik',      desc:'Verbessert Presse und Fertiger.' },
+    schmiede:     { name:'Schmiede',    desc:'Verbessert deine Einheiten.' },
+    universitaet: { name:'Universität', desc:'Allgemeine Forschung gegen Altmetall.' },
+  },
+  upgrades: {
+    fertiger:   { group:'fertigung',    name:'Fertiger',        desc:'Maschine: +1 Material pro Sekunde',             baseCost:30,  growth:1.3,  cur:'material' },
+    presse:     { group:'fertigung',    name:'Stärkere Presse', desc:'+1 Material pro Klick',                         baseCost:15,  growth:1.6,  cur:'material' },
+    hydraulik:  { group:'fabrik',       name:'Hydraulik',       desc:'Presse +25 % Material pro Klick',               baseCost:120, growth:2.0,  cur:'material', max:6 },
+    takt:       { group:'fabrik',       name:'Fließbandtakt',   desc:'Jeder Fertiger +25 % Ausstoß',                  baseCost:150, growth:1.9,  cur:'material', max:10 },
+    serie:      { group:'fabrik',       name:'Serienbau',       desc:'Fertiger 10 % günstiger',                       baseCost:200, growth:2.2,  cur:'material', max:5 },
+    klingen:    { group:'schmiede',     name:'Klingen',         desc:'Einheiten +20 % Schaden',                       baseCost:60,  growth:1.6,  cur:'material' },
+    ruestung:   { group:'schmiede',     name:'Rüstung',         desc:'Einheiten +20 % Lebenspunkte',                  baseCost:60,  growth:1.6,  cur:'material' },
+    drill:      { group:'schmiede',     name:'Drill',           desc:'Einheiten greifen 10 % schneller an',           baseCost:150, growth:2.0,  cur:'material', max:5 },
+    logistik:   { group:'universitaet', name:'Logistik',        desc:'Einheiten 8 % günstiger',                       baseCost:30,  growth:1.8,  cur:'scrap', max:5 },
+    beute:      { group:'universitaet', name:'Beuteverwertung', desc:'+20 % Altmetall pro Abschuss',                  baseCost:40,  growth:1.7,  cur:'scrap', max:8 },
+    nacht:      { group:'universitaet', name:'Nachtschicht',    desc:'Offline-Fertigung läuft 4 h länger',            baseCost:50,  growth:2.0,  cur:'scrap', max:4 },
+    mauer:      { group:'mauer',        name:'Verstärkung',     desc:'+150 max. Lebenspunkte der Basis',              baseCost:40,  growth:1.6,  cur:'scrap' },
+    stacheln:   { group:'mauer',        name:'Stachelwall',     desc:'Nahkämpfer an der Mauer erleiden 4 Schaden pro Schlag', baseCost:50, growth:1.8, cur:'scrap', max:5 },
+    moertel:    { group:'mauer',        name:'Mörtelkolonne',   desc:'Basis regeneriert +1 Lebenspunkt pro Sekunde',  baseCost:60,  growth:1.9,  cur:'scrap', max:5 },
+    turm:       { group:'turm',         name:'Kaliber',         buildName:'Turm errichten', desc:'+5 Schaden pro Schuss', baseCost:40, growth:1.9, cur:'scrap' },
+    reichweite: { group:'turm',         name:'Reichweite',      desc:'+20 Reichweite',                                baseCost:60,  growth:1.8,  cur:'scrap', max:4, needs:'turm' },
+    kadenz:     { group:'turm',         name:'Feuerrate',       desc:'+15 % Schussfrequenz',                          baseCost:70,  growth:1.9,  cur:'scrap', max:5, needs:'turm' },
+  },
+  playerTurret: { dmgPerLevel:5, cd:1.0, range:120, rangePerLevel:20 },
+  enemyTurret:  { cd:1.2, range:95 },
+  eras: [ { name:'Schrottzeit', unlockAt:0 }, { name:'Fließband', unlockAt:500 } ],
+};
+
+/* ---------- Schwierigkeitsgrade: verändern nur den Gegner ---------- */
+const DIFFICULTY = {
+  leicht: { name:'Leicht', desc:'Langsamere Wellen, schwächere Gegner. Zum Kennenlernen.',
+            enemyBaseHp:1100, firstWave:15, intervalStart:11, intervalMin:5,   intervalDrop:0.5, waveEvery:6,
+            werferFrom:2,   werferShare:0.30, hpGrowth:0.03, hpCap:99, dmgGrowth:0.04, dmgCap:99, turretDmg:5, maxField:18, alarmSize:4 },
+  normal: { name:'Normal', desc:'Der vorgesehene Schwierigkeitsgrad.',
+            enemyBaseHp:2200, firstWave:12, intervalStart:10, intervalMin:4,   intervalDrop:0.6, waveEvery:5,
+            werferFrom:1.5, werferShare:0.35, hpGrowth:0.08, hpCap:99, dmgGrowth:0.06, dmgCap:99, turretDmg:6, maxField:24, alarmSize:6 },
+  schwer: { name:'Schwer', desc:'Dichte Wellen und zähe Gegner. Verlangt eine saubere Bauordnung.',
+            enemyBaseHp:2800, firstWave:10, intervalStart:9,  intervalMin:3, intervalDrop:0.8, waveEvery:4,
+            werferFrom:1,   werferShare:0.40, hpGrowth:0.14, hpCap:99, dmgGrowth:0.10, dmgCap:99, turretDmg:7, maxField:30, alarmSize:10 },
+};
+
+const W = CFG.lane, PBW = CFG.playerBase.width, EBW = CFG.enemyBase.width;
+const FX = { on:true, shots:[], fx:[], baseFlash:{ p:0, e:0 } };   // nur Darstellung
+let rnd = Math.random;
+
+function freshState(diff){
+  const lvl = {};
+  for (const id in CFG.upgrades) lvl[id] = 0;
+  const d = DIFFICULTY[diff || 'normal'];
+  return {
+    v:2, diff: diff || 'normal', status: diff ? 'running' : 'setup', t:0,
+    material:0, materialTotal:0, scrap:0, scrapTotal:0,
+    lvl, slots:[null, null, null], revealed:{},
+    baseHp:CFG.playerBase.hp, enemyBaseHp:d.enemyBaseHp,
+    nextWave:d.firstWave, enemyQueue:[], queue:[], units:[], nextId:1,
+    spawnCd:0, turretCd:0, enemyTurretCd:0,
+    clicks:0, kills:0, losses:0, firstWaveSeen:false, eraReached:false, alarms:0,
+    log:[], savedAt:Date.now(),
+  };
+}
+let S = freshState(null);
+
+function log(msg){
+  S.log.unshift({ t:S.t, msg });
+  if (S.log.length > 5) S.log.length = 5;
+}
+
+/* ---------- abgeleitete Werte ---------- */
+const L = () => S.lvl;
+const diffCfg      = () => DIFFICULTY[S.diff];
+const has          = b => S.slots.includes(b);
+const clickPower   = () => Math.floor((1 + L().presse) * (1 + 0.25 * L().hydraulik));
+const fertigerRate = () => 1.0 * (1 + 0.25 * L().takt);
+const matRate      = () => L().fertiger * fertigerRate();
+const hpMultP      = () => Math.pow(1.2, L().ruestung);
+const dmgMultP     = () => Math.pow(1.2, L().klingen);
+const cdMultP      = () => Math.pow(0.9, L().drill);
+const bountyMult   = () => 1 + 0.2 * L().beute;
+const baseMax      = () => CFG.playerBase.hp + 150 * L().mauer;
+const offlineHours = () => CFG.offlineHours + 4 * L().nacht;
+const turretDmg    = () => CFG.playerTurret.dmgPerLevel * L().turm;
+const turretRange  = () => CFG.playerTurret.range + CFG.playerTurret.rangePerLevel * L().reichweite;
+const turretCd     = () => CFG.playerTurret.cd * Math.pow(0.87, L().kadenz);
+const enemyHpMult  = () => Math.min(diffCfg().hpCap,  1 + diffCfg().hpGrowth  * S.t / 60);
+const enemyDmgMult = () => Math.min(diffCfg().dmgCap, 1 + diffCfg().dmgGrowth * S.t / 60);
+const unitCost     = type => Math.max(1, Math.round(CFG.units[type].cost * (1 - 0.08 * L().logistik)));
+
+function upCost(id){
+  const u = CFG.upgrades[id];
+  let c = u.baseCost * Math.pow(u.growth, S.lvl[id]);
+  if (id === 'fertiger') c *= (1 - 0.1 * L().serie);
+  return Math.ceil(c);
+}
+const isMaxed = id => CFG.upgrades[id].max !== undefined && S.lvl[id] >= CFG.upgrades[id].max;
+function isAvailable(id){
+  const u = CFG.upgrades[id];
+  if (CFG.buildings[u.group] && !has(u.group)) return false;
+  if (u.needs && S.lvl[u.needs] <= 0) return false;
+  return true;
+}
+function canBuy(id){
+  return S.status === 'running' && isAvailable(id) && !isMaxed(id) && S[CFG.upgrades[id].cur] >= upCost(id);
+}
+const builtCount = () => S.slots.filter(Boolean).length;
+const nextSlotCost = () => builtCount() < CFG.slots.length ? CFG.slots[builtCount()].cost : Infinity;
+
+function addMaterial(n){ S.material += n; S.materialTotal += n; }
+
+/* ---------- Aktionen des Spielers ---------- */
+function doClick(){
+  if (S.status !== 'running') return;
+  addMaterial(clickPower());
+  S.clicks++;
+}
+
+function buy(id){
+  if (!canBuy(id)) return false;
+  const u = CFG.upgrades[id];
+  S[u.cur] -= upCost(id);
+  S.lvl[id]++;
+  if (id === 'mauer') S.baseHp += 150;
+  if (id === 'turm' && S.lvl.turm === 1) log('Turm errichtet.');
+  return true;
+}
+
+function build(key){
+  if (S.status !== 'running' || !CFG.buildings[key] || has(key)) return false;
+  const n = builtCount(), cost = nextSlotCost();
+  if (n >= CFG.slots.length || S.material < cost) return false;
+  S.material -= cost;
+  S.slots[n] = key;
+  log(`${CFG.buildings[key].name} auf Bauplatz ${n + 1} errichtet.`);
+  return true;
+}
+
+function repair(){
+  const r = CFG.repair;
+  if (S.status !== 'running' || S.scrap < r.cost || S.baseHp >= baseMax()) return false;
+  S.scrap -= r.cost;
+  S.baseHp = Math.min(baseMax(), S.baseHp + r.amount);
+  return true;
+}
+
+function makeUnit(side, type){
+  const spec = CFG.units[type], p = side === 'p';
+  const hp = spec.hp * (p ? hpMultP() : enemyHpMult());
+  return {
+    id:S.nextId++, side, type, x: p ? PBW : W - EBW,
+    hp, maxHp:hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()),
+    cdMax: spec.cd * (p ? cdMultP() : 1), cd:0, flash:0, moving:false, bob:rnd() * 6,
+  };
+}
+
+const spawnBlocked = side => S.units.some(u => u.side === side &&
+  (side === 'p' ? u.x - PBW : (W - EBW) - u.x) < 12);
+// Belagerung: Stehen eigene Einheiten direkt am gegnerischen Tor, kann der Gegner nicht nachrücken.
+const gateHeld = () => S.units.some(u => u.side === 'p' && u.hp > 0 && u.x >= W - EBW - 20);
+
+// Einheiten werden bezahlt und in eine Warteschlange gestellt (max. 5), dann nacheinander aufgestellt.
+function spawn(type){
+  const cost = unitCost(type);
+  if (S.status !== 'running' || S.queue.length >= CFG.queueMax || S.material < cost) return false;
+  S.material -= cost;
+  S.queue.push(type);
+  return true;
+}
+
+/* ---------- Simulation ---------- */
+function scheduleWave(){
+  const d = diffCfg(), min = S.t / 60;
+  const size = 1 + Math.floor(min / d.waveEvery);
+  for (let i = 0; i < size; i++){
+    const type = (min >= d.werferFrom && rnd() < d.werferShare) ? 'werfer' : 'laeufer';
+    S.enemyQueue.push({ type, at:S.t + i * 0.7 });
+  }
+  if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('Erste gegnerische Welle gesichtet.'); }
+  S.nextWave = S.t + Math.max(d.intervalMin, d.intervalStart - d.intervalDrop * min);
+}
+
+function nearest(side, x, range){
+  let best = null, bd = Infinity;
+  for (const u of S.units){
+    if (u.hp <= 0 || u.side !== side) continue;
+    const dd = Math.abs(u.x - x);
+    if (dd <= range && dd < bd){ bd = dd; best = u; }
+  }
+  return best;
+}
+
+function shot(s){ if (FX.on) FX.shots.push(s); }
+
+function updateTurrets(dt){
+  S.enemyTurretCd -= dt;
+  if (S.enemyTurretCd <= 0){
+    const tgt = nearest('p', W - EBW, CFG.enemyTurret.range);
+    if (tgt){
+      tgt.hp -= diffCfg().turretDmg * enemyDmgMult(); tgt.flash = 0.12;
+      shot({ x0:W - EBW / 2, x1:tgt.x, t:0, dur:0.18, side:'e', turret:true });
+      S.enemyTurretCd = CFG.enemyTurret.cd;
+    }
+  }
+  if (L().turm > 0){
+    S.turretCd -= dt;
+    if (S.turretCd <= 0){
+      const tgt = nearest('e', PBW, turretRange());
+      if (tgt){
+        tgt.hp -= turretDmg(); tgt.flash = 0.12;
+        shot({ x0:PBW - 9, x1:tgt.x, t:0, dur:0.18, side:'p', turret:true });
+        S.turretCd = turretCd();
+      }
+    }
+  }
+}
+
+function updateUnits(dt){
+  const us = S.units;
+  for (const u of us){
+    if (u.hp <= 0) continue;
+    const spec = CFG.units[u.type], dir = u.side === 'p' ? 1 : -1;
+    u.cd -= dt;
+    u.flash = Math.max(0, u.flash - dt);
+    u.moving = false;
+
+    let target = null, dist = Infinity, allyGap = Infinity;
+    for (const o of us){
+      if (o === u || o.hp <= 0) continue;
+      const dd = (o.x - u.x) * dir;
+      if (o.side !== u.side){ if (dd > -6 && dd < dist){ dist = dd; target = o; } }
+      else if (dd > 0 && dd < allyGap) allyGap = dd;
+    }
+    const baseDist = ((u.side === 'p' ? W - EBW : PBW) - u.x) * dir;
+    const ranged = spec.range > 30;
+
+    if (target && dist <= spec.range){
+      if (u.cd <= 0){
+        u.cd = u.cdMax;
+        target.hp -= u.dmg; target.flash = 0.12;
+        if (ranged) shot({ x0:u.x, x1:target.x, t:0, dur:0.3, side:u.side });
+      }
+    } else if (baseDist <= spec.range){
+      if (u.cd <= 0){
+        u.cd = u.cdMax;
+        if (u.side === 'p'){ S.enemyBaseHp -= u.dmg; FX.baseFlash.e = 0.12; }
+        else {
+          S.baseHp -= u.dmg; FX.baseFlash.p = 0.12;
+          if (!ranged && L().stacheln > 0){ u.hp -= 4 * L().stacheln; u.flash = 0.12; }
+        }
+        if (ranged) shot({ x0:u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, t:0, dur:0.3, side:u.side });
+      }
+    } else if (allyGap > 15){
+      let step = spec.speed * dt;
+      if (target) step = Math.min(step, Math.max(0, dist - 12));
+      u.x += dir * step;
+      u.moving = step > 0;
+    }
+  }
+  for (const u of us){
+    if (u.hp > 0 || u.dead) continue;
+    u.dead = true;
+    if (u.side === 'e'){
+      const b = CFG.units[u.type].bounty * bountyMult();
+      S.scrap += b; S.scrapTotal += b; S.kills++;
+    } else S.losses++;
+    if (FX.on) FX.fx.push({ x:u.x, t:0, side:u.side });
+  }
+  S.units = us.filter(u => !u.dead);
+}
+
+function checkReveals(){
+  for (const id in CFG.upgrades){
+    if (S.revealed[id] || !isAvailable(id)) continue;
+    const u = CFG.upgrades[id];
+    if (S[u.cur] >= upCost(id) * 0.5 || S.lvl[id] > 0){
+      S.revealed[id] = true;
+      if (S.t > 1) log(`Neue Option: ${u.buildName && S.lvl[id] === 0 ? u.buildName : u.name}.`);
+    }
+  }
+  if (!S.revealed.repair && S.baseHp < baseMax() && S.scrap > 0) S.revealed.repair = true;
+}
+
+function checkEra(){
+  if (!S.eraReached && S.scrapTotal >= CFG.eras[1].unlockAt){
+    S.eraReached = true;
+    log(`Zeitalter 2 „${CFG.eras[1].name}“ erreicht. Inhalte folgen in einer späteren Version.`);
+  }
+}
+
+function tick(dt){
+  if (S.status !== 'running') return;
+  S.t += dt;
+  addMaterial(matRate() * dt);
+  S.spawnCd = Math.max(0, S.spawnCd - dt);
+  if (L().moertel > 0) S.baseHp = Math.min(baseMax(), S.baseHp + L().moertel * dt);
+
+  if (S.queue.length && S.spawnCd <= 0 && !spawnBlocked('p')){
+    S.units.push(makeUnit('p', S.queue.shift()));
+    S.spawnCd = CFG.spawnGap;
+  }
+  if (S.t >= S.nextWave) scheduleWave();
+  // Notaufgebot: Fällt die gegnerische Basis unter 2/3 bzw. 1/3, schickt sie sofort eine Verstärkung.
+  const eFrac = S.enemyBaseHp / diffCfg().enemyBaseHp;
+  const alarmLevel = eFrac < 1/3 ? 2 : eFrac < 2/3 ? 1 : 0;
+  if (alarmLevel > (S.alarms || 0)){
+    S.alarms = alarmLevel;
+    for (let i = 0; i < diffCfg().alarmSize; i++)
+      S.enemyQueue.unshift({ type: i % 3 === 2 ? 'werfer' : 'laeufer', at:S.t + i * 0.4, alarm:true });
+    log('Notaufgebot: Der Gegner wirft Reserven an die Front.');
+  }
+  while (S.enemyQueue.length && S.enemyQueue[0].at <= S.t && !spawnBlocked('e')
+         && (S.enemyQueue[0].alarm || (!gateHeld() && S.units.filter(u => u.side === 'e').length < diffCfg().maxField))){
+    S.units.push(makeUnit('e', S.enemyQueue.shift().type));
+  }
+
+  updateTurrets(dt);
+  updateUnits(dt);
+  checkReveals();
+  checkEra();
+
+  if (S.enemyBaseHp <= 0){ S.enemyBaseHp = 0; S.status = 'won';  log('Gegnerische Basis zerstört.'); }
+  else if (S.baseHp <= 0){ S.baseHp = 0;     S.status = 'lost'; log('Deine Basis ist gefallen.'); }
+}
+// ==CORE-END==
+
+/* ================================================================
+   BROWSER-TEIL: Speichern, Oberfläche, Zeichnen, Hauptschleife
+   ================================================================ */
+const SAVE_KEY = 'klammerfront.save.v2';
+const REC_KEY  = 'klammerfront.records.v1';
+const $ = id => document.getElementById(id);
+const fmt = n => {
+  n = Math.floor(n);
+  if (n >= 1e6) return (n / 1e6).toLocaleString('de-DE', { maximumFractionDigits:2 }) + ' Mio.';
+  return n.toLocaleString('de-DE');
+};
+const fmt1 = n => n.toLocaleString('de-DE', { minimumFractionDigits:1, maximumFractionDigits:1 });
+const clock = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const dur = sec => {
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+  return h > 0 ? `${h} h ${m} min` : `${Math.max(1, m)} min`;
+};
+const curName = c => c === 'scrap' ? 'Altmetall' : 'Material';
+
+/* ---------- Speichern ---------- */
+function save(){
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({}, S, { units:[], enemyQueue:[], savedAt:Date.now() })));  // Warteschlange bleibt erhalten
+  } catch (e) { /* z. B. privates Fenster: dann eben ohne Speichern */ }
+}
+function applyAway(since){
+  if (!since || S.status !== 'running') return;
+  const sec = Math.min((Date.now() - since) / 1000, offlineHours() * 3600);
+  if (sec < 10) return;
+  const gain = matRate() * sec;
+  if (gain >= 1){
+    addMaterial(gain);
+    log(`${dur(sec)} abwesend: +${fmt(gain)} Material gefertigt. Die Front hat stillgehalten.`);
+  }
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || d.v !== 2 || !DIFFICULTY[d.diff]) return false;
+    S = Object.assign(freshState(d.diff), d, { units:[], enemyQueue:[] });
+    if (!Array.isArray(S.queue)) S.queue = [];
+    S.lvl = Object.assign(freshState(d.diff).lvl, d.lvl || {});
+    S.revealed = d.revealed || {};
+    S.slots = Array.isArray(d.slots) ? d.slots : [null, null, null];
+    S.nextWave = S.t + 5;
+    applyAway(d.savedAt);
+    return true;
+  } catch (e) { return false; }
+}
+function readRecords(){ try { return JSON.parse(localStorage.getItem(REC_KEY)) || {}; } catch (e) { return {}; } }
+function writeRecord(diff, t){
+  try {
+    const r = readRecords();
+    if (!r[diff] || t < r[diff]){ r[diff] = t; localStorage.setItem(REC_KEY, JSON.stringify(r)); return true; }
+  } catch (e) {}
+  return false;
+}
+
+/* ---------- Modal: Schwierigkeit wählen / Ergebnis ---------- */
+let modalOpen = false, resultShownFor = null;
+function openSetup(canCancel){
+  modalOpen = true;
+  const rec = readRecords();
+  $('mEyebrow').textContent = 'Neue Partie';
+  $('mTitle').textContent = 'Schwierigkeit wählen';
+  $('mText').textContent = canCancel ? 'Die laufende Partie wird dabei verworfen.' : 'Der Schwierigkeitsgrad verändert nur den Gegner. Deine Wirtschaft bleibt gleich.';
+  const box = $('mDiffs'); box.innerHTML = '';
+  for (const [key, d] of Object.entries(DIFFICULTY)){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'diff';
+    b.innerHTML = `<b></b><span class="rec"></span><span class="d"></span>`;
+    b.children[0].textContent = d.name;
+    b.children[1].textContent = rec[key] ? `Bestzeit ${clock(rec[key])}` : '';
+    b.children[2].textContent = d.desc;
+    b.addEventListener('click', () => startGame(key));
+    box.appendChild(b);
+  }
+  const act = $('mActions'); act.innerHTML = '';
+  if (canCancel){
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'link'; c.textContent = 'Zurück zur Partie';
+    c.addEventListener('click', closeModal);
+    act.appendChild(c);
+  }
+  $('modal').hidden = false;
+  box.querySelector('button').focus();
+}
+function openResult(){
+  modalOpen = true;
+  const won = S.status === 'won', d = DIFFICULTY[S.diff];
+  const record = won && writeRecord(S.diff, S.t);
+  $('mEyebrow').textContent = `${won ? 'Sieg' : 'Niederlage'} · ${d.name} · ${clock(S.t)}`;
+  $('mTitle').textContent = won ? 'Front durchbrochen' : 'Basis gefallen';
+  $('mText').textContent = won
+    ? `${fmt(S.kills)} Abschüsse, ${fmt(S.materialTotal)} Material gefertigt.${record ? ' Neue Bestzeit.' : ''}`
+    : `${fmt(S.kills)} Abschüsse vor dem Fall. Früher Fertiger kaufen, einen Turm errichten oder mit Leicht beginnen.`;
+  $('mDiffs').innerHTML = '';
+  const act = $('mActions'); act.innerHTML = '';
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn-primary'; b.textContent = 'Neue Partie';
+  b.addEventListener('click', () => openSetup(false));
+  act.appendChild(b);
+  $('modal').hidden = false;
+  b.focus();
+}
+function closeModal(){ modalOpen = false; $('modal').hidden = true; last = performance.now(); acc = 0; }
+function startGame(key){
+  S = freshState(key);
+  FX.shots = []; FX.fx = [];
+  resultShownFor = null;
+  log(`Partie gestartet: ${DIFFICULTY[key].name}. Die Front ist noch ruhig.`);
+  save();
+  closeModal();
+  render();
+}
+
+/* ---------- Oberfläche ---------- */
+const optEls = {};
+function makeOpt(parent, cls){
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'opt ' + (cls || '');
+  b.innerHTML = '<span class="opt-name"></span><span class="opt-cost num"></span><span class="opt-desc"></span>';
+  parent.appendChild(b);
+  return { btn:b, name:b.children[0], cost:b.children[1], desc:b.children[2] };
+}
+const GROUP_BOX = { fertigung:'optsFertigung', fabrik:'optsFabrik', schmiede:'optsSchmiede', universitaet:'optsUni', mauer:'optsMauer', turm:'optsTurm' };
+
+function buildUI(){
+  for (const id in CFG.upgrades){
+    const el = makeOpt($(GROUP_BOX[CFG.upgrades[id].group]));
+    el.btn.addEventListener('click', () => { buy(id); render(); });
+    optEls[id] = el;
+  }
+  for (const id in CFG.units){
+    const el = makeOpt($('optsUnits'), 'unit');
+    el.btn.addEventListener('click', () => { spawn(id); render(); });
+    optEls['unit_' + id] = el;
+  }
+  const r = makeOpt($('optsRepair'));
+  r.btn.addEventListener('click', () => { repair(); render(); });
+  optEls.repair = r;
+
+  const slots = $('slots');
+  for (let i = 0; i < CFG.slots.length; i++){
+    const card = document.createElement('div');
+    card.className = 'slot';
+    card.innerHTML = `<div class="slot-head"><span class="slot-no">Bauplatz ${i + 1}</span><span class="slot-cost"></span></div>
+      <div class="slot-body"></div>`;
+    slots.appendChild(card);
+  }
+
+  $('clickBtn').addEventListener('click', () => { doClick(); render(); });
+  $('newBtn').addEventListener('click', () => openSetup(S.status === 'running'));
+  document.addEventListener('keydown', e => {
+    if (modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
+    for (const [id, spec] of Object.entries(CFG.units)) if (e.key === spec.key){ spawn(id); render(); }
+  });
+}
+
+let slotKey = '';
+function renderSlots(){
+  const n = builtCount(), cost = nextSlotCost();
+  const key = S.slots.join(',') + '|' + (S.material >= cost) + '|' + S.status;
+  if (key === slotKey) return;
+  slotKey = key;
+  const cards = $('slots').children;
+  for (let i = 0; i < cards.length; i++){
+    const card = cards[i], body = card.querySelector('.slot-body'), costEl = card.querySelector('.slot-cost');
+    const b = S.slots[i];
+    body.innerHTML = '';
+    if (b){
+      card.className = 'slot built';
+      costEl.textContent = 'errichtet';
+      const nm = document.createElement('div'); nm.className = 'slot-name'; nm.textContent = CFG.buildings[b].name;
+      const ds = document.createElement('div'); ds.className = 'slot-desc'; ds.textContent = CFG.buildings[b].desc;
+      body.append(nm, ds);
+    } else if (i === n){
+      card.className = 'slot';
+      costEl.textContent = `${fmt(CFG.slots[i].cost)} Material`;
+      const ch = document.createElement('div'); ch.className = 'slot-choices';
+      for (const [k, bd] of Object.entries(CFG.buildings)){
+        if (has(k)) continue;
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'chip'; btn.textContent = bd.name + ' bauen';
+        btn.title = bd.desc;
+        btn.disabled = S.status !== 'running' || S.material < cost;
+        btn.addEventListener('click', () => { build(k); slotKey = ''; render(); });
+        ch.appendChild(btn);
+      }
+      body.appendChild(ch);
+    } else {
+      card.className = 'slot locked';
+      costEl.textContent = `${fmt(CFG.slots[i].cost)} Material`;
+      const ds = document.createElement('div'); ds.className = 'slot-desc';
+      ds.textContent = `Erst Bauplatz ${i} bebauen.`;
+      body.appendChild(ds);
+    }
+  }
+}
+
+let lastLogKey = '';
+function render(){
+  const running = S.status === 'running';
+  $('material').textContent = fmt(S.material);
+  $('rate').textContent = fmt1(matRate());
+  $('perClick').textContent = fmt(clickPower());
+  $('clickHint').textContent = fmt(clickPower());
+  $('scrap').textContent = fmt(S.scrap);
+  $('clock').textContent = clock(S.t);
+  $('kills').textContent = fmt(S.kills);
+  $('ownCount').textContent = S.units.filter(u => u.side === 'p').length;
+  $('losses').textContent = fmt(S.losses);
+  $('queue').textContent = `${S.queue.length}/${CFG.queueMax}`;
+  $('diffLabel').textContent = S.status === 'setup' ? '' : DIFFICULTY[S.diff].name;
+  $('eraLabel').textContent = S.eraReached ? 'Zeitalter 1 · Fließband erreicht' : 'Zeitalter 1 · Schrottzeit';
+  $('clickBtn').disabled = !running;
+
+  for (const id in CFG.upgrades){
+    const u = CFG.upgrades[id], el = optEls[id], lv = S.lvl[id];
+    el.btn.hidden = !(isAvailable(id) && S.revealed[id]);
+    if (el.btn.hidden) continue;
+    const label = u.buildName && lv === 0 ? u.buildName : u.name;
+    const stufe = u.max !== undefined ? `Stufe ${lv}/${u.max}` : `Stufe ${lv}`;
+    el.name.textContent = label;
+    el.cost.textContent = isMaxed(id) ? 'Maximum' : `${fmt(upCost(id))} ${curName(u.cur)}`;
+    el.desc.textContent = `${stufe} · ${u.desc}`;
+    el.btn.disabled = !canBuy(id);
+  }
+  for (const id in CFG.units){
+    const spec = CFG.units[id], el = optEls['unit_' + id], c = unitCost(id);
+    el.name.innerHTML = `<kbd>${spec.key}</kbd>${spec.name}`;
+    el.cost.textContent = `${fmt(c)} Material`;
+    el.desc.textContent = `${spec.role} · ${fmt(spec.hp * hpMultP())} LP · ${fmt1(spec.dmg * dmgMultP())} Schaden`;
+    el.btn.disabled = !running || S.material < c || S.queue.length >= CFG.queueMax;
+  }
+  const r = optEls.repair;
+  r.btn.hidden = !S.revealed.repair;
+  r.name.textContent = 'Basis reparieren';
+  r.cost.textContent = `${CFG.repair.cost} Altmetall`;
+  r.desc.textContent = `+${CFG.repair.amount} Lebenspunkte, sofort`;
+  r.btn.disabled = !running || S.scrap < CFG.repair.cost || S.baseHp >= baseMax();
+
+  $('hintFabrik').hidden = has('fabrik');
+  $('hintSchmiede').hidden = has('schmiede');
+  $('hintUni').hidden = has('universitaet');
+  $('hintWall').hidden = L().turm > 0 || S.lvl.mauer > 0;
+
+  $('hpP').textContent = `${fmt(Math.max(0, S.baseHp))} / ${fmt(baseMax())}`;
+  $('hpE').textContent = `${fmt(Math.max(0, S.enemyBaseHp))} / ${fmt(diffCfg().enemyBaseHp)}`;
+  $('barP').style.width = (100 * Math.max(0, S.baseHp) / baseMax()) + '%';
+  $('barE').style.width = (100 * Math.max(0, S.enemyBaseHp) / diffCfg().enemyBaseHp) + '%';
+  const target = CFG.eras[1].unlockAt;
+  $('eraProg').textContent = `${fmt(Math.min(S.scrapTotal, target))} / ${fmt(target)}`;
+  $('barEra').style.width = (100 * Math.min(1, S.scrapTotal / target)) + '%';
+
+  renderSlots();
+
+  const logKey = S.log.map(l => l.t + l.msg).join('|');
+  if (logKey !== lastLogKey){
+    lastLogKey = logKey;
+    const ol = $('log'); ol.innerHTML = '';
+    for (const l of S.log){
+      const li = document.createElement('li');
+      const ts = document.createElement('span'); ts.className = 'ts'; ts.textContent = clock(l.t);
+      li.append(ts, document.createTextNode(l.msg));
+      ol.appendChild(li);
+    }
+  }
+
+  if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t){
+    resultShownFor = S.t;
+    save();
+    openResult();
+  }
+}
+
+/* ---------- Zeichnen ---------- */
+const cv = $('lane'), ctx = cv.getContext('2d');
+let cw = 0, ch = 0, dpr = 1, C = {};
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function readColors(){
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ['surface','surface-2','ink','ink-soft','ink-faint','rule','rule-strong','steel','rust','ground','brass'])
+    C[k] = cs.getPropertyValue('--' + k).trim();
+}
+function resize(){
+  const r = cv.getBoundingClientRect();
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  cw = r.width; ch = r.height;
+  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+}
+const GY = () => ch - 34;
+
+function hpBar(x, y, w, frac, col){
+  ctx.fillStyle = C['surface-2']; ctx.fillRect(x, y, w, 4);
+  ctx.fillStyle = col; ctx.fillRect(x, y, w * Math.max(0, Math.min(1, frac)), 4);
+}
+
+function drawBuilding(kind, cx, gy, s){
+  ctx.fillStyle = C.steel;
+  if (kind === 'fabrik'){
+    const w = 20*s, h = 12*s, x = cx - w/2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.beginPath();                                  // Sägezahndach
+    for (let i = 0; i < 3; i++){
+      const tx = x + i * w/3;
+      ctx.moveTo(tx, gy - h); ctx.lineTo(tx, gy - h - 6*s); ctx.lineTo(tx + w/3, gy - h);
+    }
+    ctx.fill();
+    ctx.fillRect(x + w - 5*s, gy - h - 12*s, 3.5*s, 12*s);   // Schornstein
+  } else if (kind === 'schmiede'){
+    const w = 18*s, h = 11*s, x = cx - w/2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.beginPath(); ctx.moveTo(x - 2*s, gy - h); ctx.lineTo(cx, gy - h - 8*s); ctx.lineTo(x + w + 2*s, gy - h); ctx.fill();
+    ctx.fillRect(x + 3*s, gy - h - 9*s, 3*s, 6*s);
+    ctx.fillStyle = C.brass; ctx.fillRect(cx - 2.5*s, gy - 6*s, 5*s, 6*s);    // Esse
+  } else if (kind === 'universitaet'){
+    const w = 20*s, x = cx - w/2;
+    ctx.fillRect(x, gy - 3*s, w, 3*s);                            // Sockel
+    for (let i = 0; i < 4; i++) ctx.fillRect(x + 1.5*s + i * 5.3*s, gy - 12*s, 2.2*s, 9*s);
+    ctx.fillRect(x - 1*s, gy - 14*s, w + 2*s, 2.5*s);
+    ctx.beginPath(); ctx.moveTo(x - 1*s, gy - 14*s); ctx.lineTo(cx, gy - 20*s); ctx.lineTo(x + w + 1*s, gy - 14*s); ctx.fill();
+  }
+}
+
+function drawPlayerBase(){
+  const sx = cw / W, gy = GY(), s = Math.max(0.7, Math.min(1.25, sx * 1.15));
+  // Bauplätze
+  const slotX = [14, 37, 60];
+  for (let i = 0; i < 3; i++){
+    const cx = slotX[i] * sx, b = S.slots[i];
+    if (b) drawBuilding(b, cx, gy, s);
+    else {
+      ctx.strokeStyle = C['rule-strong']; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.strokeRect(cx - 9*s, gy - 7*s, 18*s, 7*s);
+      ctx.setLineDash([]);
+    }
+  }
+  // Mauer
+  const x0 = 74 * sx, w = (PBW - 74) * sx, h = 62;
+  ctx.fillStyle = C.steel; ctx.fillRect(x0, gy - h, w, h);
+  const mw = w / 3;
+  ctx.fillRect(x0, gy - h - 7, mw, 7); ctx.fillRect(x0 + 2*mw, gy - h - 7, mw, 7);
+  if (L().stacheln > 0){
+    ctx.fillStyle = C.ink;
+    for (let i = 0; i < 4; i++){ const y = gy - 10 - i * 12; ctx.beginPath(); ctx.moveTo(x0 + w, y); ctx.lineTo(x0 + w + 5, y - 3); ctx.lineTo(x0 + w, y - 6); ctx.fill(); }
+  }
+  if (FX.baseFlash.p > 0){ ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, gy - h, w - 2, h); }
+  // Turm
+  if (L().turm > 0){
+    ctx.fillStyle = C.ink;
+    const tx = x0 + w/2;
+    ctx.fillRect(tx - 6, gy - h - 17, 12, 10);
+    ctx.fillRect(tx + 4, gy - h - 15, 11 + L().reichweite * 2, 3);
+  }
+  hpBar(x0 - 4, gy - h - 28, w + 8, S.baseHp / baseMax(), C.steel);
+}
+
+function drawEnemyBase(){
+  const sx = cw / W, gy = GY();
+  const x0 = (W - EBW) * sx, w = EBW * sx, h = 62;
+  ctx.fillStyle = C.rust; ctx.fillRect(x0, gy - h, w, h);
+  const mw = w / 5;
+  for (let i = 0; i < 5; i += 2) ctx.fillRect(x0 + i * mw, gy - h - 7, mw, 7);
+  ctx.fillStyle = C.surface; ctx.fillRect(x0 + 4, gy - 20, 8, 20);
+  if (FX.baseFlash.e > 0){ ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, gy - h, w - 2, h); }
+  ctx.fillStyle = C.ink;
+  const tx = x0 + w/2;
+  ctx.fillRect(tx - 6, gy - h - 17, 12, 10);
+  ctx.fillRect(tx - 15, gy - h - 15, 11, 3);
+  hpBar(x0 + 2, gy - h - 28, w - 4, S.enemyBaseHp / diffCfg().enemyBaseHp, C.rust);
+}
+
+function drawUnit(u, now){
+  const sx = cw / W, gy = GY();
+  const us = Math.max(0.75, Math.min(1.5, sx * 1.4));
+  const px = u.x * sx;
+  const bob = (!reduceMotion && u.moving) ? Math.abs(Math.sin(now / 90 + u.bob)) * 1.5 : 0;
+  ctx.fillStyle = u.flash > 0 ? C.ink : (u.side === 'p' ? C.steel : C.rust);
+  if (u.type === 'laeufer'){
+    const bw = 9*us, bh = 14*us;
+    ctx.fillRect(px - bw/2, gy - bh - bob, bw, bh);
+    ctx.beginPath(); ctx.arc(px, gy - bh - 4*us - bob, 3.4*us, 0, Math.PI*2); ctx.fill();
+    ctx.fillRect(u.side === 'p' ? px + bw/2 : px - bw/2 - 6*us, gy - bh*0.7 - bob, 6*us, 2*us);
+  } else {
+    const bw = 8*us, bh = 11*us;
+    ctx.beginPath();
+    ctx.moveTo(px - bw/2, gy - bob); ctx.lineTo(px + bw/2, gy - bob); ctx.lineTo(px, gy - bh - bob);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(px, gy - bh - 3.5*us - bob, 3*us, 0, Math.PI*2); ctx.fill();
+  }
+  if (u.hp < u.maxHp){
+    const w = 14*us, y = gy - 27*us - 4;
+    ctx.fillStyle = C['surface-2']; ctx.fillRect(px - w/2, y, w, 2);
+    ctx.fillStyle = u.side === 'p' ? C.steel : C.rust; ctx.fillRect(px - w/2, y, w * Math.max(0, u.hp / u.maxHp), 2);
+  }
+}
+
+function draw(realDt, now){
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cw, ch);
+  const sx = cw / W, gy = GY();
+
+  ctx.fillStyle = C.ground; ctx.fillRect(0, gy, cw, 2);
+  ctx.fillStyle = C.rule;
+  for (let x = 200; x < W; x += 100) ctx.fillRect(x * sx, gy + 8, 1, 6);
+
+  drawPlayerBase();
+  drawEnemyBase();
+  FX.baseFlash.p = Math.max(0, FX.baseFlash.p - realDt);
+  FX.baseFlash.e = Math.max(0, FX.baseFlash.e - realDt);
+
+  for (const u of S.units) drawUnit(u, now);
+
+  FX.shots = FX.shots.filter(s => (s.t += realDt) < s.dur);
+  for (const s of FX.shots){
+    const p = s.t / s.dur;
+    if (s.turret){
+      ctx.strokeStyle = C.ink; ctx.globalAlpha = 1 - p; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(s.x0 * sx, gy - 76); ctx.lineTo(s.x1 * sx, gy - 10); ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else {
+      const x = (s.x0 + (s.x1 - s.x0) * p) * sx, y = gy - 14 - Math.sin(p * Math.PI) * 26;
+      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  FX.fx = FX.fx.filter(f => (f.t += realDt) < 0.4);
+  if (!reduceMotion){
+    for (const f of FX.fx){
+      const p = f.t / 0.4;
+      ctx.strokeStyle = f.side === 'p' ? C.steel : C.rust;
+      ctx.globalAlpha = 1 - p; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(f.x * sx, gy - 8, 3 + p * 12, 0, Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.fillStyle = C['ink-faint'];
+  ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'left';  ctx.fillText('DEINE BASIS', 6, ch - 10);
+  ctx.textAlign = 'right'; ctx.fillText('GEGNER', cw - 6, ch - 10);
+}
+
+/* ---------- Hauptschleife ---------- */
+const STEP = 0.05;          // 20 Logik-Ticks pro Sekunde
+let last = performance.now(), acc = 0, uiAcc = 0, hiddenAt = null;
+function frame(now){
+  const dt = Math.min(1, (now - last) / 1000);
+  last = now;
+  if (!modalOpen){
+    acc += dt;
+    while (acc >= STEP){ tick(STEP); acc -= STEP; }
+  }
+  uiAcc += dt;
+  draw(dt, now);
+  if (uiAcc >= 0.1){ uiAcc = 0; render(); }
+  requestAnimationFrame(frame);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden){ hiddenAt = Date.now(); save(); }
+  else {
+    if (hiddenAt) applyAway(hiddenAt);
+    hiddenAt = null; last = performance.now(); acc = 0;
+    render();
+  }
+});
+window.addEventListener('pagehide', save);
+window.addEventListener('resize', resize);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', readColors);
+new MutationObserver(readColors).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme', 'class'] });
+setInterval(() => { if (S.status === 'running') save(); }, 5000);
+
+// Schnittstelle für automatisierte Browser-Tests
+window.__kf = { get S(){ return S; }, CFG, DIFFICULTY, tick, doClick, buy, build, spawn, repair, startGame, upCost };
+
+buildUI();
+readColors();
+resize();
+if (load() && S.status === 'running'){ render(); }
+else if (S.status === 'won' || S.status === 'lost'){ render(); }
+else { S = freshState(null); render(); openSetup(false); }
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
