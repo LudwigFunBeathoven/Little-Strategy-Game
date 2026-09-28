@@ -5,11 +5,13 @@ const KlammerCore = (() => {
 'use strict';
 const C = KF_CONFIG;
 const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH;
+const LANES = C.LANE_COUNT, GATE = C.GATE_LANE;
 const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [];
 const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
 /* Stufenschwellen: kumuliertes Altmetall für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpThreshold(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
+const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
 function nextRandom(state){
@@ -20,18 +22,31 @@ function nextRandom(state){
   return [((t ^ (t >>> 14)) >>> 0) / 4294967296, s];
 }
 
+/* Verteilung einer Gruppe von n Einheiten auf die Lanes (REQ-12.1).
+   strong = Lane (oben oder unten) mit der stärkeren angekündigten Gegnerwelle. Kein Zufall. */
+function distribute(n, strong){
+  const O = C.LANE_ORDER;
+  if (n <= 0) return [];
+  if (n === 1) return [O[0]];
+  if (n === 2) return [O[0], strong ?? O[1]];
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(O[i % O.length]);
+  return out;
+}
+
 function freshState(diff, seed){
   const lvl = {};
   for (const id in C.UPGRADES) lvl[id] = 0;
   const d = C.DIFFICULTY[diff || C.DEFAULT_DIFFICULTY];
   return {
-    v: 3, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
+    v: 4, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
     lvl, slots: new Array(C.BUILDING_SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
-    baseHp: C.BASE_HP, enemyBaseHp: d.enemyBaseHp,
+    sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -Infinity })), enemyBaseHp: d.enemyBaseHp,
     nextWave: d.firstWave, enemyQueue: [], queue: [], units: [], nextId: 1,
-    spawnCd: 0, turretCd: 0, enemyTurretCd: 0,
+    laneCycle: 0, enemyLaneCycle: 0,
+    spawnCd: 0, turretCd: {}, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
     clickTimes: [],
@@ -42,7 +57,7 @@ function freshState(diff, seed){
 
 function create(){
   let S = freshState(null, 1);
-  const FX = { on: true, shots: [], fx: [], baseFlash: { p: 0, e: 0 } };
+  const FX = { on: true, shots: [], fx: [], baseFlash: { p: [0, 0, 0], e: 0 } };
 
   const rnd = () => { const [v, s] = nextRandom(S.rng); S.rng = s; return v; };
   function log(key, params){
@@ -84,17 +99,24 @@ function create(){
   const dmgMultP     = () => Math.pow(C.FX_KLINGEN, lv('klingen'));
   const cdMultP      = () => Math.pow(C.FX_DRILL, lv('drill'));
   const bountyMult   = () => mMul('scrapGain');
-  const baseMax      = () => (C.BASE_HP + C.FX_MAUER_HP * lv('mauer')) * mMul('wallHp');
+  /* Abschnitte der Basis (REQ-13): 0 = Mauer oben, 1 = Tor, 2 = Mauer unten */
+  const sectionMax   = i => (C.SECTION_HP[i] + C.FX_MAUER_HP * lv('mauer')) * mMul('wallHp');
+  const sectionUp    = i => S.sections[i].hp > 0;
+  const gateHp       = () => S.sections[GATE].hp;
   const offlineHours = () => C.OFFLINE_HOURS + C.FX_NACHT_HOURS * lv('nacht');
-  const turretDmg    = () => C.PLAYER_TURRET.dmgPerLevel * lv('turm');
-  const turretRange  = () => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv('reichweite');
-  const turretCd     = () => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv('kadenz'));
+  const towerId      = (base, lane) => `${base}_${lane}`;
+  const towerBuilt   = lane => lv(towerId('turm', lane)) > 0;
+  const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
+  const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane));
+  const turretRange  = lane => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane));
+  const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane)));
   const escalation   = () => Math.pow(1 + C.ESCALATION_RATE, Math.max(0, S.t / 60 - C.ESCALATION_START_MIN));
   const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60) * mMul('enemyHp') * escalation();
   const enemyDmgMult = () => (1 + diffCfg().dmgGrowth * S.t / 60) * escalation();
   const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * (1 - C.FX_REKRUTIERUNG * lv('rekrutierung')) * mMul('unitCost')));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
+  const rangedRows   = side => C.RANGED_RANGE_ROWS + (side === 'p' ? mAdd('rangedRows') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpThreshold(S.level), need: xpStep(S.level + 1) });
   const spawnGap     = () => C.SPAWN_GAP_S * Math.pow(C.FX_EXERZIER, lv('exerzierplatz'));
@@ -153,8 +175,8 @@ function create(){
     if (!canBuy(id)) return false;
     S[C.UPGRADES[id].cur] -= upCost(id);
     S.lvl[id]++;
-    if (id === 'mauer') S.baseHp += C.FX_MAUER_HP;
-    if (id === 'turm' && S.lvl.turm === 1) log('log.turret');
+    if (id === 'mauer') for (const s of S.sections) if (s.hp > 0) s.hp += C.FX_MAUER_HP * mMul('wallHp');
+    if (C.UPGRADES[id].base === 'turm' && S.lvl[id] === 1) log('log.turret', { lane: '@lane.' + C.UPGRADES[id].tower });
     return true;
   }
   function buildAt(i, type){
@@ -170,42 +192,51 @@ function create(){
     const i = S.slots.findIndex(x => !x);
     return i >= 0 && buildAt(i, type);
   }
+  function clampSections(){ S.sections.forEach((s, i) => { s.hp = Math.min(s.hp, sectionMax(i)); }); }
   function demolish(i){
     if (S.status !== 'running' || !S.slots[i]) return false;
     const refund = refundFor(i), type = S.slots[i].type;
     S.material += refund;
     S.slots[i] = null;
-    if (S.baseHp > baseMax()) S.baseHp = baseMax();
+    clampSections();
     log('log.demolished', { building: '@bld.' + type + '.name', slot: i + 1, amount: refund });
     return true;
   }
   function unlockBuilding(type){ S.unlocked[type] = true; }
-  function repair(){
-    if (S.status !== 'running' || S.material < C.REPAIR_COST || S.baseHp >= baseMax()) return false;
-    S.material -= C.REPAIR_COST;
-    S.baseHp = Math.min(baseMax(), S.baseHp + C.REPAIR_AMOUNT);
+  const repairCost = () => C.REPAIR_COST;
+  /* Reparatur je Abschnitt (REQ-13.6). Ein gefallener Abschnitt steht danach wieder, sein Turm feuert wieder. */
+  function repair(i){
+    if (i === undefined) i = GATE;
+    const s = S.sections[i];
+    if (S.status !== 'running' || !s || S.material < repairCost() || s.hp >= sectionMax(i)) return false;
+    S.material -= repairCost();
+    s.hp = Math.min(sectionMax(i), s.hp + C.REPAIR_AMOUNT);
     return true;
   }
-  function makeUnit(side, type){
+  function makeUnit(side, type, lane, x){
     const spec = C.UNITS[type], p = side === 'p';
     const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
     return {
-      id: S.nextId++, side, type, x: p ? spawnX() : W - EBW, range: unitRange(side, type),
+      id: S.nextId++, side, type, lane, x: x ?? (p ? spawnX() : W - EBW), range: unitRange(side, type), ranged: isRangedType(type),
       hp, maxHp: hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()),
-      cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, moving: false, bob: rnd() * 6,
+      cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, moving: false, bob: rnd() * 6, rank: 0,
     };
   }
-  const spawnBlocked = side => S.units.some(u => u.side === side &&
+  const spawnBlocked = (side, lane) => S.units.some(u => u.side === side && u.lane === lane &&
     Math.abs(u.x - (side === 'p' ? spawnX() : W - EBW)) < C.SPAWN_BLOCK_DIST);
-  const gateHeld = () => S.units.some(u => u.side === 'p' && u.hp > 0 && u.x >= W - EBW - C.GATE_HOLD_DIST);
-  // Belagert der Gegner das eigene Tor, lassen sich keine Einheiten aufstellen (verhindert endlose Fleischwolf-Patts)
-  const gateBesieged = () => S.units.filter(u => u.side === 'e' && u.hp > 0 && u.x - spawnX() < C.PLAYER_GATE_SIEGE_RANGE).length >= C.PLAYER_GATE_SIEGE_COUNT;
+  const gateHeld = lane => S.units.some(u => u.side === 'p' && u.lane === lane && u.hp > 0 && u.x >= W - EBW - C.GATE_HOLD_DIST);
 
+  /* Übergangsregel bis zu den Wellen (REQ-12.2): jede gekaufte Einheit bekommt die nächste Lane in der Reihenfolge Mitte, oben, unten */
+  function nextLane(key){
+    const lane = C.LANE_ORDER[S[key] % C.LANE_ORDER.length];
+    S[key]++;
+    return lane;
+  }
   function spawn(type){
     const cost = unitCost(type);
     if (S.status !== 'running' || S.queue.length >= queueMax() || S.material < cost) return false;
     S.material -= cost;
-    S.queue.push(type);
+    S.queue.push({ type, lane: nextLane('laneCycle') });
     return true;
   }
 
@@ -215,15 +246,15 @@ function create(){
     const size = 1 + Math.floor(min / d.waveEvery);
     for (let i = 0; i < size; i++){
       const type = (min >= d.werferFrom && rnd() < d.werferShare) ? 'werfer' : 'laeufer';
-      S.enemyQueue.push({ type, at: S.t + i * C.ENEMY_QUEUE_SPACING_S });
+      S.enemyQueue.push({ type, lane: nextLane('enemyLaneCycle'), at: S.t + i * C.ENEMY_QUEUE_SPACING_S });
     }
     if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('log.firstWave'); }
     S.nextWave = S.t + Math.max(d.intervalMin, d.intervalStart - d.intervalDrop * min);
   }
-  function nearest(side, x, range){
+  function nearestInLane(side, lane, x, range){
     let best = null, bd = Infinity;
     for (const u of S.units){
-      if (u.hp <= 0 || u.side !== side) continue;
+      if (u.hp <= 0 || u.side !== side || u.lane !== lane) continue;
       const dd = Math.abs(u.x - x);
       if (dd <= range && dd < bd){ bd = dd; best = u; }
     }
@@ -232,30 +263,61 @@ function create(){
   const shot = s => { if (FX.on) FX.shots.push(s); };
 
   function updateTurrets(dt){
+    // Gegnerischer Turm: nächste eigene Einheit in Reichweite, gleich in welcher Lane
     S.enemyTurretCd -= dt;
     if (S.enemyTurretCd <= 0){
-      const tgt = nearest('p', W - EBW, C.ENEMY_TURRET.range);
+      let tgt = null, bd = Infinity;
+      for (const u of S.units){
+        if (u.side !== 'p' || u.hp <= 0) continue;
+        const dd = W - EBW - u.x;
+        if (dd <= C.ENEMY_TURRET.range && dd < bd){ bd = dd; tgt = u; }
+      }
       if (tgt){
         tgt.hp -= diffCfg().turretDmg * enemyDmgMult(); tgt.flash = 0.12;
-        shot({ x0: W - EBW / 2, x1: tgt.x, t: 0, dur: 0.18, turret: true });
+        shot({ x0: W - EBW / 2, lane0: GATE, x1: tgt.x, lane: tgt.lane, t: 0, dur: 0.18, turret: true });
         S.enemyTurretCd = C.ENEMY_TURRET.cd;
       }
     }
-    if (lv('turm') > 0){
-      S.turretCd -= dt;
-      if (S.turretCd <= 0){
-        const tgt = nearest('e', PBW, turretRange());
-        if (tgt){
-          tgt.hp -= turretDmg() * (tgt.type === 'werfer' ? mMul('turretVsRanged') : 1); tgt.flash = 0.12;
-          shot({ x0: PBW - 9, x1: tgt.x, t: 0, dur: 0.18, turret: true });
-          S.turretCd = turretCd();
-        }
+    // Eigene Türme: nur Gegner der eigenen Lane, inaktiv solange der Abschnitt gefallen ist (REQ-13.2)
+    for (const lane of C.TOWER_LANES){
+      if (!towerActive(lane)) continue;
+      S.turretCd[lane] = (S.turretCd[lane] || 0) - dt;
+      if (S.turretCd[lane] > 0) continue;
+      const tgt = nearestInLane('e', lane, PBW, turretRange(lane));
+      if (tgt){
+        tgt.hp -= turretDmg(lane) * (tgt.type === 'werfer' ? mMul('turretVsRanged') : 1); tgt.flash = 0.12;
+        shot({ x0: PBW - 9, lane0: lane, x1: tgt.x, lane, t: 0, dur: 0.18, turret: true });
+        S.turretCd[lane] = turretCd(lane);
       }
     }
   }
 
+  /* Rang in der Lane-Kolonne: 0 = vorderste Einheit. Bei gleicher Position stehen Nahkämpfer vorn (REQ-12.3). */
+  function computeRanks(){
+    const groups = {};
+    for (const u of S.units) if (u.hp > 0) (groups[u.side + u.lane] ||= []).push(u);
+    for (const k in groups){
+      const g = groups[k], dir = k[0] === 'p' ? 1 : -1;
+      g.sort((a, b) => (b.x - a.x) * dir || (a.ranged - b.ranged));
+      g.forEach((u, i) => { u.rank = i; });
+    }
+  }
+  /* In der Kolonne kämpft vorn nur die vorderste Einheit; Fernkämpfer auch mit bis zu RANGED_RANGE_ROWS Einheiten vor sich (REQ-12.4) */
+  const canAttack = u => u.ranged ? u.rank <= rangedRows(u.side) : u.rank === 0;
+
+  /* Schaden an einem Abschnitt der eigenen Basis. Ist eine Mauer gefallen, trifft es das Tor (REQ-13.3). */
+  function hitSection(lane, dmg){
+    const i = sectionUp(lane) ? lane : GATE;
+    const s = S.sections[i];
+    s.hp -= dmg; s.lastHit = S.t;
+    FX.baseFlash.p[i] = 0.12;
+    if (s.hp <= 0 && i !== GATE){ s.hp = 0; log('log.wallDown', { lane: '@lane.' + i }); }
+    return i;
+  }
+
   function updateUnits(dt){
     const us = S.units;
+    computeRanks();
     for (const u of us){
       if (u.hp <= 0) continue;
       const spec = C.UNITS[u.type], dir = u.side === 'p' ? 1 : -1;
@@ -264,29 +326,29 @@ function create(){
       u.moving = false;
       let target = null, dist = Infinity, allyGap = Infinity;
       for (const o of us){
-        if (o === u || o.hp <= 0) continue;
+        if (o === u || o.hp <= 0 || o.lane !== u.lane) continue;
         const dd = (o.x - u.x) * dir;
         if (o.side !== u.side){ if (dd > -C.TARGET_BEHIND_TOLERANCE && dd < dist){ dist = dd; target = o; } }
-        else if (dd > 0 && dd < allyGap) allyGap = dd;
+        // Nahkämpfer gehen durch eigene Fernkämpfer hindurch nach vorn (Formation, REQ-12.3)
+        else if (dd > 0 && dd < allyGap && !(!u.ranged && o.ranged)) allyGap = dd;
       }
       const baseDist = ((u.side === 'p' ? W - EBW : PBW) - u.x) * dir;
       const range = u.range ?? spec.range;
-      const ranged = range > C.RANGED_MIN_RANGE;
       if (target && dist <= range){
-        if (u.cd <= 0){
+        if (canAttack(u) && u.cd <= 0){
           u.cd = u.cdMax;
           target.hp -= u.dmg * (u.side === 'p' ? mMul('dmgVsUnits') : 1); target.flash = 0.12;
-          if (ranged) shot({ x0: u.x, x1: target.x, t: 0, dur: 0.3 });
+          if (u.ranged) shot({ x0: u.x, x1: target.x, lane: u.lane, t: 0, dur: 0.3 });
         }
       } else if (baseDist <= range){
-        if (u.cd <= 0){
+        if (canAttack(u) && u.cd <= 0){
           u.cd = u.cdMax;
           if (u.side === 'p'){ S.enemyBaseHp -= u.dmg * mMul('dmgVsBase'); FX.baseFlash.e = 0.12; }
           else {
-            S.baseHp -= u.dmg; FX.baseFlash.p = 0.12;
-            if (!ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
+            hitSection(u.lane, u.dmg);
+            if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
           }
-          if (ranged) shot({ x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, t: 0, dur: 0.3 });
+          if (u.ranged) shot({ x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, lane: u.lane, t: 0, dur: 0.3 });
         }
       } else if (allyGap > C.ALLY_GAP){
         let step = spec.speed * dt;
@@ -302,7 +364,7 @@ function create(){
         gainScrap(C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult);
         S.kills++;
       } else S.losses++;
-      if (FX.on) FX.fx.push({ x: u.x, t: 0, side: u.side });
+      if (FX.on) FX.fx.push({ x: u.x, lane: u.lane, t: 0, side: u.side });
     }
     S.units = us.filter(u => !u.dead);
   }
@@ -312,10 +374,11 @@ function create(){
       if (S.revealed[id] || !isAvailable(id)) continue;
       if (S[C.UPGRADES[id].cur] >= upCost(id) * C.REVEAL_AT || S.lvl[id] > 0){
         S.revealed[id] = true;
-        if (S.t > 1) log('log.newOption', { name: '@upg.' + id + (id === 'turm' && S.lvl.turm === 0 ? '.build' : '.name') });
+        const base = C.UPGRADES[id].base || id;
+        if (S.t > 1) log('log.newOption', { name: '@upg.' + base + (base === 'turm' && S.lvl[id] === 0 ? '.build' : '.name') });
       }
     }
-    if (!S.revealed.repair && S.baseHp < baseMax()) S.revealed.repair = true;
+    S.sections.forEach((s, i) => { if (!S.revealed['repair_' + i] && s.hp < sectionMax(i)) S.revealed['repair_' + i] = true; });
   }
   /* ---------- Altmetall-Stufen und Draft (REQ-02) ---------- */
   function gainScrap(b){
@@ -331,7 +394,7 @@ function create(){
     if (o.unique && n > 0) return false;
     if (o.maxStacks !== undefined && n >= o.maxStacks) return false;
     if (o.requires){
-      if (o.requires.upgrade && S.lvl[o.requires.upgrade] <= 0) return false;
+      if (o.requires.upgrade && !Object.keys(C.UPGRADES).some(id => (C.UPGRADES[id].base || id) === o.requires.upgrade && S.lvl[id] > 0)) return false;
       if (o.requires.building && !has(o.requires.building)) return false;
     }
     for (const e of o.effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
@@ -365,7 +428,7 @@ function create(){
       if (e.unlock){ unlockBuilding(e.unlock); log('log.unlocked', { building: '@bld.' + e.unlock + '.name' }); }
       if (e.grant === 'production') addMaterial(Math.max(matRate(), C.GRANT_MIN_RATE) * e.seconds);
     }
-    S.baseHp = Math.min(S.baseHp, baseMax());
+    clampSections();
     log('log.draft', { name: '@' + o.nameKey });
     S.pendingDraft = null;
     S.pendingLevels--;
@@ -379,7 +442,27 @@ function create(){
     const charges = mAdd('emergencyRepair') - S.emergencyUsed;
     if (charges > 0){
       const th = (OPT.notreserve && OPT.notreserve.condition.value) || 0;
-      if (S.baseHp > 0 && S.baseHp < baseMax() * th){ S.baseHp = baseMax(); S.emergencyUsed++; log('log.emergency'); }
+      if (gateHp() > 0 && gateHp() < sectionMax(GATE) * th){ S.sections[GATE].hp = sectionMax(GATE); S.emergencyUsed++; log('log.emergency'); }
+    }
+  }
+
+  function spawnPlayer(){
+    if (!S.queue.length || S.spawnCd > 0) return;
+    const i = S.queue.findIndex(q => !spawnBlocked('p', q.lane));
+    if (i < 0) return;
+    const q = S.queue.splice(i, 1)[0];
+    S.units.push(makeUnit('p', q.type, q.lane));
+    S.spawnCd = spawnGap();
+  }
+  function spawnEnemies(){
+    let field = S.units.filter(u => u.side === 'e').length;
+    for (let i = 0; i < S.enemyQueue.length; i++){
+      const q = S.enemyQueue[i];
+      if (q.at > S.t) continue;
+      if (spawnBlocked('e', q.lane)) continue;
+      if (!q.alarm && (gateHeld(q.lane) || field >= diffCfg().maxField)) continue;
+      S.units.push(makeUnit('e', q.type, q.lane));
+      S.enemyQueue.splice(i, 1); i--; field++;
     }
   }
 
@@ -389,11 +472,8 @@ function create(){
     S.stats.prod[phase()].time += dt;
     addMaterial(matRate() * dt);
     S.spawnCd = Math.max(0, S.spawnCd - dt);
-    if (lv('moertel') > 0) S.baseHp = Math.min(baseMax(), S.baseHp + C.FX_MOERTEL_REGEN * lv('moertel') * dt);
-    if (S.queue.length && S.spawnCd <= 0 && !spawnBlocked('p') && !gateBesieged()){
-      S.units.push(makeUnit('p', S.queue.shift()));
-      S.spawnCd = spawnGap();
-    }
+    if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
+    spawnPlayer();
     // Handelskontor: Zinsen auf den Materialbestand, gedeckelt
     if (has('kontor')){
       S.kontorT += dt;
@@ -412,19 +492,17 @@ function create(){
     if (alarmLevel > S.alarms){
       S.alarms = alarmLevel;
       for (let i = 0; i < diffCfg().alarmSize; i++)
-        S.enemyQueue.unshift({ type: i % C.ALARM_WERFER_EVERY === C.ALARM_WERFER_EVERY - 1 ? 'werfer' : 'laeufer', at: S.t + i * C.ALARM_SPACING_S, alarm: true });
+        S.enemyQueue.unshift({ type: i % C.ALARM_WERFER_EVERY === C.ALARM_WERFER_EVERY - 1 ? 'werfer' : 'laeufer',
+                               lane: C.LANE_ORDER[i % LANES], at: S.t + Math.floor(i / LANES) * C.ALARM_SPACING_S, alarm: true });
       log('log.alarm');
     }
-    while (S.enemyQueue.length && S.enemyQueue[0].at <= S.t && !spawnBlocked('e')
-           && (S.enemyQueue[0].alarm || (!gateHeld() && S.units.filter(u => u.side === 'e').length < diffCfg().maxField))){
-      S.units.push(makeUnit('e', S.enemyQueue.shift().type));
-    }
+    spawnEnemies();
     updateTurrets(dt);
     updateUnits(dt);
     applyConditionals(dt);
     checkReveals();
     if (S.enemyBaseHp <= 0){ S.enemyBaseHp = 0; S.status = 'won';  log('log.won'); }
-    else if (S.baseHp <= 0){ S.baseHp = 0;     S.status = 'lost'; log('log.lost'); }
+    else if (gateHp() <= 0){ S.sections[GATE].hp = 0; S.status = 'lost'; log('log.lost'); }
   }
 
   /* Neue Partie bzw. Spielstand übernehmen */
@@ -438,6 +516,7 @@ function create(){
     S = Object.assign(base, saved, { units: [], enemyQueue: [] });
     modCache = { ver: -1, key: null, mul: {}, add: {} };
     S.lvl = Object.assign(freshState(saved.diff, 1).lvl, saved.lvl || {});
+    S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -Infinity }));
     if (!Array.isArray(S.queue)) S.queue = [];
     S.nextWave = S.t + C.RELOAD_WAVE_DELAY_S;
   }
@@ -455,14 +534,15 @@ function create(){
   return {
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
-    doClick, buy, build, buildAt, demolish, unlockBuilding, repair, spawn,
+    doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has, lv,
-    buildBlock, isBuildable, refundFor, spawnGap, queueMax, interestRate, gateBesieged,
-    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, OPT,
-    clickPower, matRate, fertigerRate, milestoneMult, hpMultP, dmgMultP, cdMultP, bountyMult, baseMax, diffCfg,
+    buildBlock, isBuildable, refundFor, spawnGap, queueMax, interestRate,
+    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT,
+    clickPower, matRate, fertigerRate, milestoneMult, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
+    sectionMax, sectionUp, gateHp, towerBuilt, towerActive, computeRanks, canAttack,
     offlineHours, turretDmg, turretRange, turretCd,
   };
 }
 
-return { create, freshState, nextRandom, xpThreshold, xpStep };
+return { create, freshState, nextRandom, xpThreshold, xpStep, distribute };
 })();

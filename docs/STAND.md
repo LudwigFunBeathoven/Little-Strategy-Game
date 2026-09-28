@@ -1,0 +1,32 @@
+# Klammerfront – Stand Iteration 3
+
+Grundlage: `docs/anforderungen-iteration-3.md`. Jedes Inkrement erfüllt die Definition „spielbar“ (Anhang A), bevor das nächste beginnt.
+
+**Starten:** `index.html` im Browser öffnen. Keine Installation nötig.
+
+| Inkrement | Inhalt | Status |
+|---|---|---|
+| I1 | Drei Lanes, Formation, Basis mit Abschnitten (REQ-11–13) | fertig |
+| I2 | Wellen mit Versorgungslimit, Wellenbefehl „Halten“ (REQ-14–15) | offen |
+| I3 | 3×3-Raster, Fabriken, Umbau von Kaserne und Schmiede (REQ-16–17) | offen |
+| I4 | Spezialkarten mit Stufen (REQ-18) | offen |
+| I5 | Belagerungswelle statt Eskalation (REQ-19) | offen |
+| I6 | Erklärzeilen, Erstkontakt-Hinweise (REQ-20) | offen |
+| I7 | Simulation, Balancing, Bericht (REQ-21) | offen |
+
+## Prüfung je Inkrement
+```
+npm test                                   # Logiktests
+npm run test:browser                       # Browser-Prüfung (braucht Playwright)
+node tools/simulate.mjs --suite kurz       # 20 Partien Normal, gierige Heuristik: 0 offen, Siegquote 20–100 %
+```
+
+## Letzte Prüfung
+- I1: `npm test` 28/28 grün. Kurzsimulation: 20 Siege, 0 offen, Median 7:31.
+
+## Abweichungen und Auslegungen
+1. **„Tor belagert“ entfällt bereits in I1** statt in I2 (REQ-14.5). Je Lane angewandt, blockierte die Regel die Warteschlange dauerhaft: Die Übergangsregel 12.2 füllt sie zyklisch, belagerte Lanes stauen sich. Die Kurzsimulation endete dadurch im Patt.
+2. **Verteilung bei zwei Einheiten (12.1):** Verglichen werden die angekündigten Gegnerwellen oben und unten; die Mitte ist mit der ersten Einheit schon besetzt.
+3. **Erklärzeile ab I1:** Alle Kaufknöpfe (Upgrades, Einheiten, Reparatur) tragen die Zeile „Wirkung · Kosten“ schon jetzt, weil die neuen Knöpfe aus I1 sie nach Anhang A brauchen und der Mechanismus für alle Kaufknöpfe derselbe ist.
+4. **Gegnerischer Turm:** Er trifft die nächste eigene Einheit in Reichweite, gleich in welcher Lane. Das Dokument regelt nur die eigenen Türme.
+5. **Lebenspunkte der Abschnitte:** Mauer oben und unten je 400, Tor 600 (bisher 600 für die ganze Basis). „Verstärkung“ gilt für alle drei Abschnitte.

@@ -15,7 +15,15 @@ export const PROFILES = {
 };
 
 const MAT_PRIO = ['fertiger', 'presse', 'druckluft', 'takt', 'serie', 'klingen', 'ruestung', 'drill',
-                  'rekrutierung', 'exerzierplatz', 'stube', 'zinseszins', 'turm', 'mauer', 'kadenz', 'reichweite', 'stacheln', 'moertel', 'nacht'];
+                  'rekrutierung', 'exerzierplatz', 'stube', 'zinseszins', 'turm_0', 'turm_2', 'mauer', 'kadenz_0', 'kadenz_2',
+                  'reichweite_0', 'reichweite_2', 'stacheln', 'moertel', 'nacht'];
+const GATE = C.GATE_LANE;
+/* Anteil der Lebenspunkte je Abschnitt; das Tor zählt doppelt, weil es die Partie entscheidet */
+function baseHealth(G){
+  let s = 0, w = 0;
+  G.S.sections.forEach((sec, i) => { const k = i === GATE ? 2 : 1; s += k * Math.max(0, sec.hp) / G.sectionMax(i); w += k; });
+  return s / w;
+}
 
 /* Kleiner, seedbarer Zufall für Bot-Entscheidungen (getrennt vom Spielzufall) */
 function botRng(seed){ let s = (seed ^ 0x9e3779b9) >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -37,7 +45,7 @@ function score(G){
   let army = 0;
   for (const u of S.units) if (u.side === 'p') army += u.hp * u.dmg / u.cdMax;
   return (1 - S.enemyBaseHp / eMax) * 100
-       - (1 - S.baseHp / G.baseMax()) * 150
+       - (1 - baseHealth(G)) * 150
        + 12 * Math.log2(1 + G.matRate())
        + 6 * Math.log2(1 + army)
        + 4 * Math.log2(1 + S.material);
@@ -107,7 +115,7 @@ export class Bot {
   act(G, stats){
     const S = G.S, o = this.o;
     if (S.status !== 'running') return;
-    if (o.useWall && S.baseHp < G.baseMax() * 0.5) G.repair();
+    if (o.useWall) S.sections.forEach((sec, i) => { if (sec.hp < G.sectionMax(i) * 0.5) G.repair(i); });
     const own = S.units.filter(u => u.side === 'p').length;
     const threat = S.units.some(u => u.side === 'e' && u.x < 400);
     const trySpawn = n => { for (let k = 0; k < n; k++){ if (own + S.queue.length >= o.cap) break; if (this.mix % 3 === 2 ? G.spawn('werfer') : G.spawn('laeufer')) this.mix++; else break; } };
@@ -154,7 +162,7 @@ export class Bot {
       for (const id of MAT_PRIO){
         if (!C.UPGRADES[id]) continue;
         const g = C.UPGRADES[id].group;
-        if (!o.useWall && (g === 'mauer' || g === 'turm') && id !== 'turm' && id !== 'mauer') continue;
+        if (!o.useWall && (g === 'mauer' || g.startsWith('turm')) && C.UPGRADES[id].base !== 'turm' && id !== 'mauer') continue;
         G.buy(id);
       }
     } else G.buy('fertiger');

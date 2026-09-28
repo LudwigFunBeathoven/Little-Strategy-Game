@@ -3,6 +3,7 @@
 //   ziele      Siegquote und Dauer je Schwierigkeitsgrad und Spielertyp (gierige Heuristik)
 //   strategie  Zufall gegen gierige Heuristik: Gebäudewahl, Gebäudekombinationen, Draft-Wahlraten, Draft-Abstände
 //   phasen     REQ-03: Klickanteil je Phase (SIM_CLICK_RATE) sowie Dauerklick / Stopp ab Phase Spät / nie klicken
+//   kurz       Kurzsimulation nach Anhang A: Normal, Spielertyp durchschnitt, gierige Heuristik (Soll: 0 offen, Siegquote 20–100 %)
 // Die Simulation misst Stärke, nicht Spielspaß. Auffälligkeiten werden berichtet, nicht automatisch wegbalanciert.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { availableParallelism } from 'node:os';
@@ -18,7 +19,7 @@ if (!isMainThread){
   const RUNS = Number(arg('runs', 20));
   const SUITE = arg('suite', 'alle');
   const JSON_OUT = arg('json', null);
-  const DIFFS = arg('diff', null) ? arg('diff').split(',') : C.DIFFICULTY_ORDER;
+  const DIFFS = SUITE === 'kurz' ? ['normal'] : arg('diff', null) ? arg('diff').split(',') : C.DIFFICULTY_ORDER;
   const CPS = C.SIM_CLICK_RATE ?? 6;
 
   const jobs = [];
@@ -27,6 +28,8 @@ if (!isMainThread){
     DIFFS.forEach((diff, di) => ['aktiv', 'durchschnitt', 'gelegentlich', 'passiv'].forEach((profile, pi) => {
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff, profile, strategy: 'gierig', seed: seedOf(di * 10 + pi, r) });
     }));
+  if (SUITE === 'kurz')
+    for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', seed: seedOf(1, r) });
   if (SUITE === 'alle' || SUITE === 'strategie')
     DIFFS.forEach((diff, di) => ['zufall', 'gierig'].forEach((strategy, si) => {
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'strategie', diff, profile: 'durchschnitt', strategy, seed: seedOf(100 + di * 10 + si, r) });
@@ -61,6 +64,7 @@ if (!isMainThread){
     report.ziele = [];
     for (const diff of DIFFS) for (const p of ['aktiv', 'durchschnitt', 'gelegentlich', 'passiv']){
       const R = Z.filter(r => r.diff === diff && r.profile === p);
+      if (!R.length) continue;
       const w = R.filter(r => r.status === 'won'), l = R.filter(r => r.status === 'lost'), o = R.filter(r => r.status === 'running');
       report.ziele.push({ diff, profile: p, games: R.length, won: w.length, lost: l.length, open: o.length, medWin: median(w.map(r => r.t)), medLoss: median(l.map(r => r.t)) });
       console.log(`${pad(diff, 13)} | ${pad(p, 12)} | ${lpad(w.length, 5)} | ${lpad(l.length, 8)} | ${lpad(o.length, 5)} | ${lpad(mmss(median(w.map(r => r.t))), 11)} | ${lpad(mmss(median(l.map(r => r.t))), 10)}`);

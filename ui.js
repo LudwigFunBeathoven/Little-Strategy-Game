@@ -104,17 +104,29 @@ const METRICS = {
   stube:         ['tip.m.queueMax',  () => G.queueMax(), v => fmt(v)],
   zinseszins:    ['tip.m.interest',  () => G.interestRate() * 100, v => fmt1(v) + ' %'],
   nacht:      ['tip.m.offline',      () => G.offlineHours(), v => fmt(v)],
-  mauer:      ['tip.m.baseMax',      () => G.baseMax(), v => fmt(v)],
+  mauer:      ['tip.m.baseMax',      () => G.sectionMax(C.GATE_LANE), v => fmt(v)],
   stacheln:   ['tip.m.thorns',       () => C.FX_STACHELN_DMG * G.S.lvl.stacheln, v => fmt(v)],
   moertel:    ['tip.m.regen',        () => C.FX_MOERTEL_REGEN * G.S.lvl.moertel, v => fmt1(v)],
-  turm:       ['tip.m.turretDmg',    () => G.turretDmg(), v => fmt(v)],
-  reichweite: ['tip.m.turretRange',  () => G.turretRange(), v => fmt(v)],
-  kadenz:     ['tip.m.turretRate',   () => 60 / G.turretCd(), v => fmt(v)],
+  turm:       ['tip.m.turretDmg',    lane => G.turretDmg(lane), v => fmt(v)],
+  reichweite: ['tip.m.turretRange',  lane => G.turretRange(lane), v => fmt(v)],
+  kadenz:     ['tip.m.turretRate',   lane => 60 / G.turretCd(lane), v => fmt(v)],
 };
+/* Turm-Upgrades gibt es je Turm (REQ-13.6); Texte und Kennzahlen teilen sie sich über base */
+const baseOf = id => C.UPGRADES[id].base || id;
 function previewUpgrade(id){
-  const [label, f, show] = METRICS[id];
+  const [label, m, show] = METRICS[baseOf(id)], f = () => m(C.UPGRADES[id].tower);
   const before = f(); G.S.lvl[id]++; const after = f(); G.S.lvl[id]--;
   return [t(label), `${show(before)} → ${show(after)}`];
+}
+/* Erklärzeile unter jedem Kaufknopf: Wirkung · Kosten (REQ-20.1) */
+function explUpgrade(id){
+  if (G.isMaxed(id)) return t('opt.max');
+  const [label, change] = previewUpgrade(id);
+  return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
+}
+function explUnit(id){
+  const spec = C.UNITS[id], hp = spec.hp * G.hpMultP() * G.mMul('unitHp') * (id === 'werfer' ? G.mMul('werferHp') : 1);
+  return t('ex.unit', { role: t(G.unitRange('p', id) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitCost(id)) });
 }
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
 function buildReason(block, cost){
@@ -136,6 +148,13 @@ function upgradeReason(id){
   if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);
   return null;
 }
+function repairReason(i){
+  const S = G.S, cost = G.repairCost();
+  if (S.status !== 'running') return t('tip.notRunning');
+  if (S.sections[i].hp >= G.sectionMax(i)) return t('tip.baseFull');
+  if (S.material < cost) return missing('material', cost, S.material);
+  return null;
+}
 function unitReason(id){
   const S = G.S, c = G.unitCost(id);
   if (S.status !== 'running') return t('tip.notRunning');
@@ -151,8 +170,9 @@ function tipContent(id){
       const u = C.UPGRADES[a], lv = S.lvl[a];
       const rows = [[t('tip.level'), u.max !== undefined ? `${lv}/${u.max}` : String(lv)]];
       if (!G.isMaxed(a)) rows.push(previewUpgrade(a), [t('tip.cost'), costText(u.cur, G.upCost(a))]);
-      return { title: a === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${a}.name`),
-               body: t(`upg.${a}.desc`, DESC_PARAMS[a]()), rows, reason: upgradeReason(a) };
+      const base = baseOf(a), where = u.tower !== undefined ? t('tower.where', { lane: t('lane.' + u.tower) }) + ' ' : '';
+      return { title: base === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${base}.name`),
+               body: where + t(`upg.${base}.desc`, DESC_PARAMS[base]()), rows, reason: upgradeReason(a) };
     }
     case 'unit': {
       const spec = C.UNITS[a];
@@ -164,11 +184,10 @@ function tipContent(id){
                reason: unitReason(a) };
     }
     case 'repair': {
-      const after = Math.min(G.baseMax(), S.baseHp + C.REPAIR_AMOUNT);
-      const reason = S.status !== 'running' ? t('tip.notRunning') : S.baseHp >= G.baseMax() ? t('tip.baseFull')
-        : S.material < C.REPAIR_COST ? missing('material', C.REPAIR_COST, S.material) : null;
-      return { title: t('repair.name'), body: t('tip.repair.body'),
-               rows: [[t('tip.m.baseHp'), `${fmt(S.baseHp)} → ${fmt(after)}`], [t('tip.cost'), costText('material', C.REPAIR_COST)]], reason };
+      const i = Number(a), sec = S.sections[i], max = G.sectionMax(i), cost = G.repairCost();
+      const after = Math.min(max, sec.hp + C.REPAIR_AMOUNT);
+      return { title: t('repair.' + i), body: t(i === C.GATE_LANE ? 'tip.repair.gate' : 'tip.repair.wall'),
+               rows: [[t('tip.m.baseHp'), `${fmt(sec.hp)} → ${fmt(after)}`], [t('tip.cost'), costText('material', cost)]], reason: repairReason(i) };
     }
     case 'click':
       return { title: t('btn.click'), body: t('tip.click.body', { max: C.MAX_CLICKS_PER_SECOND }), rows: [[t('tip.m.perClick'), fmt1(G.clickPower())], [t('tip.m.matRate'), fmt1(G.matRate())]],
@@ -422,17 +441,17 @@ const optEls = {};
 function makeOpt(parent, cls, tip, onClick){
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'opt ' + (cls || ''); b.dataset.tooltip = tip;
-  b.innerHTML = '<span class="opt-name"></span><span class="opt-cost num"></span>';
+  b.innerHTML = '<span class="opt-name"></span><span class="expl"></span>';
   b.addEventListener('click', () => { if (!isDis(b)){ onClick(); render(); } });
   parent.appendChild(b);
-  return { btn: b, name: b.children[0], cost: b.children[1] };
+  return { btn: b, name: b.children[0], expl: b.children[1] };
 }
-const GROUP_BOX = { fertigung: 'optsFertigung', fabrik: 'optsFabrik', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm: 'optsTurm' };
+const GROUP_BOX = { fertigung: 'optsFertigung', fabrik: 'optsFabrik', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm_0: 'optsTurm0', turm_2: 'optsTurm2' };
 
 function buildUI(){
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
   for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
-  optEls.repair = makeOpt($('optsRepair'), '', 'repair', () => G.repair());
+  for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
   for (let i = 0; i < C.BUILDING_SLOTS; i++){
     const card = document.createElement('button');
     card.type = 'button'; card.className = 'slot slot-btn'; card.dataset.tooltip = 'slot:' + i;
@@ -608,10 +627,10 @@ function render(){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];
     el.btn.hidden = !(G.isAvailable(id) && S.revealed[id]);
     if (el.btn.hidden) continue;
-    const label = id === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${id}.name`);
+    const label = baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`);
     el.name.textContent = label;
     if (lv > 0){ const em = document.createElement('em'); em.textContent = u.max !== undefined ? `${lv}/${u.max}` : String(lv); el.name.appendChild(em); }
-    el.cost.textContent = G.isMaxed(id) ? t('opt.max') : costText(u.cur, G.upCost(id));
+    el.expl.textContent = explUpgrade(id);
     setDis(el.btn, !G.canBuy(id));
   }
   for (const id in C.UNITS){
@@ -619,14 +638,16 @@ function render(){
     el.name.innerHTML = '';
     const kbd = document.createElement('kbd'); kbd.textContent = spec.key;
     el.name.append(kbd, document.createTextNode(t(`unit.${id}.name`)));
-    el.cost.textContent = costText('material', c);
+    el.expl.textContent = explUnit(id);
     setDis(el.btn, !!unitReason(id));
   }
-  const r = optEls.repair;
-  r.btn.hidden = !S.revealed.repair;
-  r.name.textContent = t('repair.name');
-  r.cost.textContent = costText('material', C.REPAIR_COST);
-  setDis(r.btn, !running || S.material < C.REPAIR_COST || S.baseHp >= G.baseMax());
+  for (let i = 0; i < C.LANE_COUNT; i++){
+    const r = optEls['repair_' + i];
+    r.btn.hidden = !S.revealed['repair_' + i];
+    r.name.textContent = t('repair.' + i);
+    r.expl.textContent = t('ex.repair', { n: fmt(C.REPAIR_AMOUNT), cost: costText('material', G.repairCost()) });
+    setDis(r.btn, !!repairReason(i));
+  }
 
   $('hintFabrik').hidden = G.has('fabrik');
   $('hintSchmiede').hidden = G.has('schmiede');
@@ -636,9 +657,12 @@ function render(){
   $('subKontor').hidden = false;
 
   const eMax = G.diffCfg().enemyBaseHp;
-  $('hpP').textContent = `${fmt(Math.max(0, S.baseHp))} / ${fmt(G.baseMax())}`;
+  for (let i = 0; i < C.LANE_COUNT; i++){
+    const hp = Math.max(0, S.sections[i].hp), max = G.sectionMax(i);
+    $('hpP' + i).textContent = hp > 0 || i === C.GATE_LANE ? `${fmt(hp)} / ${fmt(max)}` : t('hud.fallen');
+    $('barP' + i).style.width = (100 * hp / max) + '%';
+  }
   $('hpE').textContent = `${fmt(Math.max(0, S.enemyBaseHp))} / ${fmt(eMax)}`;
-  $('barP').style.width = (100 * Math.max(0, S.baseHp) / G.baseMax()) + '%';
   $('barE').style.width = (100 * Math.max(0, S.enemyBaseHp) / eMax) + '%';
   const xp = G.xpProgress();
   $('lvlLabel').textContent = t('level.progress', { n: xp.level + 1 });
@@ -670,10 +694,12 @@ function render(){
 }
 
 /* ================= Zeichnen ================= */
+/* Drei Lanes übereinander (REQ-11.4). Links die eigene Basis mit Mauer oben, Tor und Mauer unten, rechts die gegnerische Basis. */
 const cv = $('lane'), ctx = cv.getContext('2d');
 let cw = 0, ch = 0, dpr = 1, COL = {};
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH;
+const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH, GATE = C.GATE_LANE;
+const DRAW = { top: 14, bottom: 22, entry: 70 };   // Ränder in px; entry = Strecke, auf der Einheiten vom Tor in ihre Lane laufen
 
 function readColors(){
   const cs = getComputedStyle(document.documentElement);
@@ -686,108 +712,104 @@ function resize(){
   cw = r.width; ch = r.height;
   cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
 }
-const GY = () => ch - 34;
+const laneH = () => (ch - DRAW.top - DRAW.bottom) / C.LANE_COUNT;
+const laneTop = l => DRAW.top + l * laneH();
+const groundY = l => laneTop(l) + laneH() - 8;
 function hpBar(x, y, w, frac, col){
   ctx.fillStyle = COL['surface-2']; ctx.fillRect(x, y, w, 4);
   ctx.fillStyle = col; ctx.fillRect(x, y, w * Math.max(0, Math.min(1, frac)), 4);
 }
-function drawBuilding(kind, cx, gy, s){
-  ctx.fillStyle = COL.steel;
-  if (kind === 'fabrik'){
-    const w = 20 * s, h = 12 * s, x = cx - w / 2;
-    ctx.fillRect(x, gy - h, w, h);
-    ctx.beginPath();
-    for (let i = 0; i < 3; i++){ const tx = x + i * w / 3; ctx.moveTo(tx, gy - h); ctx.lineTo(tx, gy - h - 6 * s); ctx.lineTo(tx + w / 3, gy - h); }
-    ctx.fill();
-    ctx.fillRect(x + w - 5 * s, gy - h - 12 * s, 3.5 * s, 12 * s);
-  } else if (kind === 'schmiede'){
-    const w = 18 * s, h = 11 * s, x = cx - w / 2;
-    ctx.fillRect(x, gy - h, w, h);
-    ctx.beginPath(); ctx.moveTo(x - 2 * s, gy - h); ctx.lineTo(cx, gy - h - 8 * s); ctx.lineTo(x + w + 2 * s, gy - h); ctx.fill();
-    ctx.fillRect(x + 3 * s, gy - h - 9 * s, 3 * s, 6 * s);
-    ctx.fillStyle = COL.brass; ctx.fillRect(cx - 2.5 * s, gy - 6 * s, 5 * s, 6 * s);
-  } else if (kind === 'kaserne'){
-    const w = 20 * s, h = 10 * s, x = cx - w / 2;
-    ctx.fillRect(x, gy - h, w, h);
-    ctx.fillRect(x + 2 * s, gy - h - 4 * s, w - 4 * s, 4 * s);
-    ctx.fillRect(cx - 0.8 * s, gy - h - 16 * s, 1.6 * s, 12 * s);          // Fahnenmast
-    ctx.fillStyle = COL.brass; ctx.fillRect(cx + 0.8 * s, gy - h - 16 * s, 6 * s, 4 * s);
-  } else if (kind === 'kontor'){
-    const w = 16 * s, h = 14 * s, x = cx - w / 2;
-    ctx.fillRect(x, gy - h, w, h);
-    ctx.beginPath(); ctx.moveTo(x - 1 * s, gy - h); ctx.lineTo(x + w / 2, gy - h - 5 * s); ctx.lineTo(x + w + 1 * s, gy - h); ctx.fill();
-    ctx.fillStyle = COL.brass; ctx.beginPath(); ctx.arc(cx, gy - h / 2, 3 * s, 0, Math.PI * 2); ctx.fill();   // Münze
-  } else if (kind === 'universitaet'){
-    const w = 20 * s, x = cx - w / 2;
-    ctx.fillRect(x, gy - 3 * s, w, 3 * s);
-    for (let i = 0; i < 4; i++) ctx.fillRect(x + 1.5 * s + i * 5.3 * s, gy - 12 * s, 2.2 * s, 9 * s);
-    ctx.fillRect(x - 1 * s, gy - 14 * s, w + 2 * s, 2.5 * s);
-    ctx.beginPath(); ctx.moveTo(x - 1 * s, gy - 14 * s); ctx.lineTo(cx, gy - 20 * s); ctx.lineTo(x + w + 1 * s, gy - 14 * s); ctx.fill();
+/* Bodenhöhe einer Einheit: eigene Einheiten laufen vom Tor in ihre Lane; Gegner einer gefallenen Mauer ziehen zum Tor */
+function unitGround(u){
+  const own = groundY(u.lane), gate = groundY(GATE);
+  if (u.side === 'p'){
+    const p = Math.max(0, Math.min(1, (u.x - PBW) / DRAW.entry));
+    return gate + (own - gate) * p;
   }
+  if (u.lane !== GATE && !G.sectionUp(u.lane)){
+    const p = Math.max(0, Math.min(1, (u.x - PBW) / DRAW.entry));
+    return gate + (own - gate) * p;
+  }
+  return own;
 }
-function drawPlayerBase(){
-  const S = G.S, sx = cw / W, gy = GY(), s = Math.max(0.7, Math.min(1.25, sx * 1.15));
-  const slotX = [14, 37, 60];
-  for (let i = 0; i < C.BUILDING_SLOTS; i++){
-    const cx = slotX[i] * sx, b = S.slots[i] && S.slots[i].type;
-    if (b) drawBuilding(b, cx, gy, s);
-    else {
-      ctx.strokeStyle = COL['rule-strong']; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
-      ctx.strokeRect(cx - 9 * s, gy - 7 * s, 18 * s, 7 * s);
+function drawLanes(){
+  const sx = cw / W;
+  for (let l = 0; l < C.LANE_COUNT; l++){
+    const gy = groundY(l);
+    ctx.fillStyle = COL.ground; ctx.fillRect(PBW * sx, gy, (W - EBW - PBW) * sx, 2);
+    ctx.fillStyle = COL.rule;
+    for (let x = 200; x < W - EBW; x += 100) ctx.fillRect(x * sx, gy + 4, 1, 4);
+    if (l > 0){
+      ctx.strokeStyle = COL.rule; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+      ctx.beginPath(); ctx.moveTo(PBW * sx, laneTop(l)); ctx.lineTo((W - EBW) * sx, laneTop(l)); ctx.stroke();
       ctx.setLineDash([]);
     }
   }
-  const x0 = 74 * sx, w = (PBW - 74) * sx, h = 62;
-  ctx.fillStyle = COL.steel; ctx.fillRect(x0, gy - h, w, h);
-  const mw = w / 3;
-  ctx.fillRect(x0, gy - h - 7, mw, 7); ctx.fillRect(x0 + 2 * mw, gy - h - 7, mw, 7);
-  if (S.lvl.stacheln > 0){
-    ctx.fillStyle = COL.ink;
-    for (let i = 0; i < 4; i++){ const y = gy - 10 - i * 12; ctx.beginPath(); ctx.moveTo(x0 + w, y); ctx.lineTo(x0 + w + 5, y - 3); ctx.lineTo(x0 + w, y - 6); ctx.fill(); }
+}
+function drawPlayerBase(){
+  const S = G.S, sx = cw / W, w = Math.max(18, PBW * sx * 0.55), x0 = PBW * sx - w;
+  for (let l = 0; l < C.LANE_COUNT; l++){
+    const top = laneTop(l) + 16, gy = groundY(l), h = gy - top, up = G.sectionUp(l) || l === GATE;
+    if (up){
+      ctx.fillStyle = COL.steel; ctx.fillRect(x0, top, w, h);
+      const mw = w / 3;
+      ctx.fillRect(x0, top - 5, mw, 5); ctx.fillRect(x0 + 2 * mw, top - 5, mw, 5);
+      if (l === GATE){ ctx.fillStyle = COL.surface; ctx.fillRect(x0 + w * 0.3, gy - h * 0.5, w * 0.4, h * 0.5); }
+    } else {
+      ctx.fillStyle = COL['rule-strong'];            // Trümmer der gefallenen Mauer
+      for (let i = 0; i < 4; i++) ctx.fillRect(x0 + i * w / 4, gy - 6 - (i % 2) * 4, w / 4 - 1, 6 + (i % 2) * 4);
+    }
+    if (S.lvl.stacheln > 0 && up){
+      ctx.fillStyle = COL.ink;
+      for (let i = 0; i < 3; i++){ const y = gy - 6 - i * h / 3; ctx.beginPath(); ctx.moveTo(x0 + w, y); ctx.lineTo(x0 + w + 4, y - 2.5); ctx.lineTo(x0 + w, y - 5); ctx.fill(); }
+    }
+    if (G.FX.baseFlash.p[l] > 0){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, top, w - 2, h); }
+    if (C.TOWER_LANES.includes(l) && G.towerBuilt(l)){
+      ctx.fillStyle = G.towerActive(l) ? COL.ink : COL['ink-faint'];
+      const tx = x0 + w / 2;
+      ctx.fillRect(tx - 5, top - 14, 10, 9);
+      ctx.fillRect(tx + 3, top - 12, 9 + S.lvl['reichweite_' + l] * 2, 3);
+    }
+    hpBar(x0 - 2, laneTop(l) + 2, w + 4, S.sections[l].hp / G.sectionMax(l), COL.steel);
   }
-  if (G.FX.baseFlash.p > 0){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, gy - h, w - 2, h); }
-  if (S.lvl.turm > 0){
-    ctx.fillStyle = COL.ink;
-    const tx = x0 + w / 2;
-    ctx.fillRect(tx - 6, gy - h - 17, 12, 10);
-    ctx.fillRect(tx + 4, gy - h - 15, 11 + S.lvl.reichweite * 2, 3);
-  }
-  hpBar(x0 - 4, gy - h - 28, w + 8, S.baseHp / G.baseMax(), COL.steel);
 }
 function drawEnemyBase(){
-  const S = G.S, sx = cw / W, gy = GY();
-  const x0 = (W - EBW) * sx, w = EBW * sx, h = 62;
-  ctx.fillStyle = COL.rust; ctx.fillRect(x0, gy - h, w, h);
+  const S = G.S, sx = cw / W;
+  const x0 = (W - EBW) * sx, w = EBW * sx, top = DRAW.top + 16, gy = groundY(C.LANE_COUNT - 1), h = gy - top;
+  ctx.fillStyle = COL.rust; ctx.fillRect(x0, top, w, h);
   const mw = w / 5;
-  for (let i = 0; i < 5; i += 2) ctx.fillRect(x0 + i * mw, gy - h - 7, mw, 7);
-  ctx.fillStyle = COL.surface; ctx.fillRect(x0 + 4, gy - 20, 8, 20);
-  if (G.FX.baseFlash.e > 0){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, gy - h, w - 2, h); }
+  for (let i = 0; i < 5; i += 2) ctx.fillRect(x0 + i * mw, top - 6, mw, 6);
+  ctx.fillStyle = COL.surface;
+  for (let l = 0; l < C.LANE_COUNT; l++) ctx.fillRect(x0 + 3, groundY(l) - 16, 7, 16);
+  if (G.FX.baseFlash.e > 0){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, top, w - 2, h); }
   ctx.fillStyle = COL.ink;
-  const tx = x0 + w / 2;
-  ctx.fillRect(tx - 6, gy - h - 17, 12, 10);
-  ctx.fillRect(tx - 15, gy - h - 15, 11, 3);
-  hpBar(x0 + 2, gy - h - 28, w - 4, S.enemyBaseHp / G.diffCfg().enemyBaseHp, COL.rust);
+  const tx = x0 + w / 2, ty = groundY(GATE) - laneH() * 0.55;
+  ctx.fillRect(tx - 5, ty - 5, 10, 9);
+  ctx.fillRect(tx - 13, ty - 3, 9, 3);
+  hpBar(x0 + 2, DRAW.top + 2, w - 4, S.enemyBaseHp / G.diffCfg().enemyBaseHp, COL.rust);
 }
 function drawUnit(u, now){
-  const sx = cw / W, gy = GY();
-  const us = Math.max(0.75, Math.min(1.5, sx * 1.4));
+  const sx = cw / W, gy = unitGround(u);
+  const us = Math.max(0.7, Math.min(1.25, sx * 1.2));
   const px = u.x * sx;
   const bob = (!reduceMotion && u.moving) ? Math.abs(Math.sin(now / 90 + u.bob)) * 1.5 : 0;
   ctx.fillStyle = u.flash > 0 ? COL.ink : (u.side === 'p' ? COL.steel : COL.rust);
-  if (u.type === 'laeufer'){
+  if (!u.ranged){
+    // Nahkämpfer: Rumpf mit Waffe
     const bw = 9 * us, bh = 14 * us;
     ctx.fillRect(px - bw / 2, gy - bh - bob, bw, bh);
     ctx.beginPath(); ctx.arc(px, gy - bh - 4 * us - bob, 3.4 * us, 0, Math.PI * 2); ctx.fill();
     ctx.fillRect(u.side === 'p' ? px + bw / 2 : px - bw / 2 - 6 * us, gy - bh * 0.7 - bob, 6 * us, 2 * us);
   } else {
-    const bw = 8 * us, bh = 11 * us;
+    // Fernkämpfer: Dreieck
+    const bw = 9 * us, bh = 12 * us;
     ctx.beginPath();
     ctx.moveTo(px - bw / 2, gy - bob); ctx.lineTo(px + bw / 2, gy - bob); ctx.lineTo(px, gy - bh - bob);
     ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.arc(px, gy - bh - 3.5 * us - bob, 3 * us, 0, Math.PI * 2); ctx.fill();
   }
   if (u.hp < u.maxHp){
-    const w = 14 * us, y = gy - 27 * us - 4;
+    const w = 14 * us, y = gy - 24 * us - 4;
     ctx.fillStyle = COL['surface-2']; ctx.fillRect(px - w / 2, y, w, 2);
     ctx.fillStyle = u.side === 'p' ? COL.steel : COL.rust; ctx.fillRect(px - w / 2, y, w * Math.max(0, u.hp / u.maxHp), 2);
   }
@@ -796,24 +818,23 @@ function draw(realDt, now){
   const FX = G.FX;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cw, ch);
-  const sx = cw / W, gy = GY();
-  ctx.fillStyle = COL.ground; ctx.fillRect(0, gy, cw, 2);
-  ctx.fillStyle = COL.rule;
-  for (let x = 200; x < W; x += 100) ctx.fillRect(x * sx, gy + 8, 1, 6);
+  const sx = cw / W;
+  drawLanes();
   drawPlayerBase();
   drawEnemyBase();
-  FX.baseFlash.p = Math.max(0, FX.baseFlash.p - realDt);
+  for (let l = 0; l < C.LANE_COUNT; l++) FX.baseFlash.p[l] = Math.max(0, FX.baseFlash.p[l] - realDt);
   FX.baseFlash.e = Math.max(0, FX.baseFlash.e - realDt);
   for (const u of G.S.units) drawUnit(u, now);
   FX.shots = FX.shots.filter(s => (s.t += realDt) < s.dur);
   for (const s of FX.shots){
-    const p = s.t / s.dur;
+    const p = s.t / s.dur, gy = groundY(s.lane);
     if (s.turret){
+      const y0 = s.lane0 === s.lane ? laneTop(s.lane) + 8 : groundY(s.lane0) - laneH() * 0.55;
       ctx.strokeStyle = COL.ink; ctx.globalAlpha = 1 - p; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(s.x0 * sx, gy - 76); ctx.lineTo(s.x1 * sx, gy - 10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(s.x0 * sx, y0); ctx.lineTo(s.x1 * sx, gy - 8); ctx.stroke();
       ctx.globalAlpha = 1;
     } else {
-      const x = (s.x0 + (s.x1 - s.x0) * p) * sx, y = gy - 14 - Math.sin(p * Math.PI) * 26;
+      const x = (s.x0 + (s.x1 - s.x0) * p) * sx, y = gy - 12 - Math.sin(p * Math.PI) * Math.min(22, laneH() * 0.45);
       ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
     }
   }
@@ -823,14 +844,14 @@ function draw(realDt, now){
       const p = f.t / 0.4;
       ctx.strokeStyle = f.side === 'p' ? COL.steel : COL.rust;
       ctx.globalAlpha = 1 - p; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(f.x * sx, gy - 8, 3 + p * 12, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(f.x * sx, groundY(f.lane) - 8, 3 + p * 12, 0, Math.PI * 2); ctx.stroke();
       ctx.globalAlpha = 1;
     }
   }
   ctx.fillStyle = COL['ink-faint'];
   ctx.font = '11px "IBM Plex Mono", monospace';
-  ctx.textAlign = 'left';  ctx.fillText(t('lane.player'), 6, ch - 10);
-  ctx.textAlign = 'right'; ctx.fillText(t('lane.enemy'), cw - 6, ch - 10);
+  ctx.textAlign = 'left';  ctx.fillText(t('lane.player'), 6, ch - 6);
+  ctx.textAlign = 'right'; ctx.fillText(t('lane.enemy'), cw - 6, ch - 6);
 }
 
 /* ================= Hauptschleife ================= */

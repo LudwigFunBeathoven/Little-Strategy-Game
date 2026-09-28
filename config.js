@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.3',
-  SAVE_KEY: 'klammerfront.save.v3',
+  VERSION: '0.4',
+  SAVE_KEY: 'klammerfront.save.v4',
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
   LANGUAGES: ['de', 'en'],
@@ -28,9 +28,13 @@ const KF_CONFIG = {
   TOUCH_MOUSE_GUARD_MS: 800,
   DEV_AUDIT_MS: 2000,
 
-  /* Schlachtfeld */
+  /* Schlachtfeld: drei Lanes (REQ-11). Index 0 = oben, 1 = Mitte, 2 = unten. */
   LANE: 1000,
-  PLAYER_BASE_WIDTH: 92,
+  LANE_COUNT: 3,
+  GATE_LANE: 1,                 // Das Tor liegt am Ende der mittleren Lane
+  LANE_ORDER: [1, 0, 2],        // Reihenfolge Mitte, oben, unten (REQ-12.1/12.2)
+  RANGED_RANGE_ROWS: 1,         // Fernkämpfer greifen an, solange höchstens so viele eigene Einheiten vor ihnen stehen (REQ-12.4)
+  PLAYER_BASE_WIDTH: 60,
   ENEMY_BASE_WIDTH: 44,
   SPAWN_BLOCK_DIST: 12,
   ALLY_GAP: 15,
@@ -38,8 +42,6 @@ const KF_CONFIG = {
   TARGET_BEHIND_TOLERANCE: 6,
   RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
   GATE_HOLD_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
-  PLAYER_GATE_SIEGE_COUNT: 3,   // Gegenstück: so viele Gegner nahe dem eigenen Aufstellpunkt …
-  PLAYER_GATE_SIEGE_RANGE: 60,  // … in diesem Abstand blockieren das Aufstellen eigener Einheiten
   ENEMY_QUEUE_SPACING_S: 0.7,
   ALARM_SPACING_S: 0.4,
   ALARM_THRESHOLDS: [2 / 3, 1 / 3],
@@ -50,10 +52,12 @@ const KF_CONFIG = {
   ESCALATION_RATE: 0.4,
   RELOAD_WAVE_DELAY_S: 5,
 
-  /* Basis (Reparatur kostet seit REQ-01 Material statt Altmetall) */
-  BASE_HP: 600,
+  /* Basis: drei Abschnitte am Ende der Lanes (REQ-13). Mauer oben, Tor, Mauer unten.
+     Reparatur je Abschnitt, Kosten in Material. */
+  SECTION_HP: [400, 600, 400],
   REPAIR_COST: 60,
   REPAIR_AMOUNT: 100,
+  TOWER_LANES: [0, 2],          // Turm oben auf der Mauer oben, Turm unten auf der Mauer unten
 
   /* Einheiten */
   SPAWN_GAP_S: 0.5,
@@ -91,9 +95,13 @@ const KF_CONFIG = {
     mauer:      { group: 'mauer',        baseCost: 120, growth: 1.6,  cur: 'material' },
     stacheln:   { group: 'mauer',        baseCost: 150, growth: 1.8,  cur: 'material', max: 5 },
     moertel:    { group: 'mauer',        baseCost: 180, growth: 1.9,  cur: 'material', max: 5 },
-    turm:       { group: 'turm',         baseCost: 100, growth: 1.9,  cur: 'material' },
-    reichweite: { group: 'turm',         baseCost: 160, growth: 1.8,  cur: 'material', max: 4, needs: 'turm' },
-    kadenz:     { group: 'turm',         baseCost: 200, growth: 1.9,  cur: 'material', max: 5, needs: 'turm' },
+    /* Türme: Upgrades je Turm getrennt (REQ-13.6). base = gemeinsamer Text, tower = Lane des Turms */
+    turm_0:       { group: 'turm_0', base: 'turm',       tower: 0, baseCost: 100, growth: 1.9, cur: 'material' },
+    reichweite_0: { group: 'turm_0', base: 'reichweite', tower: 0, baseCost: 160, growth: 1.8, cur: 'material', max: 4, needs: 'turm_0' },
+    kadenz_0:     { group: 'turm_0', base: 'kadenz',     tower: 0, baseCost: 200, growth: 1.9, cur: 'material', max: 5, needs: 'turm_0' },
+    turm_2:       { group: 'turm_2', base: 'turm',       tower: 2, baseCost: 100, growth: 1.9, cur: 'material' },
+    reichweite_2: { group: 'turm_2', base: 'reichweite', tower: 2, baseCost: 160, growth: 1.8, cur: 'material', max: 4, needs: 'turm_2' },
+    kadenz_2:     { group: 'turm_2', base: 'kadenz',     tower: 2, baseCost: 200, growth: 1.9, cur: 'material', max: 5, needs: 'turm_2' },
   },
   REVEAL_AT: 0.5,               // Option erscheint, sobald die Hälfte des Preises vorhanden ist
 
@@ -113,7 +121,7 @@ const KF_CONFIG = {
   FX_STUBE: 1,                  // Warteschlangenplätze je Stufe
   FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_NACHT_HOURS: 4,
-  FX_MAUER_HP: 150,
+  FX_MAUER_HP: 150,             // je Abschnitt
   FX_STACHELN_DMG: 4,
   FX_MOERTEL_REGEN: 1,
 
