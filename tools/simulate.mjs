@@ -2,24 +2,15 @@
 // Lädt die Kernlogik direkt aus index.html und lässt Bots viele Partien spielen.
 // Aufruf:  node tools/simulate.mjs [Runden pro Kombination, Standard 8]
 
-import { readFileSync } from 'node:fs';
-import vm from 'node:vm';
+import { loadCore } from './load-core.mjs';
 
-const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-const core = html.split('// ==CORE-START==')[1].split('// ==CORE-END==')[0];
 const RUNS = Number(process.argv[2] || 8);
 const MAX_MIN = 30;
 
-function loadCore(seed){
-  const ctx = { Math, Date, console };
-  vm.createContext(ctx);
-  vm.runInContext(core + `
-    FX.on = false;
-    let _s = ${seed};
-    rnd = () => { _s = (_s * 1664525 + 1013904223) % 4294967296; return _s / 4294967296; };
-    globalThis.K = { get S(){ return S; }, set S(v){ S = v; }, freshState, tick, doClick, buy, build, spawn, repair,
-                     canBuy, upCost, nextSlotCost, baseMax, CFG, DIFFICULTY };`, ctx);
-  return ctx.K;
+function makeGame(diff, seed){
+  const { KlammerCore, KF_CONFIG } = loadCore();
+  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed);
+  return Object.assign(G, { DIFFICULTY: KF_CONFIG.DIFFICULTY });
 }
 
 // Spielertypen: Klicks pro Sekunde, Reaktionsintervall (s), Einheiten-Limit, Nutzung von Gebäuden/Upgrades
@@ -34,8 +25,7 @@ const MAT_PRIO   = ['fertiger', 'presse', 'takt', 'hydraulik', 'serie', 'klingen
 const SCRAP_PRIO = ['turm', 'beute', 'logistik', 'mauer', 'kadenz', 'reichweite', 'stacheln', 'moertel'];
 
 function play(diff, prof, seed){
-  const K = loadCore(seed);
-  K.S = K.freshState(diff);
+  const K = makeGame(diff, seed);
   const S = () => K.S;
   let clickAcc = 0, actAcc = 0, mix = 0;
   const dt = 0.05;
