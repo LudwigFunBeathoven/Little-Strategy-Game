@@ -305,7 +305,8 @@ function create(){
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, repair, spawn,
     canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has,
-    clickPower, matRate, hpMultP, dmgMultP, baseMax, diffCfg,
+    clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, baseMax, diffCfg,
+    offlineHours, turretDmg, turretRange, turretCd,
   };
 }
 

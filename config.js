@@ -18,6 +18,16 @@ const KF_CONFIG = {
   OFFLINE_HOURS: 8,
   LOG_LINES: 5,
 
+  /* Tooltips (REQ-05) */
+  TOOLTIP_DELAY_MS: 1000,       // Entscheidung Product Owner: 1000 statt 2000 ms
+  TOUCH_TOOLTIP_MS: 500,
+  TOOLTIP_OFFSET_X: 14,
+  TOOLTIP_OFFSET_Y: 18,
+  TOOLTIP_MARGIN: 8,
+  TOUCH_MOVE_TOLERANCE_PX: 10,
+  TOUCH_MOUSE_GUARD_MS: 800,
+  DEV_AUDIT_MS: 2000,
+
   /* Schlachtfeld */
   LANE: 1000,
   PLAYER_BASE_WIDTH: 92,

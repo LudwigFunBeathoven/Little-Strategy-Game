@@ -83,6 +83,199 @@ const DESC_PARAMS = {
 };
 const costText = (cur, n) => t(cur === 'scrap' ? 'cost.scrap' : 'cost.material', { n: fmt(n) });
 
+
+/* ================= Tooltips (REQ-05) ================= */
+const isDis = el => el.getAttribute('aria-disabled') === 'true';
+function setDis(el, d){ el.setAttribute('aria-disabled', d ? 'true' : 'false'); }
+/* Kennzahl je Upgrade: Wert vor und nach dem Kauf */
+const METRICS = {
+  fertiger:   ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
+  presse:     ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
+  hydraulik:  ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
+  takt:       ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
+  serie:      ['tip.m.fertigerCost', () => G.upCost('fertiger'), v => fmt(v)],
+  klingen:    ['tip.m.dmg',          () => C.UNITS.laeufer.dmg * G.dmgMultP(), v => fmt1(v)],
+  ruestung:   ['tip.m.hp',           () => C.UNITS.laeufer.hp * G.hpMultP(), v => fmt(v)],
+  drill:      ['tip.m.atkRate',      () => 1 / (C.UNITS.laeufer.cd * G.cdMultP()), v => fmt1(v)],
+  logistik:   ['tip.m.unitCost',     () => G.unitCost('laeufer'), v => fmt(v)],
+  beute:      ['tip.m.bounty',       () => C.UNITS.laeufer.bounty * G.bountyMult(), v => fmt1(v)],
+  nacht:      ['tip.m.offline',      () => G.offlineHours(), v => fmt(v)],
+  mauer:      ['tip.m.baseMax',      () => G.baseMax(), v => fmt(v)],
+  stacheln:   ['tip.m.thorns',       () => C.FX_STACHELN_DMG * G.S.lvl.stacheln, v => fmt(v)],
+  moertel:    ['tip.m.regen',        () => C.FX_MOERTEL_REGEN * G.S.lvl.moertel, v => fmt1(v)],
+  turm:       ['tip.m.turretDmg',    () => G.turretDmg(), v => fmt(v)],
+  reichweite: ['tip.m.turretRange',  () => G.turretRange(), v => fmt(v)],
+  kadenz:     ['tip.m.turretRate',   () => 60 / G.turretCd(), v => fmt(v)],
+};
+function previewUpgrade(id){
+  const [label, f, show] = METRICS[id];
+  const before = f(); G.S.lvl[id]++; const after = f(); G.S.lvl[id]--;
+  return [t(label), `${show(before)} → ${show(after)}`];
+}
+function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
+function upgradeReason(id){
+  const S = G.S, u = C.UPGRADES[id];
+  if (S.status !== 'running') return t('tip.notRunning');
+  if (G.isMaxed(id)) return t('tip.maxed');
+  if (C.BUILDINGS.includes(u.group) && !G.has(u.group)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
+  if (u.needs && S.lvl[u.needs] <= 0) return t('tip.needsTower');
+  if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);
+  return null;
+}
+function unitReason(id){
+  const S = G.S, c = G.unitCost(id);
+  if (S.status !== 'running') return t('tip.notRunning');
+  if (S.queue.length >= C.QUEUE_MAX) return t('tip.queueFull');
+  if (S.material < c) return missing('material', c, S.material);
+  return null;
+}
+/* Inhalt je Tooltip-Kennung: { title, body, rows:[[label, value]], reason } */
+function tipContent(id){
+  const S = G.S, [kind, a, b] = id.split(':');
+  switch (kind){
+    case 'upg': {
+      const u = C.UPGRADES[a], lv = S.lvl[a];
+      const rows = [[t('tip.level'), u.max !== undefined ? `${lv}/${u.max}` : String(lv)]];
+      if (!G.isMaxed(a)) rows.push(previewUpgrade(a), [t('tip.cost'), costText(u.cur, G.upCost(a))]);
+      return { title: a === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${a}.name`),
+               body: t(`upg.${a}.desc`, DESC_PARAMS[a]()), rows, reason: upgradeReason(a) };
+    }
+    case 'unit': {
+      const spec = C.UNITS[a];
+      return { title: t(`unit.${a}.name`), body: t('tip.unit.body', { max: C.QUEUE_MAX, k: spec.key }),
+               rows: [[t('tip.m.unitHp'), fmt(spec.hp * G.hpMultP())], [t('tip.m.unitDmg'), fmt1(spec.dmg * G.dmgMultP())],
+                      [t('tip.m.range'), fmt(spec.range)], [t('tip.cost'), costText('material', G.unitCost(a))]],
+               reason: unitReason(a) };
+    }
+    case 'repair': {
+      const after = Math.min(G.baseMax(), S.baseHp + C.REPAIR_AMOUNT);
+      const reason = S.status !== 'running' ? t('tip.notRunning') : S.baseHp >= G.baseMax() ? t('tip.baseFull')
+        : S.scrap < C.REPAIR_COST ? missing('scrap', C.REPAIR_COST, S.scrap) : null;
+      return { title: t('repair.name'), body: t('tip.repair.body'),
+               rows: [[t('tip.m.baseHp'), `${fmt(S.baseHp)} → ${fmt(after)}`], [t('tip.cost'), costText('scrap', C.REPAIR_COST)]], reason };
+    }
+    case 'click':
+      return { title: t('btn.click'), body: t('tip.click.body'), rows: [[t('tip.m.perClick'), fmt(G.clickPower())]],
+               reason: S.status !== 'running' ? t('tip.notRunning') : null };
+    case 'bld': {
+      const cost = G.nextSlotCost();
+      return { title: t(`bld.${a}.name`), body: t('tip.slotBuild.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }),
+               rows: [[t('tip.cost'), costText('material', cost)]],
+               reason: S.status !== 'running' ? t('tip.notRunning') : S.material < cost ? missing('material', cost, S.material) : null };
+    }
+    case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
+    case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };
+    case 'diff':  return { title: t(`diff.${a}.name`), body: t(`diff.${a}.desc`) };
+    case 'start': return { title: t('start.go'), body: t('tip.start.body') };
+    case 'back':  return { title: t('start.back'), body: t('tip.back.body') };
+    case 'again': return { title: t('result.again'), body: t('tip.again.body') };
+  }
+  return { title: id };
+}
+
+const Tip = (() => {
+  const el = document.createElement('div');
+  el.id = 'tip'; el.setAttribute('role', 'tooltip'); el.hidden = true;
+  document.body.appendChild(el);
+  let target = null, timer = null, visible = false, mode = 'mouse', mx = 0, my = 0;
+  let touchStart = null, suppressClick = false, lastTouch = -Infinity;
+
+  function cancel(){ clearTimeout(timer); timer = null; }
+  function hide(){ cancel(); visible = false; el.hidden = true; target = null; }
+  function schedule(tgt, m){
+    cancel(); target = tgt; mode = m; scheduledAt = performance.now();
+    timer = setTimeout(show, m === 'touch' ? C.TOUCH_TOOLTIP_MS : C.TOOLTIP_DELAY_MS);
+  }
+  let scheduledAt = 0, lastDelay = null;
+  function show(){
+    timer = null; lastDelay = performance.now() - scheduledAt;
+    if (!target || !document.body.contains(target) || target.closest('[hidden]')){ hide(); return; }
+    visible = true; fill(); el.hidden = false; place();
+    if (mode === 'touch') suppressClick = true;
+  }
+  function fill(){
+    const c = tipContent(target.dataset.tooltip);
+    el.innerHTML = '';
+    const add = (cls, text) => { const d = document.createElement('div'); d.className = cls; d.textContent = text; el.appendChild(d); return d; };
+    add('tt', c.title);
+    if (c.body) add('tb', c.body);
+    if (c.rows && c.rows.length){
+      const r = document.createElement('div'); r.className = 'tr';
+      for (const [k, v] of c.rows){ const s1 = document.createElement('span'); s1.textContent = k; const s2 = document.createElement('span'); s2.textContent = v; r.append(s1, s2); }
+      el.appendChild(r);
+    }
+    if (c.reason) add('tw', c.reason);
+  }
+  function place(){
+    const r = el.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, m = C.TOOLTIP_MARGIN;
+    let x, y;
+    if (mode === 'focus'){
+      const b = target.getBoundingClientRect();
+      x = b.left; y = b.bottom + 6;
+      if (y + r.height > vh - m) y = b.top - r.height - 6;
+    } else if (mode === 'touch'){
+      x = mx - r.width / 2; y = my - r.height - C.TOOLTIP_OFFSET_Y;
+      if (y < m) y = my + C.TOOLTIP_OFFSET_Y;
+    } else {
+      x = mx + C.TOOLTIP_OFFSET_X; y = my + C.TOOLTIP_OFFSET_Y;
+      if (x + r.width > vw - m) x = mx - r.width - C.TOOLTIP_OFFSET_X;
+      if (y + r.height > vh - m) y = my - r.height - C.TOOLTIP_OFFSET_Y;
+    }
+    x = Math.max(m, Math.min(x, vw - m - r.width));
+    y = Math.max(m, Math.min(y, vh - m - r.height));
+    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  }
+  const tipTarget = e => e.target instanceof Element ? e.target.closest('[data-tooltip]') : null;
+
+  document.addEventListener('mouseover', e => {
+    if (performance.now() - lastTouch < C.TOUCH_MOUSE_GUARD_MS) return;
+    const tgt = tipTarget(e);
+    mx = e.clientX; my = e.clientY;
+    if (tgt && tgt === target && mode === 'mouse') return;       // Bewegung innerhalb desselben Elements
+    hide();
+    if (tgt) schedule(tgt, 'mouse');
+  });
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; if (visible && mode === 'mouse') place(); });
+  document.addEventListener('mouseout', e => {
+    if (target && mode === 'mouse' && !(e.relatedTarget instanceof Node && target.contains(e.relatedTarget))) hide();
+  });
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch'){
+      lastTouch = performance.now();
+      const tgt = tipTarget(e);
+      hide();
+      if (tgt){ touchStart = { x: e.clientX, y: e.clientY }; mx = e.clientX; my = e.clientY; schedule(tgt, 'touch'); }
+    } else hide();
+  }, true);
+  document.addEventListener('pointermove', e => {
+    if (touchStart && timer && Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y) > C.TOUCH_MOVE_TOLERANCE_PX) cancel();
+  }, true);
+  document.addEventListener('pointerup', e => { if (e.pointerType === 'touch'){ lastTouch = performance.now(); touchStart = null; if (timer) cancel(); } }, true);
+  document.addEventListener('pointercancel', () => { touchStart = null; cancel(); }, true);
+  document.addEventListener('contextmenu', e => { if (tipTarget(e) && (timer || visible) && mode === 'touch') e.preventDefault(); });
+  document.addEventListener('click', e => {
+    if (suppressClick){ suppressClick = false; e.preventDefault(); e.stopPropagation(); return; }
+  }, true);
+  document.addEventListener('focusin', e => {
+    if (performance.now() - lastTouch < C.TOUCH_MOUSE_GUARD_MS) return;   // Fokus durch Antippen, nicht durch Tastatur
+    const tgt = tipTarget(e);
+    if (tgt && tgt.matches(':focus-visible')){ hide(); schedule(tgt, 'focus'); }
+  });
+  document.addEventListener('focusout', () => { if (mode === 'focus') hide(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+  window.addEventListener('scroll', () => { if (visible && mode !== 'mouse') place(); }, true);
+
+  return { refresh(){ if (visible){ if (!target || !document.body.contains(target)) hide(); else { fill(); place(); } } }, hide, get visible(){ return visible; }, get lastDelay(){ return lastDelay; } };
+})();
+
+/* Entwicklungsmodus (?dev=1): meldet interaktive Elemente ohne Tooltip */
+const DEV = /[?&]dev=1\b/.test(location.search);
+function tooltipAudit(){
+  const sel = 'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
+  return [...document.querySelectorAll(sel)].filter(e => !e.dataset.tooltip).map(e => e.outerHTML.slice(0, 100));
+}
+if (DEV) setInterval(() => { const m = tooltipAudit(); if (m.length) console.warn('[tooltip] ohne Tooltip:', m); }, C.DEV_AUDIT_MS);
+
 /* ================= Speichern ================= */
 function save(){
   const S = G.S;
@@ -110,10 +303,11 @@ function writeRecord(diff, time){
 /* ================= Startbildschirm und Ergebnis ================= */
 let modalOpen = false, resultShownFor = null;
 let pickDiff = C.DEFAULT_DIFFICULTY, canCancel = false;
-function mkButton(cls, text, onClick){
+function mkButton(cls, text, onClick, tip){
   const b = document.createElement('button');
   b.type = 'button'; b.className = cls; b.textContent = text;
-  b.addEventListener('click', onClick);
+  if (tip) b.dataset.tooltip = tip;
+  b.addEventListener('click', e => { if (!isDis(b)) onClick(e); });
   return b;
 }
 function openStart(cancelable){
@@ -134,7 +328,7 @@ function renderStart(){
   const ll = document.createElement('span'); ll.className = 'field-label'; ll.textContent = t('start.language');
   const seg = document.createElement('div'); seg.className = 'seg';
   for (const l of C.LANGUAGES){
-    const b = mkButton('', t('lang.' + l), () => { setLang(l); renderStart(); render(); });
+    const b = mkButton('', t('lang.' + l), () => { setLang(l); renderStart(); render(); }, 'lang:' + l);
     b.setAttribute('aria-pressed', String(l === lang));
     seg.appendChild(b);
   }
@@ -145,7 +339,7 @@ function renderStart(){
   const diffs = document.createElement('div'); diffs.className = 'diffs';
   for (const key of C.DIFFICULTY_ORDER){
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'diff';
+    b.type = 'button'; b.className = 'diff'; b.dataset.tooltip = 'diff:' + key;
     b.setAttribute('aria-pressed', String(key === pickDiff));
     const nm = document.createElement('b'); nm.textContent = t(`diff.${key}.name`);
     const rc = document.createElement('span'); rc.className = 'rec'; rc.textContent = rec[key] ? t('start.record', { time: clock(rec[key]) }) : '';
@@ -158,8 +352,8 @@ function renderStart(){
   body.append(langField, diffField);
 
   const act = $('mActions'); act.innerHTML = '';
-  if (canCancel) act.appendChild(mkButton('link', t('start.back'), closeModal));
-  act.appendChild(mkButton('btn-primary', t('start.go'), () => startGame(pickDiff)));
+  if (canCancel) act.appendChild(mkButton('btn-ghost', t('start.back'), closeModal, 'back'));
+  act.appendChild(mkButton('btn-primary', t('start.go'), () => startGame(pickDiff), 'start'));
 }
 function openResult(){
   modalOpen = true;
@@ -173,12 +367,12 @@ function openResult(){
     : t('result.lost.text', { kills: fmt(S.kills) });
   $('mBody').innerHTML = '';
   const act = $('mActions'); act.innerHTML = '';
-  const b = mkButton('btn-primary', t('result.again'), () => openStart(false));
+  const b = mkButton('btn-primary', t('result.again'), () => openStart(false), 'again');
   act.appendChild(b);
   $('modal').hidden = false;
   b.focus();
 }
-function closeModal(){ modalOpen = false; $('modal').hidden = true; last = performance.now(); acc = 0; }
+function closeModal(){ Tip.hide(); modalOpen = false; $('modal').hidden = true; last = performance.now(); acc = 0; }
 function startGame(diff){
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0);
   resultShownFor = null;
@@ -189,36 +383,27 @@ function startGame(diff){
 
 /* ================= Oberfläche ================= */
 const optEls = {};
-function makeOpt(parent, cls){
+function makeOpt(parent, cls, tip, onClick){
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'opt ' + (cls || '');
-  b.innerHTML = '<span class="opt-name"></span><span class="opt-cost num"></span><span class="opt-desc"></span>';
+  b.type = 'button'; b.className = 'opt ' + (cls || ''); b.dataset.tooltip = tip;
+  b.innerHTML = '<span class="opt-name"></span><span class="opt-cost num"></span>';
+  b.addEventListener('click', () => { if (!isDis(b)){ onClick(); render(); } });
   parent.appendChild(b);
-  return { btn: b, name: b.children[0], cost: b.children[1], desc: b.children[2] };
+  return { btn: b, name: b.children[0], cost: b.children[1] };
 }
 const GROUP_BOX = { fertigung: 'optsFertigung', fabrik: 'optsFabrik', schmiede: 'optsSchmiede', universitaet: 'optsUni', mauer: 'optsMauer', turm: 'optsTurm' };
 
 function buildUI(){
-  for (const id in C.UPGRADES){
-    const el = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]));
-    el.btn.addEventListener('click', () => { G.buy(id); render(); });
-    optEls[id] = el;
-  }
-  for (const id in C.UNITS){
-    const el = makeOpt($('optsUnits'), 'unit');
-    el.btn.addEventListener('click', () => { G.spawn(id); render(); });
-    optEls['unit_' + id] = el;
-  }
-  const r = makeOpt($('optsRepair'));
-  r.btn.addEventListener('click', () => { G.repair(); render(); });
-  optEls.repair = r;
+  for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
+  for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
+  optEls.repair = makeOpt($('optsRepair'), '', 'repair', () => G.repair());
   for (let i = 0; i < C.BUILDING_SLOTS; i++){
     const card = document.createElement('div');
     card.className = 'slot';
     card.innerHTML = '<div class="slot-head"><span class="slot-no"></span><span class="slot-cost"></span></div><div class="slot-body"></div>';
     $('slots').appendChild(card);
   }
-  $('clickBtn').addEventListener('click', () => { G.doClick(); render(); });
+  $('clickBtn').addEventListener('click', () => { if (!isDis($('clickBtn'))){ G.doClick(); render(); } });
   $('newBtn').addEventListener('click', () => openStart(G.S.status === 'running'));
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -250,8 +435,8 @@ function renderSlots(){
       const ch = document.createElement('div'); ch.className = 'slot-choices';
       for (const k of C.BUILDINGS){
         if (G.has(k)) continue;
-        const btn = mkButton('chip', t('slot.buildBtn', { name: t(`bld.${k}.name`) }), () => { G.build(k); slotKey = ''; render(); });
-        btn.disabled = S.status !== 'running' || S.material < cost;
+        const btn = mkButton('chip', t('slot.buildBtn', { name: t(`bld.${k}.name`) }), () => { G.build(k); slotKey = ''; render(); }, `bld:${k}:${i}`);
+        setDis(btn, S.status !== 'running' || S.material < cost);
         ch.appendChild(btn);
       }
       body.appendChild(ch);
@@ -286,18 +471,17 @@ function render(){
   $('queue').textContent = `${S.queue.length}/${C.QUEUE_MAX}`;
   $('diffLabel').textContent = S.status === 'setup' ? '' : t(`diff.${S.diff}.name`);
   $('eraLabel').textContent = t(S.eraReached ? 'hdr.era2' : 'hdr.era1');
-  $('clickBtn').disabled = !running;
+  setDis($('clickBtn'), !running);
 
   for (const id in C.UPGRADES){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];
     el.btn.hidden = !(G.isAvailable(id) && S.revealed[id]);
     if (el.btn.hidden) continue;
     const label = id === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${id}.name`);
-    const level = u.max !== undefined ? t('opt.levelMax', { n: lv, max: u.max }) : t('opt.level', { n: lv });
     el.name.textContent = label;
+    if (lv > 0){ const em = document.createElement('em'); em.textContent = u.max !== undefined ? `${lv}/${u.max}` : String(lv); el.name.appendChild(em); }
     el.cost.textContent = G.isMaxed(id) ? t('opt.max') : costText(u.cur, G.upCost(id));
-    el.desc.textContent = `${level} · ${t(`upg.${id}.desc`, DESC_PARAMS[id]())}`;
-    el.btn.disabled = !G.canBuy(id);
+    setDis(el.btn, !G.canBuy(id));
   }
   for (const id in C.UNITS){
     const spec = C.UNITS[id], el = optEls['unit_' + id], c = G.unitCost(id);
@@ -305,23 +489,17 @@ function render(){
     const kbd = document.createElement('kbd'); kbd.textContent = spec.key;
     el.name.append(kbd, document.createTextNode(t(`unit.${id}.name`)));
     el.cost.textContent = costText('material', c);
-    el.desc.textContent = t('unit.stats', {
-      role: t(spec.range > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'),
-      hp: fmt(spec.hp * G.hpMultP()), dmg: fmt1(spec.dmg * G.dmgMultP()),
-    });
-    el.btn.disabled = !running || S.material < c || S.queue.length >= C.QUEUE_MAX;
+    setDis(el.btn, !!unitReason(id));
   }
   const r = optEls.repair;
   r.btn.hidden = !S.revealed.repair;
   r.name.textContent = t('repair.name');
   r.cost.textContent = costText('scrap', C.REPAIR_COST);
-  r.desc.textContent = t('repair.desc', { n: C.REPAIR_AMOUNT });
-  r.btn.disabled = !running || S.scrap < C.REPAIR_COST || S.baseHp >= G.baseMax();
+  setDis(r.btn, !running || S.scrap < C.REPAIR_COST || S.baseHp >= G.baseMax());
 
   $('hintFabrik').hidden = G.has('fabrik');
   $('hintSchmiede').hidden = G.has('schmiede');
   $('hintUni').hidden = G.has('universitaet');
-  $('hintWall').hidden = S.lvl.turm > 0 || S.lvl.mauer > 0;
 
   const eMax = G.diffCfg().enemyBaseHp;
   $('hpP').textContent = `${fmt(Math.max(0, S.baseHp))} / ${fmt(G.baseMax())}`;
@@ -332,6 +510,7 @@ function render(){
   $('barEra').style.width = (100 * Math.min(1, S.scrapTotal / C.ERA2_AT)) + '%';
 
   renderSlots();
+  Tip.refresh();
 
   const logKey = lang + S.log.map(l => l.t + l.key).join('|');
   if (logKey !== lastLogKey){
@@ -533,7 +712,7 @@ new MutationObserver(readColors).observe(document.documentElement, { attributes:
 setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
 // Schnittstelle für automatisierte Browser-Tests
-window.__kf = { G, C, t, setLang, startGame, get lang(){ return lang; } };
+window.__kf = { G, C, t, setLang, startGame, tooltipAudit, Tip, get lang(){ return lang; } };
 
 setLang(lang);
 buildUI();
