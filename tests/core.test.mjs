@@ -1,4 +1,4 @@
-// Tests der Spiellogik (7.3): Erstattung, ruhende Upgrades, Freischaltung.
+// Tests der Spiellogik: Erstattung, ruhende Upgrades, Freischaltung, Draft, Phasen, 3×3-Raster (REQ-16/17).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCore } from '../tools/load-core.mjs';
@@ -26,23 +26,83 @@ test('Erstattung rundet ab', () => {
   assert.equal(G.refundFor(1), 20);
 });
 
-test('Bei Spielstart sind 4 Typen für 3 Slots wählbar, Handelskontor gesperrt', () => {
+test('Neun Plätze; bei Spielstart 4 Typen wählbar, Handelskontor gesperrt', () => {
   const { G, C } = game();
   G.S.material = 1e6;
   const buildable = C.BUILDINGS.filter(b => G.buildBlock(0, b) === null);
-  assert.equal(C.BUILDING_SLOTS, 3);
+  assert.equal(G.S.slots.length, 9);
   assert.deepEqual(Array.from(buildable).sort(), ['fabrik', 'kaserne', 'schmiede', 'universitaet']);
   assert.equal(G.buildBlock(0, 'kontor'), 'locked');
   G.unlockBuilding('kontor');
   assert.equal(G.buildBlock(0, 'kontor'), null);
 });
 
-test('Je Typ höchstens ein Gebäude', () => {
+test('Verstärkungsgebäude je einmal, Fabriken mehrfach', () => {
   const { G } = game();
   G.S.material = 1e6;
-  assert.ok(G.buildAt(0, 'fabrik'));
-  assert.equal(G.buildBlock(1, 'fabrik'), 'standing');
-  assert.equal(G.buildAt(1, 'fabrik'), false);
+  for (const type of ['schmiede', 'kaserne', 'universitaet']){
+    assert.ok(G.build(type));
+    assert.equal(G.buildBlock(8, type), 'standing', `zweite ${type} nicht baubar`);
+  }
+  assert.ok(G.build('fabrik')); assert.ok(G.build('fabrik')); assert.ok(G.build('fabrik'));
+  assert.equal(G.factoryCount(), 3);
+});
+
+test('Die dritte Fabrik kostet das 1,6²-Fache der ersten; nach Abriss sinkt der Preis', () => {
+  const { G, C } = game();
+  G.S.material = 1e6;
+  assert.equal(C.FACTORY_COST_GROWTH, 1.6);
+  const first = G.factoryCost();
+  assert.equal(first, C.FACTORY_BASE_COST);
+  G.build('fabrik'); G.build('fabrik');
+  assert.equal(G.factoryCost(), Math.ceil(C.FACTORY_BASE_COST * 1.6 * 1.6));
+  const m = G.S.material; G.build('fabrik');
+  assert.equal(m - G.S.material, Math.ceil(C.FACTORY_BASE_COST * 1.6 * 1.6), 'bezahlter Preis');
+  G.demolish(0);
+  assert.equal(G.factoryCost(), Math.ceil(C.FACTORY_BASE_COST * 1.6 * 1.6), 'Preis richtet sich nach der aktuellen Zahl');
+});
+
+test('Fabriken erzeugen FACTORY_BASE_RATE Material pro Sekunde; keine Fertiger mehr', () => {
+  const { G, C } = game();
+  assert.ok(!('fertiger' in C.UPGRADES));
+  G.S.material = 1e6;
+  G.build('fabrik'); G.build('fabrik');
+  assert.equal(G.matRate(), 2 * C.FACTORY_BASE_RATE);
+});
+
+test('Kaserne Stufe 2 ergibt ein Versorgungslimit von 7', () => {
+  const { G, C } = game();
+  G.S.material = 1e6;
+  assert.equal(G.supplyCap(), 3);
+  G.build('kaserne');
+  assert.equal(G.kaserneLevel(), 1);
+  assert.equal(G.supplyCap(), 5);
+  assert.ok(G.buy('ausbau'));
+  assert.equal(G.kaserneLevel(), 2);
+  assert.equal(G.supplyCap(), 7);
+  assert.ok(G.buy('ausbau'));
+  assert.equal(G.supplyCap(), 9);
+  assert.equal(G.buy('ausbau'), false, 'höchstens Stufe 3');
+  assert.equal(C.KASERNE_SUPPLY_PER_LEVEL, 2);
+});
+
+test('Einheitenstärke steigt mit den Stufen auch ohne Schmiede', () => {
+  const { G, C } = game();
+  assert.equal(G.has('schmiede'), false);
+  const base = G.dmgMultP();
+  G.S.level = 4;
+  assert.ok(Math.abs(G.dmgMultP() - base * (1 + 4 * C.UNIT_STRENGTH_PER_LEVEL)) < 1e-9);
+  assert.ok(G.hpMultP() > 1);
+  const u = G.makeUnit('p', 'laeufer', 1);
+  assert.ok(Math.abs(u.hp - C.UNITS.laeufer.hp * 1.2) < 1e-9);
+});
+
+test('Schmiede: Qualitätsstufen mit Kostenwachstum 2,5', () => {
+  const { G, C } = game();
+  G.S.material = 1e6; G.build('schmiede');
+  const c0 = G.upCost('qualitaet'); G.buy('qualitaet');
+  assert.equal(G.upCost('qualitaet'), Math.ceil(c0 * C.SMITHY_COST_GROWTH));
+  assert.equal(C.SMITHY_COST_GROWTH, 2.5);
 });
 
 test('Schmiede bauen, Upgrade kaufen, abreißen: Effekt ruht; neu bauen: Effekt wieder aktiv ohne Nachkauf', () => {
@@ -50,25 +110,23 @@ test('Schmiede bauen, Upgrade kaufen, abreißen: Effekt ruht; neu bauen: Effekt 
   G.S.material = 1e6;
   const base = G.dmgMultP();
   assert.ok(G.buildAt(0, 'schmiede'));
-  assert.ok(G.buy('klingen'));
+  assert.ok(G.buy('qualitaet'));
   const boosted = G.dmgMultP();
   assert.ok(boosted > base);
   assert.ok(G.demolish(0));
   assert.equal(G.dmgMultP(), base, 'Effekt muss nach Abriss ruhen');
-  assert.equal(G.S.lvl.klingen, 1, 'gekaufte Stufe bleibt gespeichert');
-  assert.equal(G.canBuy('klingen'), false, 'ohne Schmiede kein Kauf');
+  assert.equal(G.S.lvl.qualitaet, 1, 'gekaufte Stufe bleibt gespeichert');
+  assert.equal(G.canBuy('qualitaet'), false, 'ohne Schmiede kein Kauf');
   assert.ok(G.buildAt(2, 'schmiede'));
   assert.equal(G.dmgMultP(), boosted, 'Effekt nach Neubau wieder aktiv');
-  assert.equal(G.S.lvl.klingen, 1, 'kein Nachkauf nötig');
+  assert.equal(G.S.lvl.qualitaet, 1, 'kein Nachkauf nötig');
 });
 
-test('Preis richtet sich nach der Zahl stehender Gebäude, Abriss macht den Platz sofort frei', () => {
-  const { G, C } = game();
+test('Abriss macht den Platz sofort frei', () => {
+  const { G } = game();
   G.S.material = 1e6;
   G.buildAt(0, 'fabrik'); G.buildAt(1, 'schmiede');
-  assert.equal(G.nextSlotCost(), C.BUILD_COSTS[2]);
   G.demolish(0);
-  assert.equal(G.nextSlotCost(), C.BUILD_COSTS[1]);
   assert.equal(G.buildBlock(0, 'kaserne'), null);
 });
 
@@ -139,7 +197,7 @@ test('Handelskontor erst nach Wahl der Draft-Option baubar', () => {
 
 test('Optionsdaten sind vollständig und deklarativ', () => {
   const { KF_DRAFT_OPTIONS } = loadCore();
-  assert.ok(KF_DRAFT_OPTIONS.length >= 10 && KF_DRAFT_OPTIONS.length <= 12);
+  assert.ok(KF_DRAFT_OPTIONS.length >= 10 && KF_DRAFT_OPTIONS.length <= 20);
   for (const o of KF_DRAFT_OPTIONS){
     for (const f of ['id', 'category', 'nameKey', 'descKey', 'effect', 'weight']) assert.ok(o[f] !== undefined, `${o.id}: ${f} fehlt`);
     assert.ok(o.unique || o.maxStacks, `${o.id}: unique oder maxStacks nötig`);
@@ -170,16 +228,15 @@ test('Klickwert ist gedeckelt; nur die Presse erhöht ihn', () => {
   while (G.buy('presse'));
   assert.equal(G.S.lvl.presse, C.UPGRADES.presse.max);
   assert.equal(G.clickPower(), 1 + C.FX_PRESSE * C.UPGRADES.presse.max);
-  G.buildAt(0, 'fabrik');
   const before = G.clickPower();
-  while (G.buy('druckluft') || G.buy('takt'));
-  assert.equal(G.clickPower(), before, 'Fabrik-Upgrades verändern den Klickwert nicht');
+  G.buildAt(0, 'fabrik'); G.buildAt(1, 'fabrik');
+  assert.equal(G.clickPower(), before, 'Fabriken verändern den Klickwert nicht');
   assert.ok(!('hydraulik' in C.UPGRADES), 'Hydraulik ist umgebaut');
 });
 
 test('Produktion wird je Phase getrennt nach Klick und Automatik erfasst', () => {
   const { G } = game();
-  G.doClick(); G.S.material = 1e6; G.buy('fertiger'); G.tick(0.05);
+  G.doClick(); G.S.material = 1e6; G.build('fabrik'); G.tick(0.05);
   const p = G.S.stats.prod.early;
   assert.ok(p.click >= 1 && p.auto > 0);
 });

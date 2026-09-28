@@ -14,9 +14,8 @@ export const PROFILES = {
   passiv:       { cps: 0.3, every: 3,    cap: 10, useWall: false, noBuild: true, noUpgrades: true },
 };
 
-const MAT_PRIO = ['fertiger', 'presse', 'druckluft', 'takt', 'serie', 'klingen', 'ruestung', 'drill',
-                  'rekrutierung', 'stube', 'zinseszins', 'turm_0', 'turm_2', 'mauer', 'kadenz_0', 'kadenz_2',
-                  'reichweite_0', 'reichweite_2', 'stacheln', 'moertel', 'nacht'];
+const MAT_PRIO = ['presse', 'ausbau', 'qualitaet', 'zinseszins', 'turm_0', 'turm_2', 'mauer', 'kadenz_0', 'kadenz_2',
+                  'reichweite_0', 'reichweite_2', 'stacheln', 'moertel'];
 const GATE = C.GATE_LANE;
 /* Anteil der Lebenspunkte je Abschnitt; das Tor zählt doppelt, weil es die Partie entscheidet */
 function baseHealth(G){
@@ -47,6 +46,7 @@ function score(G){
   return (1 - S.enemyBaseHp / eMax) * 100
        - (1 - baseHealth(G)) * 150
        + 12 * Math.log2(1 + G.matRate())
+       + 8 * Math.log2(G.supplyCap()) + 10 * Math.log2(G.dmgMultP())
        + 6 * Math.log2(1 + army)
        + 4 * Math.log2(1 + S.material);
 }
@@ -121,10 +121,10 @@ export class Bot {
     const trySpawn = n => { for (let k = 0; k < n; k++){ if (own + S.queue.length >= o.cap) break; if (this.mix % 3 === 2 ? G.spawn('werfer') : G.spawn('laeufer')) this.mix++; else break; } };
     if (threat && own < 4) trySpawn(2);
 
-    // Bauen
+    // Bauen: passive Spieler bauen nur Fabriken
     const free = S.slots.findIndex(x => !x);
-    if (!o.noBuild && free >= 0 && S.material >= G.nextSlotCost()){
-      const options = C.BUILDINGS.filter(b => G.buildBlock(free, b) === null);
+    if (free >= 0){
+      const options = C.BUILDINGS.filter(b => G.buildBlock(free, b) === null && (!o.noBuild || b === 'fabrik') && !(o.forbid || []).includes(b));
       if (options.length){
         const type = this.chooseBuilding(G, free, options, stats);
         if (G.buildAt(free, type) && stats) stats.built[type] = (stats.built[type] || 0) + 1;
@@ -136,7 +136,7 @@ export class Bot {
       if (o.strategy === 'zufall' && this.rng() < 0.01){
         const i = Math.floor(this.rng() * S.slots.length);
         if (G.demolish(i) && stats) stats.demolished++;
-      } else if (o.strategy === 'gierig' && o.lookahead && missingUnlocked.length && S.material >= C.BUILD_COSTS[C.BUILDING_SLOTS - 1] * 1.5){
+      } else if (o.strategy === 'gierig' && o.lookahead && missingUnlocked.length && S.material >= G.buildCost(missingUnlocked[0]) * 1.5){
         const cand = missingUnlocked[0];
         let best = -1, bestScore = score(G) + 5;          // Tausch nur bei klarem Vorteil
         const keep = forkGame(G);
@@ -165,10 +165,9 @@ export class Bot {
         if (!o.useWall && (g === 'mauer' || g.startsWith('turm')) && C.UPGRADES[id].base !== 'turm' && id !== 'mauer') continue;
         G.buy(id);
       }
-    } else G.buy('fertiger');
+    }
     // Einheiten mit Rücklage für Wirtschaft
-    const slotTarget = !o.noBuild && S.slots.some(x => !x) ? G.nextSlotCost() : Infinity;
-    const econTarget = Math.min(G.upCost('fertiger'), slotTarget);
+    const econTarget = S.slots.some(x => !x) ? G.factoryCost() : Infinity;
     const reserve = threat ? 0 : econTarget * 0.7;
     while (S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
       const q = S.queue.length; trySpawn(1); if (S.queue.length === q) break;
@@ -177,11 +176,11 @@ export class Bot {
 }
 
 /* Eine vollständige Partie. Liefert Kennzahlen für den Bericht. */
-export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45 }){
+export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   const G = newGame(diff, seed);
-  const bot = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon }));
+  const bot = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [] };
   const steps = maxMin * 60 / DT;
   for (let i = 0; i < steps && G.S.status === 'running'; i++) bot.step(G, stats);

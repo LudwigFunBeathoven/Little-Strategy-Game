@@ -63,18 +63,10 @@ function dur(sec){
 const pct = x => Math.round(x * 100);
 /* Kennzahlen für die Beschreibungen, direkt aus der Konfiguration */
 const DESC_PARAMS = {
-  fertiger:   () => ({ n: fmt1(C.FX_FERTIGER_RATE), m: C.FX_FERTIGER_MILESTONE }),
   presse:     () => ({ n: C.FX_PRESSE }),
-  druckluft:  () => ({ percent: pct(C.FX_DRUCKLUFT - 1) }),
-  takt:       () => ({ percent: pct(C.FX_TAKT - 1) }),
-  serie:      () => ({ percent: pct(C.FX_SERIE) }),
-  klingen:    () => ({ percent: pct(C.FX_KLINGEN - 1) }),
-  ruestung:   () => ({ percent: pct(C.FX_RUESTUNG - 1) }),
-  drill:      () => ({ percent: pct(1 - C.FX_DRILL) }),
-  rekrutierung:  () => ({ percent: pct(C.FX_REKRUTIERUNG) }),
-  stube:         () => ({ n: C.FX_STUBE }),
+  qualitaet:  () => ({ percent: pct(C.FX_QUALITAET) }),
+  ausbau:     () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL }),
   zinseszins:    () => ({ percent: fmt1(C.FX_ZINSESZINS * 100) }),
-  nacht:      () => ({ n: C.FX_NACHT_HOURS }),
   mauer:      () => ({ n: C.FX_MAUER_HP }),
   stacheln:   () => ({ n: C.FX_STACHELN_DMG }),
   moertel:    () => ({ n: C.FX_MOERTEL_REGEN }),
@@ -90,18 +82,10 @@ const isDis = el => el.getAttribute('aria-disabled') === 'true';
 function setDis(el, d){ el.setAttribute('aria-disabled', d ? 'true' : 'false'); }
 /* Kennzahl je Upgrade: Wert vor und nach dem Kauf */
 const METRICS = {
-  fertiger:   ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
   presse:     ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
-  druckluft:  ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
-  takt:       ['tip.m.matRate',      () => G.matRate(), v => fmt1(v)],
-  serie:      ['tip.m.fertigerCost', () => G.upCost('fertiger'), v => fmt(v)],
-  klingen:    ['tip.m.dmg',          () => C.UNITS.laeufer.dmg * G.dmgMultP(), v => fmt1(v)],
-  ruestung:   ['tip.m.hp',           () => C.UNITS.laeufer.hp * G.hpMultP(), v => fmt(v)],
-  drill:      ['tip.m.atkRate',      () => 1 / (C.UNITS.laeufer.cd * G.cdMultP()), v => fmt1(v)],
-  rekrutierung:  ['tip.m.unitCost',  () => G.unitCost('laeufer'), v => fmt(v)],
-  stube:         ['tip.m.queueMax',  () => G.supplyCap(), v => fmt(v)],
+  qualitaet:  ['tip.m.strength',     () => G.qualityMult() * 100, v => fmt(v) + ' %'],
+  ausbau:     ['tip.m.queueMax',     () => G.supplyCap(), v => fmt(v)],
   zinseszins:    ['tip.m.interest',  () => G.interestRate() * 100, v => fmt1(v) + ' %'],
-  nacht:      ['tip.m.offline',      () => G.offlineHours(), v => fmt(v)],
   mauer:      ['tip.m.baseMax',      () => G.sectionMax(C.GATE_LANE), v => fmt(v)],
   stacheln:   ['tip.m.thorns',       () => C.FX_STACHELN_DMG * G.S.lvl.stacheln, v => fmt(v)],
   moertel:    ['tip.m.regen',        () => C.FX_MOERTEL_REGEN * G.S.lvl.moertel, v => fmt1(v)],
@@ -193,12 +177,12 @@ function tipContent(id){
                reason: S.status !== 'running' ? t('tip.notRunning') : null };
     case 'slot': {
       const sl = S.slots[a];
-      if (!sl) return { title: t('slot.label', { n: Number(a) + 1 }), body: t('tip.slot.empty'), rows: [[t('tip.cost'), costText('material', G.nextSlotCost())]] };
-      return { title: t(`bld.${sl.type}.name`), body: t('tip.slot.built'),
+      if (!sl) return { title: t('slot.label', { n: Number(a) + 1 }), body: t('tip.slot.empty'), rows: [[t('tip.m.nextFactory'), costText('material', G.factoryCost())]] };
+      return { title: t(`bld.${sl.type}.name`), body: bldEffect(sl.type, true) + '. ' + t('tip.slot.built'),
                rows: [[t('tip.refund'), costText('material', G.refundFor(Number(a)))]] };
     }
     case 'pick': {
-      const cost = G.nextSlotCost(), block = G.buildBlock(Number(b), a);
+      const cost = G.buildCost(a), block = G.buildBlock(Number(b), a);
       return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }),
                rows: [[t('tip.cost'), costText('material', cost)]], reason: buildReason(block, cost) };
     }
@@ -450,13 +434,13 @@ function makeOpt(parent, cls, tip, onClick){
   parent.appendChild(b);
   return { btn: b, name: b.children[0], expl: b.children[1] };
 }
-const GROUP_BOX = { fertigung: 'optsFertigung', fabrik: 'optsFabrik', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm_0: 'optsTurm0', turm_2: 'optsTurm2' };
+const GROUP_BOX = { fertigung: 'optsFertigung', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm_0: 'optsTurm0', turm_2: 'optsTurm2' };
 
 function buildUI(){
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
   for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
-  for (let i = 0; i < C.BUILDING_SLOTS; i++){
+  for (let i = 0; i < KlammerCore.SLOTS; i++){
     const card = document.createElement('button');
     card.type = 'button'; card.className = 'slot slot-btn'; card.dataset.tooltip = 'slot:' + i;
     card.innerHTML = '<span class="slot-head"><span class="slot-no"></span><span class="slot-cost"></span></span><span class="slot-body"></span>';
@@ -473,10 +457,21 @@ function buildUI(){
   });
 }
 
+/* Wirkung eines Gebäudes für Erklärzeilen: neu gebaut (built = false) oder wie es gerade wirkt */
+function bldEffect(type, built){
+  switch (type){
+    case 'fabrik': return t('fx.fabrik', { rate: fmt1(G.factoryRate()) });
+    case 'schmiede': return t('fx.schmiede', { n: G.S.lvl.qualitaet });
+    case 'kaserne': return t('fx.kaserne', { n: built ? G.kaserneLevel() : 1, m: C.KASERNE_SUPPLY_PER_LEVEL * (built ? G.kaserneLevel() : 1) });
+    case 'universitaet': return t('fx.universitaet', { n: C.DRAFT_OPTIONS_UNIVERSITY });
+    case 'kontor': return t('fx.kontor', { percent: fmt1(G.interestRate() * 100), s: C.KONTOR.intervalS });
+  }
+  return '';
+}
 let slotKey = '';
 function renderSlots(){
-  const S = G.S, cost = G.nextSlotCost();
-  const key = lang + JSON.stringify(S.slots) + '|' + cost + '|' + S.status;
+  const S = G.S, cost = G.factoryCost();
+  const key = lang + JSON.stringify(S.slots) + '|' + cost + '|' + S.status + '|' + fmt1(G.factoryRate()) + '|' + G.kaserneLevel() + '|' + S.lvl.qualitaet;
   if (key === slotKey) return;
   slotKey = key;
   const cards = $('slots').children;
@@ -486,16 +481,19 @@ function renderSlots(){
     const sl = S.slots[i];
     body.innerHTML = '';
     setDis(card, S.status !== 'running');
+    const ex = document.createElement('span'); ex.className = 'expl';
     if (sl){
       card.className = 'slot slot-btn built';
-      costEl.textContent = t('slot.built');
+      costEl.textContent = '';
       const nm = document.createElement('span'); nm.className = 'slot-name'; nm.textContent = t(`bld.${sl.type}.name`);
-      body.appendChild(nm);
+      ex.textContent = t('ex.slot.built', { effect: bldEffect(sl.type, true), refund: costText('material', G.refundFor(i)) });
+      body.append(nm, ex);
     } else {
       card.className = 'slot slot-btn';
-      costEl.textContent = costText('material', cost);
+      costEl.textContent = '';
       const cta = document.createElement('span'); cta.className = 'slot-cta'; cta.textContent = t('slot.choose');
-      body.appendChild(cta);
+      ex.textContent = t('ex.slot.empty', { cost: costText('material', cost) });
+      body.append(cta, ex);
     }
   }
 }
@@ -567,23 +565,24 @@ function openSlotDialog(i){
   const S = G.S, sl = S.slots[i];
   const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel');
   if (!sl){
-    const cost = G.nextSlotCost(), list = document.createElement('div'); list.className = 'diffs';
+    const list = document.createElement('div'); list.className = 'diffs';
     for (const type of C.BUILDINGS){
-      const block = G.buildBlock(i, type);
+      const block = G.buildBlock(i, type), cost = G.buildCost(type);
       if (block === 'standing') continue;
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `pick:${type}:${i}`;
-      const nm = document.createElement('b'); nm.textContent = t(`bld.${type}.name`);
-      const c = document.createElement('span'); c.className = 'c'; c.textContent = costText('material', cost);
+      const nm = document.createElement('b'); nm.textContent = type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${type}.name`);
+      const c = document.createElement('span'); c.className = 'c';
       const d = document.createElement('span'); d.className = 'd'; d.textContent = t(`bld.${type}.desc`);
-      b.append(nm, c, d);
+      const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.line', { effect: bldEffect(type, false), cost: costText('material', cost) });
+      b.append(nm, c, d, ex);
       const why = buildReason(block, cost);
       if (why){ const w = document.createElement('span'); w.className = 'w'; w.textContent = why; b.appendChild(w); }
       setDis(b, !!block);
       b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ slotKey = ''; closeModal(); render(); } });
       list.appendChild(b);
     }
-    showDialog({ eyebrow: t('yard.title'), title: t('slot.label', { n: i + 1 }), text: t('slot.dialogText', { cost: costText('material', cost) }),
+    showDialog({ eyebrow: t('yard.title'), title: t('slot.label', { n: i + 1 }), text: t('slot.dialogText'),
                  body: [list], actions: [cancel], focus: list.querySelector('.pick:not([aria-disabled="true"])') || cancel });
   } else {
     const refund = costText('material', G.refundFor(i));
@@ -672,7 +671,7 @@ function render(){
     setDis(r.btn, !!repairReason(i));
   }
 
-  $('hintFabrik').hidden = G.has('fabrik');
+  $('factoryStat').textContent = t('fab.stat', { n: G.factoryCount(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) });
   $('hintSchmiede').hidden = G.has('schmiede');
   $('hintKaserne').hidden = G.has('kaserne');
   const kontorKnown = G.has('kontor') || !!S.unlocked.kontor;

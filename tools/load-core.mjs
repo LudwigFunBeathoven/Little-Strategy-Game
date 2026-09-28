@@ -11,7 +11,15 @@ export function loadCore(files = ['config.js', 'data/draft-options.js', 'core.js
     vm.runInContext(readFileSync(p, 'utf8'), ctx, { filename: f });
   }
   vm.runInContext('globalThis.__out = { KF_CONFIG, KlammerCore, KF_DRAFT_OPTIONS: typeof KF_DRAFT_OPTIONS !== "undefined" ? KF_DRAFT_OPTIONS : null };', ctx);
+  // Balancing-Versuche ohne Dateiänderung: KF_OVERRIDE='{"DIFFICULTY":{"normal":{"waveGrowth":0.6}}}'
+  if (process.env.KF_OVERRIDE) merge(ctx.__out.KF_CONFIG, JSON.parse(process.env.KF_OVERRIDE));
   return ctx.__out;
+}
+function merge(target, src){
+  for (const [k, v] of Object.entries(src)){
+    if (v && typeof v === 'object' && !Array.isArray(v) && target[k] && typeof target[k] === 'object') merge(target[k], v);
+    else target[k] = v;
+  }
 }
 export function loadI18n(){
   const ctx = {}; vm.createContext(ctx);

@@ -11,7 +11,7 @@
      weight     relative Ziehungswahrscheinlichkeit
      unique     true = einmalig; sonst maxStacks = Obergrenze für Mehrfachwahl
      requires   optional: Voraussetzung für das Angebot ({ upgrade } | { building })
-   Bekannte stats: autoProd, clickYield, wallHp, unitCost, unitHp, werferHp, werferRange, dmgVsBase, dmgVsUnits,
+   Bekannte stats: autoProd, factoryYield, factoryCost, offlineHours, supply, rangedRows, clickYield, wallHp, unitCost, unitHp, werferHp, werferRange, dmgVsBase, dmgVsUnits,
                    turretVsRanged, scrapGain, siegeDps, spawnOffset, emergencyRepair, enemyHp */
 const KF_DRAFT_OPTIONS = [
   { id: 'schwerePressen', category: 'upgrade', nameKey: 'draft.schwerePressen.name', descKey: 'draft.schwerePressen.desc',
@@ -37,6 +37,13 @@ const KF_DRAFT_OPTIONS = [
     effect: [{ stat: 'werferRange', add: 25 }], drawback: [{ stat: 'werferHp', mul: 0.85 }], weight: 8, maxStacks: 2 },
   { id: 'doppelschicht', category: 'upgrade', nameKey: 'draft.doppelschicht.name', descKey: 'draft.doppelschicht.desc',
     effect: [{ stat: 'autoProd', mul: 1.25 }], drawback: [{ stat: 'clickYield', mul: 0.5 }], weight: 8, maxStacks: 2 },
+  /* Ehemalige Fabrik- und Fertiger-Upgrades (REQ-16.4), in I3 ohne Stufen */
+  { id: 'bessereFabriken', category: 'upgrade', nameKey: 'draft.bessereFabriken.name', descKey: 'draft.bessereFabriken.desc',
+    effect: [{ stat: 'factoryYield', mul: 1.25 }], weight: 10, maxStacks: 3 },
+  { id: 'serienbau', category: 'upgrade', nameKey: 'draft.serienbau.name', descKey: 'draft.serienbau.desc',
+    effect: [{ stat: 'factoryCost', mul: 0.85 }], weight: 8, maxStacks: 2 },
+  { id: 'nachtschicht', category: 'upgrade', nameKey: 'draft.nachtschicht.name', descKey: 'draft.nachtschicht.desc',
+    effect: [{ stat: 'offlineHours', add: 4 }], weight: 5, maxStacks: 2 },
   { id: 'kriegsanleihe', category: 'upgrade', nameKey: 'draft.kriegsanleihe.name', descKey: 'draft.kriegsanleihe.desc',
     effect: [{ grant: 'production', seconds: 60 }], drawback: [{ stat: 'enemyHp', mul: 1.08 }], weight: 7, maxStacks: 3 },
 ];

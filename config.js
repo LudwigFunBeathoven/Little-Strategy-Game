@@ -69,29 +69,27 @@ const KF_CONFIG = {
     werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, speed: 30, range: 105, bounty: 15 },
   },
 
-  /* Bauplätze (REQ-01). Der Preis richtet sich nach der Zahl der stehenden Gebäude.
+  /* Bauplätze: 3×3-Raster, alle ab Start offen (REQ-16.1).
      Abriss erstattet REFUND_RATE des tatsächlich gezahlten Preises; Upgrades ruhen und leben beim Neubau wieder auf. */
-  BUILDING_SLOTS: 3,
-  MAX_PER_TYPE: 1,
+  GRID_SIZE: 3,
+  MAX_PER_TYPE: 1,              // gilt nur für Verstärkungsgebäude; Fabriken sind mehrfach baubar
   REFUND_RATE: 0.5,
-  BUILD_COSTS: [40, 350, 1200],
+  /* Fabriken (REQ-16.2): die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1) */
+  FACTORY_BASE_RATE: 2.5,       // Material pro Sekunde je Fabrik
+  FACTORY_BASE_COST: 30,
+  FACTORY_COST_GROWTH: 1.6,
+  BUILDING_COST: { schmiede: 200, kaserne: 150, universitaet: 300, kontor: 250 },   // Verstärkungsgebäude, je einmal baubar
   BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet', 'kontor'],
   START_BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet'],   // Handelskontor nur per Draft (REQ-02)
   KONTOR: { intervalS: 10, rate: 0.01, capSeconds: 30, capMin: 20 },   // Zinsen: alle intervalS Sekunden rate × Bestand, höchstens capSeconds Automatik-Ertrag
 
   /* Upgrades. group = Gebäude oder Bereich; cur = Währung; max = Höchststufe; needs = Voraussetzung */
   UPGRADES: {
-    fertiger:   { group: 'fertigung',    baseCost: 25,  growth: 1.25, cur: 'material' },
     presse:     { group: 'fertigung',    baseCost: 15,  growth: 2.5,  cur: 'material', max: 2 },     // Klickwert gedeckelt (REQ-03.3)
-    druckluft:  { group: 'fabrik',       baseCost: 250, growth: 2.1,  cur: 'material', max: 6 },     // ersetzt Hydraulik: skaliert Fertiger statt Klick
-    takt:       { group: 'fabrik',       baseCost: 150, growth: 2.0,  cur: 'material', max: 8 },
-    serie:      { group: 'fabrik',       baseCost: 200, growth: 2.2,  cur: 'material', max: 5 },
-    nacht:      { group: 'fabrik',       baseCost: 400, growth: 2.2,  cur: 'material', max: 4 },
-    klingen:    { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
-    ruestung:   { group: 'schmiede',     baseCost: 60,  growth: 1.6,  cur: 'material' },
-    drill:      { group: 'schmiede',     baseCost: 150, growth: 2.0,  cur: 'material', max: 5 },
-    rekrutierung:  { group: 'kaserne',   baseCost: 80,  growth: 1.8,  cur: 'material', max: 5 },
-    stube:         { group: 'kaserne',   baseCost: 150, growth: 2.2,  cur: 'material', max: 3 },
+    /* Schmiede: Qualitätsstufen mit stark steigenden Kosten, Abfluss für überschüssiges Material (REQ-17.3) */
+    qualitaet:  { group: 'schmiede',     baseCost: 80,  cur: 'material' },   // Wachstum: SMITHY_COST_GROWTH
+    /* Kaserne: das Gebäude ist Ausbaustufe 1, „Ausbau“ hebt auf Stufe 2 und 3 (REQ-17.1) */
+    ausbau:     { group: 'kaserne',      baseCost: 250, growth: 2.0,  cur: 'material', max: 2 },
     zinseszins: { group: 'kontor',       baseCost: 300, growth: 2.0,  cur: 'material', max: 4 },
     mauer:      { group: 'mauer',        baseCost: 120, growth: 1.6,  cur: 'material' },
     stacheln:   { group: 'mauer',        baseCost: 150, growth: 1.8,  cur: 'material', max: 5 },
@@ -107,20 +105,12 @@ const KF_CONFIG = {
   REVEAL_AT: 0.5,               // Option erscheint, sobald die Hälfte des Preises vorhanden ist
 
   /* Wirkungen der Upgrades */
-  FX_FERTIGER_RATE: 1.0,
-  FX_FERTIGER_MILESTONE: 15,    // je 15 Fertiger verdoppelt sich ihr Ausstoß
-  FX_MILESTONE_MULT: 2,
-  FX_TAKT: 1.4,                 // Faktor je Stufe
-  FX_DRUCKLUFT: 1.3,            // Faktor je Stufe
-  FX_SERIE: 0.10,
   FX_PRESSE: 1,
-  FX_KLINGEN: 1.2,
-  FX_RUESTUNG: 1.2,
-  FX_DRILL: 0.9,
-  FX_REKRUTIERUNG: 0.08,        // Einheiten je Stufe günstiger
-  FX_STUBE: 1,                  // Versorgungslimit je Stufe
+  SMITHY_COST_GROWTH: 2.5,
+  FX_QUALITAET: 0.25,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (Faktor 1,25 je Stufe)
+  KASERNE_SUPPLY_PER_LEVEL: 2,  // Versorgungslimit je Ausbaustufe der Kaserne: 3 → 5 → 7 → 9
+  UNIT_STRENGTH_PER_LEVEL: 0.05,// Grundstärke aller eigenen Einheiten je Altmetall-Stufe, auch ohne Schmiede (REQ-17.2)
   FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
-  FX_NACHT_HOURS: 4,
   FX_MAUER_HP: 150,             // je Abschnitt
   FX_STACHELN_DMG: 4,
   FX_MOERTEL_REGEN: 1,
@@ -152,7 +142,7 @@ const KF_CONFIG = {
   DIFFICULTY: {
     leicht: { enemyBaseHp: 1500, waveBase: 1.5, waveGrowth: 0.4,
               werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.03, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
-    normal: { enemyBaseHp: 2200, waveBase: 2,   waveGrowth: 0.8,
+    normal: { enemyBaseHp: 2200, waveBase: 2,   waveGrowth: 0.6,
               werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
     schwer: { enemyBaseHp: 3800, waveBase: 2,   waveGrowth: 1.3,
               werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.17, dmgGrowth: 0.10, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
@@ -160,3 +150,4 @@ const KF_CONFIG = {
   DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],
   DEFAULT_DIFFICULTY: 'normal',
 };
+KF_CONFIG.UPGRADES.qualitaet.growth = KF_CONFIG.SMITHY_COST_GROWTH;

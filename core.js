@@ -5,7 +5,7 @@ const KlammerCore = (() => {
 'use strict';
 const C = KF_CONFIG;
 const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH;
-const LANES = C.LANE_COUNT, GATE = C.GATE_LANE;
+const LANES = C.LANE_COUNT, GATE = C.GATE_LANE, SLOTS = C.GRID_SIZE * C.GRID_SIZE;
 const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [];
 const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
 /* Stufenschwellen: kumuliertes Altmetall für Stufe n */
@@ -42,7 +42,7 @@ function freshState(diff, seed){
     v: 4, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
-    lvl, slots: new Array(C.BUILDING_SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
+    lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -Infinity })), enemyBaseHp: d.enemyBaseHp,
     nextWave: C.WAVE_INTERVAL_S, waveNo: 0, hold: false, nextEnemy: [], enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
@@ -86,23 +86,27 @@ function create(){
 
   /* ---------- abgeleitete Werte ---------- */
   const has = b => S.slots.some(s => s && s.type === b);
+  const countType = type => S.slots.filter(s => s && s.type === type).length;
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
   const diffCfg      = () => C.DIFFICULTY[S.diff];
-  // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Automatik skaliert über Fertiger, Fabrik und Draft
+  // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Material kommt sonst aus Fabriken (REQ-16.2)
   const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * mMul('clickYield');
-  const milestoneMult = () => Math.pow(C.FX_MILESTONE_MULT, Math.floor(lv('fertiger') / C.FX_FERTIGER_MILESTONE));
-  const fertigerRate = () => C.FX_FERTIGER_RATE * Math.pow(C.FX_TAKT, lv('takt')) * Math.pow(C.FX_DRUCKLUFT, lv('druckluft')) * milestoneMult();
-  const matRate      = () => lv('fertiger') * fertigerRate() * mMul('autoProd');
-  const hpMultP      = () => Math.pow(C.FX_RUESTUNG, lv('ruestung'));
-  const dmgMultP     = () => Math.pow(C.FX_KLINGEN, lv('klingen'));
-  const cdMultP      = () => Math.pow(C.FX_DRILL, lv('drill'));
+  const factoryCount = () => countType('fabrik');
+  const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd');
+  const matRate      = () => factoryCount() * factoryRate();
+  // Grundstärke steigt je Altmetall-Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
+  const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
+  const qualityMult  = () => Math.pow(1 + C.FX_QUALITAET, lv('qualitaet'));
+  const hpMultP      = () => levelStrength() * qualityMult();
+  const dmgMultP     = () => levelStrength() * qualityMult();
+  const cdMultP      = () => 1;
   const bountyMult   = () => mMul('scrapGain');
   /* Abschnitte der Basis (REQ-13): 0 = Mauer oben, 1 = Tor, 2 = Mauer unten */
   const sectionMax   = i => (C.SECTION_HP[i] + C.FX_MAUER_HP * lv('mauer')) * mMul('wallHp');
   const sectionUp    = i => S.sections[i].hp > 0;
   const gateHp       = () => S.sections[GATE].hp;
-  const offlineHours = () => C.OFFLINE_HOURS + C.FX_NACHT_HOURS * lv('nacht');
+  const offlineHours = () => C.OFFLINE_HOURS + mAdd('offlineHours');
   const towerId      = (base, lane) => `${base}_${lane}`;
   const towerBuilt   = lane => lv(towerId('turm', lane)) > 0;
   const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
@@ -112,13 +116,15 @@ function create(){
   const escalation   = () => Math.pow(1 + C.ESCALATION_RATE, Math.max(0, S.t / 60 - C.ESCALATION_START_MIN));
   const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60) * mMul('enemyHp') * escalation();
   const enemyDmgMult = () => (1 + diffCfg().dmgGrowth * S.t / 60) * escalation();
-  const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * (1 - C.FX_REKRUTIERUNG * lv('rekrutierung')) * mMul('unitCost')));
+  const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost')));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
   const rangedRows   = side => C.RANGED_RANGE_ROWS + (side === 'p' ? mAdd('rangedRows') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpThreshold(S.level), need: xpStep(S.level + 1) });
-  const supplyCap    = () => C.SUPPLY_CAP_START + C.FX_STUBE * lv('stube') + mAdd('supply');
+  // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
+  const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
+  const supplyCap    = () => C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply');
   // „Halten“ verbilligt Turm, Mauer und Reparatur (REQ-15.3)
   const holdFactor   = () => S.hold ? 1 - C.HOLD_DISCOUNT : 1;
   const holdDiscounted = id => { const g = C.UPGRADES[id].group; return g === 'mauer' || C.UPGRADES[id].tower !== undefined; };
@@ -127,7 +133,6 @@ function create(){
   function upCost(id){
     const u = C.UPGRADES[id];
     let c = u.baseCost * Math.pow(u.growth, S.lvl[id]);
-    if (id === 'fertiger') c *= (1 - C.FX_SERIE * lv('serie'));
     if (holdDiscounted(id)) c *= holdFactor();
     return Math.ceil(c);
   }
@@ -140,18 +145,19 @@ function create(){
   }
   const canBuy = id => S.status === 'running' && isAvailable(id) && !isMaxed(id) && S[C.UPGRADES[id].cur] >= upCost(id);
   const builtCount = () => S.slots.filter(Boolean).length;
-  const nextSlotCost = () => builtCount() < C.BUILDING_SLOTS ? C.BUILD_COSTS[builtCount()] : Infinity;
+  /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
+  const factoryCost = () => Math.ceil(C.FACTORY_BASE_COST * Math.pow(C.FACTORY_COST_GROWTH, factoryCount()) * mMul('factoryCost'));
+  const buildCost = type => type === 'fabrik' ? factoryCost() : C.BUILDING_COST[type];
   const isBuildable = type => C.START_BUILDINGS.includes(type) || !!S.unlocked[type];
-  const countType = type => S.slots.filter(s => s && s.type === type).length;
   const refundFor = i => S.slots[i] ? Math.floor(S.slots[i].paid * C.REFUND_RATE) : 0;
   /* Warum ein Gebäude nicht baubar ist (null = baubar) */
   function buildBlock(i, type){
     if (S.status !== 'running') return 'notRunning';
     if (!C.BUILDINGS.includes(type)) return 'unknown';
     if (!isBuildable(type)) return 'locked';
-    if (countType(type) >= C.MAX_PER_TYPE) return 'standing';
-    if (i < 0 || i >= C.BUILDING_SLOTS || S.slots[i]) return 'occupied';
-    if (S.material < nextSlotCost()) return 'material';
+    if (type !== 'fabrik' && countType(type) >= C.MAX_PER_TYPE) return 'standing';
+    if (i < 0 || i >= SLOTS || S.slots[i]) return 'occupied';
+    if (S.material < buildCost(type)) return 'material';
     return null;
   }
 
@@ -183,7 +189,7 @@ function create(){
   }
   function buildAt(i, type){
     if (buildBlock(i, type)) return false;
-    const cost = nextSlotCost();
+    const cost = buildCost(type);
     S.material -= cost;
     S.slots[i] = { type, paid: cost };
     log('log.built', { building: '@bld.' + type + '.name', slot: i + 1 });
@@ -427,8 +433,8 @@ function create(){
       if (S.revealed[id] || !isAvailable(id)) continue;
       if (S[C.UPGRADES[id].cur] >= upCost(id) * C.REVEAL_AT || S.lvl[id] > 0){
         S.revealed[id] = true;
-        const base = C.UPGRADES[id].base || id;
-        if (S.t > 1) log('log.newOption', { name: '@upg.' + base + (base === 'turm' && S.lvl[id] === 0 ? '.build' : '.name') });
+        const u = C.UPGRADES[id], base = u.base || id, name = '@upg.' + base + (base === 'turm' && S.lvl[id] === 0 ? '.build' : '.name');
+        if (S.t > 1) log(u.tower !== undefined ? 'log.newTowerOption' : 'log.newOption', { name, lane: '@lane.' + u.tower });
       }
     }
     S.sections.forEach((s, i) => { if (!S.revealed['repair_' + i] && s.hp < sectionMax(i)) S.revealed['repair_' + i] = true; });
@@ -561,6 +567,7 @@ function create(){
     S = Object.assign(base, saved, { units: [], enemyQueue: [] });
     modCache = { ver: -1, key: null, mul: {}, add: {} };
     S.lvl = Object.assign(freshState(saved.diff, 1).lvl, saved.lvl || {});
+    if (!Array.isArray(S.slots) || S.slots.length !== SLOTS) S.slots = new Array(SLOTS).fill(null);
     S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -Infinity }));
     if (!Array.isArray(S.queue)) S.queue = [];
     S.nextWave = Math.max(S.nextWave, S.t + C.RELOAD_WAVE_DELAY_S);
@@ -582,14 +589,15 @@ function create(){
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit, setHold,
     supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength,
-    canBuy, isAvailable, isMaxed, upCost, unitCost, nextSlotCost, builtCount, has, lv,
+    canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, refundFor, interestRate,
     chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT,
-    clickPower, matRate, fertigerRate, milestoneMult, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
+    clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, computeRanks, canAttack,
     offlineHours, turretDmg, turretRange, turretCd,
   };
 }
 
-return { create, freshState, nextRandom, xpThreshold, xpStep, distribute };
+return { create, freshState, nextRandom, xpThreshold, xpStep, distribute, SLOTS };
 })();
