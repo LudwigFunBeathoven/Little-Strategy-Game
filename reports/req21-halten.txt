@@ -1,0 +1,8 @@
+100 Partien auf 4 Kernen …
+fertig in 35 s
+
+HALTEN – Wellenbefehl als Strategie (Normal, durchschnitt)
+
+nie halten         Siegquote 100 %  Median Sieg   9:08
+halten unter 50 %  Siegquote 100 %  Median Sieg   9:09
+

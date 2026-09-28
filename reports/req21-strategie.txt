@@ -1,0 +1,52 @@
+180 Partien auf 4 Kernen …
+fertig in 56 s
+
+STRATEGIE – Zufall gegen gierige Heuristik (Spielertyp durchschnitt)
+
+Schwierigkeit | Strategie | Siegquote | Median Sieg | Abrisse/Partie
+leicht        | zufall    |     100 % |        6:23 |     0.20
+leicht        | gierig    |     100 % |        6:25 |     0.00
+normal        | zufall    |     100 % |        9:22 |     1.63
+normal        | gierig    |     100 % |        8:51 |     0.07
+schwer        | zufall    |      90 % |       10:32 |     3.27
+schwer        | gierig    |      73 % |       12:46 |     0.17
+
+Wahlrate je Gebäudetyp (Anteil der Partien, in denen der Typ gebaut wurde)
+Strategie | fabrik       | schmiede     | kaserne      | universitaet | kontor      
+zufall    | 100 %        | 100 %        | 100 %        | 86 %         | 37 %        
+gierig    | 100 %        | 100 %        | 100 %        | 82 %         | 30 %        
+
+Siegquote je Gebäudekombination am Partieende (beide Strategien, alle Schwierigkeitsgrade, mind. 3 Partien)
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+schmiede+universitaet   96 Partien  Siegquote  98 %
+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+kontor+schmiede+universitaet   37 Partien  Siegquote  89 %
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+kontor+schmiede   17 Partien  Siegquote  82 %
+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+schmiede+universitaet   13 Partien  Siegquote 100 %
+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+schmiede    7 Partien  Siegquote 100 %
+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+kontor+schmiede    4 Partien  Siegquote 100 %
+
+Draft-Wahlrate je Option (gierige Heuristik; Soll 5–60 %)
+aushebung            angeboten  126  gewählt   59   47 %
+belagerungsgeraet    angeboten   87  gewählt   40   46 %
+bessereFabriken      angeboten  115  gewählt   62   54 %
+doppelschicht        angeboten   94  gewählt   54   57 %
+handelskontor        angeboten   79  gewählt   29   37 %
+kriegsanleihe        angeboten   86  gewählt   53   62 %  ← außerhalb
+langeWurfarme        angeboten   81  gewählt    9   11 %
+maurerkolonne        angeboten   95  gewählt   50   53 %
+nachtschicht         angeboten   65  gewählt   16   25 %
+notreserve           angeboten   90  gewählt   27   30 %
+sappeure             angeboten   81  gewählt   53   65 %  ← außerhalb
+scharfschuetzen      angeboten   77  gewählt   23   30 %
+schrottsammler       angeboten  104  gewählt   33   32 %
+schwerePressen       angeboten  135  gewählt   89   66 %  ← außerhalb
+serienbau            angeboten   96  gewählt   26   27 %
+turmkanoniere        angeboten   78  gewählt   31   40 %
+vorposten            angeboten   61  gewählt   35   57 %
+weitschuss           angeboten   75  gewählt   33   44 %
+
+Median-Abstand zwischen zwei Drafts je Phase (Soll 45–150 s; beide Strategien)
+early     37 s  (180 Abstände)  ← außerhalb
+mid       48 s  (540 Abstände)
+late      76 s  (534 Abstände)
+Erster Draft (Median): 84 s (Soll 60–90 s)
+

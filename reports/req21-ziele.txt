@@ -1,0 +1,44 @@
+3000 Partien auf 4 Kernen …
+fertig in 1789 s
+
+ZIELE – Siegquote und Dauer (gierige Heuristik)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+leicht        | aktiv        |   200 |        0 |     0 |        5:09 |          – | Ende spät.  6:12 | Wellen am Limit  78 %
+leicht        | durchschnitt |   200 |        0 |     0 |        6:21 |          – | Ende spät.  7:39 | Wellen am Limit  76 %
+leicht        | gelegentlich |   123 |       77 |     0 |        7:36 |       3:47 | Ende spät. 10:13 | Wellen am Limit  57 %
+leicht        | passiv       |     0 |      200 |     0 |           – |       2:17 | Ende spät.  3:47 | Wellen am Limit  37 %
+leicht        | verteidigung |     0 |      200 |     0 |           – |      22:03 | Ende spät. 23:58 | Wellen am Limit     –
+normal        | aktiv        |   200 |        0 |     0 |        7:18 |          – | Ende spät. 10:55 | Wellen am Limit  89 %
+normal        | durchschnitt |   200 |        0 |     0 |        9:32 |          – | Ende spät. 14:30 | Wellen am Limit  82 %
+normal        | gelegentlich |     9 |      191 |     0 |       11:13 |       2:45 | Ende spät. 14:36 | Wellen am Limit  78 %
+normal        | passiv       |     0 |      200 |     0 |           – |       1:59 | Ende spät.  2:34 | Wellen am Limit  13 %
+normal        | verteidigung |     0 |      200 |     0 |           – |      20:31 | Ende spät. 23:13 | Wellen am Limit     –
+schwer        | aktiv        |   192 |        8 |     0 |        8:39 |      19:48 | Ende spät. 21:53 | Wellen am Limit  90 %
+schwer        | durchschnitt |   154 |       46 |     0 |       10:40 |      18:41 | Ende spät. 22:27 | Wellen am Limit  88 %
+schwer        | gelegentlich |     3 |      197 |     0 |       10:30 |       2:39 | Ende spät. 16:49 | Wellen am Limit  77 %
+schwer        | passiv       |     0 |      200 |     0 |           – |       1:58 | Ende spät.  2:43 | Wellen am Limit   6 %
+schwer        | verteidigung |     0 |      200 |     0 |           – |      21:45 | Ende spät. 23:16 | Wellen am Limit     –
+
+Patt-Quote (offen nach 30 min): 0 von 3000 = 0 % (Soll ≤ 2 %)
+
+Siegquote mit Karte gegen ohne Karte (aktiv und durchschnitt, alle Schwierigkeitsgrade; Meldung ab +25 Prozentpunkten)
+aushebung            gewählt in  466 Partien  mit  93 %  ohne  97 %  Differenz   -4 pp
+belagerungsgeraet    gewählt in  498 Partien  mit  94 %  ohne  96 %  Differenz   -2 pp
+bessereFabriken      gewählt in  552 Partien  mit  94 %  ohne  97 %  Differenz   -3 pp
+doppelschicht        gewählt in  501 Partien  mit  92 %  ohne  98 %  Differenz   -6 pp
+handelskontor        gewählt in  322 Partien  mit  91 %  ohne  97 %  Differenz   -6 pp
+kriegsanleihe        gewählt in  410 Partien  mit  91 %  ohne  98 %  Differenz   -7 pp
+langeWurfarme        gewählt in  211 Partien  mit  95 %  ohne  96 %  Differenz   -0 pp
+maurerkolonne        gewählt in  424 Partien  mit  91 %  ohne  98 %  Differenz   -7 pp
+nachtschicht         gewählt in  195 Partien  mit  90 %  ohne  97 %  Differenz   -6 pp
+notreserve           gewählt in  276 Partien  mit  91 %  ohne  97 %  Differenz   -5 pp
+sappeure             gewählt in  462 Partien  mit  95 %  ohne  96 %  Differenz   -0 pp
+scharfschuetzen      gewählt in  303 Partien  mit  92 %  ohne  97 %  Differenz   -5 pp
+schrottsammler       gewählt in  328 Partien  mit  98 %  ohne  94 %  Differenz   +4 pp
+schwerePressen       gewählt in  692 Partien  mit  94 %  ohne  97 %  Differenz   -3 pp
+serienbau            gewählt in  329 Partien  mit  91 %  ohne  97 %  Differenz   -6 pp
+turmkanoniere        gewählt in  306 Partien  mit  92 %  ohne  97 %  Differenz   -5 pp
+vorposten            gewählt in  400 Partien  mit  95 %  ohne  96 %  Differenz   -2 pp
+weitschuss           gewählt in  481 Partien  mit  95 %  ohne  96 %  Differenz   -0 pp
+

@@ -1,0 +1,30 @@
+20 Partien auf 4 Kernen …
+fertig in 10 s
+
+ZIELE – Siegquote und Dauer (gierige Heuristik)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+normal        | durchschnitt |    18 |        2 |     0 |        8:51 |      18:37 | Ende spät. 18:37 | Wellen am Limit  83 %
+
+Patt-Quote (offen nach 30 min): 0 von 20 = 0 % (Soll ≤ 2 %)
+
+Siegquote mit Karte gegen ohne Karte (aktiv und durchschnitt, alle Schwierigkeitsgrade; Meldung ab +25 Prozentpunkten)
+aushebung            gewählt in    8 Partien  mit  88 %  ohne  92 %  Differenz   -4 pp
+belagerungsgeraet    gewählt in   10 Partien  mit  90 %  ohne  90 %  Differenz   +0 pp
+bessereFabriken      gewählt in   13 Partien  mit  92 %  ohne  86 %  Differenz   +7 pp
+doppelschicht        gewählt in   11 Partien  mit  91 %  ohne  89 %  Differenz   +2 pp
+handelskontor        gewählt in    3 Partien  mit 100 %  ohne  88 %  Differenz  +12 pp
+kriegsanleihe        gewählt in    8 Partien  mit 100 %  ohne  83 %  Differenz  +17 pp
+langeWurfarme        gewählt in    3 Partien  mit 100 %  ohne  88 %  Differenz  +12 pp
+maurerkolonne        gewählt in    8 Partien  mit  75 %  ohne 100 %  Differenz  -25 pp
+nachtschicht         gewählt in    2 Partien  mit  50 %  ohne  94 %  Differenz  -44 pp
+notreserve           gewählt in    5 Partien  mit  80 %  ohne  93 %  Differenz  -13 pp
+sappeure             gewählt in    3 Partien  mit 100 %  ohne  88 %  Differenz  +12 pp
+scharfschuetzen      gewählt in    4 Partien  mit 100 %  ohne  88 %  Differenz  +13 pp
+schrottsammler       gewählt in    4 Partien  mit 100 %  ohne  88 %  Differenz  +13 pp
+schwerePressen       gewählt in   10 Partien  mit  90 %  ohne  90 %  Differenz   +0 pp
+serienbau            gewählt in    6 Partien  mit  67 %  ohne 100 %  Differenz  -33 pp
+turmkanoniere        gewählt in    4 Partien  mit  75 %  ohne  94 %  Differenz  -19 pp
+vorposten            gewählt in    6 Partien  mit  83 %  ohne  93 %  Differenz  -10 pp
+weitschuss           gewählt in   10 Partien  mit  90 %  ohne  90 %  Differenz   +0 pp
+

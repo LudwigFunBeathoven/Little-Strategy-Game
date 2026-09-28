@@ -1,0 +1,18 @@
+{
+  "runs": 50,
+  "suite": "halten",
+  "report": {
+    "halten": {
+      "never": {
+        "games": 50,
+        "winRate": 1,
+        "medWin": 548.350000000049
+      },
+      "lowSection": {
+        "games": 50,
+        "winRate": 1,
+        "medWin": 549.4000000000481
+      }
+    }
+  }
+}

@@ -297,6 +297,9 @@ function create(){
     // Eigene Welle: bei „Halten“ bleibt die Warteschlange stehen; der Befehl springt danach zurück (REQ-15.1/15.2)
     if (S.hold){ S.hold = false; if (S.queue.length) log('log.held', { n: S.queue.length }); }
     else if (S.queue.length){
+      // Kennzahl: Anteil der Wellen am Versorgungslimit (REQ-21.2)
+      S.stats.waves = (S.stats.waves || 0) + 1;
+      if (S.queue.length >= supplyCap()) S.stats.wavesFull = (S.stats.wavesFull || 0) + 1;
       for (const q of formation(assignLanes(S.queue.map(q => q.type), strongerLane(enemy))))
         S.units.push(makeUnit('p', q.type, q.lane, deployX(q.lane) - q.k * C.ALLY_GAP));
       S.queue = [];

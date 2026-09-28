@@ -94,7 +94,7 @@ test('Einheitenstärke steigt mit den Stufen auch ohne Schmiede', () => {
   assert.ok(Math.abs(G.dmgMultP() - base * (1 + 4 * C.UNIT_STRENGTH_PER_LEVEL)) < 1e-9);
   assert.ok(G.hpMultP() > 1);
   const u = G.makeUnit('p', 'laeufer', 1);
-  assert.ok(Math.abs(u.hp - C.UNITS.laeufer.hp * 1.2) < 1e-9);
+  assert.ok(Math.abs(u.hp - C.UNITS.laeufer.hp * (1 + 4 * C.UNIT_STRENGTH_PER_LEVEL)) < 1e-9);
 });
 
 test('Schmiede: Qualitätsstufen mit Kostenwachstum 2,5', () => {

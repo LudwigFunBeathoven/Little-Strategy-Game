@@ -1,0 +1,17 @@
+450 Partien auf 4 Kernen …
+fertig in 91 s
+
+PHASEN – 6 Klicks/s, gierige Heuristik, Spielertyp aktiv
+
+Klickanteil an der Materialproduktion je Phase (Soll: Früh ≥ 50 %, Mitte 10–30 %, Spät ≤ 3 %)
+leicht   Früh   63.7 %  Mitte   50.1 %  Spät   40.5 %
+normal   Früh   63.8 %  Mitte   49.5 %  Spät   37.3 %
+schwer   Früh   64.9 %  Mitte   48.1 %  Spät   32.9 %
+
+Siegquote nach Klickverhalten
+Schwierigkeit | Dauerklick | Stopp ab Spät | nie klicken | Stopp/Dauer | nie/Dauer
+leicht        |      100 % |         100 % |         0 % |       100 % |       0 %
+normal        |      100 % |         100 % |         0 % |       100 % |       0 %
+schwer        |      100 % |          94 % |         0 % |        94 % |       0 %
+(Soll: Stopp/Dauer ≥ 95 %, nie/Dauer ≤ 50 %)
+

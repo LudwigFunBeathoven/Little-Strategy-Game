@@ -1,6 +1,8 @@
 // Klammerfront – Balancing-Simulation (7.1)
 // Aufruf:  node tools/simulate.mjs [--runs 20] [--suite alle|ziele|strategie|phasen] [--diff leicht,normal] [--json ergebnis.json]
-//   ziele      Siegquote und Dauer je Schwierigkeitsgrad und Spielertyp (gierige Heuristik)
+//   ziele      Siegquote und Dauer je Schwierigkeitsgrad und Spielertyp (gierige Heuristik), inkl. Bot „verteidigung“;
+//              Patt-Quote, Anteil der Wellen am Versorgungslimit, Siegquote mit und ohne jede Spezialkarte (REQ-21.2)
+//   halten     Wellenbefehl als Strategie: nie halten gegen halten unter 50 % (Normal, durchschnitt)
 //   strategie  Zufall gegen gierige Heuristik: Gebäudewahl, Gebäudekombinationen, Draft-Wahlraten, Draft-Abstände
 //   phasen     REQ-03: Klickanteil je Phase (SIM_CLICK_RATE) sowie Dauerklick / Stopp ab Phase Spät / nie klicken
 //   ohneSchmiede  REQ-17: Normal, durchschnitt, gierige Heuristik ohne Schmiede (Soll: Siegquote ≥ 30 %)
@@ -24,14 +26,19 @@ if (!isMainThread){
   const DIFFS = SUITE === 'kurz' || SUITE === 'ohneSchmiede' ? ['normal'] : arg('diff', null) ? arg('diff').split(',') : C.DIFFICULTY_ORDER;
   const CPS = C.SIM_CLICK_RATE ?? 6;
   const PROFILE_FILTER = arg('profile', null) ? arg('profile').split(',') : null;
+  const ZPROFILES = ['aktiv', 'durchschnitt', 'gelegentlich', 'passiv', 'verteidigung'];
 
   const jobs = [];
   const seedOf = (k, r) => (1000 + r * 7919 + k * 104729) >>> 0;
   if (SUITE === 'alle' || SUITE === 'ziele')
-    DIFFS.forEach((diff, di) => ['aktiv', 'durchschnitt', 'gelegentlich', 'passiv'].forEach((profile, pi) => {
+    DIFFS.forEach((diff, di) => ZPROFILES.forEach((profile, pi) => {
       if (PROFILE_FILTER && !PROFILE_FILTER.includes(profile)) return;
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff, profile, strategy: 'gierig', seed: seedOf(di * 10 + pi, r) });
     }));
+  if (SUITE === 'alle' || SUITE === 'halten')
+    ['never', 'lowSection'].forEach((holdPolicy, hi) => {
+      for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'halten', diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', holdPolicy, seed: seedOf(300 + hi, r) });
+    });
   if (SUITE === 'ohneSchmiede')
     for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', forbid: ['schmiede'], seed: seedOf(3, r) });
   if (SUITE === 'kurz')
@@ -57,7 +64,7 @@ if (!isMainThread){
   process.stderr.write(`fertig in ${Math.round((Date.now() - t0) / 1000)} s\n\n`);
 
   const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
-  const mmss = t => t == null ? '–' : `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}`;
+  const mmss = t => t == null ? '–' : `${Math.floor(Math.round(t) / 60)}:${String(Math.round(t) % 60).padStart(2, '0')}`;
   const pct = (a, b) => b ? Math.round(100 * a / b) + ' %' : '–';
   const pad = (s, w) => String(s).padEnd(w);
   const lpad = (s, w) => String(s).padStart(w);
@@ -68,12 +75,32 @@ if (!isMainThread){
     console.log('ZIELE – Siegquote und Dauer (gierige Heuristik)\n');
     console.log('Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage');
     report.ziele = [];
-    for (const diff of DIFFS) for (const p of ['aktiv', 'durchschnitt', 'gelegentlich', 'passiv']){
+    for (const diff of DIFFS) for (const p of ZPROFILES){
       const R = Z.filter(r => r.diff === diff && r.profile === p);
       if (!R.length) continue;
       const w = R.filter(r => r.status === 'won'), l = R.filter(r => r.status === 'lost'), o = R.filter(r => r.status === 'running');
-      report.ziele.push({ diff, profile: p, games: R.length, won: w.length, lost: l.length, open: o.length, medWin: median(w.map(r => r.t)), medLoss: median(l.map(r => r.t)) });
-      console.log(`${pad(diff, 13)} | ${pad(p, 12)} | ${lpad(w.length, 5)} | ${lpad(l.length, 8)} | ${lpad(o.length, 5)} | ${lpad(mmss(median(w.map(r => r.t))), 11)} | ${lpad(mmss(median(l.map(r => r.t))), 10)}`);
+      const maxEnd = Math.max(...R.map(r => r.t));
+      const waves = R.reduce((a, r) => a + r.waves, 0), full = R.reduce((a, r) => a + r.wavesFull, 0);
+      report.ziele.push({ diff, profile: p, games: R.length, won: w.length, lost: l.length, open: o.length, medWin: median(w.map(r => r.t)), medLoss: median(l.map(r => r.t)),
+                          maxEnd, wavesAtCap: waves ? full / waves : null });
+      console.log(`${pad(diff, 13)} | ${pad(p, 12)} | ${lpad(w.length, 5)} | ${lpad(l.length, 8)} | ${lpad(o.length, 5)} | ${lpad(mmss(median(w.map(r => r.t))), 11)} | ${lpad(mmss(median(l.map(r => r.t))), 10)} | Ende spät. ${lpad(mmss(maxEnd), 5)} | Wellen am Limit ${lpad(pct(full, waves), 5)}`);
+    }
+    const open = Z.filter(r => r.status === 'running').length;
+    report.pattRate = Z.length ? open / Z.length : null;
+    console.log(`\nPatt-Quote (offen nach 30 min): ${open} von ${Z.length} = ${pct(open, Z.length)} (Soll ≤ 2 %)`);
+    // Siegquote mit gegen ohne Karte, in Prozentpunkten (REQ-21.2); nur Profile, die Karten sinnvoll wählen
+    const C2 = Z.filter(r => r.profile === 'aktiv' || r.profile === 'durchschnitt');
+    const ids = [...new Set(C2.flatMap(r => r.cards))].sort();
+    if (ids.length){
+      console.log('\nSiegquote mit Karte gegen ohne Karte (aktiv und durchschnitt, alle Schwierigkeitsgrade; Meldung ab +25 Prozentpunkten)');
+      report.cardDelta = {};
+      for (const id of ids){
+        const withC = C2.filter(r => r.cards.includes(id)), without = C2.filter(r => !r.cards.includes(id));
+        const q = R => R.length ? R.filter(r => r.status === 'won').length / R.length : null;
+        const d = q(withC) != null && q(without) != null ? (q(withC) - q(without)) * 100 : null;
+        report.cardDelta[id] = { with: withC.length, winWith: q(withC), without: without.length, winWithout: q(without), deltaPp: d };
+        console.log(`${pad(id, 20)} gewählt in ${lpad(withC.length, 4)} Partien  mit ${lpad(pct(withC.filter(r => r.status === 'won').length, withC.length), 5)}  ohne ${lpad(pct(without.filter(r => r.status === 'won').length, without.length), 5)}  Differenz ${lpad(d == null ? '–' : (d >= 0 ? '+' : '') + d.toFixed(0) + ' pp', 7)}${d != null && d > 25 ? '  ← über +25' : ''}`);
+      }
     }
     console.log('');
   }
@@ -138,6 +165,18 @@ if (!isMainThread){
       }
       report.firstDraft = median(first);
       console.log(`Erster Draft (Median): ${Math.round(median(first) || 0)} s (Soll 60–90 s)`);
+    }
+    console.log('');
+  }
+
+  const H = results.filter(r => r.suite === 'halten');
+  if (H.length){
+    console.log('HALTEN – Wellenbefehl als Strategie (Normal, durchschnitt)\n');
+    report.halten = {};
+    for (const hp of ['never', 'lowSection']){
+      const R = H.filter(r => r.holdPolicy === hp), w = R.filter(r => r.status === 'won');
+      report.halten[hp] = { games: R.length, winRate: R.length ? w.length / R.length : null, medWin: median(w.map(r => r.t)) };
+      console.log(`${pad(hp === 'never' ? 'nie halten' : 'halten unter 50 %', 18)} Siegquote ${lpad(pct(w.length, R.length), 5)}  Median Sieg ${lpad(mmss(median(w.map(r => r.t))), 6)}`);
     }
     console.log('');
   }

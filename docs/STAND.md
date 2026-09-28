@@ -1,6 +1,6 @@
 # Klammerfront – Stand Iteration 3
 
-Grundlage: `docs/anforderungen-iteration-3.md`. Jedes Inkrement erfüllt die Definition „spielbar“ (Anhang A), bevor das nächste beginnt.
+Grundlage: `docs/anforderungen-iteration-3.md`. Branch: `3x3-und-3-Lanes-Spiel` (das Dokument nennt `iteration-3`; gearbeitet wurde auf Wunsch des PO im aktuellen Branch). Jedes Inkrement erfüllt die Definition „spielbar“ (Anhang A), bevor das nächste beginnt.
 
 **Starten:** `index.html` im Browser öffnen. Keine Installation nötig.
 
@@ -12,7 +12,7 @@ Grundlage: `docs/anforderungen-iteration-3.md`. Jedes Inkrement erfüllt die Def
 | I4 | Spezialkarten mit Stufen (REQ-18) | fertig |
 | I5 | Belagerungswelle statt Eskalation (REQ-19) | fertig |
 | I6 | Erklärzeilen, Erstkontakt-Hinweise (REQ-20) | fertig |
-| I7 | Simulation, Balancing, Bericht (REQ-21) | offen |
+| I7 | Simulation, Balancing, Bericht (REQ-21) | fertig |
 
 ## Prüfung je Inkrement
 ```
@@ -34,6 +34,9 @@ KF_OVERRIDE='{"FX_QUALITAET":0.2}' node tools/simulate.mjs --suite kurz   # Bala
 - I5 und I6 (ein gemeinsamer Commit, weil I6 entstand, während die Simulationen zu I5 liefen): `npm test` 53/53 grün,
   `npm run test:browser` grün in beiden Sprachen. Kurzsimulation: 20 Siege, 0 offen.
   Auf Schwer bleiben nach I5 noch einzelne Partien nach 30 Minuten offen; das ist Gegenstand von I7.
+- I7: `npm test` 53/53 grün, `npm run test:browser` grün. Serie 3.000 Partien (200 je Schwierigkeitsgrad und Profil): 0 offen,
+  „nur Verteidigung“ verliert immer, spätestens 23:58. Kurzsimulation: 18 Siege, 2 Niederlagen, 0 offen. Ohne Schmiede 32 %.
+  Ergebnisse und Abweichungen: `docs/bericht-iteration-3.md`, Rohdaten `reports/req21-*`.
 
 ## Abweichungen und Auslegungen
 1. **„Tor belagert“ entfällt bereits in I1** statt in I2 (REQ-14.5). Je Lane angewandt, blockierte die Regel die Warteschlange dauerhaft: Die Übergangsregel 12.2 füllt sie zyklisch, belagerte Lanes stauen sich. Die Kurzsimulation endete dadurch im Patt.
@@ -83,3 +86,7 @@ KF_OVERRIDE='{"FX_QUALITAET":0.2}' node tools/simulate.mjs --suite kurz   # Bala
     Belagerungswelle. Ein Hinweis gilt als gesehen, sobald er erscheint.
 25. **Erklärzeilen (20.1)** tragen alle Knöpfe, auch Sprache, Schwierigkeit und Dialogknöpfe. Wo nichts kostet, steht die Wirkung allein
     oder „kostenlos“. Die Browser-Prüfung zählt Knöpfe ohne Zeile (`__kf.explAudit()`, im Entwicklungsmodus `?dev=1` auch in der Konsole).
+26. **Kalibrierung in I7** (nur Konstanten): siehe Tabelle im Bericht. Abweichend von Vorgaben des Dokuments: `POST_SIEGE_GROWTH` 0,6 statt 0,10 und
+    `UNIT_STRENGTH_PER_LEVEL` 0,08 statt 0,05.
+27. **Bots (21.1):** aktiv und durchschnitt halten, sobald ein Abschnitt unter 50 % fällt; gelegentlich und passiv halten nie. Die Reihe `--suite halten`
+    vergleicht beide Strategien direkt. Alle Bots bauen zuerst eine Fabrik, bevor sie Einheiten kaufen (vorher verhungerte „gelegentlich“ ohne Einkommen).

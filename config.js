@@ -51,7 +51,7 @@ const KF_CONFIG = {
   SIEGE_MINUTE: 16,
   SIEGE_STRENGTH: 3,
   SIEGE_WARNING_S: 60,
-  POST_SIEGE_GROWTH: 0.10,
+  POST_SIEGE_GROWTH: 0.6,       // Vorgabe 0,10; kalibriert in I7: erst ab 0,5 fällt reine Verteidigung bis Minute 25 (REQ-21.4)
   RELOAD_WAVE_DELAY_S: 5,
 
   /* Wellen (REQ-14/15): eigene und gegnerische Wellen rücken im selben Takt aus */
@@ -111,9 +111,9 @@ const KF_CONFIG = {
   /* Wirkungen der Upgrades */
   FX_PRESSE: 1,
   SMITHY_COST_GROWTH: 2.5,
-  FX_QUALITAET: 0.25,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (Faktor 1,25 je Stufe)
+  FX_QUALITAET: 0.12,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (Faktor 1,12 je Stufe; I7: vorher 0,25)
   KASERNE_SUPPLY_PER_LEVEL: 2,  // Versorgungslimit je Ausbaustufe der Kaserne: 3 → 5 → 7 → 9
-  UNIT_STRENGTH_PER_LEVEL: 0.05,// Grundstärke aller eigenen Einheiten je Altmetall-Stufe, auch ohne Schmiede (REQ-17.2)
+  UNIT_STRENGTH_PER_LEVEL: 0.08,// Grundstärke je Altmetall-Stufe, auch ohne Schmiede (REQ-17.2; Vorgabe 0,05, I7: 0,08, damit Partien ohne Schmiede ≥ 30 % gewinnen)
   FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_MAUER_HP: 150,             // je Abschnitt
   FX_STACHELN_DMG: 4,
@@ -147,12 +147,12 @@ const KF_CONFIG = {
      damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen.
      Gegnerwelle: waveBase + waveGrowth × Minute Einheiten (gerundet), Lanes zufällig über den Spielzufall. */
   DIFFICULTY: {
-    leicht: { enemyBaseHp: 1500, waveBase: 1.5, waveGrowth: 0.4,
+    leicht: { enemyBaseHp: 4800, waveBase: 1,   waveGrowth: 0.3,
               werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.03, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
-    normal: { enemyBaseHp: 2200, waveBase: 2,   waveGrowth: 0.6,
+    normal: { enemyBaseHp: 5000, waveBase: 2,   waveGrowth: 0.6,
               werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
-    schwer: { enemyBaseHp: 3800, waveBase: 2,   waveGrowth: 1.3,
-              werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.17, dmgGrowth: 0.10, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
+    schwer: { enemyBaseHp: 5500, waveBase: 2,   waveGrowth: 0.9,
+              werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.07, dmgGrowth: 0.05, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
   },
   DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],
   DEFAULT_DIFFICULTY: 'normal',

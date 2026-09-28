@@ -1,0 +1,30 @@
+50 Partien auf 4 Kernen …
+fertig in 41 s
+
+ZIELE – Siegquote und Dauer (gierige Heuristik)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+normal        | durchschnitt |    16 |       34 |     0 |       12:15 |      18:50 | Ende spät. 22:55 | Wellen am Limit  90 %
+
+Patt-Quote (offen nach 30 min): 0 von 50 = 0 % (Soll ≤ 2 %)
+
+Siegquote mit Karte gegen ohne Karte (aktiv und durchschnitt, alle Schwierigkeitsgrade; Meldung ab +25 Prozentpunkten)
+aushebung            gewählt in   27 Partien  mit  19 %  ohne  48 %  Differenz  -29 pp
+belagerungsgeraet    gewählt in   19 Partien  mit  21 %  ohne  39 %  Differenz  -18 pp
+bessereFabriken      gewählt in   25 Partien  mit  12 %  ohne  52 %  Differenz  -40 pp
+doppelschicht        gewählt in   32 Partien  mit  34 %  ohne  28 %  Differenz   +7 pp
+handelskontor        gewählt in   17 Partien  mit  29 %  ohne  33 %  Differenz   -4 pp
+kriegsanleihe        gewählt in   25 Partien  mit  24 %  ohne  40 %  Differenz  -16 pp
+langeWurfarme        gewählt in   13 Partien  mit  46 %  ohne  27 %  Differenz  +19 pp
+maurerkolonne        gewählt in   23 Partien  mit  26 %  ohne  37 %  Differenz  -11 pp
+nachtschicht         gewählt in    9 Partien  mit  44 %  ohne  29 %  Differenz  +15 pp
+notreserve           gewählt in   13 Partien  mit  23 %  ohne  35 %  Differenz  -12 pp
+sappeure             gewählt in   28 Partien  mit  39 %  ohne  23 %  Differenz  +17 pp
+scharfschuetzen      gewählt in   19 Partien  mit  32 %  ohne  32 %  Differenz   -1 pp
+schrottsammler       gewählt in   15 Partien  mit  20 %  ohne  37 %  Differenz  -17 pp
+schwerePressen       gewählt in   33 Partien  mit  33 %  ohne  29 %  Differenz   +4 pp
+serienbau            gewählt in   21 Partien  mit  29 %  ohne  34 %  Differenz   -6 pp
+turmkanoniere        gewählt in   25 Partien  mit  28 %  ohne  36 %  Differenz   -8 pp
+vorposten            gewählt in   23 Partien  mit  30 %  ohne  33 %  Differenz   -3 pp
+weitschuss           gewählt in   24 Partien  mit  46 %  ohne  19 %  Differenz  +27 pp  ← über +25
+

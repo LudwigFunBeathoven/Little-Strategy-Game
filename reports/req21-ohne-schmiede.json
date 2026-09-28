@@ -1,0 +1,149 @@
+{
+  "runs": 50,
+  "suite": "ohneSchmiede",
+  "report": {
+    "ziele": [
+      {
+        "diff": "normal",
+        "profile": "durchschnitt",
+        "games": 50,
+        "won": 16,
+        "lost": 34,
+        "open": 0,
+        "medWin": 734.9999999998793,
+        "medLoss": 1130.04999999952,
+        "maxEnd": 1374.9999999992972,
+        "wavesAtCap": 0.9014084507042254
+      }
+    ],
+    "pattRate": 0,
+    "cardDelta": {
+      "aushebung": {
+        "with": 27,
+        "winWith": 0.18518518518518517,
+        "without": 23,
+        "winWithout": 0.4782608695652174,
+        "deltaPp": -29.307568438003223
+      },
+      "belagerungsgeraet": {
+        "with": 19,
+        "winWith": 0.21052631578947367,
+        "without": 31,
+        "winWithout": 0.3870967741935484,
+        "deltaPp": -17.65704584040747
+      },
+      "bessereFabriken": {
+        "with": 25,
+        "winWith": 0.12,
+        "without": 25,
+        "winWithout": 0.52,
+        "deltaPp": -40
+      },
+      "doppelschicht": {
+        "with": 32,
+        "winWith": 0.34375,
+        "without": 18,
+        "winWithout": 0.2777777777777778,
+        "deltaPp": 6.597222222222221
+      },
+      "handelskontor": {
+        "with": 17,
+        "winWith": 0.29411764705882354,
+        "without": 33,
+        "winWithout": 0.3333333333333333,
+        "deltaPp": -3.9215686274509776
+      },
+      "kriegsanleihe": {
+        "with": 25,
+        "winWith": 0.24,
+        "without": 25,
+        "winWithout": 0.4,
+        "deltaPp": -16.000000000000004
+      },
+      "langeWurfarme": {
+        "with": 13,
+        "winWith": 0.46153846153846156,
+        "without": 37,
+        "winWithout": 0.2702702702702703,
+        "deltaPp": 19.12681912681913
+      },
+      "maurerkolonne": {
+        "with": 23,
+        "winWith": 0.2608695652173913,
+        "without": 27,
+        "winWithout": 0.37037037037037035,
+        "deltaPp": -10.950080515297905
+      },
+      "nachtschicht": {
+        "with": 9,
+        "winWith": 0.4444444444444444,
+        "without": 41,
+        "winWithout": 0.2926829268292683,
+        "deltaPp": 15.176151761517614
+      },
+      "notreserve": {
+        "with": 13,
+        "winWith": 0.23076923076923078,
+        "without": 37,
+        "winWithout": 0.35135135135135137,
+        "deltaPp": -12.058212058212058
+      },
+      "sappeure": {
+        "with": 28,
+        "winWith": 0.39285714285714285,
+        "without": 22,
+        "winWithout": 0.22727272727272727,
+        "deltaPp": 16.558441558441558
+      },
+      "scharfschuetzen": {
+        "with": 19,
+        "winWith": 0.3157894736842105,
+        "without": 31,
+        "winWithout": 0.3225806451612903,
+        "deltaPp": -0.6791171477079805
+      },
+      "schrottsammler": {
+        "with": 15,
+        "winWith": 0.2,
+        "without": 35,
+        "winWithout": 0.37142857142857144,
+        "deltaPp": -17.142857142857142
+      },
+      "schwerePressen": {
+        "with": 33,
+        "winWith": 0.3333333333333333,
+        "without": 17,
+        "winWithout": 0.29411764705882354,
+        "deltaPp": 3.9215686274509776
+      },
+      "serienbau": {
+        "with": 21,
+        "winWith": 0.2857142857142857,
+        "without": 29,
+        "winWithout": 0.3448275862068966,
+        "deltaPp": -5.911330049261087
+      },
+      "turmkanoniere": {
+        "with": 25,
+        "winWith": 0.28,
+        "without": 25,
+        "winWithout": 0.36,
+        "deltaPp": -7.9999999999999964
+      },
+      "vorposten": {
+        "with": 23,
+        "winWith": 0.30434782608695654,
+        "without": 27,
+        "winWithout": 0.3333333333333333,
+        "deltaPp": -2.898550724637677
+      },
+      "weitschuss": {
+        "with": 24,
+        "winWith": 0.4583333333333333,
+        "without": 26,
+        "winWithout": 0.19230769230769232,
+        "deltaPp": 26.602564102564095
+      }
+    }
+  }
+}

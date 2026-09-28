@@ -7,11 +7,14 @@ export const CONFIG = C;
 const DT = C.TICK_S;
 
 /* Spielertypen: Klicks/s, Reaktionsintervall (s), Einheiten-Limit */
+/* Wellenbefehl: aktive Spieler halten, sobald ein Abschnitt unter 50 % fällt; die anderen halten nie (REQ-21.1).
+   „verteidigung“: immer halten, keine Einheiten; Referenz dafür, dass reine Verteidigung verliert (REQ-21.4). */
 export const PROFILES = {
-  aktiv:        { cps: 3,   every: 0.25, cap: 30, useWall: true },
-  durchschnitt: { cps: 1.5, every: 1,    cap: 22, useWall: true },
-  gelegentlich: { cps: 0.7, every: 3,    cap: 15, useWall: false },
-  passiv:       { cps: 0.3, every: 3,    cap: 10, useWall: false, noBuild: true, noUpgrades: true },
+  aktiv:        { cps: 3,   every: 0.25, cap: 30, useWall: true,  holdPolicy: 'lowSection' },
+  durchschnitt: { cps: 1.5, every: 1,    cap: 22, useWall: true,  holdPolicy: 'lowSection' },
+  gelegentlich: { cps: 0.7, every: 3,    cap: 15, useWall: false, holdPolicy: 'never' },
+  passiv:       { cps: 0.3, every: 3,    cap: 10, useWall: false, holdPolicy: 'never', noBuild: true, noUpgrades: true },
+  verteidigung: { cps: 1.5, every: 1,    cap: 0,  useWall: true,  holdPolicy: 'always', noUnits: true },
 };
 
 const MAT_PRIO = ['presse', 'ausbau', 'qualitaet', 'zinseszins', 'turm_0', 'turm_2', 'mauer', 'kadenz_0', 'kadenz_2',
@@ -116,10 +119,15 @@ export class Bot {
     const S = G.S, o = this.o;
     if (S.status !== 'running') return;
     if (o.useWall) S.sections.forEach((sec, i) => { if (sec.hp < G.sectionMax(i) * 0.5) G.repair(i); });
+    // Wellenbefehl (REQ-21.1): nie halten, halten sobald ein Abschnitt unter 50 % fällt, oder immer halten
+    if (o.holdPolicy === 'always') G.setHold(true);
+    else if (o.holdPolicy === 'lowSection') G.setHold(S.sections.some((sec, i) => sec.hp < G.sectionMax(i) * 0.5));
     const own = S.units.filter(u => u.side === 'p').length;
     const threat = S.units.some(u => u.side === 'e' && u.x < 400);
-    const trySpawn = n => { for (let k = 0; k < n; k++){ if (own + S.queue.length >= o.cap) break; if (this.mix % 3 === 2 ? G.spawn('werfer') : G.spawn('laeufer')) this.mix++; else break; } };
-    if (threat && own < 4) trySpawn(2);
+    const trySpawn = n => { if (o.noUnits) return; for (let k = 0; k < n; k++){ if (own + S.queue.length >= o.cap) break; if (this.mix % 3 === 2 ? G.spawn('werfer') : G.spawn('laeufer')) this.mix++; else break; } };
+    // Die erste Fabrik hat Vorrang: ohne sie gibt es kein Einkommen außer Klicks
+    const needFactory = G.factoryCount() === 0;
+    if (threat && own < 4 && !needFactory) trySpawn(2);
 
     // Bauen: passive Spieler bauen nur Fabriken
     const free = S.slots.findIndex(x => !x);
@@ -169,16 +177,17 @@ export class Bot {
     // Einheiten mit Rücklage für Wirtschaft
     const econTarget = S.slots.some(x => !x) ? G.factoryCost() : Infinity;
     const reserve = threat ? 0 : econTarget * 0.7;
-    while (S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
+    while (!o.noUnits && G.factoryCount() > 0 && S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
       const q = S.queue.length; trySpawn(1); if (S.queue.length === q) break;
     }
   }
 }
 
 /* Eine vollständige Partie. Liefert Kennzahlen für den Bericht. */
-export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid }){
+export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, holdPolicy }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
+  if (holdPolicy !== undefined) prof.holdPolicy = holdPolicy;
   const G = newGame(diff, seed);
   const bot = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [] };
@@ -192,5 +201,6 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
     built: stats.built, demolished: stats.demolished,
     offered: stats.offered, picked: stats.picked, draftTimes: stats.draftTimes,
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
+    cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0, holdPolicy: prof.holdPolicy,
   };
 }

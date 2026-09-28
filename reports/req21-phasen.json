@@ -1,0 +1,40 @@
+{
+  "runs": 50,
+  "suite": "phasen",
+  "report": {
+    "clickShare": {
+      "leicht": {
+        "early": 0.6370922559729892,
+        "mid": 0.5014559180579498,
+        "late": 0.4049725151636721
+      },
+      "normal": {
+        "early": 0.6381281661929399,
+        "mid": 0.4946326556667784,
+        "late": 0.3730671547194726
+      },
+      "schwer": {
+        "early": 0.6493248353817539,
+        "mid": 0.48147698497205876,
+        "late": 0.3291488401072239
+      }
+    },
+    "clickPolicies": {
+      "leicht": {
+        "always": 1,
+        "stopLate": 1,
+        "never": 0
+      },
+      "normal": {
+        "always": 1,
+        "stopLate": 1,
+        "never": 0
+      },
+      "schwer": {
+        "always": 1,
+        "stopLate": 0.94,
+        "never": 0
+      }
+    }
+  }
+}

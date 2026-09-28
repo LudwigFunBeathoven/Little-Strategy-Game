@@ -1,21 +1,24 @@
 # Klammerfront
 
-Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fertigen, Gebäude wählen, Einheiten an die Front schicken, bei jedem Stufenaufstieg eine Verstärkung wählen und die gegnerische Basis zerstören.
+Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fertigen, Fabriken und Gebäude im 3×3-Raster bauen, Einheiten in Wellen über drei Lanes schicken, bei jedem Stufenaufstieg eine Spezialkarte wählen und die gegnerische Basis zerstören, bevor sie dein Tor bricht.
 
 **Spielen:** `index.html` im Browser öffnen. Keine Installation nötig. Sprache (Deutsch/English) und Schwierigkeit werden auf dem Startbildschirm gewählt.
 
-## Spielprinzip
-- **Fertigen** erzeugt Material. Zu Beginn die wichtigste Einnahme, danach tragen Fertiger und Fabrik die Produktion. Höchstens 10 Klicks pro Sekunde zählen.
-- **Einheiten** (Tasten 1 und 2) werden bezahlt und in eine Warteschlange gestellt.
-- **Drei Bauplätze**, fünf Gebäudetypen: Fabrik, Schmiede, Kaserne, Universität, Handelskontor (nur per Draft). Abriss erstattet die Hälfte des Baupreises; gekaufte Upgrades ruhen und wirken nach einem Neubau wieder.
-- **Altmetall** aus Abschüssen zählt als Erfahrung. Jede Stufe öffnet einen **Draft** mit 2 Optionen, mit Universität 3.
-- **Phasen:** Früh (Stufe 0–1), Mitte (2–4), Spät (ab 5). Im Spätspiel zählen Entscheidungen, nicht Klicks.
-- Jedes Bedienelement hat einen **Tooltip** (1 s Hover, auf Touch-Geräten langes Drücken).
+## Spielprinzip (v0.4, Iteration 3)
+- **Drei Lanes:** oben, Mitte, unten. Einheiten bleiben in ihrer Lane. Nahkämpfer stehen vorn, Fernkämpfer greifen mit höchstens einer Einheit vor sich an.
+- **Deine Basis** hat drei Abschnitte: Mauer oben, Tor, Mauer unten. Auf den Mauern stehen die Türme. Fällt eine Mauer, schweigt ihr Turm und die Gegner ziehen zum Tor. **Fällt das Tor, ist die Partie verloren.**
+- **Wellen:** Gekaufte Einheiten warten in der Warteschlange und rücken alle 20 s gemeinsam aus, höchstens so viele wie das Versorgungslimit (Start 3). Die Welle verteilt sich selbst auf die Lanes. Rechts am Schlachtfeld siehst du die nächste Gegnerwelle je Lane.
+- **Halten:** Der Befehl behält die nächste Welle in der Basis; solange er gilt, kosten Turm, Mauer und Reparatur 30 % weniger.
+- **Wirtschaft:** Klicken („Fertigen“) trägt den Anfang, danach Fabriken. Neun Bauplätze; Fabriken mehrfach baubar, Schmiede, Kaserne, Universität und Handelskontor je einmal. Die Kaserne hebt das Versorgungslimit, die Schmiede verstärkt in Qualitätsstufen.
+- **Spezialkarten:** Jede Altmetall-Stufe bietet 2 Karten zur Wahl (mit Universität 3). Karten haben bis zu drei Stufen I–III.
+- **Belagerungswelle:** In Minute 16 greift eine angekündigte Welle mit dreifacher Stärke an; danach wird der Gegner jede Minute stärker.
+- Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Beim ersten Kontakt mit Wellen, Karten, Halten, Abriss und Belagerung erscheint ein kurzer Hinweis.
 
 ## Entwicklung
 ```
-npm test                                   # Logik- und Sprachtests (ohne Abhängigkeiten)
+npm test                                   # Logik-, Sprach- und Hinweistests (ohne Abhängigkeiten)
 npm run test:browser                       # optional, braucht Playwright
-node tools/simulate.mjs --runs 20          # Balancing-Simulation, alle Berichte
+node tools/simulate.mjs --suite kurz       # Kurzsimulation: 20 Partien Normal
+node tools/simulate.mjs --runs 200 --suite ziele   # Serie für das Balancing
 ```
-Projektregeln und Zielwerte stehen in `CLAUDE.md`. Anforderungen und Umsetzungsbericht der Iteration 2 liegen in `docs/`.
+Projektregeln und Zielwerte stehen in `CLAUDE.md`. Anforderungen, Stand und Bericht der Iteration 3 liegen in `docs/`.

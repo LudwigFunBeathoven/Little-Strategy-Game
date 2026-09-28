@@ -1,0 +1,317 @@
+{
+  "runs": 200,
+  "suite": "ziele",
+  "report": {
+    "ziele": [
+      {
+        "diff": "leicht",
+        "profile": "aktiv",
+        "games": 200,
+        "won": 200,
+        "lost": 0,
+        "open": 0,
+        "medWin": 309.4000000000361,
+        "medLoss": null,
+        "maxEnd": 372.0000000000503,
+        "wavesAtCap": 0.7830151928320997
+      },
+      {
+        "diff": "leicht",
+        "profile": "durchschnitt",
+        "games": 200,
+        "won": 200,
+        "lost": 0,
+        "open": 0,
+        "medWin": 380.90000000005233,
+        "medLoss": null,
+        "maxEnd": 458.50000000007,
+        "wavesAtCap": 0.7627003068530515
+      },
+      {
+        "diff": "leicht",
+        "profile": "gelegentlich",
+        "games": 200,
+        "won": 123,
+        "lost": 77,
+        "open": 0,
+        "medWin": 456.10000000006943,
+        "medLoss": 227.1500000000174,
+        "maxEnd": 612.7999999999904,
+        "wavesAtCap": 0.570389232448163
+      },
+      {
+        "diff": "leicht",
+        "profile": "passiv",
+        "games": 200,
+        "won": 0,
+        "lost": 200,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 136.89999999999688,
+        "maxEnd": 226.6500000000173,
+        "wavesAtCap": 0.3710691823899371
+      },
+      {
+        "diff": "leicht",
+        "profile": "verteidigung",
+        "games": 200,
+        "won": 0,
+        "lost": 200,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 1323.3499999993442,
+        "maxEnd": 1438.1999999992397,
+        "wavesAtCap": null
+      },
+      {
+        "diff": "normal",
+        "profile": "aktiv",
+        "games": 200,
+        "won": 200,
+        "lost": 0,
+        "open": 0,
+        "medWin": 437.6000000000652,
+        "medLoss": null,
+        "maxEnd": 654.999999999952,
+        "wavesAtCap": 0.8851332783731795
+      },
+      {
+        "diff": "normal",
+        "profile": "durchschnitt",
+        "games": 200,
+        "won": 200,
+        "lost": 0,
+        "open": 0,
+        "medWin": 571.8500000000276,
+        "medLoss": null,
+        "maxEnd": 869.6499999997568,
+        "wavesAtCap": 0.8167222685571309
+      },
+      {
+        "diff": "normal",
+        "profile": "gelegentlich",
+        "games": 200,
+        "won": 9,
+        "lost": 191,
+        "open": 0,
+        "medWin": 673.2499999999354,
+        "medLoss": 164.80000000000322,
+        "maxEnd": 876.049999999751,
+        "wavesAtCap": 0.7758271438217421
+      },
+      {
+        "diff": "normal",
+        "profile": "passiv",
+        "games": 200,
+        "won": 0,
+        "lost": 200,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 119.29999999999536,
+        "maxEnd": 154.45000000000087,
+        "wavesAtCap": 0.13131313131313133
+      },
+      {
+        "diff": "normal",
+        "profile": "verteidigung",
+        "games": 200,
+        "won": 0,
+        "lost": 200,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 1230.9499999994282,
+        "maxEnd": 1393.0499999992808,
+        "wavesAtCap": null
+      },
+      {
+        "diff": "schwer",
+        "profile": "aktiv",
+        "games": 200,
+        "won": 192,
+        "lost": 8,
+        "open": 0,
+        "medWin": 519.2000000000755,
+        "medLoss": 1187.6999999994675,
+        "maxEnd": 1312.7999999993538,
+        "wavesAtCap": 0.9010795329367702
+      },
+      {
+        "diff": "schwer",
+        "profile": "durchschnitt",
+        "games": 200,
+        "won": 154,
+        "lost": 46,
+        "open": 0,
+        "medWin": 640.2999999999654,
+        "medLoss": 1121.149999999528,
+        "maxEnd": 1346.7999999993228,
+        "wavesAtCap": 0.8753814035651196
+      },
+      {
+        "diff": "schwer",
+        "profile": "gelegentlich",
+        "games": 200,
+        "won": 3,
+        "lost": 197,
+        "open": 0,
+        "medWin": 630.4999999999743,
+        "medLoss": 159.25000000000196,
+        "maxEnd": 1008.7999999996302,
+        "wavesAtCap": 0.7722846441947565
+      },
+      {
+        "diff": "schwer",
+        "profile": "passiv",
+        "games": 200,
+        "won": 0,
+        "lost": 200,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 118.44999999999541,
+        "maxEnd": 162.5000000000027,
+        "wavesAtCap": 0.06060606060606061
+      },
+      {
+        "diff": "schwer",
+        "profile": "verteidigung",
+        "games": 200,
+        "won": 0,
+        "lost": 200,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 1305.2999999993606,
+        "maxEnd": 1395.6499999992784,
+        "wavesAtCap": null
+      }
+    ],
+    "pattRate": 0,
+    "cardDelta": {
+      "aushebung": {
+        "with": 466,
+        "winWith": 0.9291845493562232,
+        "without": 734,
+        "winWithout": 0.9713896457765667,
+        "deltaPp": -4.2205096420343535
+      },
+      "belagerungsgeraet": {
+        "with": 498,
+        "winWith": 0.9437751004016064,
+        "without": 702,
+        "winWithout": 0.9629629629629629,
+        "deltaPp": -1.9187862561356517
+      },
+      "bessereFabriken": {
+        "with": 552,
+        "winWith": 0.9402173913043478,
+        "without": 648,
+        "winWithout": 0.9675925925925926,
+        "deltaPp": -2.7375201288244777
+      },
+      "doppelschicht": {
+        "with": 501,
+        "winWith": 0.9221556886227545,
+        "without": 699,
+        "winWithout": 0.9785407725321889,
+        "deltaPp": -5.63850839094343
+      },
+      "handelskontor": {
+        "with": 322,
+        "winWith": 0.9099378881987578,
+        "without": 878,
+        "winWithout": 0.9715261958997722,
+        "deltaPp": -6.158830770101442
+      },
+      "kriegsanleihe": {
+        "with": 410,
+        "winWith": 0.9121951219512195,
+        "without": 790,
+        "winWithout": 0.9772151898734177,
+        "deltaPp": -6.502006792219817
+      },
+      "langeWurfarme": {
+        "with": 211,
+        "winWith": 0.95260663507109,
+        "without": 989,
+        "winWithout": 0.9555106167846309,
+        "deltaPp": -0.2903981713540893
+      },
+      "maurerkolonne": {
+        "with": 424,
+        "winWith": 0.9127358490566038,
+        "without": 776,
+        "winWithout": 0.9780927835051546,
+        "deltaPp": -6.5356934448550845
+      },
+      "nachtschicht": {
+        "with": 195,
+        "winWith": 0.9025641025641026,
+        "without": 1005,
+        "winWithout": 0.9651741293532339,
+        "deltaPp": -6.26100267891313
+      },
+      "notreserve": {
+        "with": 276,
+        "winWith": 0.9130434782608695,
+        "without": 924,
+        "winWithout": 0.9675324675324676,
+        "deltaPp": -5.4488989271598065
+      },
+      "sappeure": {
+        "with": 462,
+        "winWith": 0.9545454545454546,
+        "without": 738,
+        "winWithout": 0.9552845528455285,
+        "deltaPp": -0.07390983000739038
+      },
+      "scharfschuetzen": {
+        "with": 303,
+        "winWith": 0.9174917491749175,
+        "without": 897,
+        "winWithout": 0.967670011148272,
+        "deltaPp": -5.0178261973354505
+      },
+      "schrottsammler": {
+        "with": 328,
+        "winWith": 0.9817073170731707,
+        "without": 872,
+        "winWithout": 0.944954128440367,
+        "deltaPp": 3.6753188632803746
+      },
+      "schwerePressen": {
+        "with": 692,
+        "winWith": 0.9421965317919075,
+        "without": 508,
+        "winWithout": 0.9724409448818898,
+        "deltaPp": -3.024441308998227
+      },
+      "serienbau": {
+        "with": 329,
+        "winWith": 0.9088145896656535,
+        "without": 871,
+        "winWithout": 0.9724454649827784,
+        "deltaPp": -6.363087531712486
+      },
+      "turmkanoniere": {
+        "with": 306,
+        "winWith": 0.9150326797385621,
+        "without": 894,
+        "winWithout": 0.9686800894854586,
+        "deltaPp": -5.364740974689653
+      },
+      "vorposten": {
+        "with": 400,
+        "winWith": 0.945,
+        "without": 800,
+        "winWithout": 0.96,
+        "deltaPp": -1.5000000000000013
+      },
+      "weitschuss": {
+        "with": 481,
+        "winWith": 0.9521829521829522,
+        "without": 719,
+        "winWithout": 0.9568845618915159,
+        "deltaPp": -0.4701609708563703
+      }
+    }
+  }
+}
