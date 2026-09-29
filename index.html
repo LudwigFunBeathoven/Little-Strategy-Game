@@ -132,7 +132,6 @@
   .opt-name kbd{font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:500; border:1px solid var(--rule-strong); border-radius:3px; padding:0 5px; margin-right:7px; color:var(--ink-soft);}
   .expl{display:block; font-family:"IBM Plex Mono", monospace; font-size:11.5px; font-weight:400; font-variant-numeric:tabular-nums; color:var(--ink-soft); line-height:1.35;}
   .opt .expl{grid-column:1 / -1;}
-  .opt-desc{grid-column:1 / -1; font-size:12.5px; color:var(--ink-soft);}
   .statline{font-family:"IBM Plex Mono", monospace; font-size:12.5px; color:var(--ink-soft);}
   .statline b{color:var(--ink); font-weight:500;}
 
@@ -164,13 +163,13 @@
   .diff[aria-pressed="true"]{border-color:var(--brass); background:var(--brass-soft);}
 
   /* Einheitlicher Stil für alles Klickbare (REQ-05) */
-  .opt, .chip, .btn-primary, .btn-ghost, .seg button, .diff, .slot-btn{min-height:32px; min-width:32px; cursor:pointer;}
+  .opt, .btn-primary, .btn-ghost, .seg button, .diff{min-height:32px; min-width:32px; cursor:pointer;}
   .btn-ghost{border:1px solid var(--rule-strong); background:var(--surface); border-radius:5px; padding:5px 12px; font-size:13px; font-family:"IBM Plex Mono", monospace; color:var(--ink-soft); box-shadow:0 1px 0 var(--rule);}
   .btn-ghost:hover{border-color:var(--brass); color:var(--ink);}
-  .opt, .chip, .seg button, .diff{box-shadow:0 1px 0 var(--rule);}
-  .opt:active:not([aria-disabled="true"]), .chip:active:not([aria-disabled="true"]), .btn-ghost:active, .seg button:active, .diff:active{transform:translateY(1px); box-shadow:none;}
+  .opt, .seg button, .diff{box-shadow:0 1px 0 var(--rule);}
+  .opt:active:not([aria-disabled="true"]), .btn-ghost:active, .seg button:active, .diff:active{transform:translateY(1px); box-shadow:none;}
   [aria-disabled="true"]{opacity:.5; cursor:not-allowed !important;}
-  .opt[aria-disabled="true"]:hover, .chip[aria-disabled="true"]:hover{border-color:var(--rule-strong); background:var(--surface);}
+  .opt[aria-disabled="true"]:hover{border-color:var(--rule-strong); background:var(--surface);}
   .opt{grid-template-columns:minmax(0, 1fr) auto; align-items:baseline;}
   .opt-name{min-width:0; overflow-wrap:anywhere;}
   .opt-name em{font-style:normal; font-weight:400; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; font-size:11.5px; margin-left:6px;}

@@ -68,7 +68,7 @@ const KF_CONFIG = {
   /* Gestaffelte Einführung (REQ-47): Verstärkungsgebäude ab dieser Stufe; Einstellung „Einführung überspringen“ im Browser */
   INTRO_BUILDINGS_LEVEL: 2,
   INTRO_SKIP_KEY: 'klammerfront.skipIntro',
-  POST_SIEGE_GROWTH: 0.6,       // Vorgabe 0,10; kalibriert in I7: erst ab 0,5 fällt reine Verteidigung bis Minute 25 (REQ-21.4)
+  POST_SIEGE_GROWTH: 1.1,       // I4.8: 0,6 → 1,1; mit Formationen hielt reine Verteidigung auf Leicht sonst bis Minute 29 (REQ-21.4)
   RELOAD_WAVE_DELAY_S: 5,
 
   /* Wellen (REQ-14/15): eigene und gegnerische Wellen rücken im selben Takt aus */
@@ -129,9 +129,9 @@ const KF_CONFIG = {
   /* Wirkungen der Upgrades */
   FX_PRESSE: 1,
   SMITHY_COST_GROWTH: 2.5,
-  FX_QUALITAET: 0.12,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (Faktor 1,12 je Stufe; I7: vorher 0,25)
+  FX_QUALITAET: 0.05,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (I4.8: 0,12 → 0,05, Ausgleich zur höheren Grundstärke)
   KASERNE_SUPPLY_PER_LEVEL: 2,  // Versorgungslimit je Ausbaustufe der Kaserne: 3 → 5 → … → 15
-  UNIT_STRENGTH_PER_LEVEL: 0.08,// Grundstärke je Altmetall-Stufe, auch ohne Schmiede (REQ-17.2; Vorgabe 0,05, I7: 0,08, damit Partien ohne Schmiede ≥ 30 % gewinnen)
+  UNIT_STRENGTH_PER_LEVEL: 0.16,// Grundstärke je Altmetall-Stufe, auch ohne Schmiede (REQ-17.2; I4.8: 0,08 → 0,16, damit Partien ohne Schmiede ≥ 30 % gewinnen)
   FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_MAUER_HP: 150,             // je Abschnitt
   FX_STACHELN_DMG: 4,
@@ -143,7 +143,7 @@ const KF_CONFIG = {
 
   /* Altmetall-Stufen und Draft (REQ-02). Altmetall wird nur gesammelt, nicht ausgegeben.
      Stufe n verlangt XP_BASE × XP_GROWTH^(n−1) Altmetall zusätzlich zur vorigen Stufe (kumulierte Summe). */
-  XP_BASE: 40,
+  XP_BASE: 47,                  // I4.8: 40 → 47, damit der Median-Abstand der Karten im Frühspiel ≥ 45 s liegt (REQ-48)
   XP_GROWTH: 1.4,
   DRAFT_OPTIONS_BASE: 2,
   DRAFT_OPTIONS_UNIVERSITY: 3,
@@ -161,6 +161,8 @@ const KF_CONFIG = {
   PHASE_MID_LEVEL: 2,
   PHASE_LATE_LEVEL: 5,
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
+  SIM_SIEGE_LOOKAHEAD_S: 120,   // Bot-Vorausschau reicht bis nach der Belagerungswelle, sobald sie so nah ist (REQ-48)
+  SIM_SIEGE_EVAL_S: 40,         // … und so lange über ihr Ausrücken hinaus
   MAX_CLICKS_PER_SECOND: 10,    // darüber hinausgehende Klicks verfallen (Schutz gegen Autoklicker)
   /* Automatische Presse (REQ-44): Anteil der Referenzrate ab Phase Mitte bzw. Spät */
   PRESS_REFERENCE_CPS: 6,
@@ -172,11 +174,11 @@ const KF_CONFIG = {
      damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen.
      Gegnerwelle: waveBase + waveGrowth × Minute Einheiten (gerundet), Lanes zufällig über den Spielzufall. */
   DIFFICULTY: {
-    leicht: { enemyBaseHp: 4800, waveBase: 1,   waveGrowth: 0.3,
-              werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.03, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
-    normal: { enemyBaseHp: 5000, waveBase: 2,   waveGrowth: 0.6,
+    leicht: { enemyBaseHp: 11000, waveBase: 1,  waveGrowth: 0.45,
+              werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.05, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
+    normal: { enemyBaseHp: 13000, waveBase: 2,  waveGrowth: 0.7,
               werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
-    schwer: { enemyBaseHp: 5500, waveBase: 2,   waveGrowth: 0.9,
+    schwer: { enemyBaseHp: 15000, waveBase: 2,  waveGrowth: 1.0,
               werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.07, dmgGrowth: 0.05, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
   },
   DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],

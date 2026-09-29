@@ -17,7 +17,7 @@ if (!isMainThread){
   parentPort.postMessage(workerData.jobs.map(j => Object.assign(playGame(j), { suite: j.suite })));
 } else {
   const { loadCore } = await import('./load-core.mjs');
-  const { KF_CONFIG: C } = loadCore();
+  const { KF_CONFIG: C, KF_DRAFT_OPTIONS: OPTS } = loadCore();
   const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
   const RUNS = Number(arg('runs', 20));
   const SUITE = arg('suite', 'alle');
@@ -83,18 +83,41 @@ if (!isMainThread){
     const open = Z.filter(r => r.status === 'running').length;
     report.pattRate = Z.length ? open / Z.length : null;
     console.log(`\nPatt-Quote (offen nach 30 min): ${open} von ${Z.length} = ${pct(open, Z.length)} (Soll ≤ 2 %)`);
-    // Siegquote mit gegen ohne Karte, in Prozentpunkten (REQ-21.2); nur Profile, die Karten sinnvoll wählen
+    // Weitere Kennzahlen (REQ-48)
+    const known = Z.filter(r => r.profile !== 'verteidigung' && r.profile !== 'passiv');
+    const legendary = new Set(OPTS.filter(o => o.rarity === 'legendary').map(o => o.id));
+    report.maxArmy = median(known.map(r => r.maxArmy));
+    report.wallFall = median(Z.map(r => r.wallFall).filter(t => t != null));
+    report.wallFallShare = Z.length ? Z.filter(r => r.wallFall != null).length / Z.length : null;
+    report.legendaryShare = known.length ? known.filter(r => r.cards.some(id => legendary.has(id))).length / known.length : null;
+    console.log(`Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): ${report.maxArmy ?? '–'} Einheiten`);
+    console.log(`Fall des ersten Mauerabschnitts (Median der Partien mit Fall): ${mmss(report.wallFall)} · in ${pct(Z.filter(r => r.wallFall != null).length, Z.length)} der Partien`);
+    console.log(`Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): ${pct(known.filter(r => r.cards.some(id => legendary.has(id))).length, known.length)}`);
+
+    // Karten: Siegquote „angeboten und gewählt“ gegen „angeboten und nicht gewählt“, je Stufe (REQ-48);
+    // nur Profile, die Karten sinnvoll wählen. Eine Partie zählt je Karte und Stufe höchstens einmal.
     const C2 = Z.filter(r => r.profile === 'aktiv' || r.profile === 'durchschnitt');
-    const ids = [...new Set(C2.flatMap(r => r.cards))].sort();
+    const q = R => R.length ? R.filter(r => r.status === 'won').length / R.length : null;
+    const fmtD = d => d == null ? '–' : (d >= 0 ? '+' : '') + d.toFixed(0) + ' pp';
+    const cmp = (id, tier) => {
+      const chosen = C2.filter(r => r.offers.some(o => o.id === id && (tier == null || o.tier === tier) && o.chosen));
+      const not = C2.filter(r => !chosen.includes(r) && r.offers.some(o => o.id === id && (tier == null || o.tier === tier)));
+      const d = q(chosen) != null && q(not) != null ? (q(chosen) - q(not)) * 100 : null;
+      return { chosen: chosen.length, winChosen: q(chosen), notChosen: not.length, winNot: q(not), deltaPp: d };
+    };
+    const ids = [...new Set(C2.flatMap(r => r.offers.map(o => o.id)))].sort();
     if (ids.length){
-      console.log('\nSiegquote mit Karte gegen ohne Karte (aktiv und durchschnitt, alle Schwierigkeitsgrade; Meldung ab +25 Prozentpunkten)');
-      report.cardDelta = {};
+      const maxTier = Math.max(...OPTS.map(o => o.tiers.length));
+      console.log('\nKarten: Siegquote angeboten+gewählt gegen angeboten+nicht gewählt (aktiv und durchschnitt; Meldung ab +25 pp, mind. 5 Partien je Seite)');
+      console.log(`${pad('Karte', 20)} ${pad('Kat./Selt.', 26)} gewählt  nicht  Differenz  | ` + Array.from({ length: maxTier }, (_, k) => `Stufe ${k + 1}`.padStart(9)).join(' '));
+      report.cardCompare = {};
       for (const id of ids){
-        const withC = C2.filter(r => r.cards.includes(id)), without = C2.filter(r => !r.cards.includes(id));
-        const q = R => R.length ? R.filter(r => r.status === 'won').length / R.length : null;
-        const d = q(withC) != null && q(without) != null ? (q(withC) - q(without)) * 100 : null;
-        report.cardDelta[id] = { with: withC.length, winWith: q(withC), without: without.length, winWithout: q(without), deltaPp: d };
-        console.log(`${pad(id, 20)} gewählt in ${lpad(withC.length, 4)} Partien  mit ${lpad(pct(withC.filter(r => r.status === 'won').length, withC.length), 5)}  ohne ${lpad(pct(without.filter(r => r.status === 'won').length, without.length), 5)}  Differenz ${lpad(d == null ? '–' : (d >= 0 ? '+' : '') + d.toFixed(0) + ' pp', 7)}${d != null && d > 25 ? '  ← über +25' : ''}`);
+        const all = cmp(id), tiers = Array.from({ length: maxTier }, (_, k) => cmp(id, k + 1));
+        report.cardCompare[id] = { ...all, tiers };
+        const flag = all.deltaPp != null && all.deltaPp > 25 && all.chosen >= 5 && all.notChosen >= 5 ? '  ← über +25' : '';
+        const o = OPTS.find(x => x.id === id);
+        console.log(`${pad(id, 20)} ${pad(o.category + '/' + o.rarity, 26)} ${lpad(all.chosen, 7)} ${lpad(all.notChosen, 6)} ${lpad(fmtD(all.deltaPp), 10)}  | `
+          + tiers.map(t => lpad(t.chosen + t.notChosen ? fmtD(t.deltaPp) : '', 9)).join(' ') + flag);
       }
     }
     console.log('');
@@ -143,6 +166,13 @@ if (!isMainThread){
         const flag = rate < 0.05 || rate > 0.6 ? '  ← außerhalb' : '';
         console.log(`${pad(k, 20)} angeboten ${lpad(offered[k], 4)}  gewählt ${lpad(picked[k] || 0, 4)}  ${lpad(pct(picked[k] || 0, offered[k]), 5)}${flag}`);
       });
+      // Wahlraten je Kategorie und Seltenheit (REQ-48)
+      for (const key of ['category', 'rarity']){
+        const off = {}, pick = {};
+        for (const o of OPTS){ off[o[key]] = (off[o[key]] || 0) + (offered[o.id] || 0); pick[o[key]] = (pick[o[key]] || 0) + (picked[o.id] || 0); }
+        report['pickRateBy_' + key] = Object.fromEntries(Object.keys(off).map(k => [k, off[k] ? pick[k] / off[k] : null]));
+        console.log(`\nWahlrate je ${key === 'category' ? 'Kategorie' : 'Seltenheit'}: ` + Object.keys(off).map(k => `${k} ${pct(pick[k], off[k])}`).join(' · '));
+      }
       console.log(`\nMedian-Abstand zwischen zwei Drafts je Phase (Soll ${C.DRAFT_INTERVAL_MIN_S}–${C.DRAFT_INTERVAL_MAX_S} s; beide Strategien)`);
       const gaps = { early: [], mid: [], late: [] }, first = [];
       for (const r of T){

@@ -14,7 +14,7 @@ Stand von Iteration 3: `docs/archiv/STAND-iteration-3.md`.
 | I4.5 | Kartenausbau | 45 | P1 | fertig |
 | I4.6 | Vertikales Layout, Reich in der Spielwelt, Scrollen | 46 | P1 | fertig |
 | I4.7 | Gestaffelte Einführung | 47 | P2 | fertig |
-| I4.8 | Simulation, Balancing, Bericht, Merge-Bereitschaft | 48 | P2 | offen |
+| I4.8 | Simulation, Balancing, Bericht, Merge-Bereitschaft | 48 | P2 | fertig (Merge wartet auf Freigabe) |
 
 Abgleich mit Version 1: Nach Version 1 wurden keine Inkremente umgesetzt; es gibt nichts abzugleichen.
 
@@ -46,6 +46,9 @@ node tools/simulate.mjs --suite kurz
 - I4.7: `npm test` 83/83, Browser-Prüfung grün (neu: Startzustand der Einführung, Freischaltung ab Stufe 2, Schalter „Einführung überspringen“).
   Kurzsimulation mit Einführung 20 Siege, 0 offen; ohne Einführung (`KF_SKIP_INTRO=1`) 17 Siege, 3 Niederlagen, 0 offen.
   Der Bot gewinnt mit Einführung öfter, weil er früh kein Material in Verstärkungsgebäude steckt; Einordnung in I4.8.
+
+- I4.8: `npm test` 83/83, Browser-Prüfung grün. Serie: 3.000 Partien (ziele), 1.800 (phasen), 300 (strategie), 100 (ohne Schmiede),
+  450 (ohne Einführung); Patt-Quote 0 %. Kurzsimulation 12 Siege, 8 Niederlagen, 0 offen. Kalibrierung, Abnahmetabelle und Auffälligkeiten in `docs/bericht-iteration-4.md`, Rohdaten unter `reports/i4-*`.
 
 ## Abweichungen und Auslegungen
 1. **Suche nach „hold“ wörtlich genommen:** Auch Namen, die das Wort nur zufällig enthalten, sind umbenannt: `xpThreshold` → `xpTotal`,
@@ -94,3 +97,9 @@ node tools/simulate.mjs --suite kurz
 26. **Hinweise je System:** neu „Start“ (Presse, Fabrik, Einheiten) und „Verstärkungsgebäude“ (ab Stufe 2); vorhanden: Welle, Karte, Belagerung.
     Das Handelskontor bleibt wie bisher an seine Karte gebunden und erscheint während der Einführung ebenfalls erst ab Stufe 2.
     Die Wellenleiste erscheint mit der ersten eigenen oder gegnerischen Welle, je nachdem, was zuerst ausrückt.
+27. **Karten über +25 pp** (Große Armee, Söldnerheer) sind berichtet, nicht abgeschwächt (Regel in `CLAUDE.md`); REQ-48 verlangt „keine Karte über +25 pp“.
+    Die Entscheidung liegt beim PO.
+28. **Vergleichswert einer Karte** ist „angeboten und nicht gewählt“; eine Partie zählt je Karte und Stufe höchstens einmal, und wer die Karte irgendwann
+    gewählt hat, zählt nicht mehr zu „nicht gewählt“. Bewertet werden wie bisher die Profile aktiv und durchschnitt; Meldung erst ab 5 Partien je Seite.
+29. **Kalibrierung über mehr als die genannten Konstanten:** Neben `XP_BASE`, `POST_SIEGE_GROWTH` und `UNIT_STRENGTH_PER_LEVEL` sind
+    `FX_QUALITAET`, `enemyBaseHp`, `waveGrowth` und Leicht `hpGrowth` geändert (Begründung im Bericht).

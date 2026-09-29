@@ -4,14 +4,38 @@ Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fer
 
 **Spielen:** `index.html` im Browser öffnen. Keine Installation nötig. Sprache (Deutsch/English) und Schwierigkeit werden auf dem Startbildschirm gewählt.
 
-## Spielprinzip (v0.4, Iteration 3)
-- **Drei Lanes:** oben, Mitte, unten. Einheiten bleiben in ihrer Lane. Nahkämpfer stehen vorn, Fernkämpfer greifen mit höchstens einer Einheit vor sich an.
-- **Deine Basis** hat drei Abschnitte: Mauer oben, Tor, Mauer unten. Auf den Mauern stehen die Türme. Fällt eine Mauer, schweigt ihr Turm und die Gegner ziehen zum Tor. **Fällt das Tor, ist die Partie verloren.**
-- **Wellen:** Gekaufte Einheiten warten in der Warteschlange und rücken alle 20 s gemeinsam aus, höchstens so viele wie das Versorgungslimit (Start 3). Die Welle verteilt sich selbst auf die Lanes. Rechts am Schlachtfeld siehst du die nächste Gegnerwelle je Lane.
-- **Wirtschaft:** Klicken („Fertigen“) trägt den Anfang, danach Fabriken. Neun Bauplätze; Fabriken mehrfach baubar, Schmiede, Kaserne, Universität und Handelskontor je einmal. Die Kaserne hebt das Versorgungslimit, die Schmiede verstärkt in Qualitätsstufen.
-- **Spezialkarten:** Jede Altmetall-Stufe bietet 2 Karten zur Wahl (mit Universität 3). Karten haben bis zu drei Stufen I–III.
-- **Belagerungswelle:** In Minute 16 greift eine angekündigte Welle mit dreifacher Stärke an; danach wird der Gegner jede Minute stärker.
-- Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Beim ersten Kontakt mit Wellen, Karten, Abriss und Belagerung erscheint ein kurzer Hinweis.
+## Start
+`index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig). Auf dem Startbildschirm Sprache und Schwierigkeit wählen.
+„Einführung überspringen“ schaltet alle Systeme von Beginn an frei; ohne diese Option erscheinen sie nacheinander.
+Die Partie wird im Browser gespeichert und beim nächsten Öffnen fortgesetzt.
+
+## Spielprinzip (v0.5, Iteration 4)
+- **Links dein Reich, rechts der Gegner.** Das Reich ist ein 3×3-Raster aus Bauplätzen, umschlossen von der Mauer: Mauer oben mit Turm,
+  Tor in der Mitte, Mauer unten mit Turm. **Fällt das Tor, ist die Partie verloren.** Zerstöre die gegnerische Basis am rechten Rand.
+- **Wirtschaft:** „Fertigen“ bringt Material pro Klick; ab Phase Mitte presst eine Automatik mit. Fabriken produzieren laufend (die erste ist kostenlos).
+  Ab Stufe 2 kommen Schmiede, Kaserne und Universität hinzu, das Handelskontor über eine Spezialkarte.
+- **Armee:** Gekaufte Einheiten rücken alle 20 s als Welle aus, höchstens so viele wie das Versorgungslimit (Kaserne, bis 15).
+  Jede Lane-Gruppe marschiert als **Formation**: Nahkämpfer vorn in Reihen zu höchstens fünf, Fernkämpfer dahinter, alle im gleichen Tempo.
+  Formationen helfen der Nachbar-Lane, wenn dort gekämpft wird, und kehren zurück, sobald in der eigenen Lane ein Gegner auftaucht.
+- **Spezialkarten:** Jede Altmetall-Stufe bietet 2 Karten (mit Universität 3) aus fünf Kategorien, teils selten oder legendär
+  (einmalig, mit Nachteil). Synergiekarten wirken stärker, je mehr Karten ihrer Kategorie du hast.
+- **Belagerungswelle** in Minute 16, eine Minute vorher angekündigt; danach wird der Gegner jede Minute stärker.
+- Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Jedes System erklärt sich beim ersten Auftreten mit einem kurzen Hinweis.
+
+## Steuerung
+| Aktion | Maus | Tastatur |
+|---|---|---|
+| Material fertigen | „Fertigen“ | – |
+| Läufer / Werfer in die Warteschlange | Knöpfe unter „Einheiten“ | `1` / `2` |
+| Bauplatz wählen, bauen, ausbauen, abreißen | Bauplatz in der Spielwelt anklicken, dann im Kontextfeld rechts | – |
+| Mauer reparieren, Türme, Mauer-Upgrades | Mauer in der Spielwelt anklicken oder „Zur Basis“ | – |
+| Spezialkarte wählen | Karte im Dialog | Tab, Enter |
+
+## Scrollen
+Die Spielwelt ist doppelt so breit wie das Bild. Scrollen geht mit dem **Mausrad**, durch **Ziehen** mit gedrückter Maustaste
+(ab 5 Pixeln; ein kürzerer Klick wählt aus), mit den **Pfeiltasten** oder **A/D** und mit der **Scrollleiste** unter der Welt.
+Die Knöpfe über der Welt springen zum **Reich** oder zur **Front**; **Front folgen** führt die Kamera mit der vordersten eigenen Formation mit.
+Ereignisse außerhalb des Bildes zeigt ein Randmarker.
 
 ## Entwicklung
 ```
@@ -19,5 +43,6 @@ npm test                                   # Logik-, Sprach- und Hinweistests (o
 npm run test:browser                       # optional, braucht Playwright
 node tools/simulate.mjs --suite kurz       # Kurzsimulation: 20 Partien Normal
 node tools/simulate.mjs --runs 200 --suite ziele   # Serie für das Balancing
+KF_SKIP_INTRO=1 node tools/simulate.mjs --suite kurz # Bots ohne gestaffelte Einführung
 ```
-Projektregeln und Zielwerte stehen in `CLAUDE.md`. Anforderungen, Stand und Bericht der Iteration 3 liegen in `docs/`.
+Projektregeln und Zielwerte stehen in `CLAUDE.md`. Anforderungen, Stand und Bericht der Iteration 4 liegen in `docs/`, Rohdaten der Simulation unter `reports/`.

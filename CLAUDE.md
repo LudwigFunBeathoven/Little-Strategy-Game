@@ -6,9 +6,8 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Altmetall, das nur als Erfahrung zählt. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Aktueller Auftrag: `docs/anforderungen-iteration-4.md` (Iteration 4, Stand je Inkrement in `docs/STAND.md`, Plan in `docs/plan-iteration-4.md`).
-Vorgänger: v0.4 (Iteration 3: `docs/anforderungen-iteration-3.md`, Stand `docs/archiv/STAND-iteration-3.md`,
-Bericht in `docs/bericht-iteration-3.md`).
+Stand: v0.5 (Iteration 4: `docs/anforderungen-iteration-4.md`, Stand je Inkrement in `docs/STAND.md`,
+Bericht in `docs/bericht-iteration-4.md`). Frühere Iterationen: `docs/archiv/`, `docs/bericht-iteration-3.md`.
 
 ## Der Nutzer
 Nick ist Product Owner, kein Entwickler. Erkläre Änderungen in Klartext und übersetze Fachbegriffe kurz.
@@ -67,6 +66,8 @@ Weitere Zielwerte (Iteration 2): erster Draft nach 60–90 s; Median-Abstand zwi
 Klickanteil bei 6 Klicks/s: Früh ≥ 50 %, Mitte 10–30 %, Spät ≤ 3 %; Draft-Wahlrate je Option 5–60 %.
 Iteration 3: Partien ohne Schmiede gewinnen auf Normal mindestens 30 % (`--suite ohneSchmiede`). Karten, deren Siegquote-Differenz
 über +25 Prozentpunkten liegt, werden berichtet, nicht automatisch abgeschwächt.
+Iteration 4: Vergleichswert einer Karte ist „angeboten und nicht gewählt“ (je Stufe); Bots spielen mit gestaffelter Einführung
+(`KF_SKIP_INTRO=1` schaltet sie ab).
 
 ## Mechaniken gegen Patts (nicht ohne Simulation entfernen)
 - Belagerung: Eigene Einheiten am gegnerischen Tor blockieren reguläre Gegnerwellen in dieser Lane.
@@ -93,4 +94,4 @@ Bericht `docs/bericht-iteration-<n>.md` mit: Ergebnis in drei Sätzen, Entscheid
 wegbalanciert), offene Punkte für den PO. Rohdaten der Simulation unter `reports/`.
 
 ## Bekannte offene Punkte
-Siehe Abschnitt „Offen“ in `docs/bericht-iteration-3.md`.
+Siehe Abschnitt „Offen“ in `docs/bericht-iteration-4.md`.

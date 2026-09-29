@@ -61,6 +61,13 @@ export class Bot {
     this.rng = botRng(opts.seed || 1);
     this.clickAcc = 0; this.actAcc = 0; this.mix = 0;
   }
+  /* Vorausschau bis nach der Belagerungswelle, sobald sie innerhalb von SIM_SIEGE_LOOKAHEAD_S bevorsteht (REQ-48):
+     sonst bewertet die Heuristik Karten und Gebäude, ohne den stärksten Angriff der Partie zu sehen */
+  horizonFor(G, base){
+    const S = G.S, until = S.siegeWaveT - S.t;
+    if (S.siegeDone || until < 0 || until > C.SIM_SIEGE_LOOKAHEAD_S) return base;
+    return Math.max(base, until + C.SIM_SIEGE_EVAL_S);
+  }
   clickRateNow(G){
     const p = this.o.clickPolicy;
     if (p === 'never') return 0;
@@ -86,7 +93,8 @@ export class Bot {
       F.buildAt(slot, type);
       const sub = new Bot(Object.assign({}, this.o, { lookahead: false, strategy: 'zufall', seed: 99 }));
       // Gebäude wirken langsamer als Draft-Optionen: längere Vorausschau
-      for (let t = 0; t < this.o.buildHorizon / DT && F.S.status === 'running'; t++) sub.step(F, null);
+      const h = this.horizonFor(G, this.o.buildHorizon);
+      for (let t = 0; t < h / DT && F.S.status === 'running'; t++) sub.step(F, null);
       const sc = score(F);
       if (sc > bestScore){ bestScore = sc; best = type; }
     }
@@ -102,7 +110,8 @@ export class Bot {
         const F = forkGame(G);
         F.chooseDraft(i);
         const sub = new Bot(Object.assign({}, this.o, { lookahead: false, strategy: 'zufall', seed: 77 }));
-        for (let t = 0; t < this.o.horizon / DT && F.S.status === 'running'; t++) sub.step(F, null);
+        const h = this.horizonFor(G, this.o.horizon);
+        for (let t = 0; t < h / DT && F.S.status === 'running'; t++) sub.step(F, null);
         const sc = score(F);
         if (sc > bestScore){ bestScore = sc; pick = i; }
       });
@@ -112,6 +121,8 @@ export class Bot {
       const id = offer[pick];
       stats.picked[id] = (stats.picked[id] || 0) + 1;
       stats.draftTimes.push({ t: G.S.t, level: G.S.pendingDraft.level });
+      // je angebotener Karte die Stufe, die sie gebracht hätte, und ob sie gewählt wurde (REQ-48)
+      offer.forEach((oid, i) => stats.offers.push({ id: oid, tier: G.cardTaken(oid) + 1, chosen: i === pick }));
     }
     G.chooseDraft(pick);
   }
@@ -186,16 +197,21 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
   if (cps !== undefined) prof.cps = cps;
   const G = newGame(diff, seed);
   const bot = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
-  const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [] };
+  const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [] };
+  let wallFall = null;
   const steps = maxMin * 60 / DT;
-  for (let i = 0; i < steps && G.S.status === 'running'; i++) bot.step(G, stats);
+  for (let i = 0; i < steps && G.S.status === 'running'; i++){
+    bot.step(G, stats);
+    if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
+  }
   const S = G.S;
   return {
     diff, profile, strategy, clickPolicy, seed,
     status: S.status, t: S.t,
     combo: S.slots.filter(Boolean).map(x => x.type).sort().join('+') || '–',
     built: stats.built, demolished: stats.demolished,
-    offered: stats.offered, picked: stats.picked, draftTimes: stats.draftTimes,
+    offered: stats.offered, picked: stats.picked, draftTimes: stats.draftTimes, offers: stats.offers,
+    wallFall, maxArmy: S.stats.maxArmy || 0,
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
   };
