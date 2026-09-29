@@ -13,22 +13,24 @@ function game(diff = 'normal', seed = 7){
 function quiet(G){ G.S.nextWave = Infinity; G.S.enemyQueue = []; G.S.units = []; G.S.forms = []; G.S.enemyTurretCd = Infinity; }
 function place(G, side, type, lane, x){ const u = G.makeUnit(side, type, lane, x); G.S.units.push(u); return u; }
 
-test('Einheiten wechseln nie die Lane', () => {
+test('Einheiten behalten ihre Heimat-Lane (REQ-11.2, seit REQ-43 mit Querbewegung zur Unterstützung)', () => {
   const { G } = game('normal', 11);
   G.S.material = 1e6;
-  const lanes = new Map();
+  const home = new Map();
   for (let i = 0; i < 20 * 240 && G.S.status === 'running'; i++){
     if (G.S.pendingDraft) G.chooseDraft(0);
     if (i % 40 === 0){ G.spawn('laeufer'); G.spawn('werfer'); G.S.material = 1e6; }
     G.tick(0.05);
+    const forms = new Map(G.S.forms.map(f => [f.id, f]));
     for (const u of G.S.units){
-      if (!lanes.has(u.id)) lanes.set(u.id, u.lane);
-      assert.equal(u.lane, lanes.get(u.id), `Einheit ${u.id} hat die Lane gewechselt`);
+      const f = forms.get(u.form); if (!f) continue;
+      if (!home.has(u.id)) home.set(u.id, f.home);
+      assert.equal(f.home, home.get(u.id), `Einheit ${u.id} hat die Heimat-Lane gewechselt`);
+      assert.ok(Math.abs(u.laneF - f.home) <= 1, 'höchstens eine Lane neben der Heimat');
     }
   }
-  assert.ok(lanes.size > 20, 'genug Einheiten beobachtet');
-  const used = new Set([...lanes.values()]);
-  assert.deepEqual([...used].sort(), [TOP, MID, BOT]);
+  assert.ok(home.size > 20, 'genug Einheiten beobachtet');
+  assert.deepEqual([...new Set(home.values())].sort(), [TOP, MID, BOT]);
 });
 
 test('Verteilung für n = 1 bis 6 nach REQ-12.1', () => {

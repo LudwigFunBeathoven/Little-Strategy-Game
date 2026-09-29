@@ -118,7 +118,7 @@ function create(){
   const towerBuilt   = lane => lv(towerId('turm', lane)) > 0;
   const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
   const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane)) * mMul('turretDmg');
-  const turretRange  = lane => C.PLAYER_TURRET.range + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane));
+  const turretRange  = lane => C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane));
   const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane)));
   /* Gegnerstärke wächst linear; nach der Belagerungswelle kommt POST_SIEGE_GROWTH je Minute hinzu (REQ-19.4) */
   const postSiege    = () => S.siegeDone ? C.POST_SIEGE_GROWTH * Math.max(0, S.t - S.siegeWaveT) / 60 : 0;
@@ -276,11 +276,13 @@ function create(){
   /* Reichweite der vordersten Reihe: Nahkampf-Kontakt oder, bei reiner Fernkampf-Front, deren Reichweite */
   const frontReach = f => { const fr = frontOf(f); return fr.length && fr[0].ranged ? Math.min(...fr.map(u => u.range)) : C.MELEE_REACH; };
   /* Nächste gegnerische Formation vor f in derselben Lane; d = Abstand der vordersten Reihen */
-  function enemyAhead(f){
+  const arrived = f => f.laneF === f.lane;
+  function enemyAhead(f, lane){
     const dir = dirOf(f.side);
+    if (lane === undefined) lane = f.lane;
     let best = null, bd = Infinity;
     for (const o of S.forms){
-      if (o.side === f.side || o.lane !== f.lane || o.size === 0) continue;
+      if (o.side === f.side || o.lane !== lane || !arrived(o) || o.size === 0) continue;
       const d = (o.x - f.x) * dir;
       if (d > -C.TARGET_BEHIND_TOLERANCE && d < bd){ bd = d; best = o; }
     }
@@ -375,18 +377,18 @@ function create(){
   const shot = s => { if (FX.on) FX.shots.push(s); };
 
   function updateTurrets(dt){
-    // Gegnerischer Turm: nächste eigene Einheit in Reichweite, gleich in welcher Lane
+    // Gegnerischer Turm steht an der Mitte: zuerst Einheiten der Mitte, sonst die nächste in einer anderen Lane (REQ-43)
     S.enemyTurretCd -= dt;
     if (S.enemyTurretCd <= 0){
-      let tgt = null, bd = Infinity;
-      for (const u of S.units){
+      let tgt = nearestInLane('p', GATE, W - EBW, C.ENEMY_TURRET.range), bd = Infinity;
+      if (!tgt) for (const u of S.units){
         if (u.side !== 'p' || u.hp <= 0) continue;
         const dd = W - EBW - u.x;
         if (dd <= C.ENEMY_TURRET.range && dd < bd){ bd = dd; tgt = u; }
       }
       if (tgt){
         tgt.hp -= diffCfg().turretDmg * enemyDmgMult(); tgt.flash = 0.12;
-        shot({ x0: W - EBW / 2, lane0: GATE, x1: tgt.x, lane: tgt.lane, t: 0, dur: 0.18, turret: true });
+        shot({ x0: W - EBW / 2, lane0: GATE, x1: tgt.x, lane: tgt.laneF, t: 0, dur: 0.18, turret: true });
         S.enemyTurretCd = C.ENEMY_TURRET.cd;
       }
     }
@@ -395,10 +397,11 @@ function create(){
       if (!towerActive(lane)) continue;
       S.turretCd[lane] = (S.turretCd[lane] || 0) - dt;
       if (S.turretCd[lane] > 0) continue;
-      const tgt = nearestInLane('e', lane, PBW, turretRange(lane));
+      // Türme: zuerst Gegner der eigenen Lane, sonst Gegner in der Mitte in Reichweite (REQ-43)
+      const tgt = nearestInLane('e', lane, PBW, turretRange(lane)) || nearestInLane('e', GATE, PBW, turretRange(lane));
       if (tgt){
         tgt.hp -= turretDmg(lane) * (tgt.type === 'werfer' ? mMul('turretVsRanged') : 1); tgt.flash = 0.12;
-        shot({ x0: PBW - 9, lane0: lane, x1: tgt.x, lane, t: 0, dur: 0.18, turret: true });
+        shot({ x0: PBW - 9, lane0: lane, x1: tgt.x, lane: tgt.laneF, t: 0, dur: 0.18, turret: true });
         S.turretCd[lane] = turretCd(lane);
       }
     }
@@ -428,10 +431,35 @@ function create(){
 
   /* Bewegung und Kampf aller Formationen. Die Formation hält, sobald die vorderste Reihe Kontakt hat.
      Die ganze vorderste Reihe greift an; Fernkämpfer, solange höchstens rangedRows Reihen vor ihnen stehen (REQ-42). */
+  /* Lane-übergreifender Kampf (REQ-43): Ohne Ziel in der eigenen Lane innerhalb von SUPPORT_RANGE wechselt eine Formation in eine
+     Nachbar-Lane mit Gegner in diesem Abstand (von oben oder unten nur in die Mitte). Ziele in der eigenen Lane gehen immer vor;
+     nach dem Kampf kehrt die Formation zurück. Der Wechsel ist eine Querbewegung, währenddessen kämpft die Formation nicht. */
+  const neighbours = lane => lane === GATE ? [0, LANES - 1] : [GATE];
+  const inSupport = (f, lane) => { const a = enemyAhead(f, lane); return a && a.d <= C.SUPPORT_RANGE ? a : null; };
+  function chooseLane(f){
+    if (!arrived(f)) return;
+    if (inSupport(f, f.home)){ f.lane = f.home; return; }              // eigene Lane hat ein Ziel: dort bleiben oder zurück
+    if (f.lane !== f.home){ if (!inSupport(f, f.lane)) f.lane = f.home; return; }
+    // Die Mitte hat Vorrang: Formationen oben und unten wechseln frei in die Mitte; eine Formation der Mitte hilft einer
+    // Seiten-Lane nur dort, wo der Gegner schon kämpft (sonst tauschen zwei zielfreie Formationen endlos die Lanes)
+    let best = null;
+    for (const l of neighbours(f.home)){
+      const a = inSupport(f, l);
+      if (!a || (f.home === GATE && !(a.f.fighting || inSupport(a.f, a.f.home)))) continue;
+      if (!best || a.d < best.d) best = { lane: l, d: a.d };
+    }
+    if (best) f.lane = best.lane;
+  }
+  function shiftLane(f, dt){
+    const step = dt / C.LANE_SHIFT_S;
+    f.laneF = Math.abs(f.lane - f.laneF) <= step ? f.lane : f.laneF + Math.sign(f.lane - f.laneF) * step;
+  }
   function updateForms(dt){
     const aheads = new Map();
     layoutAll();
+    for (const f of S.forms) chooseLane(f);
     for (const f of S.forms){
+      if (!arrived(f)){ shiftLane(f, dt); f.fighting = false; f.moving = true; aheads.set(f.id, null); continue; }
       const dir = dirOf(f.side), reach = frontReach(f), ahead = enemyAhead(f);
       const baseD = (baseX(f.side) - f.x) * dir;
       const contact = !!ahead && ahead.d <= reach;
@@ -449,6 +477,7 @@ function create(){
     }
     layoutAll();
     for (const f of S.forms){
+      if (!arrived(f)) continue;
       const dir = dirOf(f.side), ahead = aheads.get(f.id), rows = rangedRows(f.side);
       const tgtFront = ahead ? frontOf(ahead.f).filter(u => u.hp > 0) : [];
       for (const u of S.units){
@@ -487,10 +516,10 @@ function create(){
   /* Holt eine Formation eine kämpfende oder stehende eigene Formation derselben Lane ein, verschmelzen beide (REQ-42) */
   function mergeForms(){
     for (const a of S.forms){
-      if (a.size === 0 || a.moving) continue;
+      if (a.size === 0 || a.moving || a.home !== a.lane) continue;
       const dir = dirOf(a.side), tail = a.x - dir * (a.rows - 1) * C.ROW_GAP;
       for (const b of S.forms){
-        if (b === a || b.size === 0 || b.side !== a.side || b.lane !== a.lane || b.laneF !== a.laneF) continue;
+        if (b === a || b.size === 0 || b.side !== a.side || b.lane !== a.lane || b.home !== a.home || !arrived(a) || !arrived(b)) continue;
         const gap = (tail - b.x) * dir;
         if (gap >= 0 && gap <= C.ROW_GAP * 1.5){
           for (const u of S.units) if (u.form === b.id) u.form = a.id;

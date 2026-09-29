@@ -43,6 +43,10 @@ const KF_CONFIG = {
   FORMATION_ROW_MAX: 5,         // höchstens so viele Einheiten je Reihe quer zur Lane
   ROW_GAP: 16,                  // Abstand zwischen zwei Reihen
   MELEE_REACH: 14,              // Kontaktabstand der vordersten Nahkampfreihe
+  /* Lane-übergreifender Kampf (REQ-43) */
+  SUPPORT_RANGE: 60,            // eine Formationslänge: drei Reihen plus Kontakt
+  LANE_SHIFT_S: 1.2,            // Dauer der Querbewegung in eine Nachbar-Lane
+  TOWER_RANGE: 120,             // Grundreichweite der eigenen Türme (bisher PLAYER_TURRET.range)
   TARGET_BEHIND_TOLERANCE: 6,
   RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
   GATE_BLOCK_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
@@ -122,7 +126,7 @@ const KF_CONFIG = {
   FX_MOERTEL_REGEN: 1,
 
   /* Türme */
-  PLAYER_TURRET: { dmgPerLevel: 5, cd: 1.0, range: 120, rangePerLevel: 20, cdFactor: 0.87 },
+  PLAYER_TURRET: { dmgPerLevel: 5, cd: 1.0, rangePerLevel: 20, cdFactor: 0.87 },
   ENEMY_TURRET:  { cd: 1.2, range: 95 },
 
   /* Altmetall-Stufen und Draft (REQ-02). Altmetall wird nur gesammelt, nicht ausgegeben.

@@ -23,8 +23,10 @@ for (const lang of ['de', 'en']){
     if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errors.push(m.text());
   });
   p.on('pageerror', e => errors.push(e.message));
-  await p.addInitScript(l => { try { if (!sessionStorage.getItem('kf.init')){ localStorage.clear(); localStorage.setItem('klammerfront.lang', l); sessionStorage.setItem('kf.init', '1'); } } catch (e) {} }, lang);
-  await p.goto(url); await p.waitForTimeout(300);
+  // Frischer Browser-Speicher je Sprache, danach bleibt er über das spätere Neuladen erhalten
+  await p.goto(url);
+  await p.evaluate(l => { localStorage.clear(); localStorage.setItem('klammerfront.lang', l); }, lang);
+  await p.reload(); await p.waitForTimeout(300);
   check((await p.evaluate(() => __kf.tooltipAudit())).length === 0, `[${lang}] Startbildschirm: alle Elemente mit Tooltip`);
   const startExpl = await p.evaluate(() => __kf.explAudit());
   check(startExpl.length === 0, `[${lang}] Startbildschirm: jeder Knopf mit Erklärzeile${show(startExpl)}`);
