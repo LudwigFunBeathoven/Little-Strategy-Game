@@ -587,6 +587,7 @@ function render(){
     if (G.introShows('waves') && (S.waveNo >= 1 || S.ownWaveNo >= 1)) showHint('wave');
     if (G.introShows('buildings') && (S.level >= C.INTRO_BUILDINGS_LEVEL || !S.intro)) showHint('buildings');
     if (S.pendingDraft) showHint('card');
+    if (G.has('universitaet')) showHint('research');
     if (G.siegeAnnounced()) showHint('siege');
   }
   if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t && !modalOpen){
@@ -634,7 +635,7 @@ function boot(){
   setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
   // Schnittstelle für automatisierte Browser-Tests
-  window.__kf = { G, C, t, screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw,
+  window.__kf = { G, C, t, session: () => Session.data, sessionReset: () => Session.reset(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw,
                   selectPlot, selectSection, clearSelection, selectTab, setPaused,
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };
@@ -644,6 +645,7 @@ function boot(){
   buildHud();
   buildPanels();
   wireWorldInput();
+  Session.init();
   readColors();
   resize();
   if (load()){ render(); }

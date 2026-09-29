@@ -1,0 +1,13 @@
+Einfacher Bot (tools/browser-bot.js), 50 Partien je Feld, Seeds 1000–1049
+aktiv leicht Siege 50/50 5:13
+aktiv normal Siege 50/50 5:17
+aktiv schwer Siege 50/50 6:09
+durchschnitt leicht Siege 50/50 6:01
+durchschnitt normal Siege 50/50 6:22
+durchschnitt schwer Siege 50/50 7:10
+gelegentlich leicht Siege 50/50 7:30
+gelegentlich normal Siege 48/50 7:29
+gelegentlich schwer Siege 6/50 8:50
+passiv leicht Siege 0/50 -
+passiv normal Siege 0/50 -
+passiv schwer Siege 0/50 -

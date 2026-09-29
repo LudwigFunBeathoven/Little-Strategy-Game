@@ -98,7 +98,7 @@ for (const lang of ['de', 'en']){
   await ctx.close();
 }
 // REQ-46 und REQ-5.03: drei Bänder, Scrollen, Bauplatz-Klick, Bildzeit
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 const shotDir = new URL('../reports/screens/', import.meta.url);
 mkdirSync(shotDir, { recursive: true });
 for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080], [2560, 1440]]){
@@ -380,6 +380,53 @@ for (const dsf of [1, 2]){
   check(focused === 'grid:7' && onPick.startsWith('pick:') && !!r3, `Bau per Tastatur: Fokus ${focused}, dann ${onPick}, gebaut ${r3 && r3.type}`);
   check(errors.length === 0, `Bauen: keine Fehler${show(errors)}`);
   await ctx.close();
+}
+
+// REQ-5.11: Sitzungsprotokoll (?debug=1) einer Bot-Partie im Browser wird von compare-human.mjs dem eigenen Profil zugeordnet
+// REQ-5.09: Durchlauftest je Schwierigkeitsgrad bis Sieg oder Niederlage, Konsole ohne Fehler und Warnungen
+{
+  const { execFileSync } = await import('node:child_process');
+  const { PROFILES } = await import('../tools/sim-bot.mjs');
+  const protoDir = new URL('../reports/protokolle/', import.meta.url);
+  mkdirSync(protoDir, { recursive: true });
+  const botSrc = new URL('../tools/browser-bot.js', import.meta.url).pathname;
+  const playBot = async (diff, profile, maxS) => {
+    const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+    const p = await ctx.newPage();
+    const issues = [];
+    p.on('pageerror', e => issues.push('Fehler: ' + e.message));
+    p.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !/ERR_CERT|fonts\.g/.test(m.text())) issues.push(m.type() + ': ' + m.text()); });
+    await p.goto(url.replace('dev=1', 'debug=1'));
+    await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
+    await p.reload(); await p.waitForTimeout(300);
+    await p.evaluate(d => __kf.startGame(d), diff); await p.waitForTimeout(100);
+    await p.addScriptTag({ path: botSrc });
+    await p.evaluate(prof => { window.__bot = KF_BROWSER_BOT(__kf.G, prof); __kf.sessionReset(); document.querySelector('#hintBox').hidden = true; }, PROFILES[profile]);
+    // in Schritten zu 20 s Spielzeit, dazwischen zeichnet und aktualisiert die Seite (Konsole prüft auch Oberfläche und Zeichnen)
+    for (let k = 0; k < maxS / 20; k++){
+      const st = await p.evaluate(() => { for (let i = 0; i < 400 && __kf.G.S.status === 'running'; i++) window.__bot.step(0.05); return __kf.G.S.status; });
+      await p.waitForTimeout(25);
+      if (st !== 'running') break;
+    }
+    const proto = await p.evaluate(() => __kf.session());
+    const sessionBtn = await p.evaluate(() => !document.querySelector('#sessionBtn').hidden && __kf.explAudit().length === 0 && __kf.tooltipAudit().length === 0);
+    await ctx.close();
+    return { proto, issues, sessionBtn };
+  };
+  for (const profile of ['aktiv', 'durchschnitt', 'gelegentlich', 'passiv']){
+    const { proto, issues, sessionBtn } = await playBot('normal', profile, 300);
+    const file = new URL(`bot-${profile}.json`, protoDir).pathname;
+    writeFileSync(file, JSON.stringify(proto, null, 2));
+    const res = execFileSync('node', [new URL('../tools/compare-human.mjs', import.meta.url).pathname, file], { encoding: 'utf8' });
+    const got = (res.match(/nächstes Bot-Profil: (\w+)/) || [])[1];
+    check(got === profile && sessionBtn, `Protokoll einer Bot-Partie (${profile}, ${Math.round(proto.durationS)} s, ${proto.clicks} Klicks, ${proto.actions.length} Handlungen) → compare-human: ${got}`);
+    check(issues.length === 0, `Protokoll-Partie ${profile}: Konsole ohne Fehler und Warnungen${show(issues)}`);
+  }
+  for (const diff of ['leicht', 'normal', 'schwer']){
+    const { proto, issues } = await playBot(diff, 'aktiv', 30 * 60);
+    check(proto.result === 'won' || proto.result === 'lost', `Durchlauftest ${diff}: Partie endet (${proto.result} nach ${Math.floor(proto.durationS / 60)}:${String(Math.round(proto.durationS % 60)).padStart(2, '0')})`);
+    check(issues.length === 0, `Durchlauftest ${diff}: Konsole ohne Fehler und Warnungen${show(issues)}`);
+  }
 }
 
 // REQ-47: Gestaffelte Einführung (frischer Browser, Einführung an)

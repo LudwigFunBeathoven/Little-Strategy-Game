@@ -266,7 +266,8 @@ KF_I18N.en = {
   'hint.ok': 'Got it',
   'ex.hintOk': 'Close hint',
   'tip.hintOk.body': 'Closes the hint. It will not return unless you reset hints on the start screen.',
-  'hint.wave': 'Every 20 s your queue deploys as a wave, at most {cap} units. The wave spreads across the three lanes by itself.',
+  'hint.wave': 'Every 20 s your queue joins the army. It marches on all lanes together, fights on contact and regroups afterwards.',
+  'hint.research': 'The university researches: material and time for permanent advantages. University tab, one research at a time.',
   'hint.card': 'Special cards last for the whole game. A chosen card may return later at a higher tier.',
   'hint.demolish': 'Demolishing refunds half the price. Upgrades are kept and take effect again once you rebuild.',
   'hint.siege': 'In one minute a siege wave of {x}× strength attacks. After that the enemy grows stronger every minute.',
@@ -464,4 +465,7 @@ KF_I18N.en = {
   'draft.ban': 'Ban {name}',
   'ex.draft.ban': 'Remove for this game · {n} left',
   'tip.draft.ban': 'Removes the card from the pool for this game; a new one takes its place. {n} bans left.',
+  'menu.session': 'Log',
+  'ex.menu.session': 'Session as JSON',
+  'tip.menu.session': 'Debug mode: downloads the session log of this game (clicks, actions, card choices, research, result) for comparison with the bot profiles.',
 };

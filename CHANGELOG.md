@@ -1,5 +1,21 @@
 # Änderungen
 
+## v0.6 – Iteration 5 (29.09.2026)
+- REQ-5.01 Klicks kommen an: Knöpfe werden beim Aktualisieren nicht mehr ersetzt (vorher gingen Klicks mit normaler Haltedauer verloren),
+  „Fertigen“ löst beim Drücken aus, Ziehschwelle 6 px, eine Umrechnung Bildschirm → Welt; Oberfläche höchstens einmal je Bild.
+- REQ-5.02 Altmetall heißt Erfahrungspunkte (EP), auch im Code. Spielstand-Version 6; alte Spielstände werden mit Hinweis verworfen.
+- REQ-5.03 Oberfläche in drei Bändern (Leiste, Spielwelt, Arbeitsbereich mit Reitern und Kontextkopf); `ui.js` aufgeteilt in
+  `ui.js`, `render.js`, `hud.js`, `panels.js`. Kartenwahl im Reiter statt im Dialog, Pause und Sprachwechsel in der Leiste.
+- REQ-5.04 Bauen in zwei Klicks aus der Welt oder aus dem Knopfraster, vollständig per Tastatur.
+- REQ-5.05 Jede Einheit wird einzeln simuliert: eigenes Ziel, eigene Abklingzeit, gleichzeitige Auflösung; Türme mit Einzelzielen.
+  Die Karte Weitschuss gibt jetzt +20 % Fernkampfschaden (die Reihenregel, die sie lockerte, entfällt).
+- REQ-5.06 Die Armee rückt als gemeinsame Welle vor: Marsch, Kampf, Sammeln; Nachschub schließt auf; Ausnahme Mitte; der Gegner folgt derselben Logik.
+- REQ-5.07 Universität mit Forschungsbaum (13 Forschungen in vier Zweigen), neue Einheit Schildträger.
+- REQ-5.08 Balancing: gegnerische Basis Leicht/Normal/Schwer 26.000/26.000/46.000, Schwer mit größerer Grundwelle und mehr EP;
+  `XP_GROWTH` 1,55, Hörsaal 0,1/0,25/0,4 EP/s. Experiment „Schwung“ (aus) simuliert.
+- REQ-5.09–5.11 Durchlauftest je Schwierigkeitsgrad, Sitzungsprotokoll `?debug=1`, `tools/compare-human.mjs`, Testleitfaden,
+  schwebende Zahlen, verblassende Einheiten, feste Zählerbreiten. Gegenprobe `tools/einfach-bot.mjs`.
+
 ## v0.5 – Iteration 4 (29.09.2026)
 - REQ-41 Wellenbefehl „Halten“ entfernt, samt Rabatt, Texten und Simulationsreihe.
 - REQ-42 Formationen: gemeinsames Tempo, Reihen zu höchstens fünf Nahkämpfern, Fernkämpfer dahinter, Verschmelzen; gilt auch für Gegner.

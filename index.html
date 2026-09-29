@@ -206,7 +206,16 @@
   .hud-item{display:flex; flex-direction:column; justify-content:center; gap:1px; padding:4px 12px; border-right:1px solid var(--rule); min-width:0; white-space:nowrap;}
   .hud-item[hidden]{display:none;}
   .hud-l{font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .hud-item{position:relative;}
   .hud-item > b{font-size:18px; font-weight:500; line-height:1.1; min-width:4ch;}
+  /* Feste Breiten für Zähler: keine Layoutsprünge beim Aktualisieren (REQ-5.10) */
+  #material{min-width:7ch;} #xpVal{min-width:6ch;} #hudSoldiers{min-width:5ch;} #clock{min-width:5ch;} #armyState{min-width:7ch;}
+  .hud-waves .num{min-width:4.5ch; display:inline-block;} .hud-walls .wall-row b{min-width:4ch;}
+  .float{position:absolute; right:10px; top:14px; font-size:12px; font-weight:600; color:var(--brass); pointer-events:none; animation:floatup .9s ease-out forwards;}
+  @keyframes floatup{from{opacity:1; transform:translateY(0);} to{opacity:0; transform:translateY(-16px);}}
+  .tabpanel:not([hidden]){animation:tabin .12s ease-out;}
+  @keyframes tabin{from{opacity:.4;} to{opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ .tabpanel:not([hidden]), .float, .hud-draft{animation:none;} }
   .hud-s{font-size:11.5px; color:var(--ink-soft);}
   .hud-xp{min-width:170px;} .hud-xp .bar{height:5px; margin-top:2px;}
   .hud-waves{display:flex; gap:10px; font-size:16px; font-weight:500;}
@@ -223,6 +232,7 @@
   @keyframes pulse{50%{box-shadow:0 0 0 4px var(--brass-soft);}}
   .hud-menu{margin-left:auto; display:flex; gap:6px; align-items:center; padding-left:10px;}
   .hud-menu .btn-ghost{padding:3px 9px; white-space:nowrap;}
+  .hud-menu .btn-ghost[hidden]{display:none;}
   .hud-menu .btn-ghost .expl{font-size:10px;}
 
   /* Band 2: Spielwelt */
@@ -309,6 +319,7 @@
       <button class="btn-ghost" id="pauseBtn" type="button" data-tooltip="menu:pause" aria-pressed="false"><span class="btn-label"></span><span class="expl"></span></button>
       <button class="btn-ghost" id="langBtn" type="button" data-tooltip="menu:lang"><span class="btn-label"></span><span class="expl"></span></button>
       <button class="btn-ghost" id="newBtn" type="button" data-tooltip="new"><span class="btn-label" data-i18n="hdr.newGame"></span><span class="expl"></span></button>
+      <button class="btn-ghost" id="sessionBtn" type="button" data-tooltip="menu:session" hidden><span class="btn-label" data-i18n="menu.session"></span><span class="expl" data-i18n="ex.menu.session"></span></button>
     </div>
   </header>
 
@@ -424,5 +435,6 @@
 <script src="render.js"></script>
 <script src="hud.js"></script>
 <script src="panels.js"></script>
+<script src="session.js"></script>
 </body>
 </html>

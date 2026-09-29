@@ -15,6 +15,22 @@ function xpRate(){
 }
 
 const hudEl = {};
+/* Schwebende Zahlen (REQ-5.10): Material- und EP-Gewinn der letzten Sekunde, höchstens eine je Quelle und Sekunde */
+const floatLast = { t: null, mat: 0, xp: 0 };
+function floatGain(){
+  const S = G.S;
+  if (floatLast.t === null || S.t < floatLast.t){ Object.assign(floatLast, { t: S.t, mat: S.materialTotal, xp: S.xpTotal }); return; }
+  if (S.t - floatLast.t < 1) return;
+  const dm = S.materialTotal - floatLast.mat, dx = S.xpTotal - floatLast.xp;
+  Object.assign(floatLast, { t: S.t, mat: S.materialTotal, xp: S.xpTotal });
+  if (reduceMotion || S.status !== 'running') return;
+  for (const [el, v] of [[hudEl.material, dm], [hudEl.xpVal, dx]]){
+    if (v < 1) continue;
+    const f = document.createElement('span'); f.className = 'float'; f.classList.add('num'); f.textContent = '+' + fmt(v);
+    el.parentElement.appendChild(f);
+    setTimeout(() => f.remove(), C.UI.floatMs);
+  }
+}
 function buildHud(){
   for (const id of ['hudSoldiers', 'material', 'rate', 'xpVal', 'xpRate', 'barLvl', 'lvlProg', 'waveIn', 'enemyWaveIn', 'siegeInfo',
                     'hudWaves', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn'])
@@ -76,4 +92,5 @@ function renderHud(){
   setText(E.langBtn.querySelector('.btn-label'), t('lang.' + C.LANGUAGES[(C.LANGUAGES.indexOf(lang) + 1) % C.LANGUAGES.length]));
   setText(E.langBtn.querySelector('.expl'), t('ex.menu.lang'));
   setText(E.newBtn.querySelector('.expl'), t('ex.newGame'));
+  floatGain();
 }

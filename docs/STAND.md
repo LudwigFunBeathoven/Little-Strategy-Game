@@ -16,7 +16,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | I5.6 | Armee als gemeinsame Welle | 5.06 | fertig |
 | I5.7 | Universität | 5.07 | fertig |
 | I5.8 | Balancing-Serie | 5.08 | fertig |
-| I5.9 | Polish, Fehlerbehebung, Testpaket, Bericht | 5.09–5.11 | offen |
+| I5.9 | Polish, Fehlerbehebung, Testpaket, Bericht | 5.09–5.11 | fertig |
 
 ## Prüfung je Inkrement
 ```
@@ -46,6 +46,19 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.9: `npm test` 109/109 (neu `tests/momentum.test.mjs`), Browser-Prüfung 180/180 (neu: Sitzungsprotokoll je Profil, Zuordnung durch
+  `compare-human.mjs` 4 von 4 richtig; Durchlauftest Leicht/Normal/Schwer bis Sieg, Konsole ohne Fehler und Warnungen). Kurzsimulation 15 Siege,
+  5 Niederlagen, 0 offen. **Leistung:** Bildzeit mit 60 Einheiten 0,30 ms (1280×720) und 0,60 ms (1920×1080), Basislinie 0,30/0,70 ms: erfüllt.
+  Tick-Zeit: im direkten Wechsel mit v0.5 (gleiche Maschine, 5 × 1.000 Ticks, `bench-tick.mjs` auf beiden Ständen) Median 0,10 ms gegen 0,065 ms,
+  **+50 %, Soll ≤ +20 % verfehlt**; p95 0,20–0,26 gegen 0,18 ms (+10–40 %). Der in I5.0 notierte Basiswert 0,09–0,11 ms war unter Last gemessen
+  und zu hoch. Ursache: Jede Einheit sucht ihr Ziel selbst (REQ-5.05); in v0.5 kämpfte nur die vorderste Reihe. Drei Optimierungen ohne
+  Änderung des Ergebnisses (Kurzsimulation vorher/nachher identisch) brachten keine messbare Verbesserung. Absolut kostet die Logik bei 120 Einheiten
+  2 ms je Sekunde Spielzeit (20 Ticks); spürbar ist das nicht. Vorschlag: Soll für die Tick-Zeit auf „≤ 1 ms bei 2 × 60 Einheiten“ umstellen.
+  Versionsnummer 0.6 (`config.js`, `package.json`).
+  **Gegenprobe mit dem einfachen Bot** (`tools/einfach-bot.mjs`, 50 Partien je Feld, `reports/i5-einfacher-bot.txt`): Der Browser-Bot ohne
+  Vorausschau (feste Bauordnung, stets Einheiten bis zum Limit, erste Karte) gewinnt Normal „aktiv“ 50/50 nach 5:17 und Schwer „aktiv“ 50/50
+  nach 6:09; die gierige Heuristik der Simulation mit denselben Profilwerten 88 % nach 6:44 bzw. 50 % nach 11:00. Die Kalibrierung aus I5.8
+  stützt sich auf einen Bot, den eine einfache Spielweise deutlich schlägt. Siehe Bericht, „Auffälligkeiten“ und „Offen“.
 - I5.8: Abnahmeserie 200 Partien je Feld (3.000 Ziele, 1.800 Phasen, 300 Strategie, 100 ohne Schmiede, 600 Experiment Schwung), 0 offen.
   Rohdaten `reports/i5-ziele.*`, `i5-phasen.*`, `i5-strategie.*`, `i5-ohneSchmiede.*`, `i5-experiment-schwung.*`; Zwischenrunden mit 50 je Feld
   `reports/i5-8-start|runde2|runde3-ziele.*`. Rechenzeit: 1.223 s für 3.000 Partien, 2,1 s je simulierter Spielstunde.
@@ -212,3 +225,12 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
     die Stärke. Ein fairer Vergleich bräuchte „bezahlbar und nicht erforscht“ je Zeitpunkt, analog zu den Karten; offen.
 44. **Experiment „Schwung“:** Jeder Klick lädt einen Speicher um 0,01, der mit 20 s Zeitkonstante abklingt; die Automatik (Fabriken, Presse)
     erhält den Speicherstand als Bonus, höchstens +50 %. Drei Klicks je Sekunde halten den Höchstwert. Die Klickausbeute selbst bleibt unverändert.
+45. **Sitzungsprotokoll:** Der Knopf „Protokoll“ erscheint nur mit `?debug=1` oben rechts. Das Protokoll umhüllt die öffentlichen Aktionen der
+    Spiellogik und ändert das Spiel nicht. „Größte Armee“ zählt Einheiten auf dem Feld und in der Warteschlange; „Reaktionsintervall“ ist der
+    Median der Abstände zwischen zwei Handlungen (Klicks auf das Klickfeld zählen nicht als Handlung).
+46. **Bot im Browser** (`tools/browser-bot.js`): vereinfachter Bot ohne Vorausschau, der die Profilparameter aus `tools/sim-bot.mjs` nutzt. Er
+    dient dem Durchlauftest und der Protokollprüfung; für Balancing gilt weiter die Simulation. Der Durchlauftest beschleunigt nicht über
+    `KF_OVERRIDE` (Abweichung vom Wortlaut), sondern rechnet je Schritt 20 s Spielzeit mit unveränderten Werten und lässt die Seite dazwischen
+    zeichnen; so läuft die echte Partie in wenigen Sekunden durch, und die Konsole prüft trotzdem Oberfläche und Zeichnen.
+47. **Schwebende Zahlen** zeigen den Material- und EP-Gewinn der letzten Sekunde, je Quelle höchstens eine je Sekunde, nicht bei reduzierter Bewegung.
+    Gefallene Einheiten verblassen 0,6 s. Zähler in der Leiste haben feste Breiten (Ziffern gleicher Breite).

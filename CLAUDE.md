@@ -6,8 +6,8 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.5 (Iteration 4: `docs/anforderungen-iteration-4.md`, Stand je Inkrement in `docs/STAND.md`,
-Bericht in `docs/bericht-iteration-4.md`). Frühere Iterationen: `docs/archiv/`, `docs/bericht-iteration-3.md`.
+Stand: v0.6 (Iteration 5: `docs/anforderungen-iteration-5.md`, Stand je Inkrement in `docs/STAND.md`,
+Bericht in `docs/bericht-iteration-5.md`). Frühere Iterationen: `docs/archiv/`, `docs/bericht-iteration-4.md`.
 
 ## Der Nutzer
 Nick ist Product Owner, kein Entwickler. Erkläre Änderungen in Klartext und übersetze Fachbegriffe kurz.
@@ -20,15 +20,21 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `index.html` | Markup und CSS. Enthält außer dem Titel keinen sichtbaren Text. |
 | `config.js` | **Alle** Zahlenwerte (Balancing, Regeln, Tooltip-Zeiten, Schwierigkeitsgrade). |
 | `data/draft-options.js` | Spezialkarten mit Stufen (`tiers`), deklarativ. Neue Karten nur hier ergänzen. |
+| `data/research.js` | Forschungsbaum der Universität, deklarativ; Wirkungen über dieselbe Pipeline wie Karten. |
 | `hints.js` | Erstkontakt-Hinweise; Speicher wird von außen übergeben (testbar ohne Browser). |
 | `core.js` | Spiellogik ohne Zugriff auf Seite, Fenster oder Speicher. Läuft auch im Simulator. |
 | `ui.js` | Lädt zuerst: gemeinsame Namen (C, G, $, t, fmt), Tooltips, Eingabe, Speichern, Dialoge, Hauptschleife, Start. |
 | `render.js` | Spielwelt: Canvas, Kamera, Zeichnen, `screenToWorld`. |
 | `hud.js` | Ressourcenleiste (oberes Band). |
-| `panels.js` | Arbeitsbereich (unteres Band): Klickfeld, Reiter, Kontextkopf, Kartenwahl. |
+| `panels.js` | Arbeitsbereich (unteres Band): Klickfeld, Reiter, Kontextkopf, Kartenwahl, Forschung. |
+| `session.js` | Sitzungsprotokoll für Spieltests (`?debug=1`). |
 | `i18n/de.js`, `i18n/en.js` | Alle sichtbaren Texte. Schlüssel müssen identisch sein. |
 | `tools/simulate.mjs` | Balancing-Simulation mit Bots (Worker-Threads). |
 | `tools/sim-bot.mjs` | Bot-Strategien `zufall` und `gierig` (Vorausschau per Kopie des Spielstands). |
+| `tools/compare-human.mjs` | Ordnet Sitzungsprotokolle von Menschen dem nächstliegenden Bot-Profil zu. |
+| `tools/browser-bot.js` | Einfacher Bot für Partien im Browser (Durchlauftest, Protokollprüfung). |
+| `tools/bench-tick.mjs` | Tick-Zeit mit 2 × 60 Einheiten. |
+| `tools/einfach-bot.mjs` | Gegenprobe: der einfache Bot je Profil über viele Seeds (schlägt die gierige Heuristik deutlich, siehe Bericht I5). |
 | `tests/` | `npm test` (Node-eigener Test-Runner), optional `npm run test:browser` (braucht Playwright). |
 | `docs/STAND.md` | Stand je Inkrement, Prüfergebnisse, Abweichungen und Auslegungen. |
 
@@ -71,6 +77,9 @@ Iteration 3: Partien ohne Schmiede gewinnen auf Normal mindestens 30 % (`--suite
 über +25 Prozentpunkten liegt, werden berichtet, nicht automatisch abgeschwächt.
 Iteration 4: Vergleichswert einer Karte ist „angeboten und nicht gewählt“ (je Stufe); Bots spielen mit gestaffelter Einführung
 (`KF_SKIP_INTRO=1` schaltet sie ab).
+Iteration 5: Profilabstand Leicht aktiv ↔ gelegentlich (Median) ≥ 4 min; Schwer gelegentlich ≤ 5 % Siege; Anteil der EP-Automatik (Hörsaal III)
+≤ 25 % des EP-Ertrags eines aktiven Spielers auf Normal; Forschungen wie Karten ≤ +25 pp; Zeitanteil der Armee im Kampf berichten.
+Offene Partien gibt die Simulation mit Seed aus (Nachspielen: `playGame` aus `tools/sim-bot.mjs`).
 
 ## Mechaniken gegen Patts (nicht ohne Simulation entfernen)
 - Belagerung: Eigene Einheiten am gegnerischen Tor blockieren reguläre Gegnerwellen in dieser Lane.
@@ -79,6 +88,8 @@ Iteration 4: Vergleichswert einer Karte ist „angeboten und nicht gewählt“ (
 - Reparatur je Abschnitt höchstens alle `REPAIR_COOLDOWN_S` Sekunden (sonst hält reine Verteidigung auf Leicht bis Minute 30).
 - Gegnerische Einheiten auf dem Feld sind begrenzt (`maxField`); die Belagerungswelle rückt immer vollständig aus.
 - Entfernt in I4.2 (Simulation ohne sie: 0–2 % Patts): Belagerung als Stärke je Einheit, Nachskalieren der Gegner im Feld.
+- Vorrang der Mitte im Armeemodell (I5.7): Einheiten in der Mitte helfen einer äußeren Lane nur, wo eigene Einheiten schon kämpfen;
+  die Lage einer Lane zählt auch Einheiten, die gerade in sie wechseln. Ohne das tauschen zwei Armeen endlos die Lanes (Patt).
 
 ## Armee und Kampf (REQ-5.05, REQ-5.06)
 Jede Welle bildet eine Gruppe über alle Lanes (`S.forms`); die älteste Gruppe einer Seite ist die Armee (`main`), spätere sind Nachschub.

@@ -4,7 +4,7 @@
    Texte stehen in den Sprachdateien unter 'hint.<id>'. */
 const KF_HINTS = (() => {
 'use strict';
-const IDS = ['start', 'wave', 'card', 'buildings', 'demolish', 'siege'];
+const IDS = ['start', 'wave', 'card', 'buildings', 'research', 'demolish', 'siege'];
 
 function create(storage, key){
   let seen = load();

@@ -2,7 +2,7 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.5',
+  VERSION: '0.6',
   SAVE_KEY: 'klammerfront.save.v6',
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
@@ -68,6 +68,8 @@ const KF_CONFIG = {
     bands: { hud: 0.10, world: 0.50, work: 0.40 },   // Anteile der Fensterhöhe: Ressourcenleiste, Spielwelt, Arbeitsbereich
     hudMinPx: 56, hudMaxPx: 80,                      // Grenzen der Ressourcenleiste; der Arbeitsbereich erhält den Rest
     xpRateWindowS: 30,          // EP je Sekunde in der Leiste: gleitend über diese Spielzeit
+    floatMs: 900,               // Dauer der schwebenden Zahlen bei Material- und EP-Gewinn (REQ-5.10)
+    fadeS: 0.6,                 // gefallene Einheiten verblassen so lange
   },
 
   /* Spielwelt und Kamera (REQ-46) */

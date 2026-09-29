@@ -1,0 +1,339 @@
+{
+  "format": "klammerfront-session",
+  "formatVersion": 1,
+  "version": "0.5",
+  "lang": "de",
+  "diff": "normal",
+  "startedAt": "2026-09-29T13:09:56.950Z",
+  "result": "lost",
+  "durationS": 286.2,
+  "clicks": 85,
+  "clicksPerMinute": [
+    17,
+    18,
+    18,
+    18,
+    14
+  ],
+  "clicksByPhase": {
+    "early": 43,
+    "mid": 42,
+    "late": 0
+  },
+  "timeByPhase": {
+    "early": 144.7499999999987,
+    "mid": 141.3000000000321,
+    "late": 0
+  },
+  "actions": [
+    {
+      "t": 3.15,
+      "kind": "buildAt",
+      "arg": 0
+    },
+    {
+      "t": 9.25,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 12.3,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 24.5,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 27.55,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 33.65,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 42.85,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 48.95,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 52,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 61.2,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 67.3,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 70.35,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 82.6,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 85.65,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 87.85,
+      "kind": "chooseDraft",
+      "arg": "bauleitung"
+    },
+    {
+      "t": 91.75,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 100.9,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 103.95,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 110.05,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 122.3,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 125.35,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 128.4,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 140.65,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 143.7,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 144.9,
+      "kind": "chooseDraft",
+      "arg": "nachtschicht"
+    },
+    {
+      "t": 146.75,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 155.9,
+      "kind": "buildAt",
+      "arg": 1
+    },
+    {
+      "t": 162,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 162,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 162,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 174.2,
+      "kind": "buildAt",
+      "arg": 2
+    },
+    {
+      "t": 180.3,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 180.3,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 180.3,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 189.5,
+      "kind": "buildAt",
+      "arg": 3
+    },
+    {
+      "t": 201.75,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 201.75,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 201.75,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 202.4,
+      "kind": "chooseDraft",
+      "arg": "drill"
+    },
+    {
+      "t": 210.9,
+      "kind": "buildAt",
+      "arg": 4
+    },
+    {
+      "t": 220.05,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 220.05,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 220.05,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 235.3,
+      "kind": "buildAt",
+      "arg": 5
+    },
+    {
+      "t": 241.45,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 241.45,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 241.45,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 262.85,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 262.85,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 262.85,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 268.95,
+      "kind": "buildAt",
+      "arg": 6
+    },
+    {
+      "t": 281.15,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 281.15,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 281.15,
+      "kind": "spawn",
+      "arg": "laeufer"
+    }
+  ],
+  "drafts": [
+    {
+      "t": 87.8,
+      "level": 1,
+      "chosen": "bauleitung",
+      "offered": [
+        "bauleitung",
+        "aushebung"
+      ]
+    },
+    {
+      "t": 144.9,
+      "level": 2,
+      "chosen": "nachtschicht",
+      "offered": [
+        "nachtschicht",
+        "aushebung"
+      ]
+    },
+    {
+      "t": 202.4,
+      "level": 3,
+      "chosen": "drill",
+      "offered": [
+        "drill",
+        "doppelschicht"
+      ]
+    }
+  ],
+  "research": [],
+  "maxUnits": 7,
+  "maxArmy": 4,
+  "firstWallFallS": 279.4,
+  "wallUse": {
+    "repairs": 0,
+    "upgrades": 0
+  },
+  "kills": 40,
+  "losses": 41
+}

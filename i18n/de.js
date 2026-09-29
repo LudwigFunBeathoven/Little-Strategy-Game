@@ -266,7 +266,8 @@ KF_I18N.de = {
   'hint.ok': 'Verstanden',
   'ex.hintOk': 'Hinweis schließen',
   'tip.hintOk.body': 'Schließt den Hinweis. Er erscheint nicht wieder, bis du die Hinweise auf dem Startbildschirm zurücksetzt.',
-  'hint.wave': 'Alle 20 s rückt deine Warteschlange als Welle aus, höchstens {cap} Einheiten. Die Welle verteilt sich selbst auf die drei Lanes.',
+  'hint.wave': 'Alle 20 s stößt deine Warteschlange zur Armee. Sie marschiert auf allen Lanes gemeinsam, kämpft bei Kontakt und sammelt sich danach.',
+  'hint.research': 'Die Universität forscht: Material und Zeit gegen dauerhafte Vorteile. Reiter Universität, eine Forschung gleichzeitig.',
   'hint.card': 'Spezialkarten wirken dauerhaft. Eine gewählte Karte kann später in einer höheren Stufe wiederkommen.',
   'hint.demolish': 'Abriss erstattet die Hälfte des Preises. Upgrades bleiben gespeichert und wirken nach einem Neubau wieder.',
   'hint.siege': 'In einer Minute greift eine {x}-fach starke Belagerungswelle an. Danach wird der Gegner jede Minute stärker.',
@@ -464,4 +465,7 @@ KF_I18N.de = {
   'draft.ban': '{name} bannen',
   'ex.draft.ban': 'Für diese Partie entfernen · noch {n}',
   'tip.draft.ban': 'Entfernt die Karte für diese Partie aus dem Pool; an ihre Stelle tritt eine neue. Noch {n} Banne.',
+  'menu.session': 'Protokoll',
+  'ex.menu.session': 'Sitzung als JSON',
+  'tip.menu.session': 'Debug-Modus: lädt das Sitzungsprotokoll dieser Partie herunter (Klicks, Handlungen, Kartenwahl, Forschung, Ergebnis) zum Vergleich mit den Bot-Profilen.',
 };

@@ -238,9 +238,16 @@ function draw(realDt, now){
       ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.arc(x, y1 - Math.sin(p * Math.PI) * laneH() * 0.12, 2, 0, Math.PI * 2); ctx.fill();
     }
   }
-  FX.fx = FX.fx.filter(f => (f.t += realDt) < 0.4);
+  FX.fx = FX.fx.filter(f => (f.t += realDt) < Math.max(0.4, C.UI.fadeS));
   if (!reduceMotion){
     for (const f of FX.fx){
+      // gefallene Einheit verblasst an ihrer Stelle (REQ-5.10)
+      if (f.type && f.t < C.UI.fadeS){
+        ctx.globalAlpha = 0.5 * (1 - f.t / C.UI.fadeS); ctx.fillStyle = f.side === 'p' ? COL.steel : COL.rust;
+        const r = Math.max(3.5, Math.min(8, laneH() * 0.055)); ctx.fillRect(wx(f.x) - r, laneMid(f.lane) - r * 0.6, 2 * r, r * 1.2);
+        ctx.globalAlpha = 1;
+      }
+      if (f.t >= 0.4) continue;
       const p = f.t / 0.4;
       ctx.strokeStyle = f.side === 'p' ? COL.steel : COL.rust;
       ctx.globalAlpha = 1 - p; ctx.lineWidth = 1.5;

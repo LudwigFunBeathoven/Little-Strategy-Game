@@ -459,7 +459,6 @@ function create(){
   const fighting = u => u.hp > 0 && u.laneF === u.lane;        // während der Querbewegung weder Angreifer noch Ziel
   /* Je Seite und Lane die kampffähigen Einheiten, nach x sortiert: Zielsuche per Binärsuche statt über alle Einheiten */
   const byX = (p, q) => p.x - q.x || p.id - q.id;
-  function laneIndex(side){ return laneIndexBoth()[side]; }
   /* Beide Seiten in einem Durchlauf */
   function laneIndexBoth(){
     const idx = { p: [[], [], []], e: [[], [], []] };
@@ -473,9 +472,19 @@ function create(){
     let lo = 0, hi = arr.length;
     while (lo < hi){ const m = (lo + hi) >> 1; if (arr[m].x < x) lo = m + 1; else hi = m; }
     let best = null, bd = Infinity;
-    const take = u => { const d = Math.abs(u.x - x); if (d > reach) return false; if (d < bd || (d === bd && u.id < best.id)){ bd = d; best = u; } return d <= bd; };
-    for (let i = lo; i < arr.length && take(arr[i]); i++);
-    for (let i = lo - 1; i >= 0 && take(arr[i]); i--);
+    // nach rechts, dann nach links, jeweils bis außer Reichweite oder weiter als das beste Ziel (ohne Hilfsfunktion: Leistung)
+    for (let i = lo; i < arr.length; i++){
+      const u = arr[i], d = Math.abs(u.x - x);
+      if (d > reach) break;
+      if (d < bd || (d === bd && u.id < best.id)){ bd = d; best = u; }
+      if (d > bd) break;
+    }
+    for (let i = lo - 1; i >= 0; i--){
+      const u = arr[i], d = Math.abs(u.x - x);
+      if (d > reach) break;
+      if (d < bd || (d === bd && u.id < best.id)){ bd = d; best = u; }
+      if (d > bd) break;
+    }
     return best;
   }
   const byId = new Map();
@@ -483,11 +492,16 @@ function create(){
     const id = targets.get(key), tg = id !== undefined ? byId.get(id) : null;
     return tg && fighting(tg) && lanes.includes(tg.lane) && Math.abs(tg.x - x) <= reach ? tg : null;
   }
+  const ONE_LANE = Array.from({ length: C.LANE_COUNT }, (_, l) => [l]);
   let byIdFor = null, byIdLen = -1;
-  function resolveCombat(dt, given){
+  function resolveCombat(dt){
     // Zuordnung Id → Einheit nur neu aufbauen, wenn sich die Einheitenliste geändert hat
-    if (byIdFor !== S.units || byIdLen !== S.units.length){ byId.clear(); for (const u of S.units) byId.set(u.id, u); byIdFor = S.units; byIdLen = S.units.length; }
-    const idx = given || laneIndexBoth();
+    // dabei auch Ziele gefallener Einheiten vergessen
+    if (byIdFor !== S.units || byIdLen !== S.units.length){
+      byId.clear(); for (const u of S.units) byId.set(u.id, u); byIdFor = S.units; byIdLen = S.units.length;
+      for (const key of [...targets.keys()]) if (!byId.has(key) && typeof key === 'number') targets.delete(key);
+    }
+    const idx = laneIndexBoth();
     const attacks = [];
     // 1. Ziele bestimmen, Zustand zu Tickbeginn
     for (const u of S.units){
@@ -496,7 +510,7 @@ function create(){
       u.cd -= dt;
       if (u.cd > 0 || u.laneF !== u.lane) continue;
       const reach = reachOf(u), foes = idx[u.side === 'p' ? 'e' : 'p'][u.lane];
-      const tg = keepTarget(u.id, u.x, reach, [u.lane]) || nearestIn(foes, u.x, reach);
+      const tg = keepTarget(u.id, u.x, reach, ONE_LANE[u.lane]) || nearestIn(foes, u.x, reach);
       if (tg){ targets.set(u.id, tg.id); attacks.push({ u, tg }); u.cd = u.cdMax; continue; }
       targets.delete(u.id);
       if ((baseX(u.side) - u.x) * dirOf(u.side) <= reach){ attacks.push({ u, base: true }); u.cd = u.cdMax; }
@@ -530,7 +544,6 @@ function create(){
       } else if (a.base) hitBase(a.u);
       else hitUnit(a.u, a.tg);
     }
-    for (const key of [...targets.keys()]) if (!byId.has(key) && typeof key === 'number') targets.delete(key);
   }
   /* Ausfallschritt im Nahkampf (nur Darstellung, außerhalb des Spielstands) */
   function lunge(u){ if (FX.on) FX.lunge.set(u.id, 0); }
@@ -598,12 +611,11 @@ function create(){
     const mem = new Map();
     for (const f of S.forms) mem.set(f.id, []);
     for (const u of S.units) if (u.hp > 0){ const m = mem.get(u.form); if (m) m.push(u); }
-    const idx = laneIndexBoth();
     // Für die Lage einer Lane zählen auch Einheiten, die gerade in sie wechseln (Ziel-Lane): sonst laufen zwei Armeen in
     // verschiedenen Lanes einander hinterher und tauschen endlos die Lanes
     const bound = { p: [[], [], []], e: [[], [], []] };
     for (const u of S.units) if (u.hp > 0) bound[u.side][u.lane].push(u);
-    let relayout = false, reindex = false;
+    let relayout = false;
     for (const g of S.forms){
       const members = mem.get(g.id), foes = bound[g.side === 'p' ? 'e' : 'p'], dir = dirTo(g.side);
       const dist = [threat(g, 0, foes), threat(g, 1, foes), threat(g, 2, foes)];
@@ -632,7 +644,7 @@ function create(){
         if (g.fighting && lane !== GATE && lane !== u.home && u.lane === GATE && u.laneF === GATE && !engaged[lane]) lane = GATE;
         if (u.lane !== lane){ u.lane = lane; relayout = true; }
         // Querbewegung: während des Wechsels kämpft eine Einheit nicht und ist nicht greifbar
-        if (u.laneF !== u.lane){ const step = dt / C.LANE_SHIFT_S; u.laneF = Math.abs(u.lane - u.laneF) <= step ? u.lane : u.laneF + Math.sign(u.lane - u.laneF) * step; reindex = true; }
+        if (u.laneF !== u.lane){ const step = dt / C.LANE_SHIFT_S; u.laneF = Math.abs(u.lane - u.laneF) <= step ? u.lane : u.laneF + Math.sign(u.lane - u.laneF) * step; }
       }
       // Bewegung nur im Marsch; bis auf Kontaktreichweite, Nachschub höchstens bis hinter die Armee
       g.moving = false;
@@ -655,8 +667,7 @@ function create(){
       if ((rear - g.x) * dirTo(g.side) <= 0.5){ mergeInto(main, g); relayout = true; }
     }
     if (relayout) layoutAll();
-    if (relayout || reindex) resolveCombat(dt);
-    else { for (const side of ['p', 'e']) for (const a of idx[side]) a.sort(byX); resolveCombat(dt, idx); }
+    resolveCombat(dt);                                                  // Lane-Index nach der Bewegung, einmal je Tick
     // Gruppen, die in diesem Schritt eine Einheit der Mitte verloren haben (für die Ausnahme Mitte)
     const lostMid = new Set();
     for (const u of S.units){
@@ -669,7 +680,7 @@ function create(){
         gainXp(xp);
         S.kills++;
       } else S.losses++;
-      if (FX.on) FX.fx.push({ x: u.x, lane: u.laneF, t: 0, side: u.side });
+      if (FX.on) FX.fx.push({ x: u.x, lane: u.laneF, t: 0, side: u.side, type: u.type });
     }
     const before = S.units.length;
     S.units = S.units.filter(u => !u.dead);
