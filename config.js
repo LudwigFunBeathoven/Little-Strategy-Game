@@ -48,9 +48,13 @@ const KF_CONFIG = {
   LANE_SHIFT_S: 1.2,            // Dauer der Querbewegung in eine Nachbar-Lane
   TOWER_RANGE: 120,             // Grundreichweite der eigenen Türme (bisher PLAYER_TURRET.range)
 
+  /* Oberfläche (REQ-5.01, REQ-5.03) */
+  UI: {
+    dragThresholdPx: 6,         // ab dieser Zeigerbewegung ist eine Geste in der Welt ein Ziehen, darunter ein Klick
+  },
+
   /* Spielwelt und Kamera (REQ-46) */
   WORLD_WIDTH_FACTOR: 2,        // die Welt ist doppelt so breit wie der Anzeigebereich
-  DRAG_THRESHOLD_PX: 5,         // ab dieser Mausbewegung ist ein Klick ein Ziehen
   SCROLL_STEP_PX: 80,           // Pfeiltasten und A/D
   CAMERA_FOLLOW_RATE: 3,        // „Front folgen“: Annäherung je Sekunde
   EDGE_MARKER_S: 1.5,           // so lange nach einem Treffer zeigt der Randpfeil einen Abschnitt außerhalb des Bildes

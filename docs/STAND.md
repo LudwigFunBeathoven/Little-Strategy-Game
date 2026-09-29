@@ -8,7 +8,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | Inkrement | Inhalt | REQ | Status |
 |---|---|---|---|
 | I5.0 | Merge v0.5 → `main`, Branch, Basislinie | – | fertig |
-| I5.1 | Eingabe: Ursache belegen, beheben | 5.01 | offen |
+| I5.1 | Eingabe: Ursache belegen, beheben | 5.01 | fertig |
 | I5.2 | Umbenennung zu EP | 5.02 | offen |
 | I5.3 | Drei Bänder, Aufteilung von `ui.js` | 5.03 | offen |
 | I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | offen |
@@ -46,8 +46,35 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.1: `npm test` 83/83, Browser-Prüfung 78/78, Kurzsimulation 12 Siege, 8 Niederlagen, 0 offen (Logik unverändert).
+  Neue Prüfpunkte (je bei devicePixelRatio 1 und 2): Bau-Option und „Läufer“ mit 120 ms Haltedauer, 100 Klicks an zufälligen Punkten freier Bauplätze
+  bei wechselnder Kamera und 0–4 px Zittern, 50 Klicks auf das Klickfeld in 5 s, Latenz Klickfeld (Median 13–14 ms, p95 15–16 ms) und Welt-Klick
+  bis zum nächsten Bild (Median 12 ms, p95 13–14 ms), Umkehrbarkeit `screenToWorld`/`worldToScreen`.
+  Derselbe Test gegen v0.5: Bau 0 von 4, „Läufer“ 0 von 10, Klickfeld-Latenz ab dem Drücken 43 ms (Auslösung erst beim Loslassen); Treffer in der Welt 100 von 100.
 - I5.0: Basislinie oben. `main` per Fast-Forward auf `42aad39` (v0.5 plus Entwicklungsreport), Branch `iteration-5` von dort.
+
+## Befund REQ-5.01: welche Hypothese zutraf
+**Hypothese 1 (DOM-Neuaufbau) trifft zu und erklärt den Befund vollständig.**
+- Das Kontextfeld baute seine Bau-Knöpfe neu, sobald sich der ganzzahlige Materialbestand änderte (der Bestand war Teil des Schlüssels für den Neuaufbau).
+  Mit vier Fabriken geschah das neunmal je Sekunde. Ein menschlicher Klick (Drücken bis Loslassen 80–150 ms) traf beim Loslassen einen neuen Knopf;
+  der Browser löst dann kein `click` aus. Messung: 0 von 4 Bauten bei 120 ms Haltedauer.
+- Die Einheiten- und Upgrade-Knöpfe blieben erhalten, aber ihre Beschriftung (Taste, Stufenzahl) wurde bei jeder Aktualisierung (alle 100 ms) neu
+  erzeugt. Traf das Drücken diese inneren Elemente, ging der Klick ebenso verloren: 0 von 10 bei „Läufer“.
+- Hypothese 2 (Ziehen schluckt Klicks) und 3 (Trefferprüfung) treffen nicht zu: 100 von 100 Treffern auch mit v0.5. Die Ziehschwelle lag bereits bei 5 px.
+- Hypothese 4 (Bedienführung): Der Bau brauchte schon in v0.5 zwei Klicks (Feld, Option); unklar war nur, dass die zweite oft verloren ging.
+- Hypothese 5 (Kopplung an den Tick): trifft nicht zu. Das Klickfeld löste aber erst beim Loslassen aus, das kostet die Haltedauer (43 ms im Test).
+
+**Behebung:** Knöpfe werden nur neu gebaut, wenn sich Auswahl oder Optionsmenge ändern; Kosten, Sperre und Begründung werden in den bestehenden
+Knöpfen aktualisiert. Beschriftungen haben feste Kindelemente, geschrieben wird nur bei geänderten Werten (`setText`, `setHidden`, `setDis`).
+Das Klickfeld löst auf `pointerdown` aus (Tastatur weiter über `click`). Handler fordern das Neuzeichnen nur an; die Oberfläche aktualisiert höchstens
+einmal je Bild. Ziehschwelle 6 px (`UI.dragThresholdPx`), gemessen als Abstand statt nur waagrecht; die Trefferprüfung nutzt den Druckpunkt.
+Eine Funktion `screenToWorld` (mit CSS-Skalierung und Kamera) für alle Treffer in der Canvas. Spielflächen mit `touch-action: manipulation`
+und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
 
 ## Auslegungen
 1. **Basis des Branches:** `main` wurde auf `42aad39` vorgespult, nicht auf das im Dokument genannte `36a71ee`; der einzige Unterschied ist der
    Entwicklungsreport (`docs/report-entwicklung.md`).
+2. **Tastatur am Klickfeld:** Enter und Leertaste lösen weiterhin über `click` aus (ohne Zeigerereignis, erkennbar an `detail = 0`); gedrückt gehaltene
+   Tasten wiederholen nicht, weil Browser für Knöpfe nur beim Loslassen bzw. einmal auslösen.
+3. **Latenz-Messung:** Ab dem `pointerdown` bis zur ersten DOM-Änderung am Materialzähler bzw. bis zum nächsten `requestAnimationFrame` nach einem Welt-Klick.
+   Die Anzeige folgt dadurch im nächsten Bild (höchstens 16,7 ms bei 60 Hz), nicht mehr sofort im Handler.

@@ -81,7 +81,14 @@ const refundText = n => t('cost.material', { n: fmt(n) });   // Erstattung 0 hei
 
 /* ================= Tooltips (REQ-05) ================= */
 const isDis = el => el.getAttribute('aria-disabled') === 'true';
-function setDis(el, d){ el.setAttribute('aria-disabled', d ? 'true' : 'false'); }
+function setDis(el, d){ const v = d ? 'true' : 'false'; if (el.getAttribute('aria-disabled') !== v) el.setAttribute('aria-disabled', v); }
+/* Nur geänderte Werte schreiben (REQ-5.01): unveränderte Knoten bleiben unberührt, der Zeiger verliert nie sein Ziel */
+function setText(el, s){ s = String(s); if (el.textContent !== s) el.textContent = s; }
+function setHidden(el, h){ h = !!h; if (el.hidden !== h) el.hidden = h; }
+function setWidth(el, p){ const v = p.toFixed(2) + '%'; if (el.style.width !== v) el.style.width = v; }
+/* Neuzeichnen der Oberfläche höchstens einmal je Bild: Handler melden nur Bedarf an */
+let uiDirty = true;
+function requestRender(){ uiDirty = true; }
 /* Kennzahl je Upgrade: Wert vor und nach dem Kauf */
 const METRICS = {
   presse:     ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
@@ -474,10 +481,11 @@ const optEls = {};
 function makeOpt(parent, cls, tip, onClick){
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'opt ' + (cls || ''); b.dataset.tooltip = tip;
-  b.innerHTML = '<span class="opt-name"></span><span class="expl"></span>';
-  b.addEventListener('click', () => { if (!isDis(b)){ onClick(); render(); } });
+  b.innerHTML = '<span class="opt-name"><kbd hidden></kbd><span></span><em hidden></em></span><span class="expl"></span>';
+  b.addEventListener('click', () => { if (!isDis(b)){ onClick(); requestRender(); } });
   parent.appendChild(b);
-  return { btn: b, name: b.children[0], expl: b.children[1] };
+  const nm = b.children[0];
+  return { btn: b, name: nm, kbd: nm.children[0], label: nm.children[1], tag: nm.children[2], expl: b.children[1] };
 }
 const GROUP_BOX = { fertigung: 'optsFertigung', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm_0: 'optsTurm0', turm_2: 'optsTurm2' };
 
@@ -485,15 +493,19 @@ function buildUI(){
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
   for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
-  $('clickBtn').addEventListener('click', () => { if (!isDis($('clickBtn'))){ G.doClick(); render(); } });
+  // Klickfeld löst auf pointerdown aus (REQ-5.01); Tastatur (Enter, Leertaste) kommt als click ohne Zeigerereignis
+  const press = () => { if (!isDis($('clickBtn'))){ G.doClick(); requestRender(); } };
+  $('clickBtn').addEventListener('pointerdown', e => { if (e.button === 0 && e.isPrimary) press(); });
+  $('clickBtn').addEventListener('click', e => { if (e.detail === 0) press(); });
   $('hintOk').addEventListener('click', dismissHint);
   $('newBtn').addEventListener('click', () => openStart(G.S.status === 'running'));
   $('camRealm').addEventListener('click', () => { Cam.follow = false; Cam.goTo(0); });
   $('camFront').addEventListener('click', () => { Cam.follow = false; Cam.goTo(Cam.frontTarget()); });
-  $('camFollow').addEventListener('click', () => { Cam.follow = !Cam.follow; render(); });
+  $('camFollow').addEventListener('click', () => { Cam.follow = !Cam.follow; requestRender(); });
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
-    for (const [id, spec] of Object.entries(C.UNITS)) if (e.key === spec.key){ G.spawn(id); render(); }
+    if (e.repeat) return;
+    for (const [id, spec] of Object.entries(C.UNITS)) if (e.key === spec.key){ G.spawn(id); requestRender(); }
   });
 }
 
@@ -510,9 +522,18 @@ function bldEffect(type, built){
 }
 
 /* ================= Kontext-Panel (REQ-46): Bauplatz, Gebäude oder Basis ================= */
-let ctxSel = { kind: 'base' }, ctxKey = '', demolishArmed = false;
-function selectPlot(i){ ctxSel = { kind: 'plot', i }; demolishArmed = false; ctxKey = ''; render(); }
-function selectBase(){ ctxSel = { kind: 'base' }; demolishArmed = false; ctxKey = ''; render(); }
+let ctxSel = { kind: 'base' }, ctxKey = '', demolishArmed = false, picks = [];
+function updatePicks(){
+  for (const p of picks){
+    const block = G.buildBlock(p.i, p.type), cost = G.buildCost(p.type), why = buildReason(block, cost);
+    setText(p.nm, p.type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${p.type}.name`));
+    setText(p.ex, t('ex.line', { effect: bldEffect(p.type, false), cost: costText('material', cost) }));
+    setText(p.w, why || ''); setHidden(p.w, !why);
+    setDis(p.b, !!block);
+  }
+}
+function selectPlot(i){ ctxSel = { kind: 'plot', i }; demolishArmed = false; ctxKey = ''; requestRender(); }
+function selectBase(){ ctxSel = { kind: 'base' }; demolishArmed = false; ctxKey = ''; requestRender(); }
 function renderContext(){
   const S = G.S, plot = ctxSel.kind === 'plot', sl = plot ? S.slots[ctxSel.i] : null;
   $('ctxBase').hidden = plot;
@@ -528,37 +549,39 @@ function renderContext(){
     $('ctxTitle').textContent = t('ctx.building', { name: t(`bld.${sl.type}.name`), n: ctxSel.i + 1 });
     $('ctxText').textContent = `${t(`bld.${sl.type}.desc`)} ${bldEffect(sl.type, true)}.`;
   }
-  // Knöpfe, die sich nur mit dem Zustand ändern, werden bei Bedarf neu gebaut
-  const key = [lang, JSON.stringify(ctxSel), JSON.stringify(S.slots), Math.floor(S.material), demolishArmed, S.status, JSON.stringify(S.unlocked), S.level].join('|');
-  if (key === ctxKey) return;
+  // Knöpfe werden nur neu gebaut, wenn sich die Auswahl oder die Menge der Optionen ändert, nie wegen Material oder Zeit (REQ-5.01);
+  // Kosten, Sperre und Begründung werden danach in den bestehenden Knöpfen aktualisiert
+  const key = [lang, JSON.stringify(ctxSel), JSON.stringify(S.slots), demolishArmed, S.status, JSON.stringify(S.unlocked),
+               C.BUILDINGS.map(b => plot && !sl ? G.buildBlock(ctxSel.i, b) === 'hidden' || G.buildBlock(ctxSel.i, b) === 'standing' : 0).join()].join('|');
+  if (key === ctxKey){ updatePicks(); return; }
   ctxKey = key;
   const build = $('ctxBuild'), dem = $('ctxDemolish'), nav = $('ctxNav');
-  build.innerHTML = ''; dem.innerHTML = ''; nav.innerHTML = '';
+  build.innerHTML = ''; dem.innerHTML = ''; nav.innerHTML = ''; picks = [];
   if (plot && !sl){
     const i = ctxSel.i;
     for (const type of C.BUILDINGS){
-      const block = G.buildBlock(i, type), cost = G.buildCost(type);
+      const block = G.buildBlock(i, type);
       if (block === 'standing' || block === 'hidden') continue;
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `pick:${type}:${i}`;
-      const nm = document.createElement('b'); nm.textContent = type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${type}.name`);
+      const nm = document.createElement('b');
       const c = document.createElement('span'); c.className = 'c';
       const d = document.createElement('span'); d.className = 'd'; d.textContent = t(`bld.${type}.desc`);
-      const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.line', { effect: bldEffect(type, false), cost: costText('material', cost) });
-      b.append(nm, c, d, ex);
-      const why = buildReason(block, cost);
-      if (why){ const w = document.createElement('span'); w.className = 'w'; w.textContent = why; b.appendChild(w); }
-      setDis(b, !!block);
-      b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ ctxKey = ''; render(); } });
+      const ex = document.createElement('span'); ex.className = 'expl';
+      const w = document.createElement('span'); w.className = 'w';
+      b.append(nm, c, d, ex, w);
+      b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ ctxKey = ''; requestRender(); } });
       build.appendChild(b);
+      picks.push({ type, i, b, nm, ex, w });
     }
+    updatePicks();
   }
   if (sl){
     const i = ctxSel.i, refund = refundText(G.refundFor(i));
-    if (!demolishArmed) dem.appendChild(mkButton('btn-ghost', t('slot.demolish'), () => { demolishArmed = true; showHint('demolish'); ctxKey = ''; render(); }, 'demolish:' + i, t('ex.demolish', { refund })));
+    if (!demolishArmed) dem.appendChild(mkButton('btn-ghost', t('slot.demolish'), () => { demolishArmed = true; showHint('demolish'); ctxKey = ''; requestRender(); }, 'demolish:' + i, t('ex.demolish', { refund })));
     else {
-      dem.appendChild(mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); demolishArmed = false; ctxKey = ''; render(); }, 'confirmDemolish:' + i, t('ex.demolish', { refund })));
-      dem.appendChild(mkButton('btn-ghost', t('slot.cancel'), () => { demolishArmed = false; ctxKey = ''; render(); }, 'cancel', t('ex.cancel')));
+      dem.appendChild(mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); demolishArmed = false; ctxKey = ''; requestRender(); }, 'confirmDemolish:' + i, t('ex.demolish', { refund })));
+      dem.appendChild(mkButton('btn-ghost', t('slot.cancel'), () => { demolishArmed = false; ctxKey = ''; requestRender(); }, 'cancel', t('ex.cancel')));
     }
   }
   if (plot) nav.appendChild(mkButton('btn-ghost', t('ctx.toBase'), selectBase, 'ctxBase', t('ex.ctx.toBase')));
@@ -624,7 +647,7 @@ function openDraft(){
     const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(o.descKey, optParams(o, tier));
     const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.card', { tier: optLimit(o) });
     b.append(nm, k, ds, ex);
-    b.addEventListener('click', () => { if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; closeModal(); render(); } });
+    b.addEventListener('click', () => { if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; closeModal(); requestRender(); } });
     list.appendChild(b);
   });
   showHint('card');
@@ -689,6 +712,7 @@ function logParams(entry){
 
 let lastLogKey = '';
 function render(){
+  uiDirty = false;
   const S = G.S, running = S.status === 'running';
   $('material').textContent = fmt(S.material);
   $('rate').textContent = t('hud.perSecond', { n: fmt1(G.matRate() + G.autoPressCps() * G.clickPower()) });
@@ -712,28 +736,27 @@ function render(){
 
   for (const id in C.UPGRADES){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];
-    el.btn.hidden = !(G.isAvailable(id) && S.revealed[id]);
+    setHidden(el.btn, !(G.isAvailable(id) && S.revealed[id]));
     if (el.btn.hidden) continue;
-    const label = baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`);
-    el.name.textContent = label;
-    if (lv > 0){ const em = document.createElement('em'); em.textContent = u.max !== undefined ? `${lv}/${u.max}` : String(lv); el.name.appendChild(em); }
-    el.expl.textContent = explUpgrade(id);
+    setText(el.label, baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`));
+    setHidden(el.tag, lv === 0);
+    if (lv > 0) setText(el.tag, u.max !== undefined ? `${lv}/${u.max}` : String(lv));
+    setText(el.expl, explUpgrade(id));
     setDis(el.btn, !G.canBuy(id));
   }
   for (const id in C.UNITS){
     const spec = C.UNITS[id], el = optEls['unit_' + id], c = G.unitCost(id);
-    el.name.innerHTML = '';
-    const kbd = document.createElement('kbd'); kbd.textContent = spec.key;
-    el.name.append(kbd, document.createTextNode(t(`unit.${id}.name`)));
-    el.expl.textContent = explUnit(id);
+    setHidden(el.kbd, false); setText(el.kbd, spec.key);
+    setText(el.label, t(`unit.${id}.name`));
+    setText(el.expl, explUnit(id));
     setDis(el.btn, !!unitReason(id));
   }
   for (let i = 0; i < C.LANE_COUNT; i++){
     const r = optEls['repair_' + i];
-    r.btn.hidden = !S.revealed['repair_' + i];
-    r.name.textContent = t('repair.' + i);
-    r.expl.textContent = S.sections[i].repairCd > 0 ? t('tip.repairCd', { s: Math.ceil(S.sections[i].repairCd) })
-      : t('ex.repair', { n: fmt(C.REPAIR_AMOUNT), cost: costText('material', G.repairCost()) });
+    setHidden(r.btn, !S.revealed['repair_' + i]);
+    setText(r.label, t('repair.' + i));
+    setText(r.expl, S.sections[i].repairCd > 0 ? t('tip.repairCd', { s: Math.ceil(S.sections[i].repairCd) })
+      : t('ex.repair', { n: fmt(C.REPAIR_AMOUNT), cost: costText('material', G.repairCost()) }));
     setDis(r.btn, !!repairReason(i));
   }
 
@@ -1024,10 +1047,19 @@ function draw(realDt, now){
   ctx.textAlign = 'right'; ctx.fillText(t('lane.enemy'), wx(W - EBW) - 6, ch - 4);
 }
 
-/* ================= Scrollen (REQ-46): Mausrad, Ziehen ab DRAG_THRESHOLD_PX, Pfeiltasten und A/D, Scrollleiste ================= */
-function worldPoint(e){ const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left + Cam.x, y: e.clientY - r.top }; }
-function handleWorldClick(e){
-  const p = worldPoint(e), hit = r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+/* ================= Scrollen (REQ-46): Mausrad, Ziehen ab UI.dragThresholdPx, Pfeiltasten und A/D, Scrollleiste ================= */
+/* Einzige Umrechnung Bildschirm → Welt (REQ-5.01): CSS-Pixel relativ zur Canvas, CSS-Skalierung der Canvas und Kameraversatz.
+   devicePixelRatio wirkt nur auf die Auflösung der Zeichenfläche, nicht auf diese Koordinaten. */
+function screenToWorld(clientX, clientY){
+  const r = cv.getBoundingClientRect();
+  return { x: (clientX - r.left) * (cw / r.width) + Cam.x, y: (clientY - r.top) * (ch / r.height) };
+}
+function worldToScreen(x, y){
+  const r = cv.getBoundingClientRect();
+  return { x: r.left + (x - Cam.x) * (r.width / cw), y: r.top + y * (r.height / ch) };
+}
+function handleWorldClick(clientX, clientY){
+  const p = screenToWorld(clientX, clientY), hit = r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
   const plot = plotRects.find(hit);
   if (plot) return selectPlot(plot.i);
   if (sectionRects.find(hit)) selectBase();
@@ -1035,16 +1067,16 @@ function handleWorldClick(e){
 (() => {
   let down = null, dragging = false;
   const userScroll = x => { Cam.follow = false; Cam.goTo(x); };
-  cv.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = { x: e.clientX, camX: Cam.x }; dragging = false; });
+  cv.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = { x: e.clientX, y: e.clientY, camX: Cam.x }; dragging = false; });
   window.addEventListener('pointermove', e => {
     if (!down) return;
     const dx = e.clientX - down.x;
-    if (!dragging && Math.abs(dx) >= C.DRAG_THRESHOLD_PX){ dragging = true; cv.classList.add('dragging'); }
+    if (!dragging && Math.hypot(dx, e.clientY - down.y) >= C.UI.dragThresholdPx){ dragging = true; cv.classList.add('dragging'); }
     if (dragging) userScroll(down.camX - dx);
   });
   window.addEventListener('pointerup', e => {
     if (!down) return;
-    if (!dragging && e.target === cv) handleWorldClick(e);
+    if (!dragging && e.target === cv) handleWorldClick(down.x, down.y);   // Treffer am Druckpunkt, nicht am Loslassen
     down = null; dragging = false; cv.classList.remove('dragging');
   });
   cv.addEventListener('wheel', e => {
@@ -1085,7 +1117,7 @@ function frame(now){
   Cam.update(dt);
   draw(dt, now);
   syncScrollbar();
-  if (uiAcc >= C.UI_REFRESH_S){ uiAcc = 0; render(); }
+  if (uiDirty || uiAcc >= C.UI_REFRESH_S){ uiAcc = 0; render(); }
   requestAnimationFrame(frame);
 }
 document.addEventListener('visibilitychange', () => {
@@ -1104,7 +1136,7 @@ new MutationObserver(readColors).observe(document.documentElement, { attributes:
 setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
 // Schnittstelle für automatisierte Browser-Tests
-window.__kf = { G, C, t, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, selectPlot, selectBase,
+window.__kf = { G, C, t, screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, selectPlot, selectBase,
                 get plotRects(){ return plotRects; }, get ctxSel(){ return ctxSel; }, get lang(){ return lang; } };
 
 setLang(lang);

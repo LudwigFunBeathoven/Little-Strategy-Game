@@ -147,6 +147,99 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]){
   await ctx.close();
 }
 
+// REQ-5.01: Eingabe. Klicks mit menschlicher Haltedauer, Treffer in der Welt, Klickfeld, Latenz, devicePixelRatio 1 und 2
+const quantile = (a, q) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(s.length * q))]; };
+for (const dsf of [1, 2]){
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: dsf });
+  const p = await ctx.newPage();
+  const errors = [];
+  p.on('pageerror', e => errors.push(e.message));
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.click('.card .btn-primary'); await p.waitForTimeout(200);
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; const G = __kf.G;
+    G.S.nextWave = 1e9; G.S.enemyBaseHp = 1e12; G.S.sections.forEach(s => { s.hp = 1e9; }); G.S.material = 5000; for (let i = 0; i < 4; i++) G.build('fabrik'); });
+  const tag = `[Eingabe, dpr ${dsf}]`;
+  // Umrechnung Bildschirm ↔ Welt: Hin und zurück bei verschiedenen Kamerapositionen
+  const round = await p.evaluate(() => { let worst = 0;
+    for (const cx of [0, 137, 400, __kf.Cam.max()]){ __kf.Cam.goTo(cx);
+      for (const [x, y] of [[40, 30], [__kf.Cam.x + 300, 200], [__kf.Cam.x + 900, 350]]){
+        const sc = __kf.worldToScreen(x, y), w = __kf.screenToWorld(sc.x, sc.y); worst = Math.max(worst, Math.hypot(w.x - x, w.y - y)); } }
+    __kf.Cam.goTo(0); return worst; });
+  check(round < 0.01, `${tag} screenToWorld ist die Umkehrung von worldToScreen (Abweichung ${round.toFixed(4)} px)`);
+
+  // Bau-Option mit 120 ms gedrückter Taste bei laufender Produktion (Befund PO: mehrere Klicks nötig)
+  let built = 0;
+  for (let k = 0; k < 4; k++){
+    const free = await p.evaluate(() => { const i = __kf.G.S.slots.findIndex(s => !s); __kf.selectPlot(i); __kf.G.S.material = 1e6; return i; });
+    await p.waitForTimeout(120);
+    const bx = await p.evaluate(() => { const e = document.querySelector('#ctxBuild .pick'); e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+    await p.mouse.move(bx.x, bx.y); await p.mouse.down(); await p.waitForTimeout(120); await p.mouse.up(); await p.waitForTimeout(80);
+    if (await p.evaluate(i => !!__kf.G.S.slots[i], free)) built++;
+  }
+  check(built === 4, `${tag} Bau-Option mit 120 ms Haltedauer: ${built} von 4 gebaut`);
+  // Einheitenknopf mit 120 ms Haltedauer
+  let queued = 0;
+  await p.evaluate(() => { __kf.G.S.nextOwnWave = 1e9; });
+  for (let k = 0; k < 10; k++){
+    await p.evaluate(() => { __kf.G.S.queue = []; __kf.G.S.material = 1e6; });
+    const bx = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="unit:laeufer"]'); e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return { x: r.x + 24, y: r.y + r.height / 2 }; });
+    await p.mouse.move(bx.x, bx.y); await p.mouse.down(); await p.waitForTimeout(120); await p.mouse.up(); await p.waitForTimeout(40);
+    if (await p.evaluate(() => __kf.G.S.queue.length === 1)) queued++;
+  }
+  check(queued === 10, `${tag} „Läufer“ mit 120 ms Haltedauer: ${queued} von 10`);
+
+  // 100 Klicks an zufälligen Punkten (Seed) in freien Bauplätzen, laufendes Spiel, wechselnde Kamera, Zitterbewegung unter der Schwelle
+  await p.evaluate(() => { const G = __kf.G; G.S.slots = G.S.slots.map(() => null); __kf.selectBase(); });
+  let seed = 12345; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  let hits = 0;
+  for (let k = 0; k < 100; k++){
+    const target = Math.floor(rnd() * 9);
+    const pt = await p.evaluate(([i, a, bb, c]) => {
+      __kf.selectBase(); const r = __kf.plotRects[i];
+      __kf.Cam.goTo(Math.min(__kf.Cam.max(), r.x) * c);        // Bauplatz bleibt sichtbar
+      const wx = r.x + 2 + a * (r.w - 4), wy = r.y + 2 + bb * (r.h - 4);
+      return __kf.worldToScreen(wx, wy);
+    }, [target, rnd(), rnd(), rnd()]);
+    await p.waitForTimeout(20);
+    const jitter = Math.floor(rnd() * 5);                           // 0–4 px, unter der Ziehschwelle
+    await p.mouse.move(pt.x, pt.y); await p.mouse.down(); await p.mouse.move(pt.x + jitter, pt.y); await p.mouse.up();
+    await p.waitForTimeout(20);
+    const sel = await p.evaluate(() => __kf.ctxSel);
+    if (sel.kind === 'plot' && sel.i === target) hits++;
+  }
+  check(hits === 100, `${tag} 100 Klicks in freie Bauplätze: ${hits} Treffer`);
+
+  // Klickfeld: 50 Klicks in 5 s ergeben +50 (Klickdeckel angehoben); Latenz bis zur sichtbaren Änderung
+  await p.evaluate(() => { __kf.C.MAX_CLICKS_PER_SECOND = 100; __kf.Cam.goTo(0);
+    window.__lat = []; let t0 = null;
+    document.querySelector('#clickBtn').addEventListener('pointerdown', () => { t0 = performance.now(); }, true);
+    new MutationObserver(() => { if (t0 !== null){ window.__lat.push(performance.now() - t0); t0 = null; } })
+      .observe(document.querySelector('#material'), { subtree: true, childList: true, characterData: true }); });
+  const c0 = await p.evaluate(() => __kf.G.S.clicks);
+  await p.evaluate(() => document.querySelector('#clickBtn').scrollIntoView({ block: 'center' }));
+  const cb = await p.locator('#clickBtn').boundingBox();
+  for (let k = 0; k < 50; k++){ await p.mouse.move(cb.x + 20, cb.y + 20); await p.mouse.down(); await p.waitForTimeout(40); await p.mouse.up(); await p.waitForTimeout(58); }
+  const c1 = await p.evaluate(() => __kf.G.S.clicks);
+  check(c1 - c0 === 50, `${tag} 50 Klicks auf das Klickfeld in 5 s: +${c1 - c0}`);
+  const lat = await p.evaluate(() => window.__lat);
+  check(lat.length >= 45 && quantile(lat, 0.5) <= 20 && quantile(lat, 0.95) <= 50,
+    `${tag} Latenz Klickfeld bis DOM-Änderung: Median ${quantile(lat, 0.5)?.toFixed(1)} ms, p95 ${quantile(lat, 0.95)?.toFixed(1)} ms (${lat.length} Messungen; Soll ≤ 20 / ≤ 50)`);
+  // Klick in die Welt bis zum nächsten gezeichneten Bild mit Auswahlrahmen
+  const wl = [];
+  for (let k = 0; k < 20; k++){
+    const pt = await p.evaluate(i => { __kf.selectBase(); const r = __kf.plotRects[i]; return __kf.worldToScreen(r.x + r.w / 2, r.y + r.h / 2); }, k % 9);
+    await p.mouse.move(pt.x, pt.y);
+    await p.evaluate(() => { window.__t0 = null; document.querySelector('#lane').addEventListener('pointerdown', () => { window.__t0 = performance.now(); window.__done = new Promise(r => requestAnimationFrame(() => r(performance.now() - window.__t0))); }, { once: true, capture: true }); });
+    await p.mouse.down(); await p.mouse.up();
+    wl.push(await p.evaluate(() => window.__done));
+  }
+  check(quantile(wl, 0.5) <= 20 && quantile(wl, 0.95) <= 50, `${tag} Latenz Welt-Klick bis nächstes Bild: Median ${quantile(wl, 0.5).toFixed(1)} ms, p95 ${quantile(wl, 0.95).toFixed(1)} ms`);
+  check(errors.length === 0, `${tag} keine Fehler${show(errors)}`);
+  await ctx.close();
+}
+
 // REQ-47: Gestaffelte Einführung (frischer Browser, Einführung an)
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
@@ -155,7 +248,9 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]){
   await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); });
   await p.reload(); await p.waitForTimeout(300);
   await p.click('.card .btn-primary'); await p.waitForTimeout(200);
-  const intro = await p.evaluate(() => { __kf.selectPlot(4); __kf.G.S.material = 1e5; return {
+  await p.evaluate(() => { __kf.selectPlot(4); __kf.G.S.material = 1e5; });
+  await p.waitForTimeout(150);
+  const intro = await p.evaluate(() => { return {
     wave: document.querySelector('#secWave').hidden, cards: document.querySelector('#secCards').hidden,
     picks: [...document.querySelectorAll('#ctxBuild .pick')].map(b => b.dataset.tooltip.split(':')[1]),
     hint: document.querySelector('#hintText').textContent }; });
