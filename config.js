@@ -35,7 +35,6 @@ const KF_CONFIG = {
   LANE_COUNT: 3,
   GATE_LANE: 1,                 // Das Tor liegt am Ende der mittleren Lane
   LANE_ORDER: [1, 0, 2],        // Reihenfolge Mitte, oben, unten (REQ-12.1/12.2)
-  RANGED_RANGE_ROWS: 1,         // Fernkämpfer greifen an, solange höchstens so viele eigene Einheiten vor ihnen stehen (REQ-12.4)
   PLAYER_BASE_WIDTH: 60,
   ENEMY_BASE_WIDTH: 44,
   SPAWN_BLOCK_DIST: 12,

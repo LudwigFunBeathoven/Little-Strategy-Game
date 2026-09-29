@@ -241,7 +241,7 @@ KF_I18N.en = {
   'draft.aushebung.name': 'Levy',
   'draft.aushebung.desc': 'Supply cap +{e1}. Drawback: units −{d1}% hit points.',
   'draft.weitschuss.name': 'Long shot',
-  'draft.weitschuss.desc': 'Ranged units also attack with {e1} more unit in front of them.',
+  'draft.weitschuss.desc': 'Ranged units deal {e1}% more damage.',
   'draft.turmkanoniere.name': 'Tower gunners',
   'draft.turmkanoniere.desc': 'Tower damage +{e1}%. Only offered once a tower stands.',
   'wave.siege': 'Siege wave in {time} · {x}× strength',

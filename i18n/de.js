@@ -241,7 +241,7 @@ KF_I18N.de = {
   'draft.aushebung.name': 'Aushebung',
   'draft.aushebung.desc': 'Versorgungslimit +{e1}. Nachteil: Einheiten −{d1} % Lebenspunkte.',
   'draft.weitschuss.name': 'Weitschuss',
-  'draft.weitschuss.desc': 'Fernkämpfer greifen auch mit {e1} Einheit mehr vor sich an.',
+  'draft.weitschuss.desc': 'Fernkämpfer verursachen {e1} % mehr Schaden.',
   'draft.turmkanoniere.name': 'Turmkanoniere',
   'draft.turmkanoniere.desc': 'Turmschaden +{e1} %. Nur im Angebot, wenn ein Turm steht.',
   'wave.siege': 'Belagerungswelle in {time} · {x}-fache Stärke',

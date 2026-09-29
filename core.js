@@ -59,7 +59,7 @@ function freshState(diff, seed){
 
 function create(){
   let S = freshState(null, 1);
-  const FX = { on: true, shots: [], fx: [], baseFlash: { p: [0, 0, 0], e: 0 } };
+  const FX = { on: true, shots: [], fx: [], baseFlash: { p: [0, 0, 0], e: 0 }, lunge: new Map() };
 
   const rnd = () => { const [v, s] = nextRandom(S.rng); S.rng = s; return v; };
   function log(key, params){
@@ -134,7 +134,6 @@ function create(){
   const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost')));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
-  const rangedRows   = side => C.RANGED_RANGE_ROWS + (side === 'p' ? mAdd('rangedRows') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const xpNeed       = n => xpForLevel(n) * mMul('xpNeed');
   const xpProgress   = () => ({ level: S.level, cur: S.xpTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
@@ -401,47 +400,7 @@ function create(){
     for (const u of S.units) if (u.side === 'e' && u.lane === lane && u.hp > 0) x = Math.min(x, u.x - C.ROW_GAP);
     return Math.max(PBW, x);
   }
-  function nearestInLane(side, lane, x, range){
-    let best = null, bd = Infinity;
-    for (const u of S.units){
-      if (u.hp <= 0 || u.side !== side || u.lane !== lane) continue;
-      const dd = Math.abs(u.x - x);
-      if (dd <= range && dd < bd){ bd = dd; best = u; }
-    }
-    return best;
-  }
   const shot = s => { if (FX.on) FX.shots.push(s); };
-
-  function updateTurrets(dt){
-    // Gegnerischer Turm steht an der Mitte: zuerst Einheiten der Mitte, sonst die nächste in einer anderen Lane (REQ-43)
-    S.enemyTurretCd -= dt;
-    if (S.enemyTurretCd <= 0){
-      let tgt = nearestInLane('p', GATE, W - EBW, C.ENEMY_TURRET.range), bd = Infinity;
-      if (!tgt) for (const u of S.units){
-        if (u.side !== 'p' || u.hp <= 0) continue;
-        const dd = W - EBW - u.x;
-        if (dd <= C.ENEMY_TURRET.range && dd < bd){ bd = dd; tgt = u; }
-      }
-      if (tgt){
-        tgt.hp -= diffCfg().turretDmg * enemyDmgMult(); tgt.flash = 0.12;
-        shot({ x0: W - EBW / 2, lane0: GATE, x1: tgt.x, lane: tgt.laneF, t: 0, dur: 0.18, turret: true });
-        S.enemyTurretCd = C.ENEMY_TURRET.cd;
-      }
-    }
-    // Eigene Türme: nur Gegner der eigenen Lane, inaktiv solange der Abschnitt gefallen ist (REQ-13.2)
-    for (const lane of C.TOWER_LANES){
-      if (!towerActive(lane)) continue;
-      S.turretCd[lane] = (S.turretCd[lane] || 0) - dt;
-      if (S.turretCd[lane] > 0) continue;
-      // Türme: zuerst Gegner der eigenen Lane, sonst Gegner in der Mitte in Reichweite (REQ-43)
-      const tgt = nearestInLane('e', lane, PBW, turretRange(lane)) || nearestInLane('e', GATE, PBW, turretRange(lane));
-      if (tgt){
-        tgt.hp -= turretDmg(lane) * (tgt.type === 'werfer' ? mMul('turretVsRanged') : 1); tgt.flash = 0.12;
-        shot({ x0: PBW - 9, lane0: lane, x1: tgt.x, lane: tgt.laneF, t: 0, dur: 0.18, turret: true });
-        S.turretCd[lane] = turretCd(lane);
-      }
-    }
-  }
 
   /* Schaden an einem Abschnitt der eigenen Basis. Ist eine Mauer gefallen, trifft es das Tor (REQ-13.3). */
   function hitSection(lane, dmg){
@@ -460,14 +419,16 @@ function create(){
   function hitUnit(u, target){
     let dmg = u.dmg;
     if (u.side === 'p'){
-      dmg *= mMul('dmgVsUnits');
+      dmg *= mMul('dmgVsUnits') * (u.ranged ? mMul('rangedDmg') : 1);
       if (u.formSize >= (OPT.kriegstrommeln ? OPT.kriegstrommeln.condition.value : Infinity)) dmg *= mMul('drumsDmg');   // Kriegstrommeln
     } else if (!target.ranged && target.row === 0 && target.rowSize === C.FORMATION_ROW_MAX) dmg /= mMul('shieldHp');        // Schildwall
     target.hp -= dmg; target.flash = 0.12;
     if (u.ranged) shot({ x0: u.x, x1: target.x, lane: u.laneF, t: 0, dur: 0.3 });
+    else lunge(u);
   }
   function hitBase(u){
-    if (u.side === 'p'){ S.enemyBaseHp -= u.dmg * mMul('dmgVsBase'); FX.baseFlash.e = 0.12; }
+    if (!u.ranged) lunge(u);
+    if (u.side === 'p'){ S.enemyBaseHp -= u.dmg * mMul('dmgVsBase') * (u.ranged ? mMul('rangedDmg') : 1); FX.baseFlash.e = 0.12; }
     else {
       hitSection(u.lane, u.dmg);
       if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
@@ -476,7 +437,7 @@ function create(){
   }
 
   /* Bewegung und Kampf aller Formationen. Die Formation hält, sobald die vorderste Reihe Kontakt hat.
-     Die ganze vorderste Reihe greift an; Fernkämpfer, solange höchstens rangedRows Reihen vor ihnen stehen (REQ-42). */
+     Gekämpft wird je Einheit in resolveCombat (REQ-5.05). */
   /* Lane-übergreifender Kampf (REQ-43): Ohne Ziel in der eigenen Lane innerhalb von SUPPORT_RANGE wechselt eine Formation in eine
      Nachbar-Lane mit Gegner in diesem Abstand (von oben oder unten nur in die Mitte). Ziele in der eigenen Lane gehen immer vor;
      nach dem Kampf kehrt die Formation zurück. Der Wechsel ist eine Querbewegung, währenddessen kämpft die Formation nicht. */
@@ -500,12 +461,93 @@ function create(){
     const step = dt / C.LANE_SHIFT_S;
     f.laneF = Math.abs(f.lane - f.laneF) <= step ? f.lane : f.laneF + Math.sign(f.lane - f.laneF) * step;
   }
+  /* ---------- Einzelsimulation (REQ-5.05) ----------
+     Jede Einheit wählt ihr Ziel selbst: den nächsten Gegner der eigenen Lane in Reichweite, bei Gleichstand die niedrigste Id.
+     Ein Ziel bleibt, bis es fällt oder die Reichweite verlässt. Nahkämpfer brauchen Kontakt (MELEE_REACH), Fernkämpfer schießen
+     über eigene Reihen. Ohne Einheit in Reichweite greift eine Einheit die Basis an, wenn diese in Reichweite ist.
+     Alle Angriffe eines Ticks werden aus dem Zustand zu Tickbeginn bestimmt und danach gemeinsam angewendet; keine Seite hat
+     einen Zugvorteil. Türme wählen ebenso einzelne Einheiten. Ziele liegen als Ids in einer Map außerhalb des Spielstands. */
+  let targets = new Map();
+  const reachOf = u => u.ranged ? u.range : C.MELEE_REACH;
+  const fighting = u => u.hp > 0 && u.laneF === u.lane;        // während der Querbewegung weder Angreifer noch Ziel
+  /* Je Seite und Lane die kampffähigen Einheiten, nach x sortiert: Zielsuche per Binärsuche statt über alle Einheiten */
+  function laneIndex(side){
+    const idx = Array.from({ length: LANES }, () => []);
+    for (const u of S.units) if (u.side === side && fighting(u)) idx[u.lane].push(u);
+    for (const a of idx) a.sort((p, q) => p.x - q.x || p.id - q.id);
+    return idx;
+  }
+  /* Nächste Einheit zu x innerhalb von reach; bei gleichem Abstand die niedrigste Id */
+  function nearestIn(arr, x, reach){
+    let lo = 0, hi = arr.length;
+    while (lo < hi){ const m = (lo + hi) >> 1; if (arr[m].x < x) lo = m + 1; else hi = m; }
+    let best = null, bd = Infinity;
+    const take = u => { const d = Math.abs(u.x - x); if (d > reach) return false; if (d < bd || (d === bd && u.id < best.id)){ bd = d; best = u; } return d <= bd; };
+    for (let i = lo; i < arr.length && take(arr[i]); i++);
+    for (let i = lo - 1; i >= 0 && take(arr[i]); i--);
+    return best;
+  }
+  const byId = new Map();
+  function keepTarget(key, x, reach, lanes){
+    const id = targets.get(key), tg = id !== undefined ? byId.get(id) : null;
+    return tg && fighting(tg) && lanes.includes(tg.lane) && Math.abs(tg.x - x) <= reach ? tg : null;
+  }
+  function resolveCombat(dt){
+    byId.clear();
+    for (const u of S.units) byId.set(u.id, u);
+    const idx = { p: laneIndex('p'), e: laneIndex('e') };
+    const attacks = [];
+    // 1. Ziele bestimmen, Zustand zu Tickbeginn
+    for (const u of S.units){
+      u.flash = Math.max(0, u.flash - dt);
+      if (u.hp <= 0) continue;
+      u.cd -= dt;
+      if (u.cd > 0 || u.laneF !== u.lane) continue;
+      const reach = reachOf(u), foes = idx[u.side === 'p' ? 'e' : 'p'][u.lane];
+      const tg = keepTarget(u.id, u.x, reach, [u.lane]) || nearestIn(foes, u.x, reach);
+      if (tg){ targets.set(u.id, tg.id); attacks.push({ u, tg }); u.cd = u.cdMax; continue; }
+      targets.delete(u.id);
+      if ((baseX(u.side) - u.x) * dirOf(u.side) <= reach){ attacks.push({ u, base: true }); u.cd = u.cdMax; }
+    }
+    // Gegnerischer Turm an der Mitte: zuerst Einheiten der Mitte, sonst die nächste einer anderen Lane (REQ-43)
+    S.enemyTurretCd -= dt;
+    if (S.enemyTurretCd <= 0){
+      const x = W - EBW, r = C.ENEMY_TURRET.range, all = [GATE, ...C.LANE_ORDER.filter(l => l !== GATE)];
+      // behaltenes Ziel einer anderen Lane zählt nur, solange die Mitte frei ist (Rangfolge wie REQ-5.05, Punkt 1)
+      const mid = nearestIn(idx.p[GATE], x, r), kept = keepTarget('eT', x, r, all);
+      let tg = kept && (kept.lane === GATE || !mid) ? kept : mid;
+      if (!tg){ let bd = Infinity; for (const l of all) if (l !== GATE){ const c = nearestIn(idx.p[l], x, r); if (c && (x - c.x < bd || (x - c.x === bd && c.id < tg.id))){ bd = x - c.x; tg = c; } } }
+      if (tg){ targets.set('eT', tg.id); attacks.push({ turret: 'e', tg, dmg: diffCfg().turretDmg * enemyDmgMult() }); S.enemyTurretCd = C.ENEMY_TURRET.cd; }
+    }
+    // Eigene Türme: zuerst Gegner der eigenen Lane, sonst der Mitte; inaktiv, solange der Abschnitt gefallen ist (REQ-13.2, REQ-43)
+    for (const lane of C.TOWER_LANES){
+      if (!towerActive(lane)) continue;
+      S.turretCd[lane] = (S.turretCd[lane] || 0) - dt;
+      if (S.turretCd[lane] > 0) continue;
+      const r = turretRange(lane), key = 'pT' + lane;
+      const own = nearestIn(idx.e[lane], PBW, r), kept = keepTarget(key, PBW, r, [lane, GATE]);
+      const tg = (kept && (kept.lane === lane || !own) ? kept : own) || nearestIn(idx.e[GATE], PBW, r);
+      if (tg){ targets.set(key, tg.id); attacks.push({ turret: lane, tg, dmg: turretDmg(lane) * (tg.type === 'werfer' ? mMul('turretVsRanged') : 1) }); S.turretCd[lane] = turretCd(lane); }
+    }
+    // 2. Alle Angriffe gemeinsam anwenden; überschüssiger Schaden verfällt
+    for (const a of attacks){
+      if (a.turret !== undefined){
+        a.tg.hp -= a.dmg; a.tg.flash = 0.12;
+        shot(a.turret === 'e' ? { x0: W - EBW / 2, lane0: GATE, x1: a.tg.x, lane: a.tg.laneF, t: 0, dur: 0.18, turret: true }
+                              : { x0: PBW - 9, lane0: a.turret, x1: a.tg.x, lane: a.tg.laneF, t: 0, dur: 0.18, turret: true });
+      } else if (a.base) hitBase(a.u);
+      else hitUnit(a.u, a.tg);
+    }
+    for (const key of [...targets.keys()]) if (!byId.has(key) && typeof key === 'number') targets.delete(key);
+  }
+  /* Ausfallschritt im Nahkampf (nur Darstellung, außerhalb des Spielstands) */
+  function lunge(u){ if (FX.on) FX.lunge.set(u.id, 0); }
+
   function updateForms(dt){
-    const aheads = new Map();
     layoutAll();
     for (const f of S.forms) chooseLane(f);
     for (const f of S.forms){
-      if (!arrived(f)){ shiftLane(f, dt); f.fighting = false; f.moving = true; aheads.set(f.id, null); continue; }
+      if (!arrived(f)){ shiftLane(f, dt); f.fighting = false; f.moving = true; continue; }
       const dir = dirOf(f.side), reach = frontReach(f), ahead = enemyAhead(f);
       const baseD = (baseX(f.side) - f.x) * dir;
       const contact = !!ahead && ahead.d <= reach;
@@ -519,33 +561,9 @@ function create(){
         f.x += dir * step;
         f.moving = step > 0;
       }
-      aheads.set(f.id, ahead);
     }
     layoutAll();
-    for (const f of S.forms){
-      if (!arrived(f)) continue;
-      const dir = dirOf(f.side), ahead = aheads.get(f.id), rows = rangedRows(f.side);
-      const tgtFront = ahead ? frontOf(ahead.f).filter(u => u.hp > 0) : [];
-      for (const u of S.units){
-        if (u.form !== f.id || u.hp <= 0) continue;
-        u.cd -= dt;
-        u.flash = Math.max(0, u.flash - dt);
-        if (u.cd > 0) continue;
-        const inFront = u.row === 0, rangedOk = u.ranged && u.row <= rows;
-        if (!inFront && !rangedOk) continue;
-        const dist = ahead ? ahead.d + u.row * C.ROW_GAP : Infinity;
-        const reach = u.ranged ? u.range : C.MELEE_REACH;
-        if (tgtFront.length && dist <= reach){
-          const live = tgtFront.filter(t => t.hp > 0);
-          if (!live.length) continue;
-          u.cd = u.cdMax;
-          hitUnit(u, live[u.col % live.length]);
-        } else if ((baseX(f.side) - u.x) * dir <= reach && !(tgtFront.length && dist <= reach + C.ROW_GAP)){
-          u.cd = u.cdMax;
-          hitBase(u);
-        }
-      }
-    }
+    resolveCombat(dt);
     mergeForms();
     for (const u of S.units){
       if (u.hp > 0 || u.dead) continue;
@@ -726,7 +744,6 @@ function create(){
       log('log.alarm');
     }
     spawnEnemies();
-    updateTurrets(dt);
     updateForms(dt);
     applyConditionals(dt);
     checkReveals();
@@ -748,7 +765,7 @@ function create(){
     S = freshState(diff, seed);
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
-    FX.shots = []; FX.fx = [];
+    FX.shots = []; FX.fx = []; FX.lunge.clear(); targets = new Map();
     log('log.start', { diff: '@diff.' + diff + '.name' });
   }
   function adopt(saved){
@@ -784,7 +801,7 @@ function create(){
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, interestRate,
-    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     offlineHours, turretDmg, turretRange, turretCd,

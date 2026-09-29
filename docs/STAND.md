@@ -12,7 +12,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | I5.2 | Umbenennung zu EP | 5.02 | fertig |
 | I5.3 | Drei Bänder, Aufteilung von `ui.js` | 5.03 | fertig |
 | I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | fertig |
-| I5.5 | Einzelsimulation | 5.05 | offen |
+| I5.5 | Einzelsimulation | 5.05 | fertig |
 | I5.6 | Armee als gemeinsame Welle | 5.06 | offen |
 | I5.7 | Universität | 5.07 | offen |
 | I5.8 | Balancing-Serie | 5.08 | offen |
@@ -46,6 +46,9 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.5: `npm test` 93/93 (neu: zwei gegen einen, nächstes Ziel, Gleichstand und Zielbindung, symmetrisches Duell, Kontakt und Nachrücken, Turm mit
+  Einzelziel, gleicher Seed = gleiche Partie, Tick ≤ 1 ms), Browser-Prüfung grün. Kurzsimulation mit 200 Partien: 144 Siege, 56 Niederlagen,
+  **0 offen**, Dauer 1:39 min. Tick-Zeit mit 2 × 60 Einheiten: Median 0,11 ms, p95 0,25 ms (Basislinie 0,09–0,11 / 0,24–0,34).
 - I5.4: `npm test` 85/85, Browser-Prüfung 166/166, Kurzsimulation unverändert. Neue Prüfpunkte: Bau aus der Welt in genau zwei Klicks (Platz bleibt
   ausgewählt, Abriss sichtbar), aus dem Knopfraster in genau zwei Klicks (Kaserne mit Ausbau im Kontextkopf), nicht bezahlbare Optionen sichtbar, gesperrt
   und mit fehlender Menge, Bau vollständig per Tastatur (Pfeiltasten im Raster, Enter wählt, Enter baut).
@@ -117,3 +120,13 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
     Fokus nicht, damit sich nichts unter dem Zeiger verschiebt.
 17. **Kontextkopf im Reiter Bauen:** Für Bauplätze erscheint er auch dann im Reiter Bauen, wenn das Gebäude einen eigenen Reiter hat (Schmiede, Universität).
     So bleibt der Platz nach dem Bau ausgewählt und zeigt Abriss, ohne dass der Reiter wechselt. Die Upgrades der Schmiede stehen im Reiter Schmiede.
+18. **Bewegung bleibt bis I5.6 bei den Formationen aus v0.5** (gemeinsames Tempo, Halt bei Kontakt der vordersten Reihe, Lane-Wechsel als Formation).
+    Neu ist nur der Kampf: jede Einheit wählt ihr Ziel selbst, hat ihre eigene Abklingzeit, und alle Angriffe eines Ticks werden gleichzeitig angewendet.
+    Regel (b) „Gegner einer anderen Lane“ läuft bis I5.6 über den Lane-Wechsel der ganzen Formation.
+19. **Reihenregel für Fernkämpfer entfällt** (REQ-5.05, Punkt 3, ersetzt REQ-12.4): Fernkämpfer schießen über alle eigenen Reihen, begrenzt durch ihre Reichweite.
+    `RANGED_RANGE_ROWS` ist entfernt. Die Karte **Weitschuss**, die diese Regel lockerte, liefe ins Leere; sie gibt jetzt **+20 % Schaden der Fernkämpfer**.
+    Das ist eine Änderung an einer bestehenden Karte, keine neue Karte.
+20. **Rangfolge vor Zielbindung:** Ein behaltenes Ziel aus einer nachrangigen Lane (Turm: Nachbar-Lane statt eigener) wird aufgegeben, sobald in der
+    vorrangigen Lane ein Gegner in Reichweite ist. Innerhalb derselben Lane bleibt das Ziel, bis es fällt oder die Reichweite verlässt.
+21. **Gleichzeitigkeit:** Ziele werden aus dem Zustand zu Tickbeginn bestimmt, danach werden alle Treffer angewendet. Wirkungen, die erst durch den Treffer
+    entstehen (Stacheln der Mauer), treffen den Angreifer im selben Schritt.

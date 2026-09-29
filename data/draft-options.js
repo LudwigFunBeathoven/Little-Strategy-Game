@@ -60,7 +60,7 @@ const KF_DRAFT_OPTIONS = [
   { id: 'vorposten', category: 'armee', rarity: 'common', nameKey: 'draft.vorposten.name', descKey: 'draft.vorposten.desc',
     tiers: [{ effect: [{ stat: 'spawnOffset', add: 150 }], drawback: [{ stat: 'wallHp', mul: 0.85 }] }] },
   { id: 'weitschuss', category: 'armee', rarity: 'rare', nameKey: 'draft.weitschuss.name', descKey: 'draft.weitschuss.desc',
-    tiers: [{ effect: [{ stat: 'rangedRows', add: 1 }] }] },
+    tiers: [{ effect: [{ stat: 'rangedDmg', mul: 1.2 }] }] },
   { id: 'sappeure', category: 'armee', rarity: 'rare', nameKey: 'draft.sappeure.name', descKey: 'draft.sappeure.desc',
     condition: { type: 'enemyHalf' }, tiers: [{ effect: [{ stat: 'siegeDps', add: 2 }] }, { effect: [{ stat: 'siegeDps', add: 5 }] }] },
   { id: 'veteranen', category: 'armee', rarity: 'rare', nameKey: 'draft.veteranen.name', descKey: 'draft.veteranen.desc',

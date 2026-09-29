@@ -83,7 +83,8 @@ Iteration 4: Vergleichswert einer Karte ist „angeboten und nicht gewählt“ (
 ## Kampf in Formationen (REQ-42)
 Alle Einheiten einer Welle in derselben Lane bilden eine Formation, die sich als Block mit `FORMATION_SPEED` bewegt.
 Vorn Nahkämpfer in Reihen zu höchstens `FORMATION_ROW_MAX`, dahinter Fernkämpfer; die Reihen werden laufend neu gebildet.
-Die ganze vorderste Reihe greift an, Fernkämpfer mit höchstens `RANGED_RANGE_ROWS` Reihen vor sich. Formationen, die eine
+Seit I5.5 kämpft jede Einheit einzeln (`resolveCombat`): eigenes Ziel (nächster Gegner der Lane in Reichweite, Gleichstand → niedrigste Id),
+eigene Abklingzeit, alle Angriffe eines Ticks gleichzeitig; Nahkämpfer brauchen Kontakt, Fernkämpfer schießen über eigene Reihen. Formationen, die eine
 stehende eigene Formation einholen, verschmelzen. Transiente Daten (vorderste Reihe, Ziel) liegen nicht im Spielstand.
 
 ## Arbeitsweise in Inkrementen

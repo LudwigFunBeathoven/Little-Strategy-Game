@@ -170,8 +170,11 @@ function unitPos(u){
   const spread = laneH() * 0.15, mid = ((u.rowSize || 1) - 1) / 2;
   return { x: wx(u.x), y: laneMid(lane) + ((u.col || 0) - mid) * spread };
 }
+const LUNGE_S = 0.18;
 function drawUnit(u){
   const p = unitPos(u), r = Math.max(3.5, Math.min(8, laneH() * 0.055)), dir = u.side === 'p' ? 1 : -1;
+  const lt = G.FX.lunge.get(u.id);
+  if (lt !== undefined && !reduceMotion) p.x += dir * r * 0.9 * Math.sin(Math.PI * lt / LUNGE_S);   // Ausfallschritt im Nahkampf (REQ-5.05)
   if (p.x < realmR() - 4) return;                        // noch im Tor
   ctx.fillStyle = u.flash > 0 ? COL.ink : (u.side === 'p' ? COL.steel : COL.rust);
   if (!u.ranged){
@@ -210,6 +213,7 @@ function draw(realDt, now){
   FX.baseFlash.e = Math.max(0, FX.baseFlash.e - realDt);
   const left = Cam.x - 40, right = Cam.x + cw + 40;
   for (const u of G.S.units){ const x = wx(u.x); if (x > left && x < right) drawUnit(u); }
+  for (const [id, lt] of FX.lunge){ if (lt + realDt >= LUNGE_S) FX.lunge.delete(id); else FX.lunge.set(id, lt + realDt); }
   FX.shots = FX.shots.filter(s => (s.t += realDt) < s.dur);
   for (const s of FX.shots){
     const p = s.t / s.dur, y1 = laneMid(s.lane ?? GATE);

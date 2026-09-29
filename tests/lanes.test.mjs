@@ -44,8 +44,9 @@ test('Verteilung für n = 1 bis 6 nach REQ-12.1', () => {
   assert.deepEqual(Array.from(K.distribute(6, BOT)), [MID, TOP, BOT, MID, TOP, BOT]);
 });
 
-test('Fernkämpfer mit einer Reihe vor sich greift an, mit zwei nicht', () => {
-  for (const [melee, expectHit] of [[5, true], [6, false]]){
+// REQ-5.05 ersetzt REQ-12.4: Fernkämpfer schießen über alle eigenen Reihen, begrenzt nur durch ihre Reichweite
+test('Fernkämpfer schießen über eigene Reihen, solange das Ziel in Reichweite ist', () => {
+  for (const [melee, expectHit] of [[5, true], [6, true]]){
     const { G } = game();
     quiet(G);
     const e = G.addFormation('e', MID, ['laeufer'], 500);
