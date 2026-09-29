@@ -47,6 +47,13 @@ const KF_CONFIG = {
   SUPPORT_RANGE: 60,            // eine Formationslänge: drei Reihen plus Kontakt
   LANE_SHIFT_S: 1.2,            // Dauer der Querbewegung in eine Nachbar-Lane
   TOWER_RANGE: 120,             // Grundreichweite der eigenen Türme (bisher PLAYER_TURRET.range)
+
+  /* Spielwelt und Kamera (REQ-46) */
+  WORLD_WIDTH_FACTOR: 2,        // die Welt ist doppelt so breit wie der Anzeigebereich
+  DRAG_THRESHOLD_PX: 5,         // ab dieser Mausbewegung ist ein Klick ein Ziehen
+  SCROLL_STEP_PX: 80,           // Pfeiltasten und A/D
+  CAMERA_FOLLOW_RATE: 3,        // „Front folgen“: Annäherung je Sekunde
+  EDGE_MARKER_S: 1.5,           // so lange nach einem Treffer zeigt der Randpfeil einen Abschnitt außerhalb des Bildes
   TARGET_BEHIND_TOLERANCE: 6,
   RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
   GATE_BLOCK_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub

@@ -49,7 +49,6 @@
     font-family:"IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
     font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:1180px; margin:0 auto; padding:24px 16px 48px; display:flex; flex-direction:column; gap:14px;}
   .num{font-family:"IBM Plex Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums;}
   button{font:inherit; color:inherit;}
   :focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
@@ -61,27 +60,18 @@
   .tag{font-family:"IBM Plex Mono", monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass);}
   .meta{display:flex; gap:18px; align-items:baseline; flex-wrap:wrap; font-family:"IBM Plex Mono", monospace; font-size:13px; color:var(--ink-soft);}
   .meta b{color:var(--ink); font-weight:500;}
-  .link{background:none; border:none; padding:0; color:var(--ink-faint); text-decoration:underline; text-underline-offset:3px; cursor:pointer;}
-  .link:hover{color:var(--ink);}
 
   .log{list-style:none; margin:0; padding:0; font-family:"IBM Plex Mono", monospace; font-size:13px; color:var(--ink-faint); min-height:4.4em; display:flex; flex-direction:column; gap:1px;}
   .log li:first-child{color:var(--ink);}
   .log .ts{margin-right:10px; color:var(--ink-faint);}
 
-  /* Schlachtfeld */
-  .front{background:var(--surface); border:1px solid var(--rule); border-radius:6px; overflow:hidden;}
-  #lane{display:block; width:100%; height:300px;}
   /* Wellen-Leiste (REQ-14.1) */
   .wavebar{display:flex; justify-content:space-between; align-items:center; gap:8px 16px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--rule); background:var(--steel-soft);}
   .wavebar .wave-count{font-family:"IBM Plex Mono", monospace; font-size:13.5px; color:var(--steel);}
   .wavebar .wave-count b{font-size:17px; font-weight:600; color:var(--steel);}
   .wavebar .siege{font-family:"IBM Plex Mono", monospace; font-size:13.5px; font-weight:600; color:var(--rust); background:var(--rust-soft); border-radius:4px; padding:3px 8px;}
   .wavebar .siege[hidden]{display:none;}
-  @media (max-width:640px){ #lane{height:240px;} }
 
-  /* HUD */
-  .hud{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr); gap:10px 24px; align-items:end; padding:4px 2px;}
-  @media (max-width:860px){ .hud{grid-template-columns:1fr 1fr;} }
   .res{display:flex; flex-direction:column; gap:2px;}
   .res .big{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; font-size:28px; font-weight:500; line-height:1.05;}
   .res .lbl{font-size:12.5px; color:var(--ink-soft);}
@@ -92,35 +82,9 @@
   .bar{height:7px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
   .bar > i{display:block; height:100%; width:100%; border-radius:4px; transition:width .15s linear;}
   .bar.thin{height:4px;}
-  .walls{display:grid; grid-template-columns:1fr 1fr; gap:3px 12px; margin-top:3px;}
-  .walls .hp-row{font-size:12px; color:var(--ink-soft); white-space:nowrap;}
-  .walls .hp-row .num{font-size:11.5px;}
   .bar.steel > i{background:var(--steel);} .bar.rust > i{background:var(--rust);} .bar.brass > i{background:var(--brass);}
 
-  /* Baugelände */
-  .yard{display:flex; flex-direction:column; gap:8px;}
-  .yard-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;}
-  .slots{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px;}
-  .slot{border:1px dashed var(--rule-strong); border-radius:6px; padding:8px 12px; display:flex; flex-direction:column; gap:3px; min-height:64px;}
-  .slot-body{display:flex; flex-direction:column; gap:2px;}
-  .slot{min-width:0; overflow-wrap:anywhere;}
-  .statline[id]{margin:0;}
-  .slot.built{border-style:solid; border-color:var(--rule); background:var(--surface);}
-  .slot.locked{opacity:.55;}
-  .slot-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
-  .slot-no{font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
-  .slot-cost{font-family:"IBM Plex Mono", monospace; font-size:12.5px; color:var(--ink-soft);}
-  .slot-name{font-weight:600; font-size:16px;}
-  .slot-desc{font-size:13px; color:var(--ink-soft);}
-  .slot-choices{display:flex; gap:6px; flex-wrap:wrap;}
-  .chip{border:1px solid var(--rule-strong); background:var(--surface); border-radius:4px; padding:5px 10px; font-size:13.5px; font-weight:500; cursor:pointer;}
-  .chip:hover:not(:disabled){border-color:var(--brass); background:var(--brass-soft);}
-  .chip:disabled{opacity:.45; cursor:default;}
 
-  /* Panels */
-  .grid{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px; align-items:start;}
-  @media (max-width:1100px){ .grid{grid-template-columns:repeat(2, minmax(0, 1fr));} }
-  @media (max-width:640px){ .grid{grid-template-columns:1fr;} }
   .panel{background:var(--surface); border:1px solid var(--rule); border-radius:6px; padding:16px; display:flex; flex-direction:column; gap:10px;}
   .ph{margin:0; font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;}
   .ph.brass{color:var(--brass);} .ph.steel{color:var(--steel);} .ph.rust{color:var(--rust);} .ph.ink{color:var(--ink-soft);}
@@ -223,12 +187,6 @@
   #tip .tr span:nth-child(odd){color:var(--ink-faint);}
   #tip .tw{color:var(--rust); font-weight:500;}
 
-  /* Bauplätze als Knöpfe (REQ-01) */
-  .slot-btn{font:inherit; color:inherit; text-align:left; background:transparent; box-shadow:0 1px 0 var(--rule);}
-  .slot-btn:hover{border-color:var(--brass); background:var(--brass-soft);}
-  .slot-btn:active{transform:translateY(1px); box-shadow:none;}
-  .slot-btn.built{background:var(--surface);}
-  .slot-cta{font-size:13.5px; font-weight:500; color:var(--ink-soft);}
   .pick{display:grid; grid-template-columns:1fr auto; gap:2px 12px; text-align:left; padding:10px 14px; border:1px solid var(--rule-strong); border-radius:6px; background:var(--surface); cursor:pointer; box-shadow:0 1px 0 var(--rule); min-height:32px;}
   .pick:hover:not([aria-disabled="true"]){border-color:var(--brass); background:var(--brass-soft);}
   .pick b{font-size:15px;} .pick .c{font-family:"IBM Plex Mono", monospace; font-size:12.5px; color:var(--ink-soft); align-self:center;}
@@ -257,10 +215,45 @@
 
   /* REQ-03.5: Klick-Knopf tritt in Phase Spät optisch zurück, bleibt bedienbar */
   .btn-primary.late{background:var(--surface-2); color:var(--ink-soft); padding:8px 14px; font-size:14px;}
+
+  /* Layout Iteration 4 (REQ-46): Spielwelt links, Seitenleiste rechts; die Seite selbst scrollt nicht */
+  html, body{height:100%;}
+  body{overflow:hidden;}
+  .app{display:grid; grid-template-columns:minmax(0, 1fr) 360px; grid-template-rows:auto minmax(0, 1fr); gap:10px 16px;
+       height:100vh; padding-block:12px; padding-inline:16px;}
+  .top{grid-column:1 / -1;}
+  .stage{display:flex; flex-direction:column; gap:6px; min-height:0; min-width:0;}
+  .world-tools{display:flex; justify-content:space-between; align-items:center; gap:8px 16px; flex-wrap:wrap;}
+  .status{display:flex; gap:6px 16px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft);}
+  .hp-mini{display:inline-flex; align-items:center; gap:6px; white-space:nowrap;}
+  .hp-mini .num{font-size:12px; color:var(--ink);}
+  .hp-mini .bar{width:56px; height:5px;}
+  .cam button{display:flex; flex-direction:column; align-items:flex-start; padding:4px 10px;}
+  .cam .btn-label{font-weight:600; font-size:13px;}
+  .cam .expl{font-size:10.5px;}
+  .world{flex:1 1 auto; min-height:260px; position:relative; background:var(--surface); border:1px solid var(--rule); border-radius:6px; overflow:hidden;}
+  #lane{display:block; width:100%; height:100%; cursor:grab; touch-action:none;}
+  #lane.dragging{cursor:grabbing;}
+  .scrollbar{width:100%; margin:0; accent-color:var(--steel);}
+  .log{min-height:0; max-height:5.6em; overflow:hidden;}
+  .side{min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:10px; padding-right:4px;}
+  .panel{background:var(--surface); border:1px solid var(--rule); border-radius:6px; padding:12px 14px; display:flex; flex-direction:column; gap:8px;}
+  .panel[hidden]{display:none;}
+  .lanes-preview{display:grid; grid-template-columns:auto 1fr 1fr; gap:2px 10px; font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--ink-soft);}
+  .lanes-preview b{font-weight:500; color:var(--ink);}
+  .lanes-preview .e{color:var(--rust);} .lanes-preview .p{color:var(--steel);}
+  .ctx-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  #ctxBuild:empty, #ctxDemolish:empty, #ctxNav:empty{display:none;}
+  @media (max-width:900px){
+    body{overflow:auto;}
+    .app{grid-template-columns:minmax(0, 1fr); height:auto;}
+    .world{height:340px; flex:none;}
+    .side{overflow:visible;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app">
   <header class="top">
     <div class="brand">
       <h1>Klammerfront</h1>
@@ -274,90 +267,87 @@
     </div>
   </header>
 
-  <ol class="log" id="log" aria-live="polite"></ol>
-
-  <section class="front">
-    <div class="wavebar" id="waveBar">
-      <span class="wave-count"><span id="waveLabel"></span> <b id="waveIn" class="num"></b></span>
-      <span class="siege num" id="siegeInfo" hidden></span>
-    </div>
-    <canvas id="lane"></canvas>
-  </section>
-
-  <section class="hud">
-    <div class="res"><span class="big" id="material">0</span><span class="lbl"><span data-i18n="hud.material"></span> · <span class="num" id="rate"></span> · <span class="num" id="perClick"></span></span></div>
-    <div class="res"><span class="big" id="scrap">0</span><span class="lbl" id="scrapLabel"></span></div>
-    <div class="hp">
-      <div class="hp-row"><span data-i18n="hud.gate"></span><span class="num" id="hpP1"></span></div>
-      <div class="bar steel"><i id="barP1"></i></div>
-      <div class="walls">
-        <div><div class="hp-row"><span data-i18n="hud.wall0"></span><span class="num" id="hpP0"></span></div><div class="bar steel thin"><i id="barP0"></i></div></div>
-        <div><div class="hp-row"><span data-i18n="hud.wall2"></span><span class="num" id="hpP2"></span></div><div class="bar steel thin"><i id="barP2"></i></div></div>
+  <main class="stage">
+    <div class="world-tools">
+      <div class="status">
+        <span class="hp-mini"><span data-i18n="hud.gate"></span> <b class="num" id="hpP1"></b><span class="bar steel thin"><i id="barP1"></i></span></span>
+        <span class="hp-mini"><span data-i18n="hud.wall0"></span> <b class="num" id="hpP0"></b><span class="bar steel thin"><i id="barP0"></i></span></span>
+        <span class="hp-mini"><span data-i18n="hud.wall2"></span> <b class="num" id="hpP2"></b><span class="bar steel thin"><i id="barP2"></i></span></span>
+        <span class="hp-mini"><span data-i18n="hud.baseE"></span> <b class="num" id="hpE"></b><span class="bar rust thin"><i id="barE"></i></span></span>
+      </div>
+      <div class="seg cam">
+        <button type="button" id="camRealm" data-tooltip="cam:realm"><span class="btn-label" data-i18n="cam.realm"></span><span class="expl" data-i18n="ex.cam.realm"></span></button>
+        <button type="button" id="camFront" data-tooltip="cam:front"><span class="btn-label" data-i18n="cam.front"></span><span class="expl" data-i18n="ex.cam.front"></span></button>
+        <button type="button" id="camFollow" data-tooltip="cam:follow" aria-pressed="false"><span class="btn-label" data-i18n="cam.follow"></span><span class="expl" id="camFollowExpl"></span></button>
       </div>
     </div>
-    <div class="hp">
-      <div class="hp-row"><span data-i18n="hud.baseE"></span><span class="num" id="hpE"></span></div>
-      <div class="bar rust"><i id="barE"></i></div>
-    </div>
-  </section>
+    <div class="world" id="world"><canvas id="lane" tabindex="0" data-tooltip="world"></canvas></div>
+    <input type="range" id="worldScroll" class="scrollbar" min="0" max="1000" step="1" value="0" data-tooltip="scroll">
+    <ol class="log" id="log" aria-live="polite"></ol>
+  </main>
 
-  <section class="yard">
-    <div class="yard-head">
-      <h2 class="ph ink" data-i18n="yard.title"></h2>
-    </div>
-    <div class="slots" id="slots"></div>
-  </section>
-
-  <div class="grid">
-    <section class="panel">
-      <h2 class="ph brass" data-i18n="panel.fertigung"></h2>
+  <aside class="side" id="side">
+    <section class="panel" id="secRes">
+      <h2 class="ph brass" data-i18n="side.res"></h2>
+      <div class="res"><span class="big" id="material">0</span><span class="lbl"><span data-i18n="hud.material"></span> · <span class="num" id="rate"></span> · <span class="num" id="perClick"></span></span></div>
       <button class="btn-primary" id="clickBtn" type="button" data-tooltip="click"><span data-i18n="btn.click"></span> <span class="plus">+<span id="clickHint">1</span></span><span class="expl" id="clickExpl"></span></button>
       <div class="opts" id="optsFertigung"></div>
       <p class="statline" id="factoryStat"></p>
-      <h3 class="sub" id="subKontor" data-i18n="sub.kontor"></h3>
-      <p class="hint" id="hintKontor" data-i18n="hint.kontor"></p>
-      <div class="opts" id="optsKontor"></div>
-    </section>
-
-    <section class="panel">
-      <h2 class="ph steel" data-i18n="panel.front"></h2>
-      <div class="opts" id="optsUnits"></div>
-      <div class="statline"><span data-i18n="front.supply"></span> <b id="queue" class="num">0/3</b> · <span data-i18n="front.field"></span> <b id="ownCount" class="num">0</b> · <span data-i18n="front.losses"></span> <b id="losses" class="num">0</b></div>
-      <h3 class="sub" data-i18n="sub.schmiede"></h3>
-      <p class="hint" id="hintSchmiede" data-i18n="hint.schmiede"></p>
-      <div class="opts" id="optsSchmiede"></div>
-      <h3 class="sub" data-i18n="sub.kaserne"></h3>
-      <p class="hint" id="hintKaserne" data-i18n="hint.kaserne"></p>
-      <div class="opts" id="optsKaserne"></div>
-    </section>
-
-    <section class="panel">
-      <h2 class="ph rust" data-i18n="panel.wall"></h2>
-      <div class="opts" id="optsRepair"></div>
-      <h3 class="sub" data-i18n="sub.mauer"></h3>
-      <div class="opts" id="optsMauer"></div>
-      <h3 class="sub" data-i18n="sub.turm_0"></h3>
-      <div class="opts" id="optsTurm0"></div>
-      <h3 class="sub" data-i18n="sub.turm_2"></h3>
-      <div class="opts" id="optsTurm2"></div>
-    </section>
-
-    <section class="panel">
-      <h2 class="ph ink" data-i18n="panel.levels"></h2>
       <div class="hp">
         <div class="hp-row"><span id="lvlLabel"></span><span class="num" id="lvlProg"></span></div>
         <div class="bar brass"><i id="barLvl"></i></div>
       </div>
+      <p class="hint" id="scrapLabel"></p>
+    </section>
+
+    <section class="panel" id="secWave">
+      <h2 class="ph steel" data-i18n="side.wave"></h2>
+      <div class="wavebar" id="waveBar">
+        <span class="wave-count"><span id="waveLabel"></span> <b id="waveIn" class="num"></b></span>
+        <span class="siege num" id="siegeInfo" hidden></span>
+      </div>
+      <div class="statline"><span data-i18n="front.supply"></span> <b id="queue" class="num">0/3</b> · <span data-i18n="front.field"></span> <b id="ownCount" class="num">0</b> · <span data-i18n="front.losses"></span> <b id="losses" class="num">0</b></div>
+      <div class="lanes-preview" id="wavePreview"></div>
+    </section>
+
+    <section class="panel" id="secUnits">
+      <h2 class="ph steel" data-i18n="side.units"></h2>
+      <div class="opts" id="optsUnits"></div>
+    </section>
+
+    <section class="panel" id="secCtx">
+      <h2 class="ph rust" id="ctxTitle"></h2>
+      <p class="hint" id="ctxText"></p>
+      <div class="diffs" id="ctxBuild"></div>
+      <div id="ctxBuilding">
+        <div class="opts" id="optsSchmiede"></div>
+        <div class="opts" id="optsKaserne"></div>
+        <div class="opts" id="optsKontor"></div>
+        <div class="ctx-actions" id="ctxDemolish"></div>
+      </div>
+      <div id="ctxBase">
+        <div class="opts" id="optsRepair"></div>
+        <h3 class="sub" data-i18n="sub.mauer"></h3>
+        <div class="opts" id="optsMauer"></div>
+        <h3 class="sub" data-i18n="sub.turm_0"></h3>
+        <div class="opts" id="optsTurm0"></div>
+        <h3 class="sub" data-i18n="sub.turm_2"></h3>
+        <div class="opts" id="optsTurm2"></div>
+      </div>
+      <div class="ctx-actions" id="ctxNav"></div>
+    </section>
+
+    <section class="panel" id="secCards">
+      <h2 class="ph ink" data-i18n="panel.levels"></h2>
       <p class="hint" id="uniInfo"></p>
-      <h3 class="sub" data-i18n="level.chosen"></h3>
       <div class="chosen" id="chosen"></div>
     </section>
-  </div>
 
-  <footer>
-    <span id="footVersion"></span>
-    <span data-i18n="foot.save"></span>
-  </footer>
+    <footer>
+      <span id="footVersion"></span>
+      <span data-i18n="foot.save"></span>
+    </footer>
+  </aside>
 </div>
 
 <div class="hintbox" id="hintBox" role="status" aria-live="polite" hidden>

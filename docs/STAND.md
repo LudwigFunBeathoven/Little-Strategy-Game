@@ -10,9 +10,9 @@ Stand von Iteration 3: `docs/archiv/STAND-iteration-3.md`.
 | I4.1 | „Halten“ entfernen | 41 | P0 | fertig |
 | I4.2 | Formation | 42 | P0 | fertig |
 | I4.3 | Lane-übergreifender Kampf | 43 | P0 | fertig |
-| I4.4 | Automatisierung und große Armeen | 44 | P1 | fertig (Front folgen und Bildzeit mit I4.6) |
-| I4.5 | Kartenausbau | 45 | P1 | fertig (Seitenleiste mit I4.6) |
-| I4.6 | Vertikales Layout, Reich in der Spielwelt, Scrollen | 46 | P1 | offen |
+| I4.4 | Automatisierung und große Armeen | 44 | P1 | fertig |
+| I4.5 | Kartenausbau | 45 | P1 | fertig |
+| I4.6 | Vertikales Layout, Reich in der Spielwelt, Scrollen | 46 | P1 | fertig |
 | I4.7 | Gestaffelte Einführung | 47 | P2 | offen |
 | I4.8 | Simulation, Balancing, Bericht, Merge-Bereitschaft | 48 | P2 | offen |
 
@@ -38,6 +38,10 @@ node tools/simulate.mjs --suite kurz
 - I4.4: `npm test` 68/68, Browser-Prüfung grün, Kurzsimulation 19 Siege, 1 Niederlage, 0 offen.
 
 - I4.5: `npm test` 79/79, Browser-Prüfung grün, Kurzsimulation 17 Siege, 3 Niederlagen, 0 offen. 41 Karten nach `docs/plan-iteration-4.md`.
+
+- I4.6: `npm test` 79/79, Browser-Prüfung grün (neu: 1280×720 und 1920×1080 ohne waagrechte Bildlaufleiste, Mausrad, Ziehen,
+  Pfeiltasten/A/D, Scrollleiste, Sprungknöpfe, „Front folgen“, Bauplatz-Klick ohne Scrollen, Kontextfeld mit Tooltips und Erklärzeilen).
+  Bildzeit mit 60 Einheiten im Bild: Median 0,3 ms (1280×720) bzw. 0,7 ms (1920×1080), Soll ≤ 20 ms. Kurzsimulation 17 Siege, 3 Niederlagen, 0 offen.
 
 ## Abweichungen und Auslegungen
 1. **Suche nach „hold“ wörtlich genommen:** Auch Namen, die das Wort nur zufällig enthalten, sind umbenannt: `xpThreshold` → `xpTotal`,
@@ -74,3 +78,9 @@ node tools/simulate.mjs --suite kurz
 18. **Synergie:** Die Karte selbst zählt mit. Bei 0 gewählten Karten (Karte nicht gewählt) ist die Wirkung 0, bei 1 Karte +perCard.
 19. **Schildwall** wirkt als Schadensminderung (Schaden ÷ 1,2) für Nahkämpfer einer vollen vordersten Reihe; das entspricht +20 % Lebenspunkten.
 20. **Instandhaltung** repariert wie der Knopf (100 LP), unterliegt also auch der Abklingzeit von 5 s.
+21. **Bauplätze nur über die Spielwelt:** Die bisherigen Bauplatz-Karten entfallen; ein Bauplatz wird per Klick in der gezeichneten Welt gewählt,
+    Bauen, Ausbauen und Abriss laufen im Kontextfeld der Seitenleiste. Mit der Tastatur allein sind Bauplätze damit nicht erreichbar
+    (Scrollen schon). Falls das gebraucht wird: Auswahl per Zifferntaste 1–9 wäre ein kleiner Nachtrag.
+22. **Bildzeit** wird einschließlich Ausführung der Zeichenbefehle gemessen (`getImageData` nach jedem Bild), sonst misst man nur deren Aufzeichnung.
+    Die Messung im Kopflos-Browser nutzt Software-Zeichnung; echte Geräte mit Grafikkarte liegen eher darunter.
+23. **Abriss in zwei Schritten** im Kontextfeld (erster Klick fragt, zweiter reißt ab) statt eines Bestätigungsdialogs.

@@ -178,12 +178,10 @@ function tipContent(id){
     case 'click':
       return { title: t('btn.click'), body: t('tip.click.body', { max: C.MAX_CLICKS_PER_SECOND }), rows: [[t('tip.m.perClick'), fmt1(G.clickPower())], [t('tip.m.matRate'), fmt1(G.matRate())]],
                reason: S.status !== 'running' ? t('tip.notRunning') : null };
-    case 'slot': {
-      const sl = S.slots[a];
-      if (!sl) return { title: t('slot.label', { n: Number(a) + 1 }), body: t('tip.slot.empty'), rows: [[t('tip.m.nextFactory'), costText('material', G.factoryCost())]] };
-      return { title: t(`bld.${sl.type}.name`), body: bldEffect(sl.type, true) + '. ' + t('tip.slot.built'),
-               rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
-    }
+    case 'cam': return { title: t('cam.' + a), body: t('tip.cam.' + a) };
+    case 'world': return { title: t('tip.world.title'), body: t('tip.world.body') };
+    case 'scroll': return { title: t('tip.scroll.title'), body: t('tip.scroll.body') };
+    case 'ctxBase': return { title: t('ctx.toBase'), body: t('tip.ctxBase.body') };
     case 'pick': {
       const cost = G.buildCost(a), block = G.buildBlock(Number(b), a);
       return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }),
@@ -480,16 +478,12 @@ function buildUI(){
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
   for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
-  for (let i = 0; i < KlammerCore.SLOTS; i++){
-    const card = document.createElement('button');
-    card.type = 'button'; card.className = 'slot slot-btn'; card.dataset.tooltip = 'slot:' + i;
-    card.innerHTML = '<span class="slot-head"><span class="slot-no"></span><span class="slot-cost"></span></span><span class="slot-body"></span>';
-    card.addEventListener('click', () => { if (!isDis(card)) openSlotDialog(i); });
-    $('slots').appendChild(card);
-  }
   $('clickBtn').addEventListener('click', () => { if (!isDis($('clickBtn'))){ G.doClick(); render(); } });
   $('hintOk').addEventListener('click', dismissHint);
   $('newBtn').addEventListener('click', () => openStart(G.S.status === 'running'));
+  $('camRealm').addEventListener('click', () => { Cam.follow = false; Cam.goTo(0); });
+  $('camFront').addEventListener('click', () => { Cam.follow = false; Cam.goTo(Cam.frontTarget()); });
+  $('camFollow').addEventListener('click', () => { Cam.follow = !Cam.follow; render(); });
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
     for (const [id, spec] of Object.entries(C.UNITS)) if (e.key === spec.key){ G.spawn(id); render(); }
@@ -507,34 +501,60 @@ function bldEffect(type, built){
   }
   return '';
 }
-let slotKey = '';
-function renderSlots(){
-  const S = G.S, cost = G.factoryCost();
-  const key = lang + JSON.stringify(S.slots) + '|' + cost + '|' + S.status + '|' + fmt1(G.factoryRate()) + '|' + G.kaserneLevel() + '|' + S.lvl.qualitaet;
-  if (key === slotKey) return;
-  slotKey = key;
-  const cards = $('slots').children;
-  for (let i = 0; i < cards.length; i++){
-    const card = cards[i], body = card.querySelector('.slot-body'), costEl = card.querySelector('.slot-cost');
-    card.querySelector('.slot-no').textContent = t('slot.label', { n: i + 1 });
-    const sl = S.slots[i];
-    body.innerHTML = '';
-    setDis(card, S.status !== 'running');
-    const ex = document.createElement('span'); ex.className = 'expl';
-    if (sl){
-      card.className = 'slot slot-btn built';
-      costEl.textContent = '';
-      const nm = document.createElement('span'); nm.className = 'slot-name'; nm.textContent = t(`bld.${sl.type}.name`);
-      ex.textContent = t('ex.slot.built', { effect: bldEffect(sl.type, true), refund: refundText(G.refundFor(i)) });
-      body.append(nm, ex);
-    } else {
-      card.className = 'slot slot-btn';
-      costEl.textContent = '';
-      const cta = document.createElement('span'); cta.className = 'slot-cta'; cta.textContent = t('slot.choose');
-      ex.textContent = t('ex.slot.empty', { cost: costText('material', cost) });
-      body.append(cta, ex);
+
+/* ================= Kontext-Panel (REQ-46): Bauplatz, Gebäude oder Basis ================= */
+let ctxSel = { kind: 'base' }, ctxKey = '', demolishArmed = false;
+function selectPlot(i){ ctxSel = { kind: 'plot', i }; demolishArmed = false; ctxKey = ''; render(); }
+function selectBase(){ ctxSel = { kind: 'base' }; demolishArmed = false; ctxKey = ''; render(); }
+function renderContext(){
+  const S = G.S, plot = ctxSel.kind === 'plot', sl = plot ? S.slots[ctxSel.i] : null;
+  $('ctxBase').hidden = plot;
+  $('ctxBuilding').hidden = !sl;
+  for (const g of ['schmiede', 'kaserne', 'kontor']) $(GROUP_BOX[g]).hidden = !(sl && sl.type === g);
+  if (!plot){
+    $('ctxTitle').textContent = t('ctx.base');
+    $('ctxText').textContent = t('ctx.baseText');
+  } else if (!sl){
+    $('ctxTitle').textContent = t('slot.label', { n: ctxSel.i + 1 });
+    $('ctxText').textContent = t('slot.dialogText');
+  } else {
+    $('ctxTitle').textContent = t('ctx.building', { name: t(`bld.${sl.type}.name`), n: ctxSel.i + 1 });
+    $('ctxText').textContent = `${t(`bld.${sl.type}.desc`)} ${bldEffect(sl.type, true)}.`;
+  }
+  // Knöpfe, die sich nur mit dem Zustand ändern, werden bei Bedarf neu gebaut
+  const key = [lang, JSON.stringify(ctxSel), JSON.stringify(S.slots), Math.floor(S.material), demolishArmed, S.status, JSON.stringify(S.unlocked), S.level].join('|');
+  if (key === ctxKey) return;
+  ctxKey = key;
+  const build = $('ctxBuild'), dem = $('ctxDemolish'), nav = $('ctxNav');
+  build.innerHTML = ''; dem.innerHTML = ''; nav.innerHTML = '';
+  if (plot && !sl){
+    const i = ctxSel.i;
+    for (const type of C.BUILDINGS){
+      const block = G.buildBlock(i, type), cost = G.buildCost(type);
+      if (block === 'standing' || block === 'hidden') continue;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `pick:${type}:${i}`;
+      const nm = document.createElement('b'); nm.textContent = type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${type}.name`);
+      const c = document.createElement('span'); c.className = 'c';
+      const d = document.createElement('span'); d.className = 'd'; d.textContent = t(`bld.${type}.desc`);
+      const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.line', { effect: bldEffect(type, false), cost: costText('material', cost) });
+      b.append(nm, c, d, ex);
+      const why = buildReason(block, cost);
+      if (why){ const w = document.createElement('span'); w.className = 'w'; w.textContent = why; b.appendChild(w); }
+      setDis(b, !!block);
+      b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ ctxKey = ''; render(); } });
+      build.appendChild(b);
     }
   }
+  if (sl){
+    const i = ctxSel.i, refund = refundText(G.refundFor(i));
+    if (!demolishArmed) dem.appendChild(mkButton('btn-ghost', t('slot.demolish'), () => { demolishArmed = true; showHint('demolish'); ctxKey = ''; render(); }, 'demolish:' + i, t('ex.demolish', { refund })));
+    else {
+      dem.appendChild(mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); demolishArmed = false; ctxKey = ''; render(); }, 'confirmDemolish:' + i, t('ex.demolish', { refund })));
+      dem.appendChild(mkButton('btn-ghost', t('slot.cancel'), () => { demolishArmed = false; ctxKey = ''; render(); }, 'cancel', t('ex.cancel')));
+    }
+  }
+  if (plot) nav.appendChild(mkButton('btn-ghost', t('ctx.toBase'), selectBase, 'ctxBase', t('ex.ctx.toBase')));
 }
 
 /* Draft (REQ-02) */
@@ -620,57 +640,36 @@ function showDialog({ eyebrow, title, text, body, actions, focus, wide }){
   $('modal').hidden = false;
   (focus || act.lastChild || mb.firstChild)?.focus();
 }
-function openSlotDialog(i){
-  const S = G.S, sl = S.slots[i];
-  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel', t('ex.cancel'));
-  if (!sl){
-    const list = document.createElement('div'); list.className = 'diffs';
-    for (const type of C.BUILDINGS){
-      const block = G.buildBlock(i, type), cost = G.buildCost(type);
-      if (block === 'standing') continue;
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `pick:${type}:${i}`;
-      const nm = document.createElement('b'); nm.textContent = type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${type}.name`);
-      const c = document.createElement('span'); c.className = 'c';
-      const d = document.createElement('span'); d.className = 'd'; d.textContent = t(`bld.${type}.desc`);
-      const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.line', { effect: bldEffect(type, false), cost: costText('material', cost) });
-      b.append(nm, c, d, ex);
-      const why = buildReason(block, cost);
-      if (why){ const w = document.createElement('span'); w.className = 'w'; w.textContent = why; b.appendChild(w); }
-      setDis(b, !!block);
-      b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ slotKey = ''; closeModal(); render(); } });
-      list.appendChild(b);
-    }
-    showDialog({ eyebrow: t('yard.title'), title: t('slot.label', { n: i + 1 }), text: t('slot.dialogText'),
-                 body: [list], actions: [cancel], focus: list.querySelector('.pick:not([aria-disabled="true"])') || cancel });
-  } else {
-    const refund = refundText(G.refundFor(i));
-    const del = mkButton('btn-ghost', t('slot.demolish'), () => openDemolishConfirm(i), 'demolish:' + i, t('ex.demolish', { refund }));
-    showDialog({ eyebrow: t('slot.label', { n: i + 1 }), title: t(`bld.${sl.type}.name`),
-                 text: t('slot.bldText', { desc: t(`bld.${sl.type}.desc`), refund }), actions: [del, cancel], focus: cancel });
-  }
-}
-function openDemolishConfirm(i){
-  const sl = G.S.slots[i];
-  if (!sl) return closeModal();
-  const refund = refundText(G.refundFor(i));
-  showHint('demolish');
-  const ok = mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); slotKey = ''; closeModal(); render(); }, 'confirmDemolish:' + i, t('ex.demolish', { refund }));
-  const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel', t('ex.cancel'));
-  showDialog({ eyebrow: t('slot.label', { n: i + 1 }), title: t('demolish.title', { name: t(`bld.${sl.type}.name`) }),
-               text: t('demolish.text', { refund, percent: pct(C.REFUND_RATE) }), actions: [cancel, ok], focus: cancel });
-}
-
 /* Wellen-Leiste über dem Schlachtfeld: Countdown und Befehl (REQ-14.1, REQ-15.4) */
 function renderWave(){
   const S = G.S;
-  $('waveLabel').textContent = t('wave.next', { n: S.waveNo + 1 });
+  $('waveLabel').textContent = t('wave.next', { n: S.ownWaveNo + 1 });
   $('waveIn').textContent = clock(Math.ceil(G.waveIn()));
   // Belagerungswelle: Countdown ab der Ankündigung (REQ-19.3)
   const siege = G.siegeAnnounced();
   $('siegeInfo').hidden = !siege;
   if (siege) $('siegeInfo').textContent = t('wave.siege', { time: clock(Math.ceil(G.siegeIn())), x: C.SIEGE_STRENGTH });
+  renderPreview();
 
+}
+
+/* Vorschau je Lane (REQ-14.3): angekündigte Gegnerwelle und Verteilung der eigenen Warteschlange; ■ Nahkampf, ▲ Fernkampf */
+const GLYPH = { laeufer: '\u25A0', werfer: '\u25B2' };
+let previewKey = '';
+function countLine(group, lane){
+  const n = {};
+  for (const q of group) if (q.lane === lane) n[q.type] = (n[q.type] || 0) + 1;
+  return Object.keys(C.UNITS).filter(k => n[k]).map(k => `${GLYPH[k]}\u00D7${n[k]}`).join(' ') || '\u2013';
+}
+function renderPreview(){
+  const S = G.S, enemy = S.nextEnemy || [], own = G.assignLanes(S.queue.map(q => q.type), G.strongerLane(enemy));
+  const key = lang + JSON.stringify(enemy) + JSON.stringify(own);
+  if (key === previewKey) return;
+  previewKey = key;
+  const box = $('wavePreview'); box.innerHTML = '';
+  const cell = (cls, text) => { const e = document.createElement('span'); if (cls) e.className = cls; e.textContent = text; box.appendChild(e); };
+  cell('', ''); cell('p', t('preview.own')); cell('e', t('preview.enemy'));
+  for (let l = 0; l < C.LANE_COUNT; l++){ cell('', t('lane.' + l)); cell('p', countLine(own, l)); cell('e', countLine(enemy, l)); }
 }
 
 function logParams(entry){
@@ -692,7 +691,6 @@ function render(){
   const auto = G.autoPressCps();
   $('clickExpl').textContent = auto > 0 ? t('ex.clickAuto', { n: fmt1(auto) }) : t('ex.click', { n: cpText });
   $('newExpl').textContent = t('ex.newGame');
-  $('scrap').textContent = fmt(S.scrap);
   $('clock').textContent = clock(S.t);
   $('kills').textContent = fmt(S.kills);
   $('ownCount').textContent = S.units.filter(u => u.side === 'p').length;
@@ -701,7 +699,7 @@ function render(){
   renderWave();
   $('diffLabel').textContent = S.status === 'setup' ? '' : t(`diff.${S.diff}.name`);
   $('eraLabel').textContent = S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) });
-  $('scrapLabel').textContent = t('hud.scrapLevel', { n: S.level });
+  $('scrapLabel').textContent = t('hud.scrapLevel', { n: S.level, amount: fmt(S.scrap) });
   setDis($('clickBtn'), !running);
   $('clickBtn').classList.toggle('late', G.phase() === 'late');   // REQ-03.5: tritt in Phase Spät zurück
 
@@ -733,11 +731,6 @@ function render(){
   }
 
   $('factoryStat').textContent = t('fab.stat', { n: G.factoryCount(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) });
-  $('hintSchmiede').hidden = G.has('schmiede');
-  $('hintKaserne').hidden = G.has('kaserne');
-  const kontorKnown = G.has('kontor') || !!S.unlocked.kontor;
-  $('hintKontor').hidden = kontorKnown;
-  $('subKontor').hidden = false;
 
   const eMax = G.diffCfg().enemyBaseHp;
   for (let i = 0; i < C.LANE_COUNT; i++){
@@ -754,7 +747,9 @@ function render(){
   $('uniInfo').textContent = t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() });
   renderChosen();
 
-  renderSlots();
+  renderContext();
+  $('camFollow').setAttribute('aria-pressed', String(Cam.follow));
+  $('camFollowExpl').textContent = t(Cam.follow ? 'ex.cam.followOn' : 'ex.cam.followOff');
   Tip.refresh();
 
   const logKey = lang + S.log.map(l => l.t + l.key).join('|');
@@ -778,186 +773,225 @@ function render(){
   }
 }
 
-/* ================= Zeichnen ================= */
-/* Drei Lanes übereinander (REQ-11.4). Links die eigene Basis mit Mauer oben, Tor und Mauer unten, rechts die gegnerische Basis. */
+/* ================= Zeichnen: Spielwelt mit Reich und Kamera (REQ-46) =================
+   Die Welt ist WORLD_WIDTH_FACTOR-mal so breit wie der Anzeigebereich. Links liegt das Reich (3×3-Raster in Draufsicht,
+   von der Mauer umschlossen), zur Lane-Seite Mauer oben mit Turm, Tor, Mauer unten mit Turm. Rechts die gegnerische Basis. */
 const cv = $('lane'), ctx = cv.getContext('2d');
 let cw = 0, ch = 0, dpr = 1, COL = {};
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH, GATE = C.GATE_LANE;
-const DRAW = { top: 14, bottom: 22, entry: 70 };   // Ränder in px; entry = Strecke, auf der Einheiten vom Tor in ihre Lane laufen
+const PAD = 10, ENTRY = 70;          // Rand in px; Strecke (Spieleinheiten), auf der eigene Einheiten vom Tor in ihre Lane ziehen
 
 function readColors(){
   const cs = getComputedStyle(document.documentElement);
-  for (const k of ['surface', 'surface-2', 'ink', 'ink-faint', 'rule', 'rule-strong', 'steel', 'rust', 'ground', 'brass'])
+  for (const k of ['bg', 'surface', 'surface-2', 'ink', 'ink-soft', 'ink-faint', 'rule', 'rule-strong', 'steel', 'steel-soft', 'rust', 'rust-soft', 'ground', 'brass', 'brass-soft'])
     COL[k] = cs.getPropertyValue('--' + k).trim();
 }
 function resize(){
   const r = cv.getBoundingClientRect();
   dpr = Math.min(2, window.devicePixelRatio || 1);
-  cw = r.width; ch = r.height;
+  cw = Math.max(1, r.width); ch = Math.max(1, r.height);
   cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+  Cam.goTo(Cam.x);
 }
-const laneH = () => (ch - DRAW.top - DRAW.bottom) / C.LANE_COUNT;
-const laneTop = l => DRAW.top + l * laneH();
-const groundY = l => laneTop(l) + laneH() - 8;
+/* Geometrie in Weltpixeln */
+const laneH     = () => (ch - 2 * PAD) / C.LANE_COUNT;
+const laneTop   = l => PAD + l * laneH();
+const laneMid   = l => laneTop(l) + laneH() / 2;
+const realmSize = () => ch - 2 * PAD;
+const realmR    = () => PAD + realmSize();
+const worldW    = () => cw * C.WORLD_WIDTH_FACTOR;
+const laneScale = () => (worldW() - realmR() - PAD) / (W - PBW);
+const wx        = x => realmR() + (x - PBW) * laneScale();
+
+/* Kamera: Position = linker Rand des Bildes in Weltpixeln */
+const Cam = {
+  x: 0, follow: false,
+  max(){ return Math.max(0, worldW() - cw); },
+  goTo(x){ this.x = Math.max(0, Math.min(this.max(), x)); },
+  /* vorderste eigene Formation etwa bei zwei Dritteln des Bildes */
+  frontTarget(){
+    let fx = -Infinity;
+    for (const f of G.S.forms) if (f.side === 'p') fx = Math.max(fx, f.x);
+    return fx === -Infinity ? 0 : wx(fx) - cw * 0.65;
+  },
+  update(dt){ if (this.follow) this.goTo(this.x + (this.frontTarget() - this.x) * Math.min(1, dt * C.CAMERA_FOLLOW_RATE)); },
+};
+
 function hpBar(x, y, w, frac, col){
   ctx.fillStyle = COL['surface-2']; ctx.fillRect(x, y, w, 4);
   ctx.fillStyle = col; ctx.fillRect(x, y, w * Math.max(0, Math.min(1, frac)), 4);
 }
-/* Bodenhöhe einer Einheit: eigene Einheiten laufen vom Tor in ihre Lane; Gegner einer gefallenen Mauer ziehen zum Tor */
-/* Bodenhöhe einer Einheit: Lane der Formation (auch zwischen zwei Lanes) plus Platz in der Reihe quer zur Lane (REQ-42).
-   Eigene Einheiten laufen vom Tor in ihre Lane; Gegner einer gefallenen Mauer ziehen zum Tor. */
-function unitGround(u){
-  let lane = u.laneF ?? u.lane;
-  const toGate = u.side === 'p' || (u.lane !== GATE && !G.sectionUp(u.lane));
-  if (toGate){ const p = Math.max(0, Math.min(1, (u.x - PBW) / DRAW.entry)); lane = GATE + (lane - GATE) * p; }
-  const spread = laneH() * 0.13, mid = ((u.rowSize || 1) - 1) / 2;
-  return laneTop(lane) + laneH() * 0.62 + ((u.col || 0) - mid) * spread;
-}
-function drawLanes(){
-  const sx = cw / W;
-  for (let l = 0; l < C.LANE_COUNT; l++){
-    const gy = groundY(l);
-    ctx.fillStyle = COL.ground; ctx.fillRect(PBW * sx, gy, (W - EBW - PBW) * sx, 2);
-    ctx.fillStyle = COL.rule;
-    for (let x = 200; x < W - EBW; x += 100) ctx.fillRect(x * sx, gy + 4, 1, 4);
-    if (l > 0){
-      ctx.strokeStyle = COL.rule; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
-      ctx.beginPath(); ctx.moveTo(PBW * sx, laneTop(l)); ctx.lineTo((W - EBW) * sx, laneTop(l)); ctx.stroke();
-      ctx.setLineDash([]);
-    }
+/* Gebäude-Icons aus v0.3 (main), unverändert übernommen */
+function drawBuilding(kind, cx, gy, s){
+  ctx.fillStyle = COL.steel;
+  if (kind === 'fabrik'){
+    const w = 20 * s, h = 12 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.beginPath();
+    for (let i = 0; i < 3; i++){ const tx = x + i * w / 3; ctx.moveTo(tx, gy - h); ctx.lineTo(tx, gy - h - 6 * s); ctx.lineTo(tx + w / 3, gy - h); }
+    ctx.fill();
+    ctx.fillRect(x + w - 5 * s, gy - h - 12 * s, 3.5 * s, 12 * s);
+  } else if (kind === 'schmiede'){
+    const w = 18 * s, h = 11 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.beginPath(); ctx.moveTo(x - 2 * s, gy - h); ctx.lineTo(cx, gy - h - 8 * s); ctx.lineTo(x + w + 2 * s, gy - h); ctx.fill();
+    ctx.fillRect(x + 3 * s, gy - h - 9 * s, 3 * s, 6 * s);
+    ctx.fillStyle = COL.brass; ctx.fillRect(cx - 2.5 * s, gy - 6 * s, 5 * s, 6 * s);
+  } else if (kind === 'kaserne'){
+    const w = 20 * s, h = 10 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.fillRect(x + 2 * s, gy - h - 4 * s, w - 4 * s, 4 * s);
+    ctx.fillRect(cx - 0.8 * s, gy - h - 16 * s, 1.6 * s, 12 * s);          // Fahnenmast
+    ctx.fillStyle = COL.brass; ctx.fillRect(cx + 0.8 * s, gy - h - 16 * s, 6 * s, 4 * s);
+  } else if (kind === 'kontor'){
+    const w = 16 * s, h = 14 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - h, w, h);
+    ctx.beginPath(); ctx.moveTo(x - 1 * s, gy - h); ctx.lineTo(x + w / 2, gy - h - 5 * s); ctx.lineTo(x + w + 1 * s, gy - h); ctx.fill();
+    ctx.fillStyle = COL.brass; ctx.beginPath(); ctx.arc(cx, gy - h / 2, 3 * s, 0, Math.PI * 2); ctx.fill();   // Münze
+  } else if (kind === 'universitaet'){
+    const w = 20 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - 3 * s, w, 3 * s);
+    for (let i = 0; i < 4; i++) ctx.fillRect(x + 1.5 * s + i * 5.3 * s, gy - 12 * s, 2.2 * s, 9 * s);
+    ctx.fillRect(x - 1 * s, gy - 14 * s, w + 2 * s, 2.5 * s);
+    ctx.beginPath(); ctx.moveTo(x - 1 * s, gy - 14 * s); ctx.lineTo(cx, gy - 20 * s); ctx.lineTo(x + w + 1 * s, gy - 14 * s); ctx.fill();
   }
 }
-function drawPlayerBase(){
-  const S = G.S, sx = cw / W, w = Math.max(18, PBW * sx * 0.55), x0 = PBW * sx - w;
+
+/* Trefferflächen für Klicks, in Weltpixeln; beim Zeichnen des Reichs gefüllt */
+let plotRects = [], sectionRects = [];
+function drawRealm(){
+  const S = G.S, s = realmSize(), x0 = PAD, y0 = PAD, wt = Math.max(8, s * 0.06), gap = Math.max(4, s * 0.025);
+  ctx.fillStyle = COL['surface-2']; ctx.fillRect(x0, y0, s, s);
+  // Parzellen im 3×3-Raster
+  const inner = s - 2 * wt - 4 * gap, cell = inner / C.GRID_SIZE;
+  plotRects = [];
+  for (let i = 0; i < KlammerCore.SLOTS; i++){
+    const r = Math.floor(i / C.GRID_SIZE), c = i % C.GRID_SIZE;
+    const px = x0 + wt + gap + c * (cell + gap), py = y0 + wt + gap + r * (cell + gap);
+    plotRects.push({ i, x: px, y: py, w: cell, h: cell });
+    const sel = ctxSel.kind === 'plot' && ctxSel.i === i, sl = S.slots[i];
+    ctx.fillStyle = sl ? COL.surface : COL.bg; ctx.fillRect(px, py, cell, cell);
+    ctx.strokeStyle = sel ? COL.brass : COL['rule-strong']; ctx.lineWidth = sel ? 3 : 1;
+    if (!sl) ctx.setLineDash([4, 4]);
+    ctx.strokeRect(px + 0.5, py + 0.5, cell - 1, cell - 1);
+    ctx.setLineDash([]);
+    if (sl) drawBuilding(sl.type, px + cell / 2, py + cell * 0.72, cell / 34);
+    else {
+      ctx.fillStyle = COL['ink-faint'];
+      const k = cell * 0.18, t2 = Math.max(2, cell * 0.04);
+      ctx.fillRect(px + cell / 2 - k, py + cell / 2 - t2 / 2, 2 * k, t2);
+      ctx.fillRect(px + cell / 2 - t2 / 2, py + cell / 2 - k, t2, 2 * k);
+    }
+  }
+  // Mauer rundherum; die rechte Seite besteht aus den drei Abschnitten (REQ-13)
+  ctx.fillStyle = COL.steel;
+  ctx.fillRect(x0, y0, s, wt); ctx.fillRect(x0, y0 + s - wt, s, wt); ctx.fillRect(x0, y0, wt, s);
+  sectionRects = [];
   for (let l = 0; l < C.LANE_COUNT; l++){
-    const top = laneTop(l) + 16, gy = groundY(l), h = gy - top, up = G.sectionUp(l) || l === GATE;
-    if (up){
-      ctx.fillStyle = COL.steel; ctx.fillRect(x0, top, w, h);
-      const mw = w / 3;
-      ctx.fillRect(x0, top - 5, mw, 5); ctx.fillRect(x0 + 2 * mw, top - 5, mw, 5);
-      if (l === GATE){ ctx.fillStyle = COL.surface; ctx.fillRect(x0 + w * 0.3, gy - h * 0.5, w * 0.4, h * 0.5); }
+    const top = laneTop(l), h = laneH(), sx0 = x0 + s - wt, sec = S.sections[l], max = G.sectionMax(l), frac = Math.max(0, sec.hp) / max;
+    sectionRects.push({ lane: l, x: sx0 - wt, y: top, w: wt * 3, h });
+    if (sec.hp > 0 || l === GATE){
+      ctx.fillStyle = COL.steel; ctx.fillRect(sx0, top, wt, h);
+      // Schäden sichtbar: Risse, je mehr Schaden desto mehr
+      const cracks = Math.round((1 - frac) * 8);
+      ctx.fillStyle = COL['rust-soft'];
+      for (let k = 0; k < cracks; k++) ctx.fillRect(sx0 + (k % 2) * wt * 0.45, top + h * (0.08 + 0.11 * k), wt * 0.55, Math.max(2, h * 0.04));
+      if (l === GATE){ ctx.fillStyle = COL.bg; ctx.fillRect(sx0 + wt * 0.2, top + h * 0.3, wt * 0.6, h * 0.4); }
     } else {
       ctx.fillStyle = COL['rule-strong'];            // Trümmer der gefallenen Mauer
-      for (let i = 0; i < 4; i++) ctx.fillRect(x0 + i * w / 4, gy - 6 - (i % 2) * 4, w / 4 - 1, 6 + (i % 2) * 4);
+      for (let k = 0; k < 5; k++) ctx.fillRect(sx0 + (k % 2) * wt * 0.4, top + h * (0.1 + 0.18 * k), wt * 0.6, h * 0.1);
     }
-    if (S.lvl.stacheln > 0 && up){
-      ctx.fillStyle = COL.ink;
-      for (let i = 0; i < 3; i++){ const y = gy - 6 - i * h / 3; ctx.beginPath(); ctx.moveTo(x0 + w, y); ctx.lineTo(x0 + w + 4, y - 2.5); ctx.lineTo(x0 + w, y - 5); ctx.fill(); }
-    }
-    if (G.FX.baseFlash.p[l] > 0){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, top, w - 2, h); }
+    if (G.FX.baseFlash.p[l] > 0){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.strokeRect(sx0, top, wt, h); }
     if (C.TOWER_LANES.includes(l) && G.towerBuilt(l)){
+      const tsz = wt * 1.4;
       ctx.fillStyle = G.towerActive(l) ? COL.ink : COL['ink-faint'];
-      const tx = x0 + w / 2;
-      ctx.fillRect(tx - 5, top - 14, 10, 9);
-      ctx.fillRect(tx + 3, top - 12, 9 + S.lvl['reichweite_' + l] * 2, 3);
+      ctx.fillRect(sx0 + wt / 2 - tsz / 2, top + h / 2 - tsz / 2, tsz, tsz);
+      ctx.fillStyle = COL.bg; ctx.fillRect(sx0 + wt / 2 - tsz / 6, top + h / 2 - tsz / 6, tsz / 3, tsz / 3);
     }
-    hpBar(x0 - 2, laneTop(l) + 2, w + 4, S.sections[l].hp / G.sectionMax(l), COL.steel);
+    hpBar(sx0 + wt + 4, top + 6, Math.min(60, h * 0.5), frac, COL.steel);
   }
+}
+function drawLanes(){
+  const x0 = realmR(), x1 = wx(W - EBW);
+  for (let l = 0; l < C.LANE_COUNT; l++){
+    const top = laneTop(l), h = laneH();
+    ctx.fillStyle = l % 2 ? COL.surface : COL.bg; ctx.fillRect(x0, top, x1 - x0, h);
+    ctx.fillStyle = COL.rule;
+    for (let x = PBW + 100; x < W - EBW; x += 100) ctx.fillRect(wx(x), top + h - 6, 1, 4);
+  }
+  ctx.strokeStyle = COL['rule-strong']; ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+  for (let l = 1; l < C.LANE_COUNT; l++){ ctx.beginPath(); ctx.moveTo(x0, laneTop(l)); ctx.lineTo(x1, laneTop(l)); ctx.stroke(); }
+  ctx.setLineDash([]);
 }
 function drawEnemyBase(){
-  const S = G.S, sx = cw / W;
-  const x0 = (W - EBW) * sx, w = EBW * sx, top = DRAW.top + 16, gy = groundY(C.LANE_COUNT - 1), h = gy - top;
+  const S = G.S, x0 = wx(W - EBW), w = wx(W) - x0, top = PAD, h = ch - 2 * PAD;
   ctx.fillStyle = COL.rust; ctx.fillRect(x0, top, w, h);
-  const mw = w / 5;
-  for (let i = 0; i < 5; i += 2) ctx.fillRect(x0 + i * mw, top - 6, mw, 6);
   ctx.fillStyle = COL.surface;
-  for (let l = 0; l < C.LANE_COUNT; l++) ctx.fillRect(x0 + 3, groundY(l) - 16, 7, 16);
+  for (let l = 0; l < C.LANE_COUNT; l++) ctx.fillRect(x0 + 4, laneMid(l) - 10, Math.min(12, w * 0.3), 20);
   if (G.FX.baseFlash.e > 0){ ctx.strokeStyle = COL.ink; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, top, w - 2, h); }
-  ctx.fillStyle = COL.ink;
-  const tx = x0 + w / 2, ty = groundY(GATE) - laneH() * 0.55;
-  ctx.fillRect(tx - 5, ty - 5, 10, 9);
-  ctx.fillRect(tx - 13, ty - 3, 9, 3);
-  hpBar(x0 + 2, DRAW.top + 2, w - 4, S.enemyBaseHp / G.diffCfg().enemyBaseHp, COL.rust);
+  ctx.fillStyle = COL.ink; ctx.fillRect(x0 + w / 2 - 6, laneMid(GATE) - 6, 12, 12);
+  hpBar(x0 - 70, top + 4, 64, S.enemyBaseHp / G.diffCfg().enemyBaseHp, COL.rust);
 }
-function drawUnit(u, now){
-  const sx = cw / W, gy = unitGround(u);
-  const us = Math.max(0.55, Math.min(0.9, sx * 0.9));
-  const px = u.x * sx;
-  const bob = (!reduceMotion && u.moving) ? Math.abs(Math.sin(now / 90 + u.bob)) * 1.5 : 0;
+/* Position einer Einheit: Weltpixel x, Mitte der (auch halben) Lane plus Platz in der Reihe quer zur Lane (REQ-42) */
+function unitPos(u){
+  let lane = u.laneF ?? u.lane;
+  const toGate = u.side === 'p' || (u.lane !== GATE && !G.sectionUp(u.lane));
+  if (toGate){ const p = Math.max(0, Math.min(1, (u.x - PBW) / ENTRY)); lane = GATE + (lane - GATE) * p; }
+  const spread = laneH() * 0.15, mid = ((u.rowSize || 1) - 1) / 2;
+  return { x: wx(u.x), y: laneMid(lane) + ((u.col || 0) - mid) * spread };
+}
+function drawUnit(u){
+  const p = unitPos(u), r = Math.max(3.5, Math.min(8, laneH() * 0.055)), dir = u.side === 'p' ? 1 : -1;
+  if (p.x < realmR() - 4) return;                        // noch im Tor
   ctx.fillStyle = u.flash > 0 ? COL.ink : (u.side === 'p' ? COL.steel : COL.rust);
   if (!u.ranged){
-    // Nahkämpfer: Rumpf mit Waffe
-    const bw = 9 * us, bh = 14 * us;
-    ctx.fillRect(px - bw / 2, gy - bh - bob, bw, bh);
-    ctx.beginPath(); ctx.arc(px, gy - bh - 4 * us - bob, 3.4 * us, 0, Math.PI * 2); ctx.fill();
-    ctx.fillRect(u.side === 'p' ? px + bw / 2 : px - bw / 2 - 6 * us, gy - bh * 0.7 - bob, 6 * us, 2 * us);
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();                       // Nahkämpfer: Kreis mit Schild
+    ctx.fillRect(p.x + dir * r * 0.9 - (dir < 0 ? r * 0.5 : 0), p.y - r, r * 0.5, r * 2);
   } else {
-    // Fernkämpfer: Dreieck
-    const bw = 9 * us, bh = 12 * us;
-    ctx.beginPath();
-    ctx.moveTo(px - bw / 2, gy - bob); ctx.lineTo(px + bw / 2, gy - bob); ctx.lineTo(px, gy - bh - bob);
+    ctx.beginPath(); ctx.moveTo(p.x + dir * r * 1.2, p.y); ctx.lineTo(p.x - dir * r, p.y - r); ctx.lineTo(p.x - dir * r, p.y + r);   // Fernkämpfer: Dreieck
     ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.arc(px, gy - bh - 3.5 * us - bob, 3 * us, 0, Math.PI * 2); ctx.fill();
   }
   if (u.hp < u.maxHp){
-    const w = 14 * us, y = gy - 24 * us - 4;
-    ctx.fillStyle = COL['surface-2']; ctx.fillRect(px - w / 2, y, w, 2);
-    ctx.fillStyle = u.side === 'p' ? COL.steel : COL.rust; ctx.fillRect(px - w / 2, y, w * Math.max(0, u.hp / u.maxHp), 2);
+    ctx.fillStyle = COL['surface-2']; ctx.fillRect(p.x - r, p.y - r - 4, 2 * r, 2);
+    ctx.fillStyle = u.side === 'p' ? COL.steel : COL.rust; ctx.fillRect(p.x - r, p.y - r - 4, 2 * r * Math.max(0, u.hp / u.maxHp), 2);
   }
 }
-/* Vorschau je Lane (REQ-14.3): rechts die angekündigte Gegnerwelle, links die geplante eigene Welle.
-   Symbol je Einheitentyp und Anzahl. */
-function miniIcon(type, x, y, col){
-  ctx.fillStyle = col;
-  if (C.UNITS[type].range > C.RANGED_MIN_RANGE){ ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + 4, y); ctx.lineTo(x, y - 8); ctx.closePath(); ctx.fill(); }
-  else ctx.fillRect(x - 3.5, y - 8, 7, 8);
-}
-function previewCounts(group){
-  const c = Array.from({ length: C.LANE_COUNT }, () => ({}));
-  for (const q of group) c[q.lane][q.type] = (c[q.lane][q.type] || 0) + 1;
-  return c;
-}
-function drawPreviews(){
-  const S = G.S, sx = cw / W;
-  if (S.status === 'setup') return;
-  ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textBaseline = 'alphabetic';
-  const enemy = previewCounts(S.nextEnemy || []);
-  const own = previewCounts(G.assignLanes(S.queue.map(q => q.type), G.strongerLane(S.nextEnemy || [])));
-  for (let l = 0; l < C.LANE_COUNT; l++){
-    const y = laneTop(l) + 18;
-    let x = (W - EBW) * sx - 8;
-    ctx.textAlign = 'right';
-    for (const type of Object.keys(C.UNITS).reverse()){
-      const n = enemy[l][type]; if (!n) continue;
-      ctx.fillStyle = COL.rust; ctx.fillText('×' + n, x, y);
-      x -= ctx.measureText('×' + n).width + 8;
-      miniIcon(type, x, y, COL.rust); x -= 10;
-    }
-    x = PBW * sx + 10;
-    ctx.textAlign = 'left';
-    for (const type of Object.keys(C.UNITS)){
-      const n = own[l][type]; if (!n) continue;
-      miniIcon(type, x, y, COL.steel); x += 7;
-      ctx.fillStyle = COL.steel; ctx.fillText('×' + n, x, y);
-      x += ctx.measureText('×' + n).width + 10;
-    }
+/* Markierungspfeil am Rand, wenn ein Abschnitt außerhalb des Bildes Schaden nimmt (REQ-46) */
+function drawEdgeMarkers(now){
+  const S = G.S;
+  for (const r of sectionRects){
+    if (r.x + r.w > Cam.x) continue;
+    if (S.t - S.sections[r.lane].lastHit > C.EDGE_MARKER_S) continue;
+    const y = r.y + r.h / 2, x = Cam.x + 6, a = reduceMotion ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(now / 160));
+    ctx.globalAlpha = a; ctx.fillStyle = COL.rust;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 16, y - 11); ctx.lineTo(x + 16, y + 11); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
   }
-
 }
 function draw(realDt, now){
   const FX = G.FX;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cw, ch);
-  const sx = cw / W;
+  ctx.fillStyle = COL.bg; ctx.fillRect(0, 0, cw, ch);
+  ctx.setTransform(dpr, 0, 0, dpr, -Cam.x * dpr, 0);
   drawLanes();
-  drawPlayerBase();
+  drawRealm();
   drawEnemyBase();
   for (let l = 0; l < C.LANE_COUNT; l++) FX.baseFlash.p[l] = Math.max(0, FX.baseFlash.p[l] - realDt);
   FX.baseFlash.e = Math.max(0, FX.baseFlash.e - realDt);
-  for (const u of G.S.units) drawUnit(u, now);
-  drawPreviews();
+  const left = Cam.x - 40, right = Cam.x + cw + 40;
+  for (const u of G.S.units){ const x = wx(u.x); if (x > left && x < right) drawUnit(u); }
   FX.shots = FX.shots.filter(s => (s.t += realDt) < s.dur);
   for (const s of FX.shots){
-    const p = s.t / s.dur, gy = groundY(s.lane);
+    const p = s.t / s.dur, y1 = laneMid(s.lane ?? GATE);
     if (s.turret){
-      const y0 = s.lane0 === s.lane ? laneTop(s.lane) + 8 : groundY(s.lane0) - laneH() * 0.55;
+      const x0 = s.lane0 === undefined ? wx(s.x0) : (s.x0 >= W - EBW - 1 ? wx(s.x0) : realmR() - 4), y0 = laneMid(s.lane0 ?? GATE);
       ctx.strokeStyle = COL.ink; ctx.globalAlpha = 1 - p; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(s.x0 * sx, y0); ctx.lineTo(s.x1 * sx, gy - 8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(wx(s.x1), y1); ctx.stroke();
       ctx.globalAlpha = 1;
     } else {
-      const x = (s.x0 + (s.x1 - s.x0) * p) * sx, y = gy - 12 - Math.sin(p * Math.PI) * Math.min(22, laneH() * 0.45);
-      ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+      const x = wx(s.x0 + (s.x1 - s.x0) * p);
+      ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.arc(x, y1 - Math.sin(p * Math.PI) * laneH() * 0.12, 2, 0, Math.PI * 2); ctx.fill();
     }
   }
   FX.fx = FX.fx.filter(f => (f.t += realDt) < 0.4);
@@ -966,14 +1000,62 @@ function draw(realDt, now){
       const p = f.t / 0.4;
       ctx.strokeStyle = f.side === 'p' ? COL.steel : COL.rust;
       ctx.globalAlpha = 1 - p; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(f.x * sx, groundY(f.lane) - 8, 3 + p * 12, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(wx(f.x), laneMid(f.lane), 3 + p * 12, 0, Math.PI * 2); ctx.stroke();
       ctx.globalAlpha = 1;
     }
   }
+  drawEdgeMarkers(now);
   ctx.fillStyle = COL['ink-faint'];
   ctx.font = '11px "IBM Plex Mono", monospace';
-  ctx.textAlign = 'left';  ctx.fillText(t('lane.player'), 6, ch - 6);
-  ctx.textAlign = 'right'; ctx.fillText(t('lane.enemy'), cw - 6, ch - 6);
+  ctx.textAlign = 'right'; ctx.fillText(t('lane.enemy'), wx(W - EBW) - 6, ch - 4);
+}
+
+/* ================= Scrollen (REQ-46): Mausrad, Ziehen ab DRAG_THRESHOLD_PX, Pfeiltasten und A/D, Scrollleiste ================= */
+function worldPoint(e){ const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left + Cam.x, y: e.clientY - r.top }; }
+function handleWorldClick(e){
+  const p = worldPoint(e), hit = r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+  const plot = plotRects.find(hit);
+  if (plot) return selectPlot(plot.i);
+  if (sectionRects.find(hit)) selectBase();
+}
+(() => {
+  let down = null, dragging = false;
+  const userScroll = x => { Cam.follow = false; Cam.goTo(x); };
+  cv.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = { x: e.clientX, camX: Cam.x }; dragging = false; });
+  window.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - down.x;
+    if (!dragging && Math.abs(dx) >= C.DRAG_THRESHOLD_PX){ dragging = true; cv.classList.add('dragging'); }
+    if (dragging) userScroll(down.camX - dx);
+  });
+  window.addEventListener('pointerup', e => {
+    if (!down) return;
+    if (!dragging && e.target === cv) handleWorldClick(e);
+    down = null; dragging = false; cv.classList.remove('dragging');
+  });
+  cv.addEventListener('wheel', e => {
+    e.preventDefault();
+    userScroll(Cam.x + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY));
+  }, { passive: false });
+  document.addEventListener('keydown', e => {
+    if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.target === $('worldScroll')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'arrowleft' || k === 'a'){ userScroll(Cam.x - C.SCROLL_STEP_PX); e.preventDefault(); }
+    if (k === 'arrowright' || k === 'd'){ userScroll(Cam.x + C.SCROLL_STEP_PX); e.preventDefault(); }
+  });
+  $('worldScroll').addEventListener('input', e => userScroll(Number(e.target.value) / 1000 * Cam.max()));
+})();
+function syncScrollbar(){
+  const v = String(Math.round(Cam.max() ? Cam.x / Cam.max() * 1000 : 0)), el = $('worldScroll');
+  if (el.value !== v && document.activeElement !== el) el.value = v;
+}
+/* Bildzeit messen (REQ-44): Median über n Zeichnungen, für die Browser-Prüfung */
+function benchDraw(n = 60){
+  const times = [];
+  // getImageData erzwingt das Ausführen der Zeichenbefehle, sonst misst man nur deren Aufzeichnung
+  for (let i = 0; i < n; i++){ const t0 = performance.now(); draw(1 / 60, t0); ctx.getImageData(0, 0, 1, 1); times.push(performance.now() - t0); }
+  times.sort((a, b) => a - b);
+  return times[Math.floor(times.length / 2)];
 }
 
 /* ================= Hauptschleife ================= */
@@ -986,7 +1068,9 @@ function frame(now){
     while (acc >= C.TICK_S){ G.tick(C.TICK_S); acc -= C.TICK_S; }
   }
   uiAcc += dt;
+  Cam.update(dt);
   draw(dt, now);
+  syncScrollbar();
   if (uiAcc >= C.UI_REFRESH_S){ uiAcc = 0; render(); }
   requestAnimationFrame(frame);
 }
@@ -1000,12 +1084,14 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', save);
 window.addEventListener('resize', resize);
+if (window.ResizeObserver) new ResizeObserver(resize).observe($('world'));
 if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', readColors);
 new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
 setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
 // Schnittstelle für automatisierte Browser-Tests
-window.__kf = { G, C, t, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, get lang(){ return lang; } };
+window.__kf = { G, C, t, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, selectPlot, selectBase,
+                get plotRects(){ return plotRects; }, get ctxSel(){ return ctxSel; }, get lang(){ return lang; } };
 
 setLang(lang);
 buildUI();

@@ -48,13 +48,12 @@ for (const lang of ['de', 'en']){
   await p.click('#hintOk');
   check(await p.evaluate(() => document.querySelector('#hintBox').hidden), `[${lang}] Hinweis lässt sich wegklicken`);
 
-  // Bauplatz-Dialog und Kartenwahl: Erklärzeilen auch dort
-  await p.evaluate(() => { document.querySelectorAll('.slot-btn')[8].click(); });
-  await p.waitForTimeout(200);
-  const dlgExpl = await p.evaluate(() => __kf.explAudit());
-  check(dlgExpl.length === 0, `[${lang}] Bau-Dialog: jeder Knopf mit Erklärzeile${show(dlgExpl)}`);
-  await p.keyboard.press('Escape');
-  await p.evaluate(() => { document.querySelector('#modal').hidden = true; });
+  // Kontextfeld: leerer Bauplatz, bebauter Bauplatz, Basis – Erklärzeilen und Tooltips auch dort
+  for (const sel of [() => __kf.selectPlot(__kf.G.S.slots.findIndex(s => !s)), () => __kf.selectPlot(__kf.G.S.slots.findIndex(s => s && s.type === 'schmiede')), () => __kf.selectBase()]){
+    await p.evaluate(sel); await p.waitForTimeout(150);
+    const ex = await p.evaluate(() => __kf.explAudit()), tt = await p.evaluate(() => __kf.tooltipAudit());
+    check(ex.length === 0 && tt.length === 0, `[${lang}] Kontextfeld ${await p.evaluate(() => JSON.stringify(__kf.ctxSel))}: Erklärzeilen und Tooltips${show(ex.concat(tt))}`);
+  }
 
   await p.locator('#clickBtn').scrollIntoViewIfNeeded();
   await p.mouse.move(2, 2); await p.waitForTimeout(100);
@@ -85,5 +84,64 @@ for (const lang of ['de', 'en']){
   check(errors.length === 0, `[${lang}] keine Fehler in der Konsole${show(errors)}`);
   await ctx.close();
 }
+// REQ-46: Layout, Scrollen, Bauplatz-Klick, Bildzeit
+for (const [w, h] of [[1280, 720], [1920, 1080]]){
+  const ctx = await b.newContext({ viewport: { width: w, height: h } });
+  const p = await ctx.newPage();
+  const errors = [];
+  p.on('pageerror', e => errors.push(e.message));
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.click('.card .btn-primary'); await p.waitForTimeout(200);
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; });
+  const noH = await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.body.scrollWidth <= innerWidth);
+  check(noH, `[${w}×${h}] keine waagrechte Bildlaufleiste`);
+  const vis = await p.evaluate(() => { const r = document.querySelector('#lane').getBoundingClientRect(), s = document.querySelector('.side').getBoundingClientRect();
+    return r.width > 0 && r.bottom <= innerHeight && s.left >= r.right; });
+  check(vis, `[${w}×${h}] Spielwelt und Seitenleiste nebeneinander im Fenster`);
+  const cam = () => p.evaluate(() => __kf.Cam.x);
+  const box = await p.locator('#lane').boundingBox();
+  await p.evaluate(() => __kf.Cam.goTo(0));
+  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await p.mouse.wheel(0, 200); await p.waitForTimeout(100);
+  check(await cam() > 0, `[${w}×${h}] Mausrad scrollt`);
+  await p.evaluate(() => __kf.Cam.goTo(0));
+  await p.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2); await p.mouse.down();
+  await p.mouse.move(box.x + box.width * 0.8 - 150, box.y + box.height / 2, { steps: 5 }); await p.mouse.up();
+  const dragged = await cam();
+  check(Math.abs(dragged - 150) <= 2, `[${w}×${h}] Ziehen scrollt (${Math.round(dragged)} px)`);
+  await p.evaluate(() => __kf.Cam.goTo(0));
+  await p.locator('#lane').focus();
+  await p.keyboard.press('ArrowRight'); await p.keyboard.press('d');
+  check(Math.abs(await cam() - 2 * (await p.evaluate(() => __kf.C.SCROLL_STEP_PX))) < 1, `[${w}×${h}] Pfeiltaste und D scrollen`);
+  await p.keyboard.press('a'); await p.keyboard.press('ArrowLeft');
+  check(await cam() === 0, `[${w}×${h}] Pfeiltaste und A scrollen zurück`);
+  await p.evaluate(() => { const el = document.querySelector('#worldScroll'); el.value = '1000'; el.dispatchEvent(new Event('input')); });
+  check(Math.abs(await cam() - await p.evaluate(() => __kf.Cam.max())) < 1, `[${w}×${h}] Scrollleiste scrollt`);
+  await p.click('#camRealm'); await p.waitForTimeout(50);
+  check(await cam() === 0, `[${w}×${h}] „Reich“ springt zum Reich`);
+  // Klick auf Bauplatz 5 (Mitte): wählt ihn aus, ohne zu scrollen; kleine Bewegung unter der Schwelle bleibt ein Klick
+  const r = await p.evaluate(() => __kf.plotRects[4]);
+  await p.mouse.move(box.x + r.x + r.w / 2, box.y + r.y + r.h / 2); await p.mouse.down();
+  await p.mouse.move(box.x + r.x + r.w / 2 + 3, box.y + r.y + r.h / 2); await p.mouse.up(); await p.waitForTimeout(100);
+  const sel = await p.evaluate(() => __kf.ctxSel);
+  check(sel.kind === 'plot' && sel.i === 4 && await cam() === 0, `[${w}×${h}] Klick auf Bauplatz wählt ihn aus, ohne zu scrollen`);
+  // Front folgen und Bildzeit mit 60 Einheiten
+  await p.evaluate(() => { const G = __kf.G; G.S.nextWave = Infinity; G.S.nextOwnWave = Infinity;
+    G.addFormation('p', 1, Array(30).fill('laeufer'), 900); G.addFormation('e', 0, Array(30).fill('laeufer'), 1400); });
+  await p.click('#camFront'); await p.waitForTimeout(50);
+  check(await cam() > 0, `[${w}×${h}] „Front“ springt zur vordersten Formation`);
+  await p.evaluate(() => __kf.Cam.goTo(0));
+  await p.click('#camFollow'); await p.waitForTimeout(1500);
+  check(await p.evaluate(() => __kf.Cam.follow) && await cam() > 0, `[${w}×${h}] „Front folgen“ führt die Kamera nach`);
+  await p.click('#camFollow');
+  const seen = await p.evaluate(() => { __kf.Cam.goTo(__kf.Cam.frontTarget()); return __kf.G.S.units.length; });
+  const ms = await p.evaluate(() => __kf.benchDraw(60));
+  check(ms <= 20, `[${w}×${h}] Bildzeit mit ${seen} Einheiten: Median ${ms.toFixed(2)} ms (≤ 20 ms)`);
+  check(errors.length === 0, `[${w}×${h}] keine Fehler${show(errors)}`);
+  await ctx.close();
+}
+
 await b.close();
 process.exit(failed ? 1 : 0);
