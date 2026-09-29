@@ -1,0 +1,81 @@
+300 Partien auf 4 Kernen …
+fertig in 131 s · 66.1 simulierte Spielstunden · 2.0 s Rechenzeit je Spielstunde
+
+STRATEGIE – Zufall gegen gierige Heuristik (Spielertyp durchschnitt)
+
+Schwierigkeit | Strategie | Siegquote | Median Sieg | Abrisse/Partie
+leicht        | zufall    |     100 % |        7:53 |     1.48
+leicht        | gierig    |     100 % |        9:13 |     0.04
+normal        | zufall    |      54 % |        9:41 |     4.24
+normal        | gierig    |      72 % |        9:50 |     0.00
+schwer        | zufall    |      34 % |       10:11 |     7.18
+schwer        | gierig    |      24 % |       13:32 |     0.04
+
+Wahlrate je Gebäudetyp (Anteil der Partien, in denen der Typ gebaut wurde)
+Strategie | fabrik       | schmiede     | kaserne      | universitaet | kontor      
+zufall    | 100 %        | 100 %        | 100 %        | 99 %         | 11 %        
+gierig    | 100 %        | 100 %        | 100 %        | 98 %         | 5 %         
+Universität gebaut (Normal, gierig; Soll ≥ 40 %): 100 %
+
+Siegquote je Gebäudekombination am Partieende (beide Strategien, alle Schwierigkeitsgrade, mind. 3 Partien)
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+schmiede+universitaet  260 Partien  Siegquote  69 %
+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+kontor+schmiede+universitaet   13 Partien  Siegquote  46 %
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+schmiede    8 Partien  Siegquote  13 %
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+universitaet    4 Partien  Siegquote  50 %
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+kontor+schmiede    4 Partien  Siegquote  25 %
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+schmiede+universitaet    4 Partien  Siegquote   0 %
+fabrik+fabrik+fabrik+fabrik+fabrik+fabrik+kaserne+kontor+universitaet    3 Partien  Siegquote  33 %
+
+Draft-Wahlrate je Option (gierige Heuristik; Soll 5–60 %)
+allesAufDieMitte     angeboten    9  gewählt    8   89 %  ← außerhalb
+aushebung            angeboten  120  gewählt   53   44 %
+bastion              angeboten  111  gewählt   41   37 %
+bauleitung           angeboten   45  gewählt   18   40 %
+belagerungsgeraet    angeboten   88  gewählt   26   30 %
+bessereFabriken      angeboten  108  gewählt   66   61 %  ← außerhalb
+blitzkrieg           angeboten    5  gewählt    3   60 %
+dauerauftrag         angeboten   41  gewählt   18   44 %
+doppelschicht        angeboten  131  gewählt   83   63 %  ← außerhalb
+drill                angeboten   96  gewählt   50   52 %
+festungsbau          angeboten   29  gewählt    4   14 %
+fliessband           angeboten  128  gewählt   55   43 %
+gluecksritter        angeboten   34  gewählt    9   26 %
+grossauftrag         angeboten   38  gewählt   25   66 %  ← außerhalb
+grosseArmee          angeboten    7  gewählt    4   57 %
+handelskontor        angeboten   32  gewählt    8   25 %
+instandhaltung       angeboten  121  gewählt   40   33 %
+kriegsanleihe        angeboten   43  gewählt   23   53 %
+kriegserfahrung      angeboten  131  gewählt   51   39 %
+kriegstrommeln       angeboten  108  gewählt   31   29 %
+langeWurfarme        angeboten  103  gewählt   31   30 %
+maurerkolonne        angeboten  121  gewählt   46   38 %
+nachtschicht         angeboten  101  gewählt   26   26 %
+notreserve           angeboten   41  gewählt   13   32 %
+rationalisierung     angeboten   37  gewählt   18   49 %
+sappeure             angeboten   26  gewählt   10   38 %
+scharfschuetzen      angeboten   42  gewählt   10   24 %
+schildwall           angeboten  124  gewählt   41   33 %
+schwerePressen       angeboten  128  gewählt   97   76 %  ← außerhalb
+selbstlaeufer        angeboten   29  gewählt   17   59 %
+serienbau            angeboten  105  gewählt   40   38 %
+soeldnerheer         angeboten   10  gewählt    2   20 %
+taktiker             angeboten   48  gewählt   22   46 %
+turmkanoniere        angeboten  123  gewählt   40   33 %
+verbrannteErde       angeboten    5  gewählt    1   20 %
+veteranen            angeboten   32  gewählt   19   59 %
+vorposten            angeboten   99  gewählt   53   54 %
+weitschuss           angeboten   32  gewählt   14   44 %
+werkmeister          angeboten   32  gewählt    6   19 %
+zeugmeister          angeboten   53  gewählt   19   36 %
+zinnen               angeboten  113  gewählt    4    4 %  ← außerhalb
+
+Wahlrate je Kategorie: wirtschaft 51 % · armee 40 % · basis 27 % · automatisierung 39 % · sonderregel 39 %
+
+Wahlrate je Seltenheit: common 40 % · rare 40 % · legendary 50 %
+
+Median-Abstand zwischen zwei Drafts je Phase (Soll 45–150 s; beide Strategien)
+early     49 s  (300 Abstände)
+mid       54 s  (832 Abstände)
+late     123 s  (838 Abstände)
+Erster Draft (Median): 85 s (Soll 60–90 s)
+

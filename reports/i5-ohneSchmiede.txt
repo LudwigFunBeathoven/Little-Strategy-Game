@@ -1,0 +1,69 @@
+100 Partien auf 4 Kernen …
+fertig in 88 s · 27.3 simulierte Spielstunden · 3.2 s Rechenzeit je Spielstunde
+
+ZIELE – Siegquote und Dauer (gierige Heuristik)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+normal        | durchschnitt |    34 |       66 |     0 |        8:33 |      20:01 | Ende spät. 22:48 | Wellen am Limit  84 %
+
+Patt-Quote (offen nach 30 min): 0 von 100 = 0 % (Soll ≤ 2 %)
+Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): 58 %
+Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): –
+Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): 21 Einheiten
+Fall des ersten Mauerabschnitts (Median der Partien mit Fall): 20:07 · in 13 % der Partien
+Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): 10 %
+
+Forschungen: Siegquote erforscht gegen nicht erforscht (Partien mit Universität; aktiv und durchschnitt)
+r_bann               erforscht   64  nicht   36  Differenz  -34 pp
+r_drill              erforscht   32  nicht   68  Differenz  -41 pp
+r_gluecksgriff       erforscht   17  nicht   83  Differenz  -34 pp
+r_hoersaal           erforscht   10  nicht   90  Differenz  -38 pp
+r_ingenieur          erforscht   38  nicht   62  Differenz  -38 pp
+r_logistik           erforscht   18  nicht   82  Differenz  -35 pp
+r_maurerkunst        erforscht   40  nicht   60  Differenz  -32 pp
+r_metallurgie        erforscht   30  nicht   70  Differenz  -44 pp
+r_neuziehen          erforscht   85  nicht   15  Differenz  -31 pp
+
+Karten: Siegquote angeboten+gewählt gegen angeboten+nicht gewählt (aktiv und durchschnitt; Meldung ab +25 pp, mind. 5 Partien je Seite)
+Karte                Kat./Selt.                 gewählt  nicht  Differenz  |   Stufe 1   Stufe 2   Stufe 3
+allesAufDieMitte     sonderregel/legendary            3      0          –  |         –                    
+aushebung            armee/common                    37     25     +20 pp  |    +20 pp    -15 pp          
+bastion              basis/common                    20     34     -11 pp  |    -11 pp     +0 pp          
+bauleitung           automatisierung/rare            11     13     +10 pp  |    +10 pp                    
+belagerungsgeraet    armee/common                    23     34     +17 pp  |    +17 pp     +0 pp          
+bessereFabriken      wirtschaft/common               43     17     -16 pp  |    -16 pp     +7 pp         –
+blitzkrieg           sonderregel/legendary            2      4     -25 pp  |    -25 pp                    
+dauerauftrag         automatisierung/rare            13     15     +56 pp  |    +56 pp                      ← über +25
+doppelschicht        wirtschaft/common               35     14      +3 pp  |     +3 pp     -2 pp          
+drill                armee/common                    25     24      +7 pp  |     +7 pp    +17 pp          
+festungsbau          basis/rare                       6     25      -3 pp  |     -3 pp                    
+fliessband           automatisierung/common          22     35      -3 pp  |     -3 pp    -20 pp          
+gluecksritter        sonderregel/rare                 6     19     -16 pp  |    -16 pp                    
+grossauftrag         wirtschaft/rare                 17     11     -30 pp  |    -30 pp                    
+grosseArmee          sonderregel/legendary            4      4     +50 pp  |    +50 pp                    
+handelskontor        wirtschaft/rare                 13     22      -1 pp  |     -1 pp                    
+instandhaltung       automatisierung/common          27     38      +2 pp  |     +2 pp    -13 pp          
+kriegsanleihe        wirtschaft/rare                 15      7      +6 pp  |     +6 pp     +0 pp          
+kriegserfahrung      wirtschaft/common               26     24      -7 pp  |     -7 pp     +5 pp          
+kriegstrommeln       armee/common                    22     28      +4 pp  |     +4 pp    +50 pp         –
+langeWurfarme        armee/common                    22     40      -3 pp  |     -3 pp     +0 pp          
+maurerkolonne        basis/common                    24     33     -15 pp  |    -15 pp    -14 pp         –
+nachtschicht         wirtschaft/common               13     35      +3 pp  |     +3 pp     +0 pp          
+notreserve           basis/rare                       5     14     -14 pp  |    -14 pp                    
+rationalisierung     automatisierung/rare            14     19     -17 pp  |    -17 pp                    
+sappeure             armee/rare                       9     17      -1 pp  |     -1 pp         –          
+scharfschuetzen      basis/rare                      14     19     -28 pp  |    -28 pp                    
+schildwall           armee/common                    28     23      +3 pp  |     +3 pp    +17 pp          
+schwerePressen       wirtschaft/common               57      7     -34 pp  |    -34 pp    -20 pp     +0 pp
+selbstlaeufer        automatisierung/rare            14      9     -11 pp  |    -11 pp                    
+serienbau            wirtschaft/common               19     27      +6 pp  |     +6 pp     +0 pp          
+soeldnerheer         sonderregel/legendary            0      9          –  |         –                    
+taktiker             armee/rare                       7     12     +32 pp  |    +32 pp                      ← über +25
+turmkanoniere        basis/common                    21     38     -27 pp  |    -27 pp     +0 pp         –
+verbrannteErde       sonderregel/legendary            2      4     +50 pp  |    +50 pp                    
+veteranen            armee/rare                      16     11     +23 pp  |    +23 pp                    
+vorposten            armee/common                    27     28     +19 pp  |    +19 pp                    
+weitschuss           armee/rare                       9     13     +10 pp  |    +10 pp                    
+zeugmeister          automatisierung/rare             6     14      -5 pp  |     -5 pp                    
+zinnen               basis/common                     2     58     +72 pp  |    +72 pp         –          
+

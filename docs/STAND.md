@@ -15,7 +15,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | I5.5 | Einzelsimulation | 5.05 | fertig |
 | I5.6 | Armee als gemeinsame Welle | 5.06 | fertig |
 | I5.7 | Universität | 5.07 | fertig |
-| I5.8 | Balancing-Serie | 5.08 | offen |
+| I5.8 | Balancing-Serie | 5.08 | fertig |
 | I5.9 | Polish, Fehlerbehebung, Testpaket, Bericht | 5.09–5.11 | offen |
 
 ## Prüfung je Inkrement
@@ -46,6 +46,21 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.8: Abnahmeserie 200 Partien je Feld (3.000 Ziele, 1.800 Phasen, 300 Strategie, 100 ohne Schmiede, 600 Experiment Schwung), 0 offen.
+  Rohdaten `reports/i5-ziele.*`, `i5-phasen.*`, `i5-strategie.*`, `i5-ohneSchmiede.*`, `i5-experiment-schwung.*`; Zwischenrunden mit 50 je Feld
+  `reports/i5-8-start|runde2|runde3-ziele.*`. Rechenzeit: 1.223 s für 3.000 Partien, 2,1 s je simulierter Spielstunde.
+  **Messfehler „101 %“:** Die Spalte „nie/Dauer“ ist das Verhältnis zweier Siegquoten, kein Anteil (Auslegung 40). Die Simulation zeigt jetzt
+  beide Quoten und die Median-Siegzeiten daneben.
+  **Hebel in der vorgegebenen Reihenfolge** (Start = Stand I5.7, gegnerische Basis 11.000/13.000/15.000):
+  1. Automatik: Hörsaal (EP-Automatik) von 0,25/0,6/1,1 auf 0,1/0,25/0,4 EP/s. Hörsaal III entspricht rechnerisch 25 % des EP-Ertrags aus
+     Abschüssen eines aktiven Spielers auf Normal (Soll ≤ 25 %). Die Presse blieb unverändert (Klickanteile im Korridor).
+  2. Große Armee und Söldnerheer: nicht geändert. Große Armee liegt nach dem Armeemodell bei +7 pp (v0.5: +38); Söldnerheer +32 pp bei nur
+     10 Partien mit Wahl (Auffälligkeit, keine belastbare Grundlage).
+  3. Gegnerstärke: Die gebündelte Armee (I5.6) gewann zu schnell (Start: Normal durchschnitt 6:22, Schwer aktiv 6:01). Gegnerische Basis
+     Leicht/Normal/Schwer 26.000/26.000/46.000; Schwer Grundwelle 3,5 statt 2, Schadenszuwachs 0,07 statt 0,05, EP-Faktor 1,8 statt 1,15
+     (sonst kamen Karten auf Schwer so selten, dass auch „aktiv“ scheiterte: 16 % Siege in Runde 3). `XP_GROWTH` 1,4 → 1,55, damit der
+     Kartenabstand im Frühspiel ≥ 45 s bleibt (die Armee sammelt EP schneller).
+  4. Experiment „Schwung“ (`EXPERIMENT.momentum`, aus): simuliert, Ergebnis im Bericht.
 - I5.7: `npm test` 106/106 (neu `tests/research.test.mjs`: Universität, Kosten, Zeit, eine gleichzeitig, Voraussetzungen, Ruhen ohne Universität,
   je Wirkung ein Test, Neu ziehen und Bann, Freischaltungen, Schildträger bremst die Armee, Speichern und Laden), Browser-Prüfung 166/166.
   Universität gebaut (Normal, gierig, 30 Partien): 90 % (Soll ≥ 40 %). Kurzsimulation mit 200 Partien: 197 Siege, 3 Niederlagen, 0 offen, 61 s.
@@ -185,3 +200,15 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
 39. **Vorrang der Mitte im Armeemodell:** Einheiten, die in der Mitte stehen, wechseln in eine äußere kämpfende Lane nur, wenn dort schon eigene Einheiten
     im Kampfbereich stehen; sonst halten sie die Mitte, und der Gegner kommt zu ihnen (dessen Einheiten haben in ihrer Lane keinen Gegner und helfen
     der Mitte). Das ist die Regel aus I4.3, die REQ-5.06 ausdrücklich beibehält; ohne sie tauschten zwei Armeen endlos die Lanes (Patt, siehe I5.7).
+40. **„101 %“ (REQ-5.08):** Die Spalte „nie/Dauer“ teilt die Siegquote von „nie klicken“ durch die von „Dauerklick“; über 100 % heißt, dass
+    „nie klicken“ in der Stichprobe öfter gewann. Kein Rechenfehler, aber eine irreführende Darstellung. Behoben durch Anzeige beider Quoten
+    samt Median-Siegzeit. Der Zielwert „nie/Dauer ≤ 50 %“ bleibt als Verhältnis bestehen.
+41. **Anteil der EP-Automatik (REQ-5.08):** gemessen als EP aus dem Hörsaal geteilt durch alle EP (Hörsaal plus Abschüsse), Normal, aktiv.
+    Die Bots erforschen den Hörsaal selten (42 von 1.180 Partien mit Universität), der gemessene Anteil ist deshalb 0 %. Die Simulation weist
+    zusätzlich den rechnerischen Anteil von Hörsaal III am Abschuss-Ertrag eines aktiven Spielers aus; er ist die belastbare Kennzahl.
+42. **Profilabstand Leicht aktiv ↔ gelegentlich** als Differenz der Median-Siegzeiten.
+43. **Forschungen gegen +25 pp:** Vergleich „erforscht“ gegen „nicht erforscht“ in Partien mit Universität. Alle Forschungen liegen bei −27 bis
+    −73 pp. Das ist eine Verzerrung durch die Partiedauer (wer lange spielt, forscht mehr; lange Partien gehen eher verloren), kein Befund über
+    die Stärke. Ein fairer Vergleich bräuchte „bezahlbar und nicht erforscht“ je Zeitpunkt, analog zu den Karten; offen.
+44. **Experiment „Schwung“:** Jeder Klick lädt einen Speicher um 0,01, der mit 20 s Zeitkonstante abklingt; die Automatik (Fabriken, Presse)
+    erhält den Speicherstand als Bonus, höchstens +50 %. Drei Klicks je Sekunde halten den Höchstwert. Die Klickausbeute selbst bleibt unverändert.

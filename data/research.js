@@ -11,9 +11,9 @@
 const KF_RESEARCH = [
   /* ---------- A Lehre: passiver EP-Ertrag, teuer und langsam ---------- */
   { id: 'r_hoersaal', branch: 'lehre', nameKey: 'research.hoersaal.name', descKey: 'research.hoersaal.desc',
-    tiers: [{ cost: 500, timeS: 60, effect: [{ stat: 'xpPassive', add: 0.25 }] },
-            { cost: 1200, timeS: 90, effect: [{ stat: 'xpPassive', add: 0.6 }] },
-            { cost: 2600, timeS: 120, effect: [{ stat: 'xpPassive', add: 1.1 }] }] },
+    tiers: [{ cost: 500, timeS: 60, effect: [{ stat: 'xpPassive', add: 0.1 }] },
+            { cost: 1200, timeS: 90, effect: [{ stat: 'xpPassive', add: 0.25 }] },
+            { cost: 2600, timeS: 120, effect: [{ stat: 'xpPassive', add: 0.4 }] }] },
 
   /* ---------- B Archiv: Kartenmanipulation ---------- */
   { id: 'r_weitblick', branch: 'archiv', nameKey: 'research.weitblick.name', descKey: 'research.weitblick.desc',

@@ -17,7 +17,7 @@ if (!isMainThread){
   parentPort.postMessage(workerData.jobs.map(j => Object.assign(playGame(j), { suite: j.suite })));
 } else {
   const { loadCore } = await import('./load-core.mjs');
-  const { KF_CONFIG: C, KF_DRAFT_OPTIONS: OPTS } = loadCore();
+  const { KF_CONFIG: C, KF_DRAFT_OPTIONS: OPTS, KF_RESEARCH: RESEARCH } = loadCore();
   const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
   const RUNS = Number(arg('runs', 20));
   const SUITE = arg('suite', 'alle');
@@ -56,7 +56,8 @@ if (!isMainThread){
     const w = new Worker(new URL(import.meta.url), { workerData: { jobs: c } });
     w.on('message', res); w.on('error', rej);
   })))).flat();
-  process.stderr.write(`fertig in ${Math.round((Date.now() - t0) / 1000)} s\n\n`);
+  const simHours = results.reduce((a, r) => a + r.t, 0) / 3600, secs = (Date.now() - t0) / 1000;
+  process.stderr.write(`fertig in ${Math.round(secs)} s · ${simHours.toFixed(1)} simulierte Spielstunden · ${(secs / simHours).toFixed(1)} s Rechenzeit je Spielstunde\n\n`);
 
   const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
   const mmss = t => t == null ? '–' : `${Math.floor(Math.round(t) / 60)}:${String(Math.round(t) % 60).padStart(2, '0')}`;
@@ -99,6 +100,10 @@ if (!isMainThread){
     const na = Z.filter(r => r.diff === 'normal' && r.profile === 'aktiv' && r.xpPassive + r.xpKill > 0);
     report.xpPassiveShare = na.length ? na.reduce((a, r) => a + r.xpPassive, 0) / na.reduce((a, r) => a + r.xpPassive + r.xpKill, 0) : null;
     console.log(`Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): ${report.xpPassiveShare == null ? '–' : (100 * report.xpPassiveShare).toFixed(1) + ' %'}`);
+    // Rechnerisch: Hörsaal III gegen den EP-Ertrag aus Abschüssen eines aktiven Spielers (Median je Partie), weil Bots den Hörsaal selten erforschen
+    const killRate = median(na.map(r => r.xpKill / r.t)), h3 = OPTS && RESEARCH ? RESEARCH.find(x => x.id === 'r_hoersaal').tiers.at(-1).effect[0].add : null;
+    if (killRate && h3 != null){ report.hoersaal3Share = h3 / killRate;
+      console.log(`Hörsaal III rechnerisch: ${h3} EP/s gegen ${killRate.toFixed(2)} EP/s aus Abschüssen (Normal, aktiv, Median) = ${(100 * h3 / killRate).toFixed(0)} % (Soll ≤ 25 %)`); }
     console.log(`Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): ${report.maxArmy ?? '–'} Einheiten`);
     console.log(`Fall des ersten Mauerabschnitts (Median der Partien mit Fall): ${mmss(report.wallFall)} · in ${pct(Z.filter(r => r.wallFall != null).length, Z.length)} der Partien`);
     console.log(`Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): ${pct(known.filter(r => r.cards.some(id => legendary.has(id))).length, known.length)}`);
@@ -239,16 +244,22 @@ if (!isMainThread){
       }
       console.log('');
     }
-    console.log('Siegquote je Klickstrategie');
-    console.log('Schwierigkeit | Dauerklick | Stopp ab Spät | nie klicken | Stopp/Dauer | nie/Dauer');
+    // REQ-03 vergleicht Siegquoten: „nie/Dauer“ ist das Verhältnis zweier Siegquoten, kein Anteil. Über 100 % heißt: „nie klicken“ hat
+    // in dieser Stichprobe öfter gewonnen als „Dauerklick“ (REQ-5.08, Befund „101 %“). Deshalb stehen die Quoten selbst und die
+    // Median-Siegzeiten daneben; die Zeit zeigt den Wert des Klickens, wenn beide fast immer gewinnen.
+    console.log('Siegquote und Median-Siegzeit je Klickstrategie');
+    console.log('Schwierigkeit | Dauerklick     | Stopp ab Spät  | nie klicken    | Stopp/Dauer | nie/Dauer (Verhältnis der Siegquoten)');
     report.clickPolicies = {};
     for (const diff of DIFFS){
-      const q = pol => { const R = P.filter(r => r.diff === diff && r.clickPolicy === pol); return R.length ? R.filter(r => r.status === 'won').length / R.length : 0; };
+      const R = pol => P.filter(r => r.diff === diff && r.clickPolicy === pol);
+      const q = pol => { const X = R(pol); return X.length ? X.filter(r => r.status === 'won').length / X.length : 0; };
+      const mw = pol => median(R(pol).filter(r => r.status === 'won').map(r => r.t));
       const a = q('always'), s = q('stopLate'), n0 = q('never');
-      report.clickPolicies[diff] = { always: a, stopLate: s, never: n0 };
-      console.log(`${pad(diff, 13)} | ${lpad((a * 100).toFixed(0) + ' %', 10)} | ${lpad((s * 100).toFixed(0) + ' %', 13)} | ${lpad((n0 * 100).toFixed(0) + ' %', 11)} | ${lpad(a ? (s / a * 100).toFixed(0) + ' %' : '–', 11)} | ${lpad(a ? (n0 / a * 100).toFixed(0) + ' %' : '–', 9)}`);
+      report.clickPolicies[diff] = { always: a, stopLate: s, never: n0, winTime: { always: mw('always'), stopLate: mw('stopLate'), never: mw('never') } };
+      const cell = pol => lpad(`${(q(pol) * 100).toFixed(0)} % · ${mmss(mw(pol))}`, 14);
+      console.log(`${pad(diff, 13)} | ${cell('always')} | ${cell('stopLate')} | ${cell('never')} | ${lpad(a ? (s / a * 100).toFixed(0) + ' %' : '–', 11)} | ${lpad(a ? (n0 / a * 100).toFixed(0) + ' %' : '–', 9)}`);
     }
-    console.log('(Soll: Stopp/Dauer ≥ 95 %, nie/Dauer ≤ 50 %)\n');
+    console.log('(Soll: Stopp/Dauer ≥ 95 %, nie/Dauer ≤ 50 %; über 100 % = „nie klicken“ gewann in der Stichprobe öfter)\n');
   }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ runs: RUNS, suite: SUITE, report }, null, 2));
 }

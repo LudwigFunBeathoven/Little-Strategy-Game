@@ -1,0 +1,87 @@
+3000 Partien auf 4 Kernen …
+fertig in 1223 s · 569.0 simulierte Spielstunden · 2.1 s Rechenzeit je Spielstunde
+
+ZIELE – Siegquote und Dauer (gierige Heuristik)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+leicht        | aktiv        |   200 |        0 |     0 |        6:16 |          – | Ende spät. 13:21 | Wellen am Limit  86 %
+leicht        | durchschnitt |   200 |        0 |     0 |        8:58 |          – | Ende spät. 14:00 | Wellen am Limit  73 %
+leicht        | gelegentlich |   198 |        2 |     0 |       11:39 |      21:05 | Ende spät. 21:05 | Wellen am Limit  62 %
+leicht        | passiv       |     2 |      198 |     0 |       11:03 |       9:34 | Ende spät. 16:36 | Wellen am Limit  98 %
+leicht        | verteidigung |     0 |      200 |     0 |           – |      20:25 | Ende spät. 23:03 | Wellen am Limit     –
+normal        | aktiv        |   177 |       23 |     0 |        6:44 |      19:58 | Ende spät. 21:30 | Wellen am Limit  88 %
+normal        | durchschnitt |   131 |       69 |     0 |        9:53 |      19:55 | Ende spät. 22:44 | Wellen am Limit  87 %
+normal        | gelegentlich |    42 |      158 |     0 |        9:53 |      16:27 | Ende spät. 20:18 | Wellen am Limit  68 %
+normal        | passiv       |     0 |      200 |     0 |           – |       4:58 | Ende spät. 10:00 | Wellen am Limit  99 %
+normal        | verteidigung |     0 |      200 |     0 |           – |      18:26 | Ende spät. 20:05 | Wellen am Limit     –
+schwer        | aktiv        |   100 |      100 |     0 |       11:00 |      20:24 | Ende spät. 25:20 | Wellen am Limit  91 %
+schwer        | durchschnitt |    56 |      144 |     0 |        9:25 |      20:40 | Ende spät. 24:24 | Wellen am Limit  84 %
+schwer        | gelegentlich |     1 |      199 |     0 |       10:43 |       1:29 | Ende spät. 12:39 | Wellen am Limit  93 %
+schwer        | passiv       |     0 |      200 |     0 |           – |       1:27 | Ende spät.  1:38 | Wellen am Limit 100 %
+schwer        | verteidigung |     0 |      200 |     0 |           – |      16:31 | Ende spät. 21:23 | Wellen am Limit     –
+
+Patt-Quote (offen nach 30 min): 0 von 3000 = 0 % (Soll ≤ 2 %)
+Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): 63 %
+Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): 0.0 %
+Hörsaal III rechnerisch: 0.4 EP/s gegen 1.63 EP/s aus Abschüssen (Normal, aktiv, Median) = 25 % (Soll ≤ 25 %)
+Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): 21 Einheiten
+Fall des ersten Mauerabschnitts (Median der Partien mit Fall): 4:52 · in 34 % der Partien
+Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): 10 %
+
+Forschungen: Siegquote erforscht gegen nicht erforscht (Partien mit Universität; aktiv und durchschnitt)
+r_bann               erforscht  385  nicht  795  Differenz  -40 pp
+r_drill              erforscht  163  nicht 1017  Differenz  -56 pp
+r_gluecksgriff       erforscht   72  nicht 1108  Differenz  -60 pp
+r_hoersaal           erforscht   42  nicht 1138  Differenz  -70 pp
+r_ingenieur          erforscht  180  nicht 1000  Differenz  -51 pp
+r_logistik           erforscht   77  nicht 1103  Differenz  -60 pp
+r_maurerkunst        erforscht  222  nicht  958  Differenz  -50 pp
+r_metallurgie        erforscht  123  nicht 1057  Differenz  -58 pp
+r_neuziehen          erforscht  715  nicht  465  Differenz  -27 pp
+r_schildtraeger      erforscht    1  nicht 1179  Differenz  -73 pp
+r_weitblick          erforscht    1  nicht 1179  Differenz  -73 pp
+
+Karten: Siegquote angeboten+gewählt gegen angeboten+nicht gewählt (aktiv und durchschnitt; Meldung ab +25 pp, mind. 5 Partien je Seite)
+Karte                Kat./Selt.                 gewählt  nicht  Differenz  |   Stufe 1   Stufe 2   Stufe 3
+allesAufDieMitte     sonderregel/legendary           46      9     +38 pp  |    +38 pp                      ← über +25
+aushebung            armee/common                   336    221      +3 pp  |     +3 pp     +9 pp          
+bastion              basis/common                   240    346      -9 pp  |     -9 pp    -11 pp          
+bauleitung           automatisierung/rare            85    179      -2 pp  |     -2 pp                    
+belagerungsgeraet    armee/common                   259    276     +15 pp  |    +15 pp    +10 pp          
+bessereFabriken      wirtschaft/common              412    151      -6 pp  |     -6 pp     +7 pp     +1 pp
+blitzkrieg           sonderregel/legendary           21     26      +1 pp  |     +1 pp                    
+dauerauftrag         automatisierung/rare           165    124     +34 pp  |    +34 pp                      ← über +25
+doppelschicht        wirtschaft/common              420    170     -13 pp  |    -13 pp     -1 pp          
+drill                armee/common                   355    192      +3 pp  |     +3 pp     +4 pp          
+festungsbau          basis/rare                      31    202      +3 pp  |     +3 pp                    
+fliessband           automatisierung/common         331    272      -2 pp  |     -2 pp    -26 pp          
+gluecksritter        sonderregel/rare                86    192      -9 pp  |     -9 pp                    
+grossauftrag         wirtschaft/rare                152    103      -3 pp  |     -3 pp                    
+grosseArmee          sonderregel/legendary           37     25      +7 pp  |     +7 pp                    
+handelskontor        wirtschaft/rare                 66    154      -5 pp  |     -5 pp                    
+instandhaltung       automatisierung/common         240    365     -13 pp  |    -13 pp     -3 pp     -9 pp
+kriegsanleihe        wirtschaft/rare                128    132      -5 pp  |     -5 pp    +22 pp   +100 pp
+kriegserfahrung      wirtschaft/common              256    282     +11 pp  |    +11 pp    +22 pp          
+kriegstrommeln       armee/common                   248    303      +0 pp  |     +0 pp     -6 pp    +36 pp
+langeWurfarme        armee/common                   190    372      +3 pp  |     +3 pp     +2 pp          
+maurerkolonne        basis/common                   277    313     -22 pp  |    -22 pp     -5 pp    -29 pp
+nachtschicht         wirtschaft/common              237    329      -9 pp  |     -9 pp     -5 pp          
+notreserve           basis/rare                      90    202      -8 pp  |     -8 pp                    
+rationalisierung     automatisierung/rare           146    119      +3 pp  |     +3 pp                    
+sappeure             armee/rare                     123    114      +5 pp  |     +5 pp    +10 pp          
+scharfschuetzen      basis/rare                      84    163      -8 pp  |     -8 pp                    
+schildwall           armee/common                   205    325      -4 pp  |     -4 pp    +17 pp          
+schwerePressen       wirtschaft/common              520     80     -10 pp  |    -10 pp    -11 pp    -25 pp
+selbstlaeufer        automatisierung/rare           117    141      +5 pp  |     +5 pp                    
+serienbau            wirtschaft/common              241    330     -19 pp  |    -19 pp     +6 pp          
+soeldnerheer         sonderregel/legendary           10     48     +32 pp  |    +32 pp                      ← über +25
+taktiker             armee/rare                     100    136     +21 pp  |    +21 pp                    
+turmkanoniere        basis/common                   205    368      -6 pp  |     -6 pp    -10 pp     +0 pp
+verbrannteErde       sonderregel/legendary           17     46     -11 pp  |    -11 pp                    
+veteranen            armee/rare                     173     74     +10 pp  |    +10 pp                    
+vorposten            armee/common                   306    239      -9 pp  |     -9 pp                    
+weitschuss           armee/rare                     146    117     +13 pp  |    +13 pp                    
+werkmeister          automatisierung/rare            38    136     +10 pp  |    +10 pp                    
+zeugmeister          automatisierung/rare            85    148      -2 pp  |     -2 pp                    
+zinnen               basis/common                    34    529     -21 pp  |    -21 pp    -33 pp          
+

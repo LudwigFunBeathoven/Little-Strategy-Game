@@ -56,6 +56,12 @@ const KF_CONFIG = {
     midRefillShare: 1 / 3,      // fällt die letzte Einheit der Mitte, erhält die Mitte diesen Anteil der Armee (aufgerundet)
   },
 
+  /* Experimente (REQ-5.08): nur simulieren und berichten; die Einführung entscheidet der PO */
+  EXPERIMENT: { momentum: false },
+  // Schwung: jeder Klick lädt einen Speicher, der mit MOMENTUM.decayS abklingt; die Automatik (Fabriken, Presse) erhält den Speicherstand
+  // als Bonus, höchstens MOMENTUM.max (3 Klicks/s halten den Höchstwert, Nichtklicker verlieren nichts)
+  MOMENTUM: { perClick: 0.01, decayS: 20, max: 0.5 },
+
   /* Oberfläche (REQ-5.01, REQ-5.03) */
   UI: {
     dragThresholdPx: 6,         // ab dieser Zeigerbewegung ist eine Geste in der Welt ein Ziehen, darunter ein Klick
@@ -161,7 +167,7 @@ const KF_CONFIG = {
   /* EP-Stufen und Draft (REQ-02). Erfahrungspunkte (EP) werden nur gesammelt, nicht ausgegeben.
      Stufe n verlangt XP_BASE × XP_GROWTH^(n−1) EP zusätzlich zur vorigen Stufe (kumulierte Summe). */
   XP_BASE: 47,                  // I4.8: 40 → 47, damit der Median-Abstand der Karten im Frühspiel ≥ 45 s liegt (REQ-48)
-  XP_GROWTH: 1.4,
+  XP_GROWTH: 1.55,              // I5.8: 1,4 → 1,55, Kartenabstand im Frühspiel wieder ≥ 45 s (die Armee sammelt EP schneller)
   DRAFT_OPTIONS_BASE: 2,
   DRAFT_OPTIONS_UNIVERSITY: 3,
   CARD_MAX_TIER: 3,             // Spezialkarten: höchstens Stufe III (REQ-18.2)
@@ -180,9 +186,9 @@ const KF_CONFIG = {
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
   SIM_SIEGE_LOOKAHEAD_S: 120,   // Bot-Vorausschau reicht bis nach der Belagerungswelle, sobald sie so nah ist (REQ-48)
   SIM_SIEGE_EVAL_S: 40,         // … und so lange über ihr Ausrücken hinaus
-  SIM_RESEARCH_EVERY_S: 30,     // nach einer abgelehnten Forschung prüfen Bots erst wieder nach dieser Zeit, danach doppelt so lange …
-  SIM_RESEARCH_MAX_WAIT_S: 120, // … bis höchstens so lange (Rechenzeit der Vorausschau)
-  SIM_RESEARCH_CANDIDATES: 3,   // gierige Heuristik vergleicht die so vielen günstigsten bezahlbaren Forschungen
+  SIM_RESEARCH_EVERY_S: 60,     // nach einer abgelehnten Forschung prüfen Bots erst wieder nach dieser Zeit, danach doppelt so lange …
+  SIM_RESEARCH_MAX_WAIT_S: 240, // … bis höchstens so lange (Rechenzeit der Vorausschau)
+  SIM_RESEARCH_CANDIDATES: 2,   // gierige Heuristik vergleicht die so vielen günstigsten bezahlbaren Forschungen
   MAX_CLICKS_PER_SECOND: 10,    // darüber hinausgehende Klicks verfallen (Schutz gegen Autoklicker)
   /* Automatische Presse (REQ-44): Anteil der Referenzrate ab Phase Mitte bzw. Spät */
   PRESS_REFERENCE_CPS: 6,
@@ -194,12 +200,12 @@ const KF_CONFIG = {
      damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen.
      Gegnerwelle: waveBase + waveGrowth × Minute Einheiten (gerundet), Lanes zufällig über den Spielzufall. */
   DIFFICULTY: {
-    leicht: { enemyBaseHp: 11000, waveBase: 1,  waveGrowth: 0.45,
+    leicht: { enemyBaseHp: 26000, waveBase: 1,  waveGrowth: 0.45,
               werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.05, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
-    normal: { enemyBaseHp: 13000, waveBase: 2,  waveGrowth: 0.7,
+    normal: { enemyBaseHp: 26000, waveBase: 2,  waveGrowth: 0.7,
               werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
-    schwer: { enemyBaseHp: 15000, waveBase: 2,  waveGrowth: 1.0,
-              werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.07, dmgGrowth: 0.05, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.15 },
+    schwer: { enemyBaseHp: 46000, waveBase: 3.5, waveGrowth: 1.0,
+              werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.07, dmgGrowth: 0.07, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.8 },
   },
   DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],
   DEFAULT_DIFFICULTY: 'normal',
