@@ -30,6 +30,8 @@ for (const lang of ['de', 'en']){
   check((await p.evaluate(() => __kf.tooltipAudit())).length === 0, `[${lang}] Startbildschirm: alle Elemente mit Tooltip`);
   const startExpl = await p.evaluate(() => __kf.explAudit());
   check(startExpl.length === 0, `[${lang}] Startbildschirm: jeder Knopf mit Erklärzeile${show(startExpl)}`);
+  await p.click('[data-tooltip="skipIntro"]');
+  check(await p.evaluate(() => document.querySelector('[data-tooltip="skipIntro"]').getAttribute('aria-pressed') === 'true'), `[${lang}] „Einführung überspringen“ lässt sich einschalten`);
   await p.click('.card .btn-primary');
 
   // Partie vorantreiben, damit alle Bereiche sichtbar werden; das Ergebnisfenster darf nicht aufgehen
@@ -45,8 +47,10 @@ for (const lang of ['de', 'en']){
   check((await p.evaluate(() => __kf.tooltipAudit())).length === 0, `[${lang}] Spiel: alle interaktiven Elemente mit Tooltip`);
   const gameExpl = await p.evaluate(() => __kf.explAudit());
   check(gameExpl.length === 0, `[${lang}] Spiel: jeder Knopf mit Erklärzeile${show(gameExpl)}`);
+  const before = await p.evaluate(() => document.querySelector('#hintText').textContent);
   await p.click('#hintOk');
-  check(await p.evaluate(() => document.querySelector('#hintBox').hidden), `[${lang}] Hinweis lässt sich wegklicken`);
+  check(await p.evaluate(b => document.querySelector('#hintBox').hidden || document.querySelector('#hintText').textContent !== b, before), `[${lang}] Hinweis lässt sich wegklicken`);
+  await p.evaluate(() => { while (!document.querySelector('#hintBox').hidden) document.querySelector('#hintOk').click(); });
 
   // Kontextfeld: leerer Bauplatz, bebauter Bauplatz, Basis – Erklärzeilen und Tooltips auch dort
   for (const sel of [() => __kf.selectPlot(__kf.G.S.slots.findIndex(s => !s)), () => __kf.selectPlot(__kf.G.S.slots.findIndex(s => s && s.type === 'schmiede')), () => __kf.selectBase()]){
@@ -140,6 +144,27 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]){
   const ms = await p.evaluate(() => __kf.benchDraw(60));
   check(ms <= 20, `[${w}×${h}] Bildzeit mit ${seen} Einheiten: Median ${ms.toFixed(2)} ms (≤ 20 ms)`);
   check(errors.length === 0, `[${w}×${h}] keine Fehler${show(errors)}`);
+  await ctx.close();
+}
+
+// REQ-47: Gestaffelte Einführung (frischer Browser, Einführung an)
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.click('.card .btn-primary'); await p.waitForTimeout(200);
+  const intro = await p.evaluate(() => { __kf.selectPlot(4); __kf.G.S.material = 1e5; return {
+    wave: document.querySelector('#secWave').hidden, cards: document.querySelector('#secCards').hidden,
+    picks: [...document.querySelectorAll('#ctxBuild .pick')].map(b => b.dataset.tooltip.split(':')[1]),
+    hint: document.querySelector('#hintText').textContent }; });
+  check(intro.wave && intro.cards && intro.picks.join() === 'fabrik', `Einführung: zu Beginn weder Wellenleiste noch Karten, nur Fabrik baubar ${JSON.stringify(intro.picks)}`);
+  check(intro.hint === await p.evaluate(() => __kf.t('hint.start')), `Einführung: Hinweis zum Start`);
+  await p.evaluate(() => { __kf.G.S.level = 2; __kf.selectPlot(4); });
+  await p.waitForTimeout(150);
+  const later = await p.evaluate(() => ({ cards: document.querySelector('#secCards').hidden, picks: document.querySelectorAll('#ctxBuild .pick').length }));
+  check(!later.cards && later.picks >= 4, `Einführung: ab Stufe 2 Karten und Verstärkungsgebäude sichtbar`);
   await ctx.close();
 }
 

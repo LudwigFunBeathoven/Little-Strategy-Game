@@ -209,6 +209,7 @@ function tipContent(id){
     case 'back':  return { title: t('start.back'), body: t('tip.back.body') };
     case 'again': return { title: t('result.again'), body: t('tip.again.body') };
     case 'resetHints': return { title: t('start.resetHints'), body: t('tip.resetHints.body') };
+    case 'skipIntro': return { title: t('start.skipIntro'), body: t('tip.skipIntro.body') };
     case 'hintOk': return { title: t('hint.ok'), body: t('tip.hintOk.body') };
   }
   return { title: id };
@@ -429,6 +430,12 @@ function renderStart(){
   const hl = document.createElement('span'); hl.className = 'field-label'; hl.textContent = t('start.hints');
   const hb = mkButton('btn-ghost', t('start.resetHints'), () => { Hints.reset(); hb.querySelector('.expl').textContent = t('ex.resetHints.done'); }, 'resetHints', t('ex.resetHints'));
   const hrow = document.createElement('div'); hrow.className = 'seg'; hrow.appendChild(hb);
+  // Einführung überspringen (REQ-47): alle Systeme von Anfang an sichtbar; die Wahl bleibt im Browser gespeichert
+  const skip = storageGet(C.INTRO_SKIP_KEY) === '1';
+  const sb = mkButton('btn-ghost', t('start.skipIntro'), () => { storageSet(C.INTRO_SKIP_KEY, skip ? '0' : '1'); renderStart(); },
+    'skipIntro', t(skip ? 'ex.skipIntro.on' : 'ex.skipIntro.off'));
+  sb.setAttribute('aria-pressed', String(skip));
+  hrow.appendChild(sb);
   hintField.append(hl, hrow);
   body.append(langField, diffField, hintField);
 
@@ -455,7 +462,7 @@ function openResult(){
 }
 function closeModal(){ Tip.hide(); modalOpen = false; $('modal').hidden = true; last = performance.now(); acc = 0; }
 function startGame(diff){
-  G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0);
+  G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0, { intro: storageGet(C.INTRO_SKIP_KEY) !== '1' });
   resultShownFor = null;
   save();
   closeModal();
@@ -763,8 +770,15 @@ function render(){
       ol.appendChild(li);
     }
   }
-  if (S.status === 'running' && S.waveNo >= 1) showHint('wave');
-  if (S.status === 'running' && G.siegeAnnounced()) showHint('siege');
+  // Gestaffelte Einführung (REQ-47): Bereiche erscheinen mit ihrem System, jedes mit einmaligem Hinweis
+  $('secWave').hidden = !G.introShows('waves');
+  $('secCards').hidden = !G.introShows('cards');
+  if (S.status === 'running'){
+    showHint('start');
+    if (G.introShows('waves') && (S.waveNo >= 1 || S.ownWaveNo >= 1)) showHint('wave');
+    if (G.introShows('buildings') && (S.level >= C.INTRO_BUILDINGS_LEVEL || !S.intro)) showHint('buildings');
+    if (G.siegeAnnounced()) showHint('siege');
+  }
   if (S.status === 'running' && S.pendingDraft && !modalOpen) openDraft();
   if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t && !modalOpen){
     resultShownFor = S.t;

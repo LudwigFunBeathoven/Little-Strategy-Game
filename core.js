@@ -43,7 +43,7 @@ function freshState(diff, seed){
     v: SAVE_VERSION, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
-    lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
+    lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0, intro: false,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9, repairCd: 0 })), enemyBaseHp: d.enemyBaseHp,
     nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextOwnWave: C.WAVE_INTERVAL_S, ownWaveNo: 0, lastOrder: null, nextEnemy: [], nextEnemySiege: false, forms: [],
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
@@ -167,6 +167,7 @@ function create(){
   function buildBlock(i, type){
     if (S.status !== 'running') return 'notRunning';
     if (!C.BUILDINGS.includes(type)) return 'unknown';
+    if (!introShows('buildings') && type !== 'fabrik') return 'hidden';
     if (!isBuildable(type)) return 'locked';
     if (type !== 'fabrik' && countType(type) >= C.MAX_PER_TYPE) return 'standing';
     if (i < 0 || i >= SLOTS || S.slots[i]) return 'occupied';
@@ -727,8 +728,18 @@ function create(){
   }
 
   /* Neue Partie bzw. Spielstand übernehmen */
-  function newGame(diff, seed){
+  /* Gestaffelte Einführung (REQ-47): welche Systeme schon sichtbar sind; ohne Einführung alle */
+  function introShows(sys){
+    if (!S.intro) return true;
+    if (sys === 'waves') return S.waveNo >= 1 || S.ownWaveNo >= 1;
+    if (sys === 'cards') return S.level >= 1;
+    if (sys === 'buildings') return S.level >= C.INTRO_BUILDINGS_LEVEL;
+    if (sys === 'siege') return siegeAnnounced();
+    return true;
+  }
+  function newGame(diff, seed, opts = {}){
     S = freshState(diff, seed);
+    S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
     FX.shots = []; FX.fx = [];
     log('log.start', { diff: '@diff.' + diff + '.name' });
@@ -765,7 +776,7 @@ function create(){
     addFormation, layoutAll, formMembers, enemyAhead, supplyCap, supplyFull, waveIn, enemyWaveIn, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
-    buildBlock, isBuildable, refundFor, interestRate,
+    buildBlock, isBuildable, introShows, refundFor, interestRate,
     chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 

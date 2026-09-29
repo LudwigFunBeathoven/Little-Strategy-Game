@@ -13,7 +13,7 @@ Stand von Iteration 3: `docs/archiv/STAND-iteration-3.md`.
 | I4.4 | Automatisierung und große Armeen | 44 | P1 | fertig |
 | I4.5 | Kartenausbau | 45 | P1 | fertig |
 | I4.6 | Vertikales Layout, Reich in der Spielwelt, Scrollen | 46 | P1 | fertig |
-| I4.7 | Gestaffelte Einführung | 47 | P2 | offen |
+| I4.7 | Gestaffelte Einführung | 47 | P2 | fertig |
 | I4.8 | Simulation, Balancing, Bericht, Merge-Bereitschaft | 48 | P2 | offen |
 
 Abgleich mit Version 1: Nach Version 1 wurden keine Inkremente umgesetzt; es gibt nichts abzugleichen.
@@ -42,6 +42,10 @@ node tools/simulate.mjs --suite kurz
 - I4.6: `npm test` 79/79, Browser-Prüfung grün (neu: 1280×720 und 1920×1080 ohne waagrechte Bildlaufleiste, Mausrad, Ziehen,
   Pfeiltasten/A/D, Scrollleiste, Sprungknöpfe, „Front folgen“, Bauplatz-Klick ohne Scrollen, Kontextfeld mit Tooltips und Erklärzeilen).
   Bildzeit mit 60 Einheiten im Bild: Median 0,3 ms (1280×720) bzw. 0,7 ms (1920×1080), Soll ≤ 20 ms. Kurzsimulation 17 Siege, 3 Niederlagen, 0 offen.
+
+- I4.7: `npm test` 83/83, Browser-Prüfung grün (neu: Startzustand der Einführung, Freischaltung ab Stufe 2, Schalter „Einführung überspringen“).
+  Kurzsimulation mit Einführung 20 Siege, 0 offen; ohne Einführung (`KF_SKIP_INTRO=1`) 17 Siege, 3 Niederlagen, 0 offen.
+  Der Bot gewinnt mit Einführung öfter, weil er früh kein Material in Verstärkungsgebäude steckt; Einordnung in I4.8.
 
 ## Abweichungen und Auslegungen
 1. **Suche nach „hold“ wörtlich genommen:** Auch Namen, die das Wort nur zufällig enthalten, sind umbenannt: `xpThreshold` → `xpTotal`,
@@ -84,3 +88,9 @@ node tools/simulate.mjs --suite kurz
 22. **Bildzeit** wird einschließlich Ausführung der Zeichenbefehle gemessen (`getImageData` nach jedem Bild), sonst misst man nur deren Aufzeichnung.
     Die Messung im Kopflos-Browser nutzt Software-Zeichnung; echte Geräte mit Grafikkarte liegen eher darunter.
 23. **Abriss in zwei Schritten** im Kontextfeld (erster Klick fragt, zweiter reißt ab) statt eines Bestätigungsdialogs.
+24. **Einführung in der Simulation:** Bots spielen wie ein neuer Spieler mit Einführung (Gebäude erst ab Stufe 2). `KF_SKIP_INTRO=1` schaltet sie ab.
+    In `core.js` ist die Einführung ohne Angabe aus (Tests, ältere Spielstände); die Oberfläche schaltet sie für neue Partien ein.
+25. **Einführung überspringen** ist ein Schalter auf dem Startbildschirm, der im Browser gespeichert bleibt und ab der nächsten Partie gilt.
+26. **Hinweise je System:** neu „Start“ (Presse, Fabrik, Einheiten) und „Verstärkungsgebäude“ (ab Stufe 2); vorhanden: Welle, Karte, Belagerung.
+    Das Handelskontor bleibt wie bisher an seine Karte gebunden und erscheint während der Einführung ebenfalls erst ab Stufe 2.
+    Die Wellenleiste erscheint mit der ersten eigenen oder gegnerischen Welle, je nachdem, was zuerst ausrückt.

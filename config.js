@@ -65,6 +65,9 @@ const KF_CONFIG = {
   SIEGE_MINUTE: 16,
   SIEGE_STRENGTH: 3,
   SIEGE_WARNING_S: 60,
+  /* Gestaffelte Einführung (REQ-47): Verstärkungsgebäude ab dieser Stufe; Einstellung „Einführung überspringen“ im Browser */
+  INTRO_BUILDINGS_LEVEL: 2,
+  INTRO_SKIP_KEY: 'klammerfront.skipIntro',
   POST_SIEGE_GROWTH: 0.6,       // Vorgabe 0,10; kalibriert in I7: erst ab 0,5 fällt reine Verteidigung bis Minute 25 (REQ-21.4)
   RELOAD_WAVE_DELAY_S: 5,
 

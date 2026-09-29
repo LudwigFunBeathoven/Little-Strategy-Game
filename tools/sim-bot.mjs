@@ -29,8 +29,9 @@ function baseHealth(G){
 /* Kleiner, seedbarer Zufall für Bot-Entscheidungen (getrennt vom Spielzufall) */
 function botRng(seed){ let s = (seed ^ 0x9e3779b9) >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
+/* Bots spielen wie ein neuer Spieler mit gestaffelter Einführung (REQ-47); KF_SKIP_INTRO=1 schaltet sie ab */
 export function newGame(diff, seed){
-  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed);
+  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { intro: process.env.KF_SKIP_INTRO !== '1' });
   return G;
 }
 function forkGame(G){
