@@ -355,7 +355,7 @@ if (DEV) setInterval(() => {
 function save(){
   const S = G.S;
   if (S.status === 'setup') return;
-  storageSet(C.SAVE_KEY, JSON.stringify(Object.assign(G.snapshot(), { units: [], enemyQueue: [], savedAt: Date.now() })));
+  storageSet(C.SAVE_KEY, JSON.stringify(Object.assign(G.snapshot(), { units: [], enemyQueue: [] })));
 }
 /* Spielstände älterer Versionen (anderer Schlüssel oder andere Versionsnummer) werden nicht übernommen, sondern dem Spieler
    auf dem Startbildschirm gemeldet und erst danach entfernt (Anforderung Iteration 5, Abschnitt 1) */
@@ -380,7 +380,8 @@ function load(){
     const d = JSON.parse(raw);
     if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]){ discardedSave = true; dropStaleSaves([C.SAVE_KEY]); return false; }
     G.adopt(d);
-    if (d.savedAt) G.applyAway((Date.now() - d.savedAt) / 1000);
+    // Reines Online-Spiel (REQ-6.03): beim Laden vergeht keine Spielzeit, die Partie beginnt pausiert
+    if (G.S.status === 'running') setPaused(true);
     return true;
   } catch (e) { return false; }
 }
@@ -600,7 +601,7 @@ function render(){
 /* ================= Hauptschleife ================= */
 /* Spiellogik im festen Takt TICK_S, Zeichnen in requestAnimationFrame. Pause (Menü) und Dialoge halten die Logik an;
    eine offene Kartenwahl hält sie in core.js an (unverändert aus v0.5). */
-let last = performance.now(), acc = 0, uiAcc = 0, hiddenAt = null, paused = false;
+let last = performance.now(), acc = 0, uiAcc = 0, paused = false;
 function setPaused(p){ paused = !!p; last = performance.now(); acc = 0; requestRender(); }
 function frame(now){
   const dt = Math.min(C.MAX_FRAME_S, (now - last) / 1000);
@@ -620,12 +621,9 @@ function frame(now){
 /* ================= Start, sobald render.js, hud.js und panels.js geladen sind ================= */
 function boot(){
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden){ hiddenAt = Date.now(); save(); }
-    else {
-      if (hiddenAt && !paused) G.applyAway((Date.now() - hiddenAt) / 1000);
-      hiddenAt = null; last = performance.now(); acc = 0;
-      requestRender();
-    }
+    // Tab verdeckt: speichern und pausieren; beim Zurückkehren steht „Weiter“ in der Spielwelt (REQ-6.03)
+    if (document.hidden){ save(); if (G.S.status === 'running') setPaused(true); }
+    else { last = performance.now(); acc = 0; requestRender(); }
   });
   window.addEventListener('pagehide', save);
   window.addEventListener('resize', layoutBands);
@@ -635,7 +633,7 @@ function boot(){
   setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
   // Schnittstelle für automatisierte Browser-Tests
-  window.__kf = { G, C, t, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw,
+  window.__kf = { G, C, t, save, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw,
                   selectPlot, selectSection, clearSelection, selectTab, setPaused,
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };

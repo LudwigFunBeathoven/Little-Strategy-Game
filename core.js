@@ -13,7 +13,7 @@ const RES = Object.fromEntries(RESEARCH.map(r => [r.id, r]));
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 6;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+const SAVE_VERSION = 7;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
@@ -56,7 +56,7 @@ function freshState(diff, seed){
     research: { done: {}, active: [], ver: 0, banned: [], fresh: false },     // Forschungsbaum der Universität (REQ-5.07)
     clickTimes: [],
     stats: { prod: { early: { click: 0, auto: 0, time: 0 }, mid: { click: 0, auto: 0, time: 0 }, late: { click: 0, auto: 0, time: 0 } } },
-    log: [], savedAt: 0,
+    log: [],
   };
 }
 
@@ -117,7 +117,8 @@ function create(){
   // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Material kommt sonst aus Fabriken (REQ-16.2)
   const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * mMul('clickYield');
   const factoryCount = () => countType('fabrik');
-  const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd') * mMul('materialYield');
+  // Nachtschicht (REQ-6.03, ersetzt die frühere Wirkung außerhalb der Partie): Fabriken in der Spätphase stärker
+  const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd') * mMul('materialYield') * (phase() === 'late' ? mMul('lateYield') : 1);
   /* Experiment Schwung (REQ-5.08): Bonus der Automatik aus kürzlichem Klicken */
   const momentumBonus = () => C.EXPERIMENT && C.EXPERIMENT.momentum ? Math.min(C.MOMENTUM.max, S.momentum || 0) : 0;
   const matRate      = () => factoryCount() * factoryRate() * (1 + momentumBonus());
@@ -132,7 +133,6 @@ function create(){
   const sectionMax   = i => (C.SECTION_HP[i] + C.FX_MAUER_HP * lv('mauer')) * mMul('wallHp');
   const sectionUp    = i => S.sections[i].hp > 0;
   const gateHp       = () => S.sections[GATE].hp;
-  const offlineHours = () => C.OFFLINE_HOURS + mAdd('offlineHours');
   const towerId      = (base, lane) => `${base}_${lane}`;
   const towerBuilt   = lane => lv(towerId('turm', lane)) > 0;
   const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
@@ -1011,20 +1011,11 @@ function create(){
     if (!S.siegeDone) S.siegeWaveT += shift;       // Belagerungswelle bleibt eine reguläre Welle im Takt
     if (!Array.isArray(S.nextEnemy) || !S.nextEnemy.length) S.nextEnemy = rollEnemyWave();
   }
-  /* Abwesenheit: nur Material wird nachgerechnet, die Front steht still */
-  function applyAway(seconds){
-    if (S.status !== 'running') return 0;
-    const sec = Math.min(seconds, offlineHours() * 3600);
-    if (sec < C.OFFLINE_MIN_S) return 0;
-    const gain = matRate() * sec;
-    if (gain >= 1){ addMaterial(gain); log('log.away', { seconds: sec, amount: gain }); }
-    return gain;
-  }
   const snapshot = () => JSON.parse(JSON.stringify(S));
 
   return {
     get S(){ return S; }, set S(v){ S = v; }, FX,
-    newGame, adopt, snapshot, tick, applyAway,
+    newGame, adopt, snapshot, tick,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
@@ -1034,7 +1025,7 @@ function create(){
     phase, xpProgress, draftSize, colOffset, lateralOf, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, momentumBonus, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
-    offlineHours, turretDmg, turretRange, turretCd,
+    turretDmg, turretRange, turretCd,
   };
 }
 

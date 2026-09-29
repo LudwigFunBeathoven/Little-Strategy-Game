@@ -27,7 +27,7 @@ const KF_DRAFT_OPTIONS = [
     tiers: [{ effect: [{ stat: 'autoProd', mul: 1.25 }], drawback: [{ stat: 'clickYield', mul: 0.5 }] },
             { effect: [{ stat: 'autoProd', mul: 1.5 }],  drawback: [{ stat: 'clickYield', mul: 0.25 }] }] },
   { id: 'nachtschicht', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.nachtschicht.name', descKey: 'draft.nachtschicht.desc',
-    tiers: [{ effect: [{ stat: 'offlineHours', add: 4 }] }, { effect: [{ stat: 'offlineHours', add: 8 }] }] },
+    tiers: [{ effect: [{ stat: 'lateYield', mul: 1.25 }] }, { effect: [{ stat: 'lateYield', mul: 1.5 }] }] },   // I6.3: Online-Wirkung ersetzt die frühere Wirkung außerhalb der Partie
   { id: 'kriegserfahrung', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.kriegserfahrung.name', descKey: 'draft.kriegserfahrung.desc',
     tiers: [{ effect: [{ stat: 'xpGain', mul: 1.3 }] }, { effect: [{ stat: 'xpGain', mul: 1.6 }] }] },
   { id: 'kriegsanleihe', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.kriegsanleihe.name', descKey: 'draft.kriegsanleihe.desc',

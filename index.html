@@ -237,6 +237,8 @@
 
   /* Band 2: Spielwelt */
   .worldband{display:flex; flex-direction:column; gap:4px; padding:6px 10px 4px;}
+  .world .resume[hidden]{display:none;}
+  .world .resume{position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:5; min-width:180px; justify-content:center;}
   .world{flex:1 1 auto; min-height:0; position:relative; background:var(--surface); border:1px solid var(--rule); border-radius:6px; overflow:hidden;}
   #lane{display:block; width:100%; height:100%; cursor:grab; touch-action:none;}
   #lane.dragging{cursor:grabbing;}
@@ -325,7 +327,8 @@
 
   <!-- Band 2: Spielwelt, horizontal scrollbar (REQ-46) -->
   <main class="worldband" id="worldband">
-    <div class="world" id="world"><canvas id="lane" tabindex="0" data-tooltip="world"></canvas></div>
+    <div class="world" id="world"><canvas id="lane" tabindex="0" data-tooltip="world"></canvas>
+      <button class="btn-primary resume" id="resumeBtn" type="button" data-tooltip="menu:resume" hidden><span class="btn-label"></span><span class="expl"></span></button></div>
     <div class="world-tools">
       <input type="range" id="worldScroll" class="scrollbar" min="0" max="1000" step="1" value="0" data-tooltip="scroll">
       <div class="seg cam">

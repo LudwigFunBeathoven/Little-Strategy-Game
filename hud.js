@@ -38,6 +38,8 @@ function buildHud(){
   for (let i = 0; i < C.LANE_COUNT; i++){ hudEl['hpP' + i] = $('hpP' + i); hudEl['barP' + i] = $('barP' + i); }
   hudEl.draftBtn.addEventListener('click', () => selectTab('cards', true));
   hudEl.pauseBtn.addEventListener('click', () => setPaused(!paused));
+  hudEl.resumeBtn = $('resumeBtn');
+  hudEl.resumeBtn.addEventListener('click', () => setPaused(false));
   hudEl.langBtn.addEventListener('click', () => { setLang(C.LANGUAGES[(C.LANGUAGES.indexOf(lang) + 1) % C.LANGUAGES.length]); requestRender(); });
   hudEl.newBtn.addEventListener('click', () => openStart(G.S.status === 'running'));
 }
@@ -89,6 +91,10 @@ function renderHud(){
   setText(E.pauseBtn.querySelector('.btn-label'), t(paused ? 'menu.resume' : 'menu.pause'));
   setText(E.pauseBtn.querySelector('.expl'), t(paused ? 'ex.menu.resume' : 'ex.menu.pause'));
   setDis(E.pauseBtn, !running);
+  // „Weiter“ groß in der Spielwelt, solange die Partie pausiert ist (Tab verdeckt, geladen, Pause-Knopf)
+  setHidden(E.resumeBtn, !(running && paused));
+  setText(E.resumeBtn.querySelector('.btn-label'), t('menu.resume'));
+  setText(E.resumeBtn.querySelector('.expl'), t('ex.menu.resume'));
   setText(E.langBtn.querySelector('.btn-label'), t('lang.' + C.LANGUAGES[(C.LANGUAGES.indexOf(lang) + 1) % C.LANGUAGES.length]));
   setText(E.langBtn.querySelector('.expl'), t('ex.menu.lang'));
   setText(E.newBtn.querySelector('.expl'), t('ex.newGame'));

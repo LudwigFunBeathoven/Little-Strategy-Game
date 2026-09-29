@@ -3,7 +3,7 @@
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
   VERSION: '0.6',
-  SAVE_KEY: 'klammerfront.save.v6',
+  SAVE_KEY: 'klammerfront.save.v7',
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -16,8 +16,6 @@ const KF_CONFIG = {
   MAX_FRAME_S: 1,               // längster Frame, der nachgeholt wird
   UI_REFRESH_S: 0.1,
   AUTOSAVE_MS: 5000,
-  OFFLINE_MIN_S: 10,
-  OFFLINE_HOURS: 8,
   LOG_LINES: 5,
 
   /* Tooltips (REQ-05) */

@@ -300,10 +300,10 @@ for (const dsf of [1, 2]){
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage();
   await p.goto(url);
-  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.save.v5', JSON.stringify({ v: 5, diff: 'normal' })); });
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.save.v6', JSON.stringify({ v: 6, diff: 'normal' })); });
   await p.reload(); await p.waitForTimeout(300);
   const r = await p.evaluate(() => ({ text: document.querySelector('#mText').textContent, open: !document.querySelector('#modal').hidden,
-    note: __kf.t('start.oldSave'), left: localStorage.getItem('klammerfront.save.v5') }));
+    note: __kf.t('start.oldSave'), left: localStorage.getItem('klammerfront.save.v6') }));
   check(r.open && r.text.includes(r.note) && r.left === null, 'Alter Spielstand: Hinweis auf dem Startbildschirm, danach entfernt');
   await p.reload(); await p.waitForTimeout(300);
   check(!(await p.evaluate(() => document.querySelector('#mText').textContent.includes(__kf.t('start.oldSave')))), 'Alter Spielstand: Hinweis nur einmal');
@@ -476,6 +476,38 @@ for (const dsf of [1, 2]){
   const log = await p.evaluate(() => { const l = __kf.unitLog(); return { n: l.length, keys: l.length ? Object.keys(l[0]).join() : '' }; });
   check(log.n > 0 && /state/.test(log.keys) && /lane/.test(log.keys) && /row/.test(log.keys) && /dirX/.test(log.keys), `Debug-Protokoll je Einheit: ${log.n} Einträge (${log.keys})`);
   check(errs.length === 0, `Kampfbild: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
+// REQ-6.03: reines Online-Spiel. Laden nach einer Stunde Systemzeit ändert nichts und startet pausiert; verdeckter Tab pausiert
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.evaluate(() => __kf.startGame('normal')); await p.waitForTimeout(100);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.build('fabrik'); G.build('fabrik'); G.S.material = 777; });
+  await p.waitForTimeout(500);
+  // Tab verdecken: Spielzeit steht, danach „Weiter“ in der Spielwelt
+  await p.evaluate(() => { Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
+  const t0 = await p.evaluate(() => __kf.G.S.t); await p.waitForTimeout(800);
+  await p.evaluate(() => { Object.defineProperty(document, 'hidden', { value: false, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
+  await p.waitForTimeout(200);
+  const hid = await p.evaluate(() => ({ t: __kf.G.S.t, paused: __kf.paused, btn: !document.querySelector('#resumeBtn').hidden, label: document.querySelector('#resumeBtn .btn-label').textContent }));
+  check(hid.t === t0 && hid.paused && hid.btn && hid.label === 'Weiter', `Tab verdeckt: Spielzeit steht (${t0.toFixed(2)} → ${hid.t.toFixed(2)}), „Weiter“ sichtbar`);
+  await p.click('#resumeBtn'); await p.waitForTimeout(300);
+  check(await p.evaluate(() => !__kf.paused && document.querySelector('#resumeBtn').hidden && __kf.G.S.t > 0), 'Weiter: Partie läuft wieder');
+  // Speichern, Systemzeit eine Stunde vorstellen, laden: Ressourcen unverändert, Partie pausiert
+  await p.click('#pauseBtn'); await p.waitForTimeout(100);           // angehalten speichern: das Speichern beim Verlassen der Seite sieht denselben Stand
+  const before = await p.evaluate(() => { __kf.save(); return { m: __kf.G.S.material, t: __kf.G.S.t }; });
+  await p.addInitScript(() => { const real = Date.now; Date.now = () => real() + 3600 * 1000; });
+  await p.reload(); await p.waitForTimeout(500);
+  const after = await p.evaluate(() => ({ m: __kf.G.S.material, t: __kf.G.S.t, paused: __kf.paused, btn: !document.querySelector('#resumeBtn').hidden }));
+  check(Math.abs(after.m - before.m) < 1e-6 && Math.abs(after.t - before.t) < 1e-6 && after.paused && after.btn,
+    `Laden eine Stunde später: Material ${before.m.toFixed(1)} → ${after.m.toFixed(1)}, Zeit unverändert, pausiert mit „Weiter“`);
+  check(errs.length === 0, `Online-Prüfung: keine Fehler${show(errs)}`);
   await ctx.close();
 }
 

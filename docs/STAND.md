@@ -10,7 +10,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 | I6.0 | Basislinie v0.6 mit beiden Strategien, neue Kennzahlen | 6.09 | fertig |
 | I6.1 | Formationen ohne Pendeln | 6.01 | fertig (Soll knapp verfehlt, siehe Befund) |
 | I6.2 | Versetzte Einzelangriffe, eigene Geschosse | 6.02 | fertig |
-| I6.3 | Offline-Reste, Pause bei verdecktem Tab, Kartenersatz | 6.03 | offen |
+| I6.3 | Offline-Reste, Pause bei verdecktem Tab, Kartenersatz | 6.03 | fertig |
 | I6.4 | Kartenwahl automatisch, Kaserne im Reiter „Armee“ | 6.04, 6.05 | offen |
 | I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | offen |
 | I6.6 | Universität | 6.06 | offen |
@@ -65,6 +65,14 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- I6.3: `npm test` 126/126 (neu `tests/online.test.mjs`: Suchtest ohne Offline-Bezug in `core.js`, `config.js`, `hints.js`, `data/`, `i18n/`;
+  keine Abwesenheitsrechnung in der Logik; Laden ändert nichts; Nachtschicht nur in der Spätphase). Browser-Prüfung: Tab verdecken → Spielzeit
+  steht, „Weiter“ in der Spielwelt; Laden mit um eine Stunde vorgestellter Systemzeit → Material und Zeit unverändert, Partie pausiert.
+  `SAVE_VERSION` 7, `SAVE_KEY` `klammerfront.save.v7`; alte Stände werden mit dem bestehenden Hinweis verworfen.
+  **Karten mit Offline-Bezug (zur Freigabe durch den PO):** nur **Nachtschicht** (Wirtschaft, gewöhnlich; bisher „Fabriken arbeiten bei
+  Abwesenheit 4/8 Stunden länger“, im Spiel wirkungslos). Ersatz gleicher Kategorie und Seltenheit: „In der Spätphase produzieren die
+  Fabriken 25 %/50 % mehr“ (Stufe I/II). Übrige Offline-Reste: Nachrechnen beim Laden und beim Zurückkehren in den Tab, Konstanten
+  `OFFLINE_MIN_S`, `OFFLINE_HOURS`, Meldung „… abwesend: +… Material“, Zeitstempel im Spielstand – entfernt.
 - I6.1: `npm test` 116/116 (neu `tests/pendel.test.mjs`: je Ursache ein Szenario, Richtungswechsel in drei echten Partien, Totzone; zwei
   Tests in `army.test.mjs` an die Mindestverweildauer angepasst). Debug-Protokoll je Einheit mit `?debug=1` (`__kf.unitLog(id)`, im Export
   als `unitLog`, letzte 15 s). Browser-Prüfung: Kampfbild ohne Hin-und-her, Debug-Protokoll, `compare-human` erkennt Profil und Strategie.
@@ -134,3 +142,7 @@ Playwright: 10 Sekunden Kampfbild, Positionsprüfung je Bild, höchstens 1 Wechs
    sondern am Rand der Reihe. Das ist der Preis für stabile Plätze.
 10. **Einheiten auf dem Weg in eine andere Lane** erhalten ihren Platz in der Ziel-Lane beim Losgehen (hinten angereiht); sie kämpfen während
     des Wechsels weiterhin nicht.
+11. **Pause bei verdecktem Tab** gilt auch für einen geladenen Spielstand: Die Partie beginnt pausiert, ein großer Knopf „Weiter“ liegt mittig
+    über der Spielwelt (zusätzlich zum Pause-Knopf der Leiste). Einheiten auf dem Feld werden wie bisher nicht gespeichert.
+12. **Nachtschicht:** Die Spätphase ist die Phase ab Stufe `PHASE_LATE_LEVEL`; die Wirkung multipliziert den Fabrikertrag (nicht Klicks und
+    Presse). Die Karte war in v0.6 mit 26 % Wahlrate im Pool, obwohl sie im Spiel nichts bewirkte.
