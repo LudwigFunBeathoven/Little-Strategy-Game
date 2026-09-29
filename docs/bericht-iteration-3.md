@@ -1,6 +1,6 @@
 # Klammerfront – Umsetzungsbericht Iteration 3
 
-Stand: 28.09.2026 · Version 0.4 · Grundlage: `docs/anforderungen-iteration-3.md` · Stand je Inkrement: `docs/STAND.md`
+Stand: 28.09.2026 · Version 0.4 · Grundlage: `docs/anforderungen-iteration-3.md` · Stand je Inkrement: `docs/archiv/STAND-iteration-3.md`
 
 ## Ergebnis
 Alle sieben Inkremente sind umgesetzt, auf dem Branch `3x3-und-3-Lanes-Spiel` mit je einem Commit `I3.x` (I5 und I6 in einem gemeinsamen Commit).
@@ -17,7 +17,7 @@ Die Abschluss-Simulation umfasst 3.800 Partien, davon 3.000 in der Serie nach RE
 - Jeder Knopf erklärt in einer Zeile Wirkung und Kosten. Beim ersten Kontakt mit einem neuen System erscheint einmal ein kurzer Hinweis.
 
 ## Entscheidungen, die der PO bestätigen sollte
-Die vollständige Liste mit Begründung steht in `docs/STAND.md`, Abschnitt „Abweichungen und Auslegungen“ (25 Punkte). Die wichtigsten:
+Die vollständige Liste mit Begründung steht in `docs/archiv/STAND-iteration-3.md`, Abschnitt „Abweichungen und Auslegungen“ (25 Punkte). Die wichtigsten:
 
 | Nr. | Punkt | Warum |
 |---|---|---|
@@ -28,7 +28,7 @@ Die vollständige Liste mit Begründung steht in `docs/STAND.md`, Abschnitt „A
 | 23 | Reparatur je Abschnitt höchstens alle 5 s | Reiche Spieler reparierten schneller, als der Gegner Schaden machte (Patt) |
 | 11 | Schmiede: ein Upgrade „Qualitätsstufe“ statt Klingen, Rüstung, Drill | 17.3 beschreibt Qualitätsstufen; ein Upgrade ist der klarere Materialabfluss |
 | 12 | Kaserne: das Gebäude ist Ausbaustufe 1 | Sonst bringt der Bau der Kaserne allein nichts |
-| 16 | Stufen der übrigen Karten | 18.6 verlangt einen Vorschlag; Tabelle in `docs/STAND.md` |
+| 16 | Stufen der übrigen Karten | 18.6 verlangt einen Vorschlag; Tabelle in `docs/archiv/STAND-iteration-3.md` |
 
 ## Kalibrierung (REQ-21.5, nur Konstanten in `config.js`)
 | Konstante | Vorgabe / vorher | Jetzt | Grund |
@@ -149,7 +149,7 @@ Soll: Früh ≥ 50 % ✓, Mitte 10–30 % **✗**, Spät ≤ 3 % **✗**; Stopp/
 7. **Handelskontor bleibt schwach.** Kombinationen mit Kontor gewinnen 82–89 % gegen 98 % ohne; der Platz fehlt einer Fabrik oder der Universität.
 
 ## Offen für den Product Owner
-1. Die Abweichungen und Auslegungen in `docs/STAND.md` bestätigen oder verwerfen, vor allem die drei neuen Regeln gegen Patts (21–23).
+1. Die Abweichungen und Auslegungen in `docs/archiv/STAND-iteration-3.md` bestätigen oder verwerfen, vor allem die drei neuen Regeln gegen Patts (21–23).
 2. Kalibrierte Werte abweichend von den Vorgaben bestätigen: `POST_SIEGE_GROWTH` 0,6 statt 0,10, `UNIT_STRENGTH_PER_LEVEL` 0,08 statt 0,05.
 3. Sollwerte „Klickanteil Mitte/Spät“ (REQ-03) für das Fabrikmodell neu festlegen, etwa Mitte 20–50 %, Spät ≤ 40 %, oder Fabrikertrag mit der Stufe wachsen lassen.
 4. Leicht/gelegentlich und Schwer/durchschnitt: Korridore anpassen oder eine eigene Stellschraube für den Frühstart (z. B. erste Fabrik gratis) freigeben.

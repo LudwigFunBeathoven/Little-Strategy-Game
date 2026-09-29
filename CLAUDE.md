@@ -6,7 +6,8 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Altmetall, das nur als Erfahrung zählt. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.4 (Iteration 3: `docs/anforderungen-iteration-3.md`, Stand je Inkrement in `docs/STAND.md`,
+Aktueller Auftrag: `docs/anforderungen-iteration-4.md` (Iteration 4, Stand je Inkrement in `docs/STAND.md`, Plan in `docs/plan-iteration-4.md`).
+Vorgänger: v0.4 (Iteration 3: `docs/anforderungen-iteration-3.md`, Stand `docs/archiv/STAND-iteration-3.md`,
 Bericht in `docs/bericht-iteration-3.md`).
 
 ## Der Nutzer
