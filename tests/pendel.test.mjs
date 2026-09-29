@@ -31,7 +31,8 @@ test('Ursache 1 – Zustandspendeln: jede Armee bleibt mindestens ARMY.minStateS
     bot.step(0.05);
     for (const f of G.S.forms){
       const p = last.get(f.id);
-      if (p && p.state !== f.state){ worst = Math.min(worst, G.S.t - p.since); last.set(f.id, { state: f.state, since: G.S.t }); }
+      // Marsch → Kampf ist bewusst sofort erlaubt (sonst liefe die Armee in den Gegner); alle anderen Wechsel warten
+      if (p && p.state !== f.state){ if (!(p.state === 'march' && f.state === 'fight')) worst = Math.min(worst, G.S.t - p.since); last.set(f.id, { state: f.state, since: G.S.t }); }
       else if (!p) last.set(f.id, { state: f.state, since: G.S.t });
     }
   }

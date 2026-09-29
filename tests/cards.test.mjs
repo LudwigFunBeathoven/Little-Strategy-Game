@@ -6,6 +6,8 @@ import { loadCore } from '../tools/load-core.mjs';
 const TOP = 0, MID = 1;
 function game(diff = 'normal', seed = 7){
   const { KlammerCore, KF_CONFIG, KF_DRAFT_OPTIONS } = loadCore();
+  // exakte Schadensvergleiche: ohne Versatz und Streuung der Angriffe (REQ-6.02, eigene Tests in versatz.test.mjs)
+  KF_CONFIG.COMBAT.spawnStagger = 0; KF_CONFIG.COMBAT.cdJitter = 0;
   const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed);
   return { G, C: KF_CONFIG, K: KlammerCore, OPTS: KF_DRAFT_OPTIONS };
 }

@@ -250,8 +250,10 @@ function draw(realDt, now){
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(wx(s.x1), y1); ctx.stroke();
       ctx.globalAlpha = 1;
     } else {
+      // eigenes Geschoss je Wurf: vom Platz des Werfers zum Platz des Ziels, im Bogen (REQ-6.02)
       const x = wx(s.x0 + (s.x1 - s.x0) * p);
-      ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.arc(x, y1 - Math.sin(p * Math.PI) * laneH() * 0.12, 2, 0, Math.PI * 2); ctx.fill();
+      const ya = s.y0 != null ? laneMid(s.y0) : y1, yb = s.y1 != null ? laneMid(s.y1) : y1;
+      ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.arc(x, ya + (yb - ya) * p - Math.sin(p * Math.PI) * laneH() * 0.12, 2, 0, Math.PI * 2); ctx.fill();
     }
   }
   FX.fx = FX.fx.filter(f => (f.t += realDt) < Math.max(0.4, C.UI.fadeS));

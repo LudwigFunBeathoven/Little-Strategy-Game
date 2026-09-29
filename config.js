@@ -60,6 +60,13 @@ const KF_CONFIG = {
     deadZone: 0.02,             // Totzone quer (in Lanes): näher an der Ziel-Lane rastet eine Einheit ein und bewegt sich nicht mehr
   },
 
+  /* Angriffe (REQ-6.02): Versatz und Streuung gegen Gleichtakt; alles über den Spielzufall S.rng */
+  COMBAT: {
+    cdJitter: 0.10,             // jede Angriffspause ± diesen Anteil (gleichverteilt, Mittelwert unverändert)
+    spawnStagger: 1.0,          // erste Angriffspause beim Entstehen: zufälliger Anteil 0 … spawnStagger der Angriffspause
+    avoidOverkill: false,       // Fernkämpfer meiden Ziele, deren im selben Takt geplanter Schaden schon für den Abschuss reicht (Soll, Schalter)
+  },
+
   /* Experimente (REQ-5.08): nur simulieren und berichten; die Einführung entscheidet der PO */
   EXPERIMENT: { momentum: false },
   // Schwung: jeder Klick lädt einen Speicher, der mit MOMENTUM.decayS abklingt; die Automatik (Fabriken, Presse) erhält den Speicherstand

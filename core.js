@@ -267,12 +267,14 @@ function create(){
   function makeUnit(side, type, lane, x, form){
     const spec = C.UNITS[type], p = side === 'p';
     const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
-    return {
+    const u = {
       id: S.nextId++, side, type, lane, laneF: lane, home: lane, x: x ?? (p ? spawnX() : W - EBW), form: form ?? null, speed: spec.speed,
       range: unitRange(side, type), ranged: isRangedType(type),
       hp, maxHp: hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()),
       cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, bob: rnd() * 6, row: 0, col: 0, rowSize: 1,
     };
+    u.cd = u.cdMax * C.COMBAT.spawnStagger * rnd();                  // Versatz beim Entstehen: kein Gleichtakt einer Welle (REQ-6.02)
+    return u;
   }
   /* ---------- Armee als gemeinsame Welle (REQ-5.06) ----------
      Eine Gruppe (S.forms) ist die Armee einer Seite (main) oder Nachschub auf dem Weg zu ihr. Alle Lanes einer Gruppe teilen die Front x.
@@ -461,7 +463,8 @@ function create(){
       if (u.formSize >= (OPT.kriegstrommeln ? OPT.kriegstrommeln.condition.value : Infinity)) dmg *= mMul('drumsDmg');   // Kriegstrommeln
     } else if (!target.ranged && target.row === 0 && target.rowSize === C.FORMATION_ROW_MAX) dmg /= mMul('shieldHp');        // Schildwall
     target.hp -= dmg; target.flash = 0.12;
-    if (u.ranged) shot({ x0: u.x, x1: target.x, lane: u.laneF, t: 0, dur: 0.3 });
+    // eigenes Geschoss je Wurf, vom Platz des Werfers zum Platz des Ziels (REQ-6.02)
+    if (u.ranged) shot({ from: u.id, to: target.id, x0: u.x, x1: target.x, lane: u.laneF, y0: lateralOf(u), y1: lateralOf(target), t: 0, dur: 0.3 });
     else lunge(u);
   }
   function hitBase(u){
@@ -471,7 +474,7 @@ function create(){
       hitSection(u.lane, u.dmg);
       if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
     }
-    if (u.ranged) shot({ x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, lane: u.laneF, t: 0, dur: 0.3 });
+    if (u.ranged) shot({ from: u.id, to: null, x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, lane: u.laneF, y0: lateralOf(u), y1: u.laneF, t: 0, dur: 0.3 });
   }
 
   /* ---------- Einzelsimulation (REQ-5.05) ----------
@@ -520,6 +523,8 @@ function create(){
   }
   const ONE_LANE = Array.from({ length: C.LANE_COUNT }, (_, l) => [l]);
   let byIdFor = null, byIdLen = -1;
+  /* Streuung je Angriff (REQ-6.02): ± COMBAT.cdJitter, Mittelwert der Angriffspause unverändert */
+  const nextCd = u => u.cdMax * (1 + C.COMBAT.cdJitter * (2 * rnd() - 1));
   function resolveCombat(dt){
     // Zuordnung Id → Einheit nur neu aufbauen, wenn sich die Einheitenliste geändert hat
     // dabei auch Ziele gefallener Einheiten vergessen
@@ -528,7 +533,7 @@ function create(){
       for (const key of [...targets.keys()]) if (!byId.has(key) && typeof key === 'number') targets.delete(key);
     }
     const idx = laneIndexBoth();
-    const attacks = [];
+    const attacks = [], overkill = C.COMBAT.avoidOverkill, planned = overkill ? new Map() : null;
     // 1. Ziele bestimmen, Zustand zu Tickbeginn
     for (const u of S.units){
       u.flash = Math.max(0, u.flash - dt);
@@ -536,10 +541,17 @@ function create(){
       u.cd -= dt;
       if (u.cd > 0 || u.laneF !== u.lane) continue;
       const reach = reachOf(u), foes = idx[u.side === 'p' ? 'e' : 'p'][u.lane];
-      const tg = keepTarget(u.id, u.x, reach, ONE_LANE[u.lane]) || nearestIn(foes, u.x, reach);
-      if (tg){ targets.set(u.id, tg.id); attacks.push({ u, tg }); u.cd = u.cdMax; continue; }
+      let tg = keepTarget(u.id, u.x, reach, ONE_LANE[u.lane]) || nearestIn(foes, u.x, reach);
+      // Overkill-Vermeidung (Schalter COMBAT.avoidOverkill): reicht der in diesem Takt geplante Schaden schon für den Abschuss,
+      // wählt ein Fernkämpfer das nächste andere Ziel in Reichweite
+      if (tg && u.ranged && overkill && (planned.get(tg.id) || 0) >= tg.hp){
+        let alt = null, bd = Infinity;
+        for (const f of foes){ const d = Math.abs(f.x - u.x); if (d <= reach && (planned.get(f.id) || 0) < f.hp && (d < bd || (d === bd && f.id < alt.id))){ bd = d; alt = f; } }
+        if (alt) tg = alt;
+      }
+      if (tg){ targets.set(u.id, tg.id); attacks.push({ u, tg }); u.cd = nextCd(u); if (overkill) planned.set(tg.id, (planned.get(tg.id) || 0) + u.dmg); continue; }
       targets.delete(u.id);
-      if ((baseX(u.side) - u.x) * dirOf(u.side) <= reach){ attacks.push({ u, base: true }); u.cd = u.cdMax; }
+      if ((baseX(u.side) - u.x) * dirOf(u.side) <= reach){ attacks.push({ u, base: true }); u.cd = nextCd(u); }
     }
     // Gegnerischer Turm an der Mitte: zuerst Einheiten der Mitte, sonst die nächste einer anderen Lane (REQ-43)
     S.enemyTurretCd -= dt;

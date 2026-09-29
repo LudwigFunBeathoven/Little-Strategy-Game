@@ -9,7 +9,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 |---|---|---|---|
 | I6.0 | Basislinie v0.6 mit beiden Strategien, neue Kennzahlen | 6.09 | fertig |
 | I6.1 | Formationen ohne Pendeln | 6.01 | fertig (Soll knapp verfehlt, siehe Befund) |
-| I6.2 | Versetzte Einzelangriffe, eigene Geschosse | 6.02 | offen |
+| I6.2 | Versetzte Einzelangriffe, eigene Geschosse | 6.02 | fertig |
 | I6.3 | Offline-Reste, Pause bei verdecktem Tab, Kartenersatz | 6.03 | offen |
 | I6.4 | Kartenwahl automatisch, Kaserne im Reiter „Armee“ | 6.04, 6.05 | offen |
 | I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | offen |
@@ -95,6 +95,17 @@ Kennzahl „Richtungswechsel“ (Kurzsimulation 200 Partien je Strategie, `repor
 | Zeitanteil der Armee im Kampf, gierig / einheiten-zuerst | 63 % / – | 62 % / 68 % |
 | Normal durchschnitt: Median Sieg · Siegquote, gierig / einheiten-zuerst | 9:48 · 79 % / 6:25 · 100 % | 9:33 · 79 % / 6:23 · 100 % |
 
+### REQ-6.02 Würfe im Gleichtakt
+**Befund: Gleichtakt, keine Gruppierung.** Die Simulation arbeitet seit REQ-5.05 je Einheit (eigenes Ziel, eigene Angriffspause, ein Geschoss
+je Wurf). Alle Einheiten einer Welle entstanden aber im selben Takt mit Angriffspause 0 und derselben Pause danach; zehn Werfer warfen
+dauerhaft im selben Takt (Test rot: 2 Takte mit je 10 Angriffen). Zusätzlich starteten alle Geschosse einer Lane in der Lane-Mitte und
+landeten dort, deshalb sahen die Würfe wie ein einziger aus.
+Behebung: erste Angriffspause zufällig 0–100 % (`COMBAT.spawnStagger`), jede weitere ± 10 % (`COMBAT.cdJitter`), beides über `S.rng`;
+jedes Geschoss fliegt vom Platz des Werfers zum Platz seines Ziels. Gilt für Nah- und Fernkämpfer beider Seiten. Overkill-Vermeidung hinter
+`COMBAT.avoidOverkill` (aus). Tests `tests/versatz.test.mjs`: fünf und mehr Takte je 2 s, ein Geschoss je Angriff, mittlere Rate ± 3 %,
+gleicher Seed gleiche Partie, Schalter wirkt.
+
+### REQ-6.01, Fortsetzung
 **Soll „höchstens 2 je Sekunde“ knapp verfehlt.** Die restlichen Fälle sind sichtbare, aber einzelne Umordnungen in langen Kämpfen: Eine
 Einheit kommt in einer Nachbar-Lane an, bleibt die Mindestzeit und zieht weiter, während vor ihr jemand fällt oder ein Nahkämpfer sich vor die
 Fernkämpfer setzt (Regel „Nahkämpfer vorn“). Kein Muster in aufeinanderfolgenden Takten mehr. Vorschlag: so lassen und im Spieltest
