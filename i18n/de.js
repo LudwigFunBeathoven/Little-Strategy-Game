@@ -408,4 +408,7 @@ KF_I18N.de = {
   'sub.repair': 'Reparatur',
   'panel.smithy.text': 'Qualitätsstufe {n}. Jede Stufe stärkt alle Einheiten.',
   'tip.grid.empty': 'Freier Bauplatz.',
+  'grid.free': 'frei',
+  'grid.aria': 'Bauplätze im Reich',
+  'grid.cell': 'Platz {n}',
 };

@@ -335,6 +335,52 @@ for (const dsf of [1, 2]){
   await ctx.close();
 }
 
+// REQ-5.04: Bauen in genau zwei Klicks aus der Welt und aus dem Knopfraster; Bau vollständig per Tastatur
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  const errors = []; p.on('pageerror', e => errors.push(e.message));
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.click('.card .btn-primary'); await p.waitForTimeout(200);
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; const G = __kf.G; G.S.nextWave = 1e9; G.S.material = 1e5; __kf.selectTab('army'); });
+  await p.waitForTimeout(60);
+  let clicks = 0;
+  const click = async (x, y) => { clicks++; await p.mouse.click(x, y, { delay: 90 }); await p.waitForTimeout(60); };
+  const centre = async sel => p.evaluate(q => { const e = document.querySelector(q); e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, sel);
+  // aus der Welt: Bauplatz 5, dann erste Option
+  let pt = await p.evaluate(() => { const r = __kf.plotRects[4]; return __kf.worldToScreen(r.x + r.w / 2, r.y + r.h / 2); });
+  await click(pt.x, pt.y);
+  const opt1 = await centre('#ctxBuild .pick'); await click(opt1.x, opt1.y);
+  const r1 = await p.evaluate(() => ({ built: __kf.G.S.slots[4], sel: __kf.sel, head: !document.querySelector('#ctxHead').hidden, dem: document.querySelectorAll('#ctxDemolish button').length }));
+  check(clicks === 2 && !!r1.built && r1.sel?.i === 4 && r1.head && r1.dem > 0, `Bauen aus der Welt: ${clicks} Klicks, Platz bleibt ausgewählt und zeigt Abriss ${JSON.stringify(r1.built)}`);
+  // aus dem Knopfraster: Platz 6, dann Option „Kaserne“ (Reiter vorher auf Armee)
+  clicks = 0;
+  await p.evaluate(() => __kf.selectTab('army')); await p.waitForTimeout(60);
+  await p.click('#tab-build'); await p.waitForTimeout(60);
+  pt = await centre('#plotGrid [data-tooltip="grid:5"]'); await click(pt.x, pt.y);
+  const opt2 = await centre('#ctxBuild [data-tooltip^="pick:kaserne"]'); await click(opt2.x, opt2.y);
+  await p.waitForTimeout(200);            // Ausbau-Option erscheint mit dem nächsten Logik-Tick (Freischaltung nach Bestand)
+  const r2 = await p.evaluate(() => ({ built: __kf.G.S.slots[5], ausbau: !document.querySelector('#optsKaserne').hidden && !document.querySelector('[data-tooltip="upg:ausbau"]').hidden }));
+  check(clicks === 2 && r2.built?.type === 'kaserne' && r2.ausbau, `Bauen aus dem Knopfraster: ${clicks} Klicks, Kaserne mit Ausbau im Kontextkopf`);
+  // Nicht bezahlbare Option bleibt sichtbar, gesperrt, nennt die fehlende Menge
+  await p.evaluate(() => { __kf.G.S.material = 3; __kf.selectPlot(6); }); await p.waitForTimeout(80);
+  const poor = await p.evaluate(() => [...document.querySelectorAll('#ctxBuild .pick')].map(b => ({ dis: b.getAttribute('aria-disabled'), w: b.querySelector('.w').textContent })));
+  check(poor.length >= 3 && poor.filter(o => o.dis === 'true' && /\d/.test(o.w)).length >= 2, `Nicht bezahlbare Optionen: sichtbar, gesperrt, mit fehlender Menge ${JSON.stringify(poor[1])}`);
+  // Tastatur: Fokus ins Raster, Pfeiltasten zu Platz 8, Enter wählt, Enter baut
+  await p.evaluate(() => { __kf.G.S.material = 1e5; __kf.clearSelection(); document.querySelector('#plotGrid [data-tooltip="grid:0"]').tabIndex = 0; document.querySelector('#plotGrid [data-tooltip="grid:0"]').focus(); });
+  await p.keyboard.press('ArrowDown'); await p.keyboard.press('ArrowDown'); await p.keyboard.press('ArrowRight');
+  const focused = await p.evaluate(() => document.activeElement.dataset.tooltip);
+  await p.keyboard.press('Enter'); await p.waitForTimeout(120);
+  const onPick = await p.evaluate(() => document.activeElement.dataset.tooltip || '');
+  await p.keyboard.press('Enter'); await p.waitForTimeout(80);
+  const r3 = await p.evaluate(() => __kf.G.S.slots[7]);
+  check(focused === 'grid:7' && onPick.startsWith('pick:') && !!r3, `Bau per Tastatur: Fokus ${focused}, dann ${onPick}, gebaut ${r3 && r3.type}`);
+  check(errors.length === 0, `Bauen: keine Fehler${show(errors)}`);
+  await ctx.close();
+}
+
 // REQ-47: Gestaffelte Einführung (frischer Browser, Einführung an)
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });

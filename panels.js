@@ -8,7 +8,7 @@ const TABS = ['build', 'wall', 'army', 'smithy', 'uni', 'cards'];
 let activeTab = 'build';
 /* Auswahl in der Welt: null | { kind: 'plot', i } | { kind: 'section', lane } */
 let sel = null, ctxKey = '', demolishArmed = false, picks = [];
-const tabEls = {};
+const tabEls = {}, gridEls = [];
 
 /* Reiter eines Objekts: Schmiede und Universität haben eigene Reiter, übrige Gebäude und Bauplätze gehören zu Bauen */
 function tabForSel(s){
@@ -62,6 +62,28 @@ function buildPanels(){
                : e.key === 'Home' ? vis[0] : e.key === 'End' ? vis[vis.length - 1] : null;
     if (next){ e.preventDefault(); selectTab(next, true); }
   });
+  // Knopfraster der Bauplätze (REQ-5.04): Maus oder Tastatur; Pfeiltasten bewegen den Fokus, Enter wählt den Platz
+  // und springt zur ersten baubaren Option, ein zweites Enter baut
+  const grid = $('plotGrid');
+  for (let i = 0; i < KlammerCore.SLOTS; i++){
+    const b = document.createElement('button');
+    b.type = 'button'; b.setAttribute('role', 'gridcell'); b.dataset.tooltip = 'grid:' + i; b.tabIndex = i === 0 ? 0 : -1;
+    b.innerHTML = '<span class="btn-label"></span><span class="expl"></span>';
+    b.addEventListener('click', e => {
+      selectPlot(i);
+      if (e.detail === 0) requestAnimationFrame(() => { renderPanels(); const first = [...document.querySelectorAll('#ctxBuild .pick')].find(p => !isDis(p)); (first || b).focus(); });
+    });
+    grid.appendChild(b);
+    gridEls.push({ btn: b, label: b.children[0], expl: b.children[1] });
+  }
+  grid.addEventListener('keydown', e => {
+    const i = gridEls.findIndex(g => g.btn === document.activeElement);
+    if (i < 0) return;
+    const N = C.GRID_SIZE, r = Math.floor(i / N), c = i % N;
+    const to = e.key === 'ArrowRight' ? r * N + (c + 1) % N : e.key === 'ArrowLeft' ? r * N + (c + N - 1) % N
+             : e.key === 'ArrowDown' ? ((r + 1) % N) * N + c : e.key === 'ArrowUp' ? ((r + N - 1) % N) * N + c : -1;
+    if (to >= 0){ e.preventDefault(); gridEls.forEach((g, k) => { g.btn.tabIndex = k === to ? 0 : -1; }); gridEls[to].btn.focus(); }
+  });
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
   for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
@@ -92,8 +114,11 @@ function updatePicks(){
     setDis(p.b, !!block);
   }
 }
+/* Kontextkopf sichtbar im Reiter des Objekts; Bauplätze und ihre Gebäude zeigt er auch im Reiter Bauen,
+   damit nach einem Bau kein Reiterwechsel nötig ist (REQ-5.04) */
+const ctxVisible = () => !!sel && (tabForSel(sel) === activeTab || (sel.kind === 'plot' && activeTab === 'build'));
 function renderContext(){
-  const S = G.S, show = !!sel && tabForSel(sel) === activeTab;
+  const S = G.S, show = ctxVisible();
   setHidden($('ctxHead'), !show);
   const plot = show && sel.kind === 'plot', sl = plot ? S.slots[sel.i] : null, sec = show && sel.kind === 'section' ? sel.lane : null;
   setHidden($('ctxBuilding'), !sl);
@@ -322,7 +347,15 @@ function renderPanels(){
 
   renderOpts();
   renderContext();
-  setHidden($('buildHint'), !!sel && tabForSel(sel) === 'build');
+  setHidden($('buildHint'), !!sel && sel.kind === 'plot');
+  $('tabBody').classList.toggle('side-by-side', activeTab === 'build');
+  for (let i = 0; i < gridEls.length; i++){
+    const g = gridEls[i], sl = S.slots[i];
+    setText(g.label, t('grid.cell', { n: i + 1 }));
+    setText(g.expl, sl ? t(`bld.${sl.type}.name`) : t('grid.free'));
+    g.btn.classList.toggle('built', !!sl);
+    g.btn.setAttribute('aria-selected', String(!!sel && sel.kind === 'plot' && sel.i === i));
+  }
   setText($('factoryStat'), t('fab.stat', { n: G.factoryCount(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) }));
   // Armee
   setText($('queue'), `${S.queue.length}/${G.supplyCap()}`);

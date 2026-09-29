@@ -270,6 +270,15 @@
   #ctxDemolish:empty, #ctxRepair:empty{display:none;}
   #ctxBuilding[hidden], #ctxRepair[hidden]{display:none;}
   .hintbox{bottom:auto; top:calc(var(--band-hud, 72px) + 8px);}
+  /* Reiter Bauen (REQ-5.04): Knopfraster links, Kontextkopf rechts */
+  .tab-body.side-by-side{display:grid; grid-template-columns:minmax(210px, 250px) minmax(0, 1fr); align-items:start; gap:8px 12px;}
+  .tab-body.side-by-side #panel-build{order:-1;}
+  .plot-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;}
+  .plot-grid button{display:flex; flex-direction:column; align-items:flex-start; gap:0; padding:3px 7px; min-height:40px; border:1px dashed var(--rule-strong);
+                    border-radius:5px; background:var(--bg); cursor:pointer; text-align:left;}
+  .plot-grid button.built{border-style:solid; background:var(--surface);}
+  .plot-grid button[aria-selected="true"]{border:2px solid var(--brass); background:var(--brass-soft);}
+  .plot-grid .btn-label{font-weight:600; font-size:12px;} .plot-grid .expl{font-size:10px;}
 </style>
 </head>
 <body>
@@ -318,7 +327,7 @@
     </div>
     <div class="work-tabs">
       <div class="tabs" id="tabs" role="tablist"></div>
-      <div class="tab-body">
+      <div class="tab-body" id="tabBody">
         <div class="ctx-head" id="ctxHead" hidden>
           <h2 class="ph rust" id="ctxTitle"></h2>
           <p class="hint" id="ctxText"></p>
@@ -331,6 +340,7 @@
           <div class="ctx-actions" id="ctxDemolish"></div>
         </div>
         <div class="tabpanel" id="panel-build" role="tabpanel">
+          <div class="plot-grid" id="plotGrid" role="grid" data-i18n-aria="grid.aria"></div>
           <p class="hint" id="buildHint" data-i18n="panel.build.hint"></p>
           <p class="statline" id="factoryStat"></p>
         </div>

@@ -11,7 +11,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | I5.1 | Eingabe: Ursache belegen, beheben | 5.01 | fertig |
 | I5.2 | Umbenennung zu EP | 5.02 | fertig |
 | I5.3 | Drei Bänder, Aufteilung von `ui.js` | 5.03 | fertig |
-| I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | offen |
+| I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | fertig |
 | I5.5 | Einzelsimulation | 5.05 | offen |
 | I5.6 | Armee als gemeinsame Welle | 5.06 | offen |
 | I5.7 | Universität | 5.07 | offen |
@@ -46,6 +46,9 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.4: `npm test` 85/85, Browser-Prüfung 166/166, Kurzsimulation unverändert. Neue Prüfpunkte: Bau aus der Welt in genau zwei Klicks (Platz bleibt
+  ausgewählt, Abriss sichtbar), aus dem Knopfraster in genau zwei Klicks (Kaserne mit Ausbau im Kontextkopf), nicht bezahlbare Optionen sichtbar, gesperrt
+  und mit fehlender Menge, Bau vollständig per Tastatur (Pfeiltasten im Raster, Enter wählt, Enter baut).
 - I5.3: `npm test` 85/85, Browser-Prüfung 161/161, Kurzsimulation unverändert 12 Siege, 8 Niederlagen, 0 offen.
   Bänder (Leiste / Welt / Arbeitsbereich): 1280×720 72 px / 50,0 % / 40,0 %; 1366×768 77 px / 50,0 % / 40,0 %; 1920×1080 80 px (Höchstwert) / 50,0 % / 42,6 %;
   2560×1440 80 px / 50,0 % / 44,4 %; nirgends Dokument-Scroll. Bildzeit mit 60 Einheiten 0,3–0,8 ms. Bildschirmfotos: `reports/screens/i5-layout-*.png`.
@@ -110,3 +113,7 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
 14. **Ereignisprotokoll, Wellenvorschau und Abschüsse** stehen im Reiter Armee; Kamera-Knöpfe und Scrollleiste unter der Spielwelt; die Lebenspunkte der
     gegnerischen Basis zeigt weiter der Balken an der Basis in der Welt.
 15. **Hinweisfenster** liegt jetzt oben unter der Leiste statt unten, damit es den Arbeitsbereich nicht verdeckt.
+16. **Tastaturbau:** Enter auf einem Rasterplatz wählt ihn und setzt den Fokus auf die erste baubare Option; ein zweites Enter baut. Mit der Maus springt der
+    Fokus nicht, damit sich nichts unter dem Zeiger verschiebt.
+17. **Kontextkopf im Reiter Bauen:** Für Bauplätze erscheint er auch dann im Reiter Bauen, wenn das Gebäude einen eigenen Reiter hat (Schmiede, Universität).
+    So bleibt der Platz nach dem Bau ausgewählt und zeigt Abriss, ohne dass der Reiter wechselt. Die Upgrades der Schmiede stehen im Reiter Schmiede.

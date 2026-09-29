@@ -408,4 +408,7 @@ KF_I18N.en = {
   'sub.repair': 'Repair',
   'panel.smithy.text': 'Quality level {n}. Every level strengthens all units.',
   'tip.grid.empty': 'Free plot.',
+  'grid.free': 'free',
+  'grid.aria': 'Plots in your realm',
+  'grid.cell': 'Plot {n}',
 };
