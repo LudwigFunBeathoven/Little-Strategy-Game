@@ -1,8 +1,11 @@
 // Klammerfront – Bots für die Balancing-Simulation (7.1).
-// Ein Bot spielt eine Partie ohne Browser. Strategien: 'zufall' und 'gierig' (Vorausschau per Kopie des Spielstands).
+// Ein Bot spielt eine Partie ohne Browser. Strategien: 'zufall', 'gierig' (Vorausschau per Kopie des Spielstands) und
+// 'einheiten-zuerst' (REQ-6.09: tools/browser-bot.js – feste Bauordnung, Einheiten bis zum Limit, erste Karte).
+export const STRATEGIES = ['gierig', 'einheiten-zuerst'];
 import { loadCore } from './load-core.mjs';
+import { directionTracker } from './sim-metrics.mjs';
 
-const { KlammerCore, KF_CONFIG: C } = loadCore();
+const { KlammerCore, KF_CONFIG: C, KF_BROWSER_BOT } = loadCore();
 export const CONFIG = C;
 const DT = C.TICK_S;
 
@@ -216,15 +219,42 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   const G = newGame(diff, seed);
-  const bot = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {} };
+  // Handlungen in den ersten SIM_STYLE_WINDOW_S Sekunden: Anteil der Einheitenkäufe (Merkmal der Strategie für compare-human)
+  const acts = { units: 0, other: 0 };
+  for (const name of ['spawn', 'buildAt', 'buy', 'startResearch', 'repair']){
+    const f = G[name];
+    G[name] = (...a) => { const ok = f(...a); if (ok && G.S.t <= C.SIM_STYLE_WINDOW_S){ if (name === 'spawn') acts.units++; else acts.other++; } return ok; };
+  }
+  let bot;
+  if (strategy === 'einheiten-zuerst'){
+    const recordDraft = F => {
+      const offer = F.S.pendingDraft.options;
+      for (const id of offer) stats.offered[id] = (stats.offered[id] || 0) + 1;
+      stats.picked[offer[0]] = (stats.picked[offer[0]] || 0) + 1;
+      stats.draftTimes.push({ t: F.S.t, level: F.S.pendingDraft.level });
+      offer.forEach((oid, i) => stats.offers.push({ id: oid, tier: F.cardTaken(oid) + 1, chosen: i === 0 }));
+    };
+    const simple = KF_BROWSER_BOT(G, Object.assign({}, prof, forbid ? { forbid } : {}), {
+      draft: recordDraft, built: type => { stats.built[type] = (stats.built[type] || 0) + 1; },
+      researched: id => { stats.researched[id] = (stats.researched[id] || 0) + 1; } });
+    bot = { step: () => simple.step(DT) };
+  } else {
+    const b = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
+    bot = { step: () => b.step(G, stats) };
+  }
+  const dirs = directionTracker();
   let wallFall = null;
   const steps = maxMin * 60 / DT;
   for (let i = 0; i < steps && G.S.status === 'running'; i++){
-    bot.step(G, stats);
+    bot.step();
+    dirs.sample(G.S, DT);
     if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
   }
   const S = G.S;
+  // Ungenutztes Material (REQ-6.07): Anteil des in der Spätphase erzeugten Materials, der am Ende im Bestand liegt
+  const lateMade = S.stats.prod.late.click + S.stats.prod.late.auto;
+  const unused = lateMade > 0 ? Math.min(S.material, lateMade) / lateMade : null;
   return {
     diff, profile, strategy, clickPolicy, seed,
     status: S.status, t: S.t,
@@ -235,5 +265,7 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
     xpPassive: S.stats.xpPassive || 0, xpKill: S.stats.xpKill || 0, fightShare: S.stats.armyTime ? (S.stats.fightTime || 0) / S.stats.armyTime : null,
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
+    unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
+    researchTimes: S.stats.researchDone || [],
   };
 }

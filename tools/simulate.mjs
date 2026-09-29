@@ -6,6 +6,7 @@
 //   phasen     REQ-03: Klickanteil je Phase (SIM_CLICK_RATE) sowie Dauerklick / Stopp ab Phase Spät / nie klicken
 //   ohneSchmiede  REQ-17: Normal, durchschnitt, gierige Heuristik ohne Schmiede (Soll: Siegquote ≥ 30 %)
 //   --profile aktiv,durchschnitt   nur diese Spielertypen (Suite ziele)
+//   --strategy gierig,einheiten-zuerst   Strategien der Suiten ziele, kurz, ohneSchmiede (Standard: beide, REQ-6.09)
 //   kurz       Kurzsimulation nach Anhang A: Normal, Spielertyp durchschnitt, gierige Heuristik (Soll: 0 offen, Siegquote 20–100 %)
 // Die Simulation misst Stärke, nicht Spielspaß. Auffälligkeiten werden berichtet, nicht automatisch wegbalanciert.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -26,18 +27,20 @@ if (!isMainThread){
   const CPS = C.SIM_CLICK_RATE ?? 6;
   const PROFILE_FILTER = arg('profile', null) ? arg('profile').split(',') : null;
   const ZPROFILES = ['aktiv', 'durchschnitt', 'gelegentlich', 'passiv', 'verteidigung'];
+  const ZSTRATS = arg('strategy', null) ? arg('strategy').split(',') : ['gierig', 'einheiten-zuerst'];
 
   const jobs = [];
   const seedOf = (k, r) => (1000 + r * 7919 + k * 104729) >>> 0;
   if (SUITE === 'alle' || SUITE === 'ziele')
-    DIFFS.forEach((diff, di) => ZPROFILES.forEach((profile, pi) => {
+    for (const strategy of ZSTRATS) DIFFS.forEach((diff, di) => ZPROFILES.forEach((profile, pi) => {
       if (PROFILE_FILTER && !PROFILE_FILTER.includes(profile)) return;
-      for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff, profile, strategy: 'gierig', seed: seedOf(di * 10 + pi, r) });
+      // gleiche Seeds für beide Strategien: Unterschiede kommen aus der Spielweise, nicht aus dem Zufall
+      for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff, profile, strategy, seed: seedOf(di * 10 + pi, r) });
     }));
   if (SUITE === 'ohneSchmiede')
-    for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', forbid: ['schmiede'], seed: seedOf(3, r) });
+    for (const strategy of ZSTRATS) for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff: 'normal', profile: 'durchschnitt', strategy, forbid: ['schmiede'], seed: seedOf(3, r) });
   if (SUITE === 'kurz')
-    for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', seed: seedOf(1, r) });
+    for (const strategy of ZSTRATS) for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff: 'normal', profile: 'durchschnitt', strategy, seed: seedOf(1, r) });
   if (SUITE === 'alle' || SUITE === 'strategie')
     DIFFS.forEach((diff, di) => ['zufall', 'gierig'].forEach((strategy, si) => {
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'strategie', diff, profile: 'durchschnitt', strategy, seed: seedOf(100 + di * 10 + si, r) });
@@ -66,9 +69,16 @@ if (!isMainThread){
   const lpad = (s, w) => String(s).padStart(w);
   const report = {};
 
-  const Z = results.filter(r => r.suite === 'ziele');
+  const q90 = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.ceil(0.9 * s.length) - 1)]; };
+  const ZALL = results.filter(r => r.suite === 'ziele');
+  const strategiesRun = ZSTRATS.filter(st => ZALL.some(r => r.strategy === st));
+  report.strategies = {};
+  const reportAll = report;
+  for (const ST of strategiesRun){
+  const Z = ZALL.filter(r => r.strategy === ST);
+  const report = reportAll.strategies[ST] = {};
   if (Z.length){
-    console.log('ZIELE – Siegquote und Dauer (gierige Heuristik)\n');
+    console.log(`ZIELE – Siegquote und Dauer (Strategie ${ST})\n`);
     console.log('Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage');
     report.ziele = [];
     for (const diff of DIFFS) for (const p of ZPROFILES){
@@ -107,6 +117,30 @@ if (!isMainThread){
     console.log(`Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): ${report.maxArmy ?? '–'} Einheiten`);
     console.log(`Fall des ersten Mauerabschnitts (Median der Partien mit Fall): ${mmss(report.wallFall)} · in ${pct(Z.filter(r => r.wallFall != null).length, Z.length)} der Partien`);
     console.log(`Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): ${pct(known.filter(r => r.cards.some(id => legendary.has(id))).length, known.length)}`);
+    // Iteration 6: Richtungswechsel (REQ-6.01), Partielänge (REQ-6.03), ungenutztes Material (REQ-6.07), Forschungstempo (REQ-6.06)
+    const D = Z.filter(r => r.dir && r.dir.unitTime > 0);
+    report.dirMaxPerSecond = D.length ? Math.max(...D.map(r => r.dir.maxPerSecond)) : null;
+    report.dirRateMedian = median(D.map(r => r.dir.rate));
+    report.dirGamesOver2 = D.filter(r => r.dir.maxPerSecond > 2).length;
+    const worstGame = D.reduce((a, r) => !a || r.dir.maxPerSecond > a.dir.maxPerSecond ? r : a, null);
+    console.log(`Richtungswechsel je Einheit (Soll: höchstens 2 je Sekunde): größter Wert ${report.dirMaxPerSecond ?? '–'} je Sekunde · Median ${report.dirRateMedian == null ? '–' : report.dirRateMedian.toFixed(3)} je Einheit und Sekunde · Partien über 2: ${report.dirGamesOver2} von ${D.length}` +
+      (worstGame && worstGame.dir.worst ? ` · schlimmste: ${worstGame.diff}/${worstGame.profile}/Seed ${worstGame.seed}, Einheit ${worstGame.dir.worst.id} bei ${worstGame.dir.worst.t} s (${worstGame.dir.worst.axis})` : ''));
+    report.p90Win = {};
+    const p90Rows = [];
+    for (const diff of DIFFS) for (const p of ZPROFILES){ const w = Z.filter(r => r.diff === diff && r.profile === p && r.status === 'won').map(r => r.t); if (w.length){ report.p90Win[diff + '/' + p] = q90(w); p90Rows.push(`${diff}/${p} ${mmss(q90(w))}`); } }
+    console.log(`Partielänge, 90. Perzentil der Siege je Feld (Soll ≤ 20:00): ${p90Rows.join(' · ') || '–'}`);
+    const nd = Z.filter(r => r.diff === 'normal' && r.profile === 'durchschnitt' && r.unused != null);
+    report.unusedMaterial = median(nd.map(r => r.unused));
+    console.log(`Ungenutztes Material (Anteil der Spätphasen-Produktion im Bestand am Ende; Normal, durchschnitt, Median; Soll ≤ 20 %): ${report.unusedMaterial == null ? '–' : (100 * report.unusedMaterial).toFixed(0) + ' %'} (${nd.length} Partien mit Spätphase)`);
+    const ndr = Z.filter(r => r.diff === 'normal' && r.profile === 'durchschnitt');
+    if (ndr.length){
+      const first = ndr.map(r => r.researchTimes[0]?.t ?? Infinity), by10 = ndr.map(r => r.researchTimes.filter(x => x.t <= 600).length);
+      report.researchFirst = median(first); report.researchBy10 = median(by10);
+      console.log(`Forschungstempo (Normal, durchschnitt, Median): erste Forschung fertig ${report.researchFirst === Infinity ? 'nie' : mmss(report.researchFirst)} (Soll < 3:00) · fertig bis Minute 10: ${report.researchBy10} (Soll ≥ 5)`);
+    }
+    const sh = Z.filter(r => r.unitShare != null && r.profile !== 'verteidigung' && r.profile !== 'passiv');
+    report.unitShare = median(sh.map(r => r.unitShare));
+    console.log(`Anteil der Einheitenkäufe an allen Handlungen der ersten ${C.SIM_STYLE_WINDOW_S} s (Median; Merkmal für compare-human): ${report.unitShare == null ? '–' : (100 * report.unitShare).toFixed(0) + ' %'}`);
 
     // Karten: Siegquote „angeboten und gewählt“ gegen „angeboten und nicht gewählt“, je Stufe (REQ-48);
     // nur Profile, die Karten sinnvoll wählen. Eine Partie zählt je Karte und Stufe höchstens einmal.
@@ -149,6 +183,25 @@ if (!isMainThread){
     }
     console.log('');
   }
+  }
+  // Beide Strategien nebeneinander (REQ-6.09)
+  if (strategiesRun.length > 1){
+    console.log(`ZIELE – Strategien nebeneinander (Median Sieg · Siegquote)\n`);
+    console.log(`${pad('Schwierigkeit', 13)} | ${pad('Spielertyp', 12)} | ` + strategiesRun.map(st => pad(st, 18)).join(' | '));
+    for (const diff of DIFFS) for (const p of ZPROFILES){
+      const cells = strategiesRun.map(st => { const R = ZALL.filter(r => r.strategy === st && r.diff === diff && r.profile === p); if (!R.length) return null;
+        const w = R.filter(r => r.status === 'won'); return `${mmss(median(w.map(r => r.t)))} · ${pct(w.length, R.length)}`; });
+      if (cells.every(c => c == null)) continue;
+      console.log(`${pad(diff, 13)} | ${pad(p, 12)} | ` + cells.map(c => pad(c ?? '–', 18)).join(' | '));
+    }
+    // Karten über +25 pp bei beiden Strategien (REQ-6.09)
+    const both = Object.keys(reportAll.strategies[strategiesRun[0]].cardCompare || {}).filter(id => strategiesRun.every(st => {
+      const c = reportAll.strategies[st].cardCompare?.[id]; return c && c.deltaPp != null && c.deltaPp > 25 && c.chosen >= 5 && c.notChosen >= 5; }));
+    reportAll.cardsOver25Both = both;
+    console.log(`\nKarten über +25 pp bei allen Strategien: ${both.length ? both.join(', ') : 'keine'}\n`);
+  }
+  // Rückwärtskompatibel: Kennzahlen der gierigen Heuristik auch auf oberster Ebene
+  if (reportAll.strategies.gierig) Object.assign(reportAll, reportAll.strategies.gierig);
 
   const T = results.filter(r => r.suite === 'strategie');
   if (T.length){

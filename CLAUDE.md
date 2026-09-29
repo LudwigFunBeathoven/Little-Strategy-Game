@@ -30,11 +30,11 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `session.js` | Sitzungsprotokoll für Spieltests (`?debug=1`). |
 | `i18n/de.js`, `i18n/en.js` | Alle sichtbaren Texte. Schlüssel müssen identisch sein. |
 | `tools/simulate.mjs` | Balancing-Simulation mit Bots (Worker-Threads). |
-| `tools/sim-bot.mjs` | Bot-Strategien `zufall` und `gierig` (Vorausschau per Kopie des Spielstands). |
+| `tools/sim-bot.mjs` | Bot-Strategien `zufall`, `gierig` (Vorausschau per Kopie des Spielstands) und `einheiten-zuerst` (aus `browser-bot.js`). |
+| `tools/sim-metrics.mjs` | Kennzahlen je Takt (Richtungswechsel). |
 | `tools/compare-human.mjs` | Ordnet Sitzungsprotokolle von Menschen dem nächstliegenden Bot-Profil zu. |
-| `tools/browser-bot.js` | Einfacher Bot für Partien im Browser (Durchlauftest, Protokollprüfung). |
+| `tools/browser-bot.js` | Bot „Einheiten zuerst“: Durchlauftest, Protokollprüfung und zweite Simulationsstrategie (REQ-6.09). |
 | `tools/bench-tick.mjs` | Tick-Zeit mit 2 × 60 Einheiten. |
-| `tools/einfach-bot.mjs` | Gegenprobe: der einfache Bot je Profil über viele Seeds (schlägt die gierige Heuristik deutlich, siehe Bericht I5). |
 | `tests/` | `npm test` (Node-eigener Test-Runner), optional `npm run test:browser` (braucht Playwright). |
 | `docs/STAND.md` | Stand je Inkrement, Prüfergebnisse, Abweichungen und Auslegungen. |
 
@@ -80,6 +80,9 @@ Iteration 4: Vergleichswert einer Karte ist „angeboten und nicht gewählt“ (
 Iteration 5: Profilabstand Leicht aktiv ↔ gelegentlich (Median) ≥ 4 min; Schwer gelegentlich ≤ 5 % Siege; Anteil der EP-Automatik (Hörsaal III)
 ≤ 25 % des EP-Ertrags eines aktiven Spielers auf Normal; Forschungen wie Karten ≤ +25 pp; Zeitanteil der Armee im Kampf berichten.
 Offene Partien gibt die Simulation mit Seed aus (Nachspielen: `playGame` aus `tools/sim-bot.mjs`).
+Iteration 6: Die Suiten `ziele`, `kurz` und `ohneSchmiede` spielen beide Strategien (`gierig`, `einheiten-zuerst`) mit denselben Seeds und
+berichten sie nebeneinander (`--strategy` schränkt ein). Neue Kennzahlen: Richtungswechsel (≤ 2 je Einheit und Sekunde), Partielänge
+(90. Perzentil der Siege ≤ 20 min), ungenutztes Material, Forschungstempo. Keine globale Neukalibrierung vor Iteration 7.
 
 ## Mechaniken gegen Patts (nicht ohne Simulation entfernen)
 - Belagerung: Eigene Einheiten am gegnerischen Tor blockieren reguläre Gegnerwellen in dieser Lane.

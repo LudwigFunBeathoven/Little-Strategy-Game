@@ -2,7 +2,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 const root = new URL('../', import.meta.url);
-export function loadCore(files = ['config.js', 'data/draft-options.js', 'data/research.js', 'core.js']){
+export function loadCore(files = ['config.js', 'data/draft-options.js', 'data/research.js', 'core.js', 'tools/browser-bot.js']){
   const ctx = { Math, Date, JSON, console, Intl };
   vm.createContext(ctx);
   for (const f of files){
@@ -10,7 +10,7 @@ export function loadCore(files = ['config.js', 'data/draft-options.js', 'data/re
     if (!existsSync(p)) continue;
     vm.runInContext(readFileSync(p, 'utf8'), ctx, { filename: f });
   }
-  vm.runInContext('globalThis.__out = { KF_CONFIG, KlammerCore, KF_DRAFT_OPTIONS: typeof KF_DRAFT_OPTIONS !== "undefined" ? KF_DRAFT_OPTIONS : null, KF_RESEARCH: typeof KF_RESEARCH !== "undefined" ? KF_RESEARCH : null };', ctx);
+  vm.runInContext('globalThis.__out = { KF_CONFIG, KlammerCore, KF_DRAFT_OPTIONS: typeof KF_DRAFT_OPTIONS !== "undefined" ? KF_DRAFT_OPTIONS : null, KF_RESEARCH: typeof KF_RESEARCH !== "undefined" ? KF_RESEARCH : null, KF_BROWSER_BOT: typeof KF_BROWSER_BOT !== "undefined" ? KF_BROWSER_BOT : null };', ctx);
   // Balancing-Versuche ohne Dateiänderung: KF_OVERRIDE='{"DIFFICULTY":{"normal":{"waveGrowth":0.6}}}'
   if (process.env.KF_OVERRIDE) merge(ctx.__out.KF_CONFIG, JSON.parse(process.env.KF_OVERRIDE));
   return ctx.__out;

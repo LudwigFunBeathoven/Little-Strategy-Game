@@ -186,6 +186,7 @@ const KF_CONFIG = {
   PHASE_MID_LEVEL: 2,
   PHASE_LATE_LEVEL: 5,
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
+  SIM_STYLE_WINDOW_S: 300,      // Anteil der Einheitenkäufe an allen Handlungen in diesem Zeitraum (Strategie-Merkmal, REQ-6.09)
   SIM_SIEGE_LOOKAHEAD_S: 120,   // Bot-Vorausschau reicht bis nach der Belagerungswelle, sobald sie so nah ist (REQ-48)
   SIM_SIEGE_EVAL_S: 40,         // … und so lange über ihr Ausrücken hinaus
   SIM_RESEARCH_EVERY_S: 60,     // nach einer abgelehnten Forschung prüfen Bots erst wieder nach dieser Zeit, danach doppelt so lange …

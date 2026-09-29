@@ -815,6 +815,7 @@ function create(){
     S.research.active = S.research.active.filter(a => a.t < a.timeS);
     for (const a of done){
       S.research.done[a.id] = a.tier; S.research.ver++; S.research.fresh = true;
+      (S.stats.researchDone = S.stats.researchDone || []).push({ id: a.id, tier: a.tier, t: +S.t.toFixed(1) });   // Forschungstempo (REQ-6.06)
       log('log.research', { name: '@' + RES[a.id].nameKey, tier: a.tier });
     }
   }
