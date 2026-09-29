@@ -1,0 +1,49 @@
+120 Partien auf 4 Kernen …
+fertig in 37 s · 15.9 simulierte Spielstunden · 2.3 s Rechenzeit je Spielstunde
+
+ZIELE – Siegquote und Dauer (Strategie gierig)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+schwer        | gelegentlich |     3 |       27 |     0 |        9:59 |      14:35 | Ende spät. 19:30 | Wellen am Limit  60 %
+schwer        | passiv       |     0 |       30 |     0 |           – |       4:03 | Ende spät.  5:56 | Wellen am Limit  98 %
+
+Früheste Niederlage je Feld: schwer/gelegentlich 6:36 · schwer/passiv 3:30
+
+Patt-Quote (offen nach 30 min): 0 von 60 = 0 % (Soll ≤ 2 %)
+Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): 49 %
+Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): –
+Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): 15 Einheiten
+Fall des ersten Mauerabschnitts (Median der Partien mit Fall): 4:10 · in 57 % der Partien
+Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): 7 %
+Richtungswechsel je Einheit (Soll: höchstens 2 je Sekunde): größter Wert 4 je Sekunde · Median 0.009 je Einheit und Sekunde · Partien über 2: 9 von 60 · schlimmste: schwer/gelegentlich/Seed 368838, Einheit 112 bei 343.6 s (x)
+Partielänge, 90. Perzentil der Siege je Feld (Soll ≤ 20:00): schwer/gelegentlich 10:11
+Ungenutztes Material (Anteil der Spätphasen-Produktion im Bestand am Ende; Normal, durchschnitt, Median; Soll ≤ 20 %): – (0 Partien mit Spätphase)
+Anteil der Einheitenkäufe an allen Handlungen der ersten 300 s (Median; Merkmal für compare-human): 61 %
+
+ZIELE – Siegquote und Dauer (Strategie einheiten-zuerst)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+schwer        | gelegentlich |    25 |        5 |     0 |       10:17 |       7:34 | Ende spät. 12:38 | Wellen am Limit  29 %
+schwer        | passiv       |     0 |       30 |     0 |           – |       4:34 | Ende spät. 10:22 | Wellen am Limit  90 %
+
+Früheste Niederlage je Feld: schwer/gelegentlich 6:59 · schwer/passiv 3:38
+
+Patt-Quote (offen nach 30 min): 0 von 60 = 0 % (Soll ≤ 2 %)
+Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): 83 %
+Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): –
+Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): 15 Einheiten
+Fall des ersten Mauerabschnitts (Median der Partien mit Fall): 4:37 · in 58 % der Partien
+Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): 10 %
+Richtungswechsel je Einheit (Soll: höchstens 2 je Sekunde): größter Wert 5 je Sekunde · Median 0.005 je Einheit und Sekunde · Partien über 2: 4 von 60 · schlimmste: schwer/gelegentlich/Seed 313405, Einheit 189 bei 377.6 s (quer)
+Partielänge, 90. Perzentil der Siege je Feld (Soll ≤ 20:00): schwer/gelegentlich 10:39
+Ungenutztes Material (Anteil der Spätphasen-Produktion im Bestand am Ende; Normal, durchschnitt, Median; Soll ≤ 20 %): – (0 Partien mit Spätphase)
+Anteil der Einheitenkäufe an allen Handlungen der ersten 300 s (Median; Merkmal für compare-human): 77 %
+
+ZIELE – Strategien nebeneinander (Median Sieg · Siegquote)
+
+Schwierigkeit | Spielertyp   | gierig             | einheiten-zuerst  
+schwer        | gelegentlich | 9:59 · 10 %        | 10:17 · 83 %      
+schwer        | passiv       | – · 0 %            | – · 0 %           
+
+Karten über +25 pp bei allen Strategien: keine
+

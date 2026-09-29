@@ -12,7 +12,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 | I6.2 | Versetzte Einzelangriffe, eigene Geschosse | 6.02 | fertig |
 | I6.3 | Offline-Reste, Pause bei verdecktem Tab, Kartenersatz | 6.03 | fertig |
 | I6.4 | Kartenwahl automatisch, Kaserne im Reiter „Armee“ | 6.04, 6.05 | fertig |
-| I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | offen |
+| I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | fertig (REQ-6.08: Zielkonflikt, PO-Entscheidung offen) |
 | I6.6 | Universität | 6.06 | offen |
 | I6.7 | Nachbarschaftsboni | 6.07 a | offen |
 | I6.8 | Handelskontor mit Zinsen, „Welle vorziehen“ | 6.07 b, c | offen |
@@ -65,6 +65,8 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- I6.5: `npm test` 127/127 (Schwung-Test entfällt, neu `tests/anlauf.test.mjs`), Tick-Zeit Median 0,10–0,14 ms (Soll ≤ 1 ms). Die Simulation
+  meldet die früheste Niederlage je Feld.
 - I6.4: `npm test` 127/127 (neu `tests/hometab.test.mjs`), Browser-Prüfung 191/191. Kartenwahl: Reiter Karten öffnet sich selbst, Knöpfe
   400 ms gesperrt und blenden ein (`UI.draftLockMs`), Klick in der Sperrzeit wählt nichts, zweite Wahl folgt mit neuer Sperre, danach Rückkehr
   zum vorigen Reiter mit voriger Auswahl; bei gehaltener Maustaste öffnet der Reiter erst nach dem Loslassen, der Klick zählt. Kaserne:
@@ -135,6 +137,36 @@ Einheit kommt in einer Nachbar-Lane an, bleibt die Mindestzeit und zieht weiter,
 Fernkämpfer setzt (Regel „Nahkämpfer vorn“). Kein Muster in aufeinanderfolgenden Takten mehr. Vorschlag: so lassen und im Spieltest
 beobachten; eine weitere Absenkung verlangte, die Regel „Nahkämpfer vorn“ für Nachzügler aufzuweichen.
 Playwright: 10 Sekunden Kampfbild, Positionsprüfung je Bild, höchstens 1 Wechsel je Einheit und Sekunde.
+
+## Befund REQ-6.08: Schwer, kein Verlust vor Minute 4
+Stellschraube: Anlauf der Grundwelle (`startBase` → `waveBase` bis Minute `rampMin`), dazu Versuche mit späteren Werfern. Screening mit 30–50
+Partien je Feld, beide Strategien (`KF_OVERRIDE`), Werte: früheste Niederlage „passiv“ · Siegquote „gelegentlich“ (gierig / einheiten-zuerst).
+
+| Variante | passiv, früheste Niederlage | gelegentlich, Siegquote |
+|---|---|---|
+| v0.6 (kein Anlauf) | 1:27 / 1:27 | 0 % / 6–12 % |
+| Anlauf 1 → 3,5 bis Minute 4 | 3:05 / 3:03 | 20 % / 82 % |
+| Anlauf bis Minute 6 | 3:35 / 3:51 | 24 % / 84 % |
+| Anlauf bis Minute 6, Werfer ab Minute 3 | 3:30 / 3:38 | 10 % / 83 % |
+| Anlauf 2 → 3,5 bis Minute 5, Werfer ab Minute 3 | 1:58 / 2:16 | 23 % / 97 % |
+| nur Werfer ab Minute 3,5 | 1:23 / 1:26 | 0 % / 0 % |
+| Anlauf bis Minute 8 | 3:35 / 3:54 | 20 % / 93 % |
+| Anlauf bis Minute 10 | 3:56 / 4:21 | 23 % / 90 % |
+
+**Zielkonflikt, beide Kriterien zugleich nicht erreichbar.** „gelegentlich verliert“ beruhte auf Schwer fast vollständig auf dem frühen
+Zusammenbruch nach etwa 90 s. Übersteht dieses Profil die Eröffnung, gewinnt es häufig, mit „Einheiten zuerst“ fast immer. „passiv“ fällt
+auch mit kleinen Anfangswellen vor Minute 4, weil der Zuwachs je Minute (`waveGrowth` 1,0) die Wellen schnell wieder groß macht; den ändert
+die Anforderung ausdrücklich nicht („Druck ab der Spielmitte unverändert“). **Umgesetzt:** Mechanismus `startBase`/`rampMin` je
+Schwierigkeitsgrad, **Standard aus** (Werte wie v0.6). Entscheidung beim PO, siehe Bericht.
+
+## Entscheidungen des PO (Iteration 6, Abschnitt 2 der Anforderungen) – entschieden
+- Experiment „Schwung“: verworfen, Code, Konfiguration und Test entfernt (I6.5).
+- Leistungsziel: ≤ 1 ms je Takt mit 120 Einheiten in Node (`PERF_TICK_MAX_MS`, Test in `tests/single.test.mjs`, `tools/bench-tick.mjs` meldet Soll).
+- Karte Weitschuss: +20 % Fernkampfschaden (Auslegung I5 Nr. 5) – **entschieden**.
+- Forschung nach Abriss der Universität wirkt weiter (Auslegung I5 Nr. 30) – **entschieden**.
+- Durchlauftest mit echten Werten im Schnelldurchlauf (Auslegung I5 Nr. 46) – **entschieden**.
+- Handelskontor bleibt und wird umgebaut (REQ-6.07).
+- Reines Online-Spiel, Partien bis etwa 20 Minuten (REQ-6.03).
 
 ## Auslegungen
 1. **Einheiten zuerst** ist der Bot aus `tools/browser-bot.js` ohne Änderung der Spielweise: Bauordnung drei Fabriken, dann Kaserne,

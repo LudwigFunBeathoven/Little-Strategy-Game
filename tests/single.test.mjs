@@ -99,5 +99,5 @@ test('Leistung: ein Tick mit 2 × 60 Einheiten dauert im Median höchstens 1 ms'
   for (let i = 0; i < 300; i++){ const t0 = process.hrtime.bigint(); G.tick(C.TICK_S); t.push(Number(process.hrtime.bigint() - t0) / 1e6); }
   t.sort((a, b) => a - b);
   assert.equal(G.S.units.length, 120);
-  assert.ok(t[150] <= 1, `Median ${t[150].toFixed(3)} ms`);
+  assert.ok(t[150] <= C.PERF_TICK_MAX_MS, `Median ${t[150].toFixed(3)} ms (Soll ≤ ${C.PERF_TICK_MAX_MS} ms, REQ-6.10)`);
 });

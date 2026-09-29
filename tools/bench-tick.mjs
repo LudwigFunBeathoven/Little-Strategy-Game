@@ -26,4 +26,4 @@ const times = [];
 for (let i = 0; i < TICKS; i++){ const t0 = process.hrtime.bigint(); G.tick(C.TICK_S); times.push(Number(process.hrtime.bigint() - t0) / 1e6); }
 times.sort((a, b) => a - b);
 const q = p => times[Math.min(times.length - 1, Math.floor(times.length * p))];
-console.log(JSON.stringify({ units: G.S.units.length, medianMs: +q(0.5).toFixed(4), p95Ms: +q(0.95).toFixed(4) }));
+console.log(JSON.stringify({ units: G.S.units.length, medianMs: +q(0.5).toFixed(4), p95Ms: +q(0.95).toFixed(4), sollMs: C.PERF_TICK_MAX_MS, ok: q(0.5) <= C.PERF_TICK_MAX_MS }));

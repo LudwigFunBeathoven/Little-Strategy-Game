@@ -65,12 +65,6 @@ const KF_CONFIG = {
     avoidOverkill: false,       // Fernkämpfer meiden Ziele, deren im selben Takt geplanter Schaden schon für den Abschuss reicht (Soll, Schalter)
   },
 
-  /* Experimente (REQ-5.08): nur simulieren und berichten; die Einführung entscheidet der PO */
-  EXPERIMENT: { momentum: false },
-  // Schwung: jeder Klick lädt einen Speicher, der mit MOMENTUM.decayS abklingt; die Automatik (Fabriken, Presse) erhält den Speicherstand
-  // als Bonus, höchstens MOMENTUM.max (3 Klicks/s halten den Höchstwert, Nichtklicker verlieren nichts)
-  MOMENTUM: { perClick: 0.01, decayS: 20, max: 0.5 },
-
   /* Oberfläche (REQ-5.01, REQ-5.03) */
   UI: {
     dragThresholdPx: 6,         // ab dieser Zeigerbewegung ist eine Geste in der Welt ein Ziehen, darunter ein Klick
@@ -200,6 +194,7 @@ const KF_CONFIG = {
   /* Spielphasen (REQ-03), abgeleitet aus der Stufe */
   PHASE_MID_LEVEL: 2,
   PHASE_LATE_LEVEL: 5,
+  PERF_TICK_MAX_MS: 1,          // Leistungsziel (REQ-6.10): Median eines Logik-Takts mit 2 × 60 Einheiten in Node höchstens so lange
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
   SIM_STYLE_WINDOW_S: 300,      // Anteil der Einheitenkäufe an allen Handlungen in diesem Zeitraum (Strategie-Merkmal, REQ-6.09)
   SIM_SIEGE_LOOKAHEAD_S: 120,   // Bot-Vorausschau reicht bis nach der Belagerungswelle, sobald sie so nah ist (REQ-48)
@@ -222,7 +217,9 @@ const KF_CONFIG = {
               werferFrom: 2,   werferShare: 0.30, hpGrowth: 0.05, dmgGrowth: 0.04, turretDmg: 5, maxField: 18, alarmSize: 4, xpMult: 1.45 },
     normal: { enemyBaseHp: 26000, waveBase: 2,  waveGrowth: 0.7,
               werferFrom: 1.5, werferShare: 0.35, hpGrowth: 0.08, dmgGrowth: 0.06, turretDmg: 6, maxField: 24, alarmSize: 6, xpMult: 1.0 },
-    schwer: { enemyBaseHp: 46000, waveBase: 3.5, waveGrowth: 1.0,
+    // Anlauf (REQ-6.08): bis Minute rampMin steigt die Grundwelle von startBase auf waveBase; rampMin 0 = aus. Standard aus: Simulation I6.5
+    // zeigt einen Zielkonflikt (Anlauf schützt „passiv“ kaum, lässt aber „gelegentlich“ gewinnen); Entscheidung beim PO (STAND, Befund REQ-6.08)
+    schwer: { enemyBaseHp: 46000, waveBase: 3.5, waveGrowth: 1.0, startBase: 1, rampMin: 0,
               werferFrom: 1,   werferShare: 0.40, hpGrowth: 0.07, dmgGrowth: 0.07, turretDmg: 7, maxField: 30, alarmSize: 10, xpMult: 1.8 },
   },
   DIFFICULTY_ORDER: ['leicht', 'normal', 'schwer'],

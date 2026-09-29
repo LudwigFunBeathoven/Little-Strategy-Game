@@ -1,0 +1,160 @@
+240 Partien auf 4 Kernen …
+fertig in 118 s · 38.5 simulierte Spielstunden · 3.1 s Rechenzeit je Spielstunde
+
+ZIELE – Siegquote und Dauer (Strategie gierig)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+schwer        | aktiv        |    17 |       13 |     0 |       10:26 |      20:17 | Ende spät. 22:40 | Wellen am Limit  89 %
+schwer        | durchschnitt |    14 |       16 |     0 |        9:13 |      20:51 | Ende spät. 23:11 | Wellen am Limit  79 %
+schwer        | gelegentlich |     7 |       23 |     0 |        8:31 |      11:39 | Ende spät. 19:38 | Wellen am Limit  62 %
+schwer        | passiv       |     0 |       30 |     0 |           – |       4:52 | Ende spät.  7:39 | Wellen am Limit  97 %
+
+Früheste Niederlage je Feld: schwer/aktiv 16:31 · schwer/durchschnitt 16:18 · schwer/gelegentlich 5:40 · schwer/passiv 3:56
+
+Patt-Quote (offen nach 30 min): 0 von 120 = 0 % (Soll ≤ 2 %)
+Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): 58 %
+Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): –
+Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): 22 Einheiten
+Fall des ersten Mauerabschnitts (Median der Partien mit Fall): 5:31 · in 43 % der Partien
+Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): 14 %
+Richtungswechsel je Einheit (Soll: höchstens 2 je Sekunde): größter Wert 4 je Sekunde · Median 0.012 je Einheit und Sekunde · Partien über 2: 46 von 120 · schlimmste: schwer/aktiv/Seed 32676, Einheit 678 bei 772.35 s (x)
+Partielänge, 90. Perzentil der Siege je Feld (Soll ≤ 20:00): schwer/aktiv 17:45 · schwer/durchschnitt 15:24 · schwer/gelegentlich 12:41
+Ungenutztes Material (Anteil der Spätphasen-Produktion im Bestand am Ende; Normal, durchschnitt, Median; Soll ≤ 20 %): – (0 Partien mit Spätphase)
+Anteil der Einheitenkäufe an allen Handlungen der ersten 300 s (Median; Merkmal für compare-human): 60 %
+
+Forschungen: Siegquote erforscht gegen nicht erforscht (Partien mit Universität; aktiv und durchschnitt)
+r_bann               erforscht   31  nicht   28  Differenz  -19 pp
+r_drill              erforscht   16  nicht   43  Differenz  -18 pp
+r_gluecksgriff       erforscht   10  nicht   49  Differenz  -49 pp
+r_hoersaal           erforscht    3  nicht   56  Differenz  -18 pp
+r_ingenieur          erforscht   19  nicht   40  Differenz  -21 pp
+r_logistik           erforscht    8  nicht   51  Differenz  -44 pp
+r_maurerkunst        erforscht   20  nicht   39  Differenz  -16 pp
+r_metallurgie        erforscht   13  nicht   46  Differenz  -36 pp
+r_neuziehen          erforscht   49  nicht   10  Differenz  -11 pp
+
+Karten: Siegquote angeboten+gewählt gegen angeboten+nicht gewählt (aktiv und durchschnitt; Meldung ab +25 pp, mind. 5 Partien je Seite)
+Karte                Kat./Selt.                 gewählt  nicht  Differenz  |   Stufe 1   Stufe 2   Stufe 3
+allesAufDieMitte     sonderregel/legendary            5      2     +50 pp  |    +50 pp                    
+aushebung            armee/common                    20     17      -0 pp  |     -0 pp    -26 pp          
+bastion              basis/common                    18     19      -8 pp  |     -8 pp    -35 pp          
+bauleitung           automatisierung/rare             6     10     -47 pp  |    -47 pp                    
+belagerungsgeraet    armee/common                    20     15      +5 pp  |     +5 pp     +7 pp          
+bessereFabriken      wirtschaft/common               23     11     -20 pp  |    -20 pp     -3 pp     +0 pp
+blitzkrieg           sonderregel/legendary            2      2     +50 pp  |    +50 pp                    
+dauerauftrag         automatisierung/rare            15      5     +93 pp  |    +93 pp                      ← über +25
+doppelschicht        wirtschaft/common               26     13     -15 pp  |    -15 pp    +20 pp          
+drill                armee/common                    23     14      +5 pp  |     +5 pp    -13 pp          
+festungsbau          basis/rare                       2     16      +6 pp  |     +6 pp                    
+fliessband           automatisierung/common          25     11      -3 pp  |     -3 pp    +13 pp          
+gluecksritter        sonderregel/rare                 1     15     -33 pp  |    -33 pp                    
+grossauftrag         wirtschaft/rare                  6      4     -33 pp  |    -33 pp                    
+grosseArmee          sonderregel/legendary            3      1     +67 pp  |    +67 pp                    
+handelskontor        wirtschaft/rare                  5     10      +0 pp  |     +0 pp                    
+instandhaltung       automatisierung/common          16     16     +19 pp  |    +19 pp         –          
+kriegsanleihe        wirtschaft/rare                  8     10     +22 pp  |    +22 pp         –          
+kriegserfahrung      wirtschaft/common               14     18     +21 pp  |    +21 pp    -25 pp          
+kriegstrommeln       armee/common                    11     26     +34 pp  |    +34 pp    +67 pp         –  ← über +25
+langeWurfarme        armee/common                     8     25     +15 pp  |    +15 pp   -100 pp          
+maurerkolonne        basis/common                    23     13      -7 pp  |     -7 pp    -13 pp   +100 pp
+nachtschicht         wirtschaft/common               22     15     -28 pp  |    -28 pp     +0 pp          
+notreserve           basis/rare                       8     13     +27 pp  |    +27 pp                      ← über +25
+rationalisierung     automatisierung/rare            14     11     -10 pp  |    -10 pp                    
+sappeure             armee/rare                       5     10     +10 pp  |    +10 pp                    
+scharfschuetzen      basis/rare                       6     17     -20 pp  |    -20 pp                    
+schildwall           armee/common                    16     18     -19 pp  |    -19 pp    -60 pp          
+schwerePressen       wirtschaft/common               33      6     +23 pp  |    +23 pp    -21 pp    +20 pp
+selbstlaeufer        automatisierung/rare            10      8     +50 pp  |    +50 pp                      ← über +25
+serienbau            wirtschaft/common               11     15     -26 pp  |    -26 pp    +33 pp          
+soeldnerheer         sonderregel/legendary            0      1          –  |         –                    
+taktiker             armee/rare                       5     16     +22 pp  |    +22 pp                    
+turmkanoniere        basis/common                    22     19     -16 pp  |    -16 pp    -50 pp         –
+verbrannteErde       sonderregel/legendary            2      3     -33 pp  |    -33 pp                    
+veteranen            armee/rare                      11      2      +5 pp  |     +5 pp                    
+vorposten            armee/common                    18     21      -2 pp  |     -2 pp                    
+weitschuss           armee/rare                      12     10      -8 pp  |     -8 pp                    
+werkmeister          automatisierung/rare             1     11     -36 pp  |    -36 pp                    
+zeugmeister          automatisierung/rare             7      9     +21 pp  |    +21 pp                    
+zinnen               basis/common                     2     35     -46 pp  |    -46 pp         –          
+
+ZIELE – Siegquote und Dauer (Strategie einheiten-zuerst)
+
+Schwierigkeit | Spielertyp   | Siege | Niederl. | offen | Median Sieg | Median Niederlage
+schwer        | aktiv        |    30 |        0 |     0 |        6:38 |          – | Ende spät.  9:35 | Wellen am Limit  60 %
+schwer        | durchschnitt |    30 |        0 |     0 |        7:45 |          – | Ende spät. 17:24 | Wellen am Limit  48 %
+schwer        | gelegentlich |    27 |        3 |     0 |        9:47 |       9:04 | Ende spät. 10:42 | Wellen am Limit  28 %
+schwer        | passiv       |     0 |       30 |     0 |           – |       5:03 | Ende spät.  7:02 | Wellen am Limit  93 %
+
+Früheste Niederlage je Feld: schwer/gelegentlich 6:40 · schwer/passiv 4:21
+
+Patt-Quote (offen nach 30 min): 0 von 120 = 0 % (Soll ≤ 2 %)
+Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): 78 %
+Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): –
+Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): 22 Einheiten
+Fall des ersten Mauerabschnitts (Median der Partien mit Fall): 5:00 · in 28 % der Partien
+Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): 8 %
+Richtungswechsel je Einheit (Soll: höchstens 2 je Sekunde): größter Wert 7 je Sekunde · Median 0.002 je Einheit und Sekunde · Partien über 2: 4 von 120 · schlimmste: schwer/gelegentlich/Seed 424271, Einheit 239 bei 541.25 s (quer)
+Partielänge, 90. Perzentil der Siege je Feld (Soll ≤ 20:00): schwer/aktiv 7:03 · schwer/durchschnitt 8:08 · schwer/gelegentlich 10:14
+Ungenutztes Material (Anteil der Spätphasen-Produktion im Bestand am Ende; Normal, durchschnitt, Median; Soll ≤ 20 %): – (0 Partien mit Spätphase)
+Anteil der Einheitenkäufe an allen Handlungen der ersten 300 s (Median; Merkmal für compare-human): 75 %
+
+Forschungen: Siegquote erforscht gegen nicht erforscht (Partien mit Universität; aktiv und durchschnitt)
+r_bann               erforscht    1  nicht   59  Differenz   +0 pp
+r_hoersaal           erforscht    5  nicht   55  Differenz   +0 pp
+r_neuziehen          erforscht    1  nicht   59  Differenz   +0 pp
+r_weitblick          erforscht    1  nicht   59  Differenz   +0 pp
+
+Karten: Siegquote angeboten+gewählt gegen angeboten+nicht gewählt (aktiv und durchschnitt; Meldung ab +25 pp, mind. 5 Partien je Seite)
+Karte                Kat./Selt.                 gewählt  nicht  Differenz  |   Stufe 1   Stufe 2   Stufe 3
+allesAufDieMitte     sonderregel/legendary            0      2          –  |         –                    
+aushebung            armee/common                    11     13      +0 pp  |     +0 pp     +0 pp          
+bastion              basis/common                    12     15      +0 pp  |     +0 pp     +0 pp          
+bauleitung           automatisierung/rare             5      4      +0 pp  |     +0 pp                    
+belagerungsgeraet    armee/common                     6     12      +0 pp  |     +0 pp     +0 pp          
+bessereFabriken      wirtschaft/common               16      9      +0 pp  |     +0 pp     +0 pp          
+blitzkrieg           sonderregel/legendary            3      5      +0 pp  |     +0 pp                    
+dauerauftrag         automatisierung/rare             3      5      +0 pp  |     +0 pp                    
+doppelschicht        wirtschaft/common               12      8      +0 pp  |     +0 pp     +0 pp          
+drill                armee/common                    12     10      +0 pp  |     +0 pp     +0 pp          
+festungsbau          basis/rare                       3      8      +0 pp  |     +0 pp                    
+fliessband           automatisierung/common           9     17      +0 pp  |     +0 pp     +0 pp          
+gluecksritter        sonderregel/rare                 1      5      +0 pp  |     +0 pp                    
+grossauftrag         wirtschaft/rare                  0      7          –  |         –                    
+grosseArmee          sonderregel/legendary            1      2      +0 pp  |     +0 pp                    
+handelskontor        wirtschaft/rare                  4      6      +0 pp  |     +0 pp                    
+instandhaltung       automatisierung/common          10      6      +0 pp  |     +0 pp     +0 pp          
+kriegsanleihe        wirtschaft/rare                  8      8      +0 pp  |     +0 pp         –          
+kriegserfahrung      wirtschaft/common               14      5      +0 pp  |     +0 pp     +0 pp          
+kriegstrommeln       armee/common                    15      6      +0 pp  |     +0 pp     +0 pp          
+langeWurfarme        armee/common                     8     19      +0 pp  |     +0 pp     +0 pp          
+maurerkolonne        basis/common                    12     14      +0 pp  |     +0 pp     +0 pp          
+nachtschicht         wirtschaft/common                9     15      +0 pp  |     +0 pp     +0 pp          
+notreserve           basis/rare                       5      6      +0 pp  |     +0 pp                    
+rationalisierung     automatisierung/rare             5      3      +0 pp  |     +0 pp                    
+sappeure             armee/rare                       5      4      +0 pp  |     +0 pp                    
+scharfschuetzen      basis/rare                       3      5      +0 pp  |     +0 pp                    
+schildwall           armee/common                     9     12      +0 pp  |     +0 pp         –          
+schwerePressen       wirtschaft/common               12     12      +0 pp  |     +0 pp     +0 pp          
+selbstlaeufer        automatisierung/rare             2      8      +0 pp  |     +0 pp                    
+serienbau            wirtschaft/common               11     12      +0 pp  |     +0 pp     +0 pp          
+soeldnerheer         sonderregel/legendary            0      1          –  |         –                    
+taktiker             armee/rare                       6      3      +0 pp  |     +0 pp                    
+turmkanoniere        basis/common                    10     19      +0 pp  |     +0 pp         –          
+verbrannteErde       sonderregel/legendary            0      2          –  |         –                    
+veteranen            armee/rare                       4      6      +0 pp  |     +0 pp                    
+vorposten            armee/common                    16     11      +0 pp  |     +0 pp                    
+weitschuss           armee/rare                       3      4      +0 pp  |     +0 pp                    
+werkmeister          automatisierung/rare             5      1      +0 pp  |     +0 pp                    
+zeugmeister          automatisierung/rare             3     11      +0 pp  |     +0 pp                    
+zinnen               basis/common                    16      9      +0 pp  |     +0 pp     +0 pp          
+
+ZIELE – Strategien nebeneinander (Median Sieg · Siegquote)
+
+Schwierigkeit | Spielertyp   | gierig             | einheiten-zuerst  
+schwer        | aktiv        | 10:26 · 57 %       | 6:38 · 100 %      
+schwer        | durchschnitt | 9:13 · 47 %        | 7:45 · 100 %      
+schwer        | gelegentlich | 8:31 · 23 %        | 9:47 · 90 %       
+schwer        | passiv       | – · 0 %            | – · 0 %           
+
+Karten über +25 pp bei allen Strategien: keine
+

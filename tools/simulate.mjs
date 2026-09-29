@@ -88,9 +88,11 @@ if (!isMainThread){
       const maxEnd = Math.max(...R.map(r => r.t));
       const waves = R.reduce((a, r) => a + r.waves, 0), full = R.reduce((a, r) => a + r.wavesFull, 0);
       report.ziele.push({ diff, profile: p, games: R.length, won: w.length, lost: l.length, open: o.length, medWin: median(w.map(r => r.t)), medLoss: median(l.map(r => r.t)),
-                          maxEnd, wavesAtCap: waves ? full / waves : null });
+                          minLoss: l.length ? Math.min(...l.map(r => r.t)) : null, maxEnd, wavesAtCap: waves ? full / waves : null });
       console.log(`${pad(diff, 13)} | ${pad(p, 12)} | ${lpad(w.length, 5)} | ${lpad(l.length, 8)} | ${lpad(o.length, 5)} | ${lpad(mmss(median(w.map(r => r.t))), 11)} | ${lpad(mmss(median(l.map(r => r.t))), 10)} | Ende spät. ${lpad(mmss(maxEnd), 5)} | Wellen am Limit ${lpad(pct(full, waves), 5)}`);
     }
+    // Früheste Niederlage (REQ-6.08: auf Schwer keine vor Minute 4)
+    console.log('\nFrüheste Niederlage je Feld: ' + report.ziele.filter(z => z.minLoss != null).map(z => `${z.diff}/${z.profile} ${mmss(z.minLoss)}`).join(' · '));
     const open = Z.filter(r => r.status === 'running').length;
     report.pattRate = Z.length ? open / Z.length : null;
     console.log(`\nPatt-Quote (offen nach 30 min): ${open} von ${Z.length} = ${pct(open, Z.length)} (Soll ≤ 2 %)`);
