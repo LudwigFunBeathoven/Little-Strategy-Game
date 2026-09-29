@@ -11,7 +11,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 | I6.1 | Formationen ohne Pendeln | 6.01 | fertig (Soll knapp verfehlt, siehe Befund) |
 | I6.2 | Versetzte Einzelangriffe, eigene Geschosse | 6.02 | fertig |
 | I6.3 | Offline-Reste, Pause bei verdecktem Tab, Kartenersatz | 6.03 | fertig |
-| I6.4 | Kartenwahl automatisch, Kaserne im Reiter „Armee“ | 6.04, 6.05 | offen |
+| I6.4 | Kartenwahl automatisch, Kaserne im Reiter „Armee“ | 6.04, 6.05 | fertig |
 | I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | offen |
 | I6.6 | Universität | 6.06 | offen |
 | I6.7 | Nachbarschaftsboni | 6.07 a | offen |
@@ -65,6 +65,14 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- I6.4: `npm test` 127/127 (neu `tests/hometab.test.mjs`), Browser-Prüfung 191/191. Kartenwahl: Reiter Karten öffnet sich selbst, Knöpfe
+  400 ms gesperrt und blenden ein (`UI.draftLockMs`), Klick in der Sperrzeit wählt nichts, zweite Wahl folgt mit neuer Sperre, danach Rückkehr
+  zum vorigen Reiter mit voriger Auswahl; bei gehaltener Maustaste öffnet der Reiter erst nach dem Loslassen, der Klick zählt. Kaserne:
+  Abschnitt im Reiter Armee (Status, Stufe, Versorgungslimit, Ausbau), ohne Kaserne Knopf „Kaserne bauen“ → Reiter Bauen, erster freier
+  Platz, Kaserne hervorgehoben und fokussiert; Klick auf die Kaserne in der Welt öffnet Armee. Die Layout-Prüfung läuft jetzt ohne EP, weil
+  eine Kartenwahl dort den Reiter wechseln würde.
+  **Fehler aus I6.3 gefunden und im I6.3-Commit behoben:** Der verborgene Knopf „Weiter“ blieb wegen `display:flex` sichtbar-durchsichtig über
+  der Mitte der Spielwelt und fing dort Klicks und Mausrad ab.
 - I6.3: `npm test` 126/126 (neu `tests/online.test.mjs`: Suchtest ohne Offline-Bezug in `core.js`, `config.js`, `hints.js`, `data/`, `i18n/`;
   keine Abwesenheitsrechnung in der Logik; Laden ändert nichts; Nachtschicht nur in der Spätphase). Browser-Prüfung: Tab verdecken → Spielzeit
   steht, „Weiter“ in der Spielwelt; Laden mit um eine Stunde vorgestellter Systemzeit → Material und Zeit unverändert, Partie pausiert.
@@ -113,6 +121,14 @@ jedes Geschoss fliegt vom Platz des Werfers zum Platz seines Ziels. Gilt für Na
 `COMBAT.avoidOverkill` (aus). Tests `tests/versatz.test.mjs`: fünf und mehr Takte je 2 s, ein Geschoss je Angriff, mittlere Rate ± 3 %,
 gleicher Seed gleiche Partie, Schalter wirkt.
 
+Siegquoten vor und nach I6.2 (je 50 Partien je Feld, gleiche Seeds; `reports/i6-2-ziele-vor.*`, `reports/i6-2-ziele-nach.*`): größte
+Verschiebung gierig 12 pp (Schwer durchschnitt 38 → 50 %), einheiten-zuerst 6 pp (Schwer gelegentlich 12 → 6 %); alle übrigen Felder ≤ 8 pp.
+**Das Soll „höchstens 3 pp“ ist mit 50 Partien nicht prüfbar:** Die Differenz zweier Quoten aus je 50 Partien streut bei 40–60 % Siegquote
+um ± 20 pp (95 %). Die beobachteten Verschiebungen liegen im Rauschen; einen gerichteten Effekt zeigen sie nicht (Vorzeichen gemischt). Den
+Nachweis auf 3 pp genau brächte erst eine Serie mit rund 2.000 Partien je Feld. Vorschlag: in der Abnahme (200 je Feld) erneut berichten.
+**Overkill-Vermeidung** (Schalter an, `reports/i6-2-overkill.*`, gegen I6.2 mit Schalter aus): gierig Normal durchschnitt +10 pp, Schwer
+durchschnitt +6 pp, sonst ≤ 4 pp; einheiten-zuerst ≤ 4 pp. Tendenz: etwas stärkere Armeen. Bleibt aus (Standard der Anforderung).
+
 ### REQ-6.01, Fortsetzung
 **Soll „höchstens 2 je Sekunde“ knapp verfehlt.** Die restlichen Fälle sind sichtbare, aber einzelne Umordnungen in langen Kämpfen: Eine
 Einheit kommt in einer Nachbar-Lane an, bleibt die Mindestzeit und zieht weiter, während vor ihr jemand fällt oder ein Nahkämpfer sich vor die
@@ -146,3 +162,9 @@ Playwright: 10 Sekunden Kampfbild, Positionsprüfung je Bild, höchstens 1 Wechs
     über der Spielwelt (zusätzlich zum Pause-Knopf der Leiste). Einheiten auf dem Feld werden wie bisher nicht gespeichert.
 12. **Nachtschicht:** Die Spätphase ist die Phase ab Stufe `PHASE_LATE_LEVEL`; die Wirkung multipliziert den Fabrikertrag (nicht Klicks und
     Presse). Die Karte war in v0.6 mit 26 % Wahlrate im Pool, obwohl sie im Spiel nichts bewirkte.
+13. **Heimat-Reiter** (`UI.homeTab`): Fabrik → Bauen, Kaserne → Armee, Schmiede → Schmiede, Universität → Universität, Handelskontor → Bauen.
+14. **Kartenwahl:** Der Hinweis in der Leiste und die Markierung am Reiter bleiben (für den Fall, dass der Spieler den Reiter während der Wahl
+    verlässt). Verlässt der Spieler den Reiter Karten selbst, holt ihn dieselbe Wahl nicht erneut dorthin; erst eine neue Wahl. Die Rückkehr
+    gilt dem Reiter und der Auswahl vor der ersten automatisch geöffneten Wahl.
+15. **„Kaserne bauen“** wählt den ersten freien Platz, auf dem die Kaserne baubar wäre; ist keiner frei, öffnet es nur den Reiter Bauen.
+    Gebaut wird erst mit dem zweiten Klick (oder Enter), wie beim Bauen aus dem Raster (REQ-5.04).

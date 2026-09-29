@@ -468,4 +468,10 @@ KF_I18N.en = {
   'menu.session': 'Log',
   'ex.menu.session': 'Session as JSON',
   'tip.menu.session': 'Debug mode: downloads the session log of this game (clicks, actions, card choices, research, result) for comparison with the bot profiles.',
+  'sub.kaserne': 'Barracks',
+  'kaserne.status.built': 'Barracks level {n} · supply limit {m}',
+  'kaserne.status.none': 'No barracks built: the supply limit stays at its base value.',
+  'kaserne.build': 'Build barracks',
+  'ex.kaserne.build': 'Opens Build with barracks preselected · {cost}',
+  'tip.kaserne.build': 'Selects the first free plot and highlights the barracks there. The second click builds it.',
 };

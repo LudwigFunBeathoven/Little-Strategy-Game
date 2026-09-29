@@ -81,6 +81,9 @@ const KF_CONFIG = {
     fadeS: 0.6,                 // gefallene Einheiten verblassen so lange
     unitEaseS: 0.08,            // gezeichnete Einheiten folgen ihrer Position mit dieser Zeitkonstante (kein Springen beim Aufrücken, REQ-6.01)
     unitEaseSnapPx: 0.3,        // Totzone der Darstellung: näher als so viele Pixel wird nicht mehr nachgeführt
+    // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
+    homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
+    draftLockMs: 400,           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
     debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
   },
 

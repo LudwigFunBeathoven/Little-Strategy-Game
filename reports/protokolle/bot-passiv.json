@@ -4,26 +4,25 @@
   "version": "0.6",
   "lang": "de",
   "diff": "normal",
-  "startedAt": "2026-09-29T15:40:25.866Z",
-  "result": "running",
-  "durationS": 300.7,
-  "clicks": 90,
+  "startedAt": "2026-09-29T16:08:48.850Z",
+  "result": "lost",
+  "durationS": 275.8,
+  "clicks": 82,
   "clicksPerMinute": [
     17,
     18,
     18,
     18,
-    18,
-    1
+    11
   ],
   "clicksByPhase": {
-    "early": 40,
-    "mid": 50,
+    "early": 43,
+    "mid": 39,
     "late": 0
   },
   "timeByPhase": {
-    "early": 135.4999999999966,
-    "mid": 165.1000000000375,
+    "early": 143.9499999999985,
+    "mid": 131.75000000002993,
     "late": 0
   },
   "actions": [
@@ -43,317 +42,283 @@
       "arg": "laeufer"
     },
     {
-      "t": 24.5,
+      "t": 24.55,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 27.55,
+      "t": 27.6,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 33.65,
+      "t": 33.7,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 42.85,
+      "t": 42.9,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 48.95,
+      "t": 45.95,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 52,
+      "t": 52.05,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 61.2,
+      "t": 61.25,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 67.3,
+      "t": 67.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 70.35,
+      "t": 70.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 74.9,
+      "t": 74.5,
       "kind": "chooseDraft",
-      "arg": "schildwall"
+      "arg": "grossauftrag"
     },
     {
-      "t": 82.6,
+      "t": 82.65,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 85.65,
+      "t": 85.7,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 91.75,
+      "t": 88.75,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 100.95,
+      "t": 101,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 104,
+      "t": 104.05,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 110.1,
+      "t": 107.1,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 122.3,
+      "t": 122.4,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 125.35,
+      "t": 122.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 128.4,
+      "t": 125.45,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 135.6,
+      "t": 140.7,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 140.7,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 143.75,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 144.1,
       "kind": "chooseDraft",
-      "arg": "instandhaltung"
+      "arg": "fliessband"
     },
     {
-      "t": 140.65,
+      "t": 152.9,
       "kind": "buildAt",
       "arg": 1
     },
     {
-      "t": 146.75,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 146.75,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 149.8,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 158.95,
+      "t": 162.1,
       "kind": "buildAt",
       "arg": 2
     },
     {
-      "t": 162.05,
+      "t": 165.15,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 162.05,
+      "t": 165.15,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 165.1,
+      "t": 165.15,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 174.25,
+      "t": 177.35,
       "kind": "buildAt",
       "arg": 3
     },
     {
-      "t": 175.9,
-      "kind": "chooseDraft",
-      "arg": "instandhaltung"
-    },
-    {
-      "t": 180.35,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 180.35,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 180.35,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 195.65,
+      "t": 195.7,
       "kind": "buildAt",
       "arg": 4
     },
     {
-      "t": 201.75,
+      "t": 201.85,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 201.75,
+      "t": 201.85,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 201.75,
+      "t": 201.85,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 220.05,
+      "t": 205.85,
+      "kind": "chooseDraft",
+      "arg": "langeWurfarme"
+    },
+    {
+      "t": 217.1,
       "kind": "buildAt",
       "arg": 5
     },
     {
-      "t": 220.05,
+      "t": 220.15,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 223.15,
+      "t": 220.15,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 223.15,
+      "t": 220.15,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 241.5,
+      "t": 241.6,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 241.5,
+      "t": 241.6,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 241.5,
+      "t": 241.6,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 253.7,
+      "t": 247.7,
       "kind": "buildAt",
       "arg": 6
     },
     {
-      "t": 262.9,
+      "t": 263,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 262.9,
+      "t": 263,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 262.9,
+      "t": 263,
       "kind": "spawn",
       "arg": "laeufer"
-    },
-    {
-      "t": 264.65,
-      "kind": "chooseDraft",
-      "arg": "drill"
-    },
-    {
-      "t": 281.25,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 281.25,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 281.25,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 299.55,
-      "kind": "buildAt",
-      "arg": 7
     }
   ],
   "drafts": [
     {
-      "t": 74.9,
+      "t": 74.5,
       "level": 1,
-      "chosen": "schildwall",
+      "chosen": "grossauftrag",
       "offered": [
-        "schildwall",
-        "zinnen"
+        "grossauftrag",
+        "selbstlaeufer"
       ]
     },
     {
-      "t": 135.6,
+      "t": 144.1,
       "level": 2,
-      "chosen": "instandhaltung",
+      "chosen": "fliessband",
       "offered": [
-        "instandhaltung",
-        "belagerungsgeraet"
+        "fliessband",
+        "drill"
       ]
     },
     {
-      "t": 175.9,
+      "t": 205.9,
       "level": 3,
-      "chosen": "instandhaltung",
+      "chosen": "langeWurfarme",
       "offered": [
-        "instandhaltung",
-        "langeWurfarme"
-      ]
-    },
-    {
-      "t": 264.7,
-      "level": 4,
-      "chosen": "drill",
-      "offered": [
-        "drill",
-        "bessereFabriken"
+        "langeWurfarme",
+        "doppelschicht"
       ]
     }
   ],
   "research": [],
-  "maxUnits": 9,
+  "maxUnits": 7,
   "maxArmy": 6,
-  "firstWallFallS": null,
+  "firstWallFallS": 269.2,
   "wallUse": {
     "repairs": 0,
     "upgrades": 0
   },
-  "kills": 44,
-  "losses": 41
+  "kills": 35,
+  "losses": 38
 }

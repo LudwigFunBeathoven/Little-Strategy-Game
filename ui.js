@@ -225,6 +225,7 @@ function tipContent(id){
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
+    case 'kaserneBuild': return { title: t('kaserne.build'), body: t('tip.kaserne.build'), rows: [[t('tip.cost'), costText('material', G.buildCost('kaserne'))]] };
     case 'res': { const r = G.RES[a], n = G.researchTier(a), next = G.researchNext(a);
       const rows = [[t('tip.level'), `${n}/${r.tiers.length}`]];
       if (next) rows.push([t('tip.cost'), costText('material', next.cost)], [t('research.time'), t('research.seconds', { s: next.timeS })]);
@@ -639,6 +640,7 @@ function boot(){
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };
 
   setLang(lang);
+  document.documentElement.style.setProperty('--draft-lock', C.UI.draftLockMs + 'ms');
   layoutBands();
   buildHud();
   buildPanels();

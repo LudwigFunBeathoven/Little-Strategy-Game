@@ -468,4 +468,10 @@ KF_I18N.de = {
   'menu.session': 'Protokoll',
   'ex.menu.session': 'Sitzung als JSON',
   'tip.menu.session': 'Debug-Modus: lädt das Sitzungsprotokoll dieser Partie herunter (Klicks, Handlungen, Kartenwahl, Forschung, Ergebnis) zum Vergleich mit den Bot-Profilen.',
+  'sub.kaserne': 'Kaserne',
+  'kaserne.status.built': 'Kaserne Stufe {n} · Versorgungslimit {m}',
+  'kaserne.status.none': 'Keine Kaserne gebaut: Das Versorgungslimit bleibt beim Grundwert.',
+  'kaserne.build': 'Kaserne bauen',
+  'ex.kaserne.build': 'Zum Reiter Bauen, Kaserne vorausgewählt · {cost}',
+  'tip.kaserne.build': 'Wählt den ersten freien Bauplatz und hebt dort die Kaserne hervor. Gebaut wird erst mit dem zweiten Klick.',
 };

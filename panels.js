@@ -1,7 +1,8 @@
 /* Klammerfront – Arbeitsbereich, unteres Band (REQ-5.03): Klickfeld links, rechts Reiter mit Kontextkopf.
    Reiter: Bauen, Mauer & Türme, Armee, Schmiede (erst mit Schmiede), Universität, Karten.
    Ein Klick auf ein Objekt in der Welt öffnet dessen Reiter und zeigt es im Kontextkopf; Esc oder ein Klick ins Leere hebt die Auswahl auf.
-   Kein automatischer Reiterwechsel ohne Handlung des Spielers. Knöpfe entstehen einmal bzw. nur bei geänderter Auswahl (REQ-5.01). */
+   Kein automatischer Reiterwechsel ohne Handlung des Spielers – mit einer Ausnahme: Eine anstehende Kartenwahl öffnet den Reiter Karten
+   (REQ-6.04) und kehrt danach zum vorigen Reiter samt Auswahl zurück. Knöpfe entstehen einmal bzw. nur bei geänderter Auswahl (REQ-5.01). */
 'use strict';
 
 const TABS = ['build', 'wall', 'army', 'smithy', 'uni', 'cards'];
@@ -10,12 +11,12 @@ let activeTab = 'build';
 let sel = null, ctxKey = '', demolishArmed = false, picks = [];
 const tabEls = {}, gridEls = [];
 
-/* Reiter eines Objekts: Schmiede und Universität haben eigene Reiter, übrige Gebäude und Bauplätze gehören zu Bauen */
+/* Reiter eines Objekts: Heimat-Reiter des Gebäudes aus UI.homeTab (REQ-6.05); freie Bauplätze gehören zu Bauen */
 function tabForSel(s){
   if (!s) return null;
   if (s.kind === 'section') return 'wall';
   const sl = G.S.slots[s.i];
-  return sl && sl.type === 'schmiede' ? 'smithy' : sl && sl.type === 'universitaet' ? 'uni' : 'build';
+  return sl ? C.UI.homeTab[sl.type] : 'build';
 }
 function tabVisible(id){
   if (id === 'smithy') return G.has('schmiede');
@@ -31,6 +32,37 @@ function selectTab(id, byUser){
 function selectPlot(i){ sel = { kind: 'plot', i }; demolishArmed = false; ctxKey = ''; selectTab(tabForSel(sel)); }
 function selectSection(lane){ sel = { kind: 'section', lane }; demolishArmed = false; ctxKey = ''; selectTab('wall'); }
 function clearSelection(){ if (!sel) return; sel = null; demolishArmed = false; ctxKey = ''; requestRender(); }
+/* Zum Bauen eines Gebäudetyps springen: erster freier Platz, auf dem er baubar wäre; die Option wird hervorgehoben und fokussiert */
+let kaserneBuildBtn = null, preselect = null;
+function goBuild(type){
+  const i = G.S.slots.findIndex((x, k) => !x && !['hidden', 'standing'].includes(G.buildBlock(k, type)));
+  preselect = type;
+  if (i >= 0) selectPlot(i); else { clearSelection(); selectTab('build'); }
+}
+
+/* ---------- Kartenwahl öffnet sich automatisch (REQ-6.04) ----------
+   Entsteht eine Kartenwahl, wechselt der Arbeitsbereich in den Reiter Karten (nach dem Loslassen einer gedrückten Maustaste).
+   Die Kartenknöpfe nehmen Klicks erst UI.draftLockMs nach dem Öffnen an und blenden in dieser Zeit ein. Mehrere Wahlen folgen
+   nacheinander; danach kehrt der Arbeitsbereich zum vorigen Reiter samt Auswahl zurück. */
+let pointerHeld = false, draftAuto = null, draftShownKey = '', draftOpenedAt = -Infinity;
+function draftLocked(){ return performance.now() - draftOpenedAt < C.UI.draftLockMs; }
+function autoDraft(){
+  const S = G.S, d = S.status === 'running' ? S.pendingDraft : null;
+  if (d){
+    const key = d.level + ':' + d.options.join();
+    if (key === draftShownKey || pointerHeld) return;                   // schon gezeigt, oder Maustaste gedrückt: nach dem Loslassen
+    if (!draftAuto) draftAuto = { tab: activeTab, sel };
+    draftShownKey = key;
+    activeTab = 'cards';
+    draftOpenedAt = performance.now();
+    draftKey = '';
+    setTimeout(requestRender, C.UI.draftLockMs + 20);                   // Sperre endet: Knöpfe freigeben
+  } else if (draftAuto){
+    const back = draftAuto; draftAuto = null; draftShownKey = '';
+    sel = back.sel; ctxKey = '';
+    activeTab = tabVisible(back.tab) ? back.tab : 'build';
+  } else draftShownKey = '';
+}
 
 /* Wirkung eines Gebäudes für Erklärzeilen: neu gebaut (built = false) oder wie es gerade wirkt */
 function bldEffect(type, built){
@@ -62,6 +94,13 @@ function buildPanels(){
                : e.key === 'Home' ? vis[0] : e.key === 'End' ? vis[vis.length - 1] : null;
     if (next){ e.preventDefault(); selectTab(next, true); }
   });
+  // Kaserne im Reiter Armee (REQ-6.05): ohne Kaserne führt ein Knopf in den Reiter Bauen, Kaserne vorausgewählt
+  kaserneBuildBtn = mkButton('btn-ghost', '', () => goBuild('kaserne'), 'kaserneBuild', '');
+  $('kaserneBuild').appendChild(kaserneBuildBtn);
+  // Kartenwahl (REQ-6.04): gedrückte Maustaste merken; der Reiter öffnet erst nach dem Loslassen
+  document.addEventListener('pointerdown', () => { pointerHeld = true; }, true);
+  document.addEventListener('pointerup', () => { pointerHeld = false; requestRender(); }, true);
+  document.addEventListener('pointercancel', () => { pointerHeld = false; requestRender(); }, true);
   // Knopfraster der Bauplätze (REQ-5.04): Maus oder Tastatur; Pfeiltasten bewegen den Fokus, Enter wählt den Platz
   // und springt zur ersten baubaren Option, ein zweites Enter baut
   const grid = $('plotGrid');
@@ -126,7 +165,7 @@ function renderContext(){
   setHidden($('ctxHead'), !show);
   const plot = show && sel.kind === 'plot', sl = plot ? S.slots[sel.i] : null, sec = show && sel.kind === 'section' ? sel.lane : null;
   setHidden($('ctxBuilding'), !sl);
-  for (const g of ['kaserne', 'kontor']) setHidden($(GROUP_BOX[g]), !(sl && sl.type === g));
+  setHidden($(GROUP_BOX.kontor), !(sl && sl.type === 'kontor'));
   setHidden($('ctxRepair'), sec === null);
   if (plot && !sl){
     setText($('ctxTitle'), t('slot.label', { n: sel.i + 1 }));
@@ -293,9 +332,15 @@ function renderDraft(){
     const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(o.descKey, optParams(o, tier));
     const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.card', { tier: optLimit(o) });
     b.append(nm, k, ds, ex);
-    b.addEventListener('click', () => { if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; requestRender(); } });
+    b.addEventListener('click', () => { if (draftLocked() || isDis(b)) return; if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; requestRender(); } });
     list.appendChild(b);
   });
+}
+/* Sperre und Einblenden der Kartenknöpfe nach dem automatischen Öffnen */
+function renderDraftLock(){
+  const locked = draftLocked();
+  $('draftOffer').classList.toggle('locked', locked);
+  for (const b of $('draftOffer').children) setDis(b, locked);
 }
 
 /* ---------- Armee: Vorschau je Lane (REQ-14.3) und Ereignisse ---------- */
@@ -389,6 +434,7 @@ function renderResearch(){
 /* ---------- Gesamter Arbeitsbereich ---------- */
 function renderPanels(){
   const S = G.S, running = S.status === 'running';
+  autoDraft();
   if (!tabVisible(activeTab)) activeTab = 'build';                      // Reiter verschwunden (Schmiede abgerissen)
   for (const id of TABS){
     const el = tabEls[id], on = id === activeTab;
@@ -413,6 +459,21 @@ function renderPanels(){
 
   renderOpts();
   renderContext();
+  renderDraftLock();
+  // Kaserne im Reiter Armee (REQ-6.05)
+  const kas = G.has('kaserne');
+  setText($('kaserneStatus'), kas ? t('kaserne.status.built', { n: G.kaserneLevel(), m: G.supplyCap() }) : t('kaserne.status.none'));
+  setHidden(kaserneBuildBtn, kas);
+  setText(kaserneBuildBtn.querySelector('.btn-label'), t('kaserne.build'));
+  setText(kaserneBuildBtn.querySelector('.expl'), t('ex.kaserne.build', { cost: costText('material', G.buildCost('kaserne')) }));
+  setDis(kaserneBuildBtn, !running);
+  // vorausgewählte Bau-Option (Knopf „Kaserne bauen“): hervorheben und fokussieren, sobald sie sichtbar ist
+  if (preselect){
+    const p = picks.find(q => q.type === preselect);
+    for (const q of picks) q.b.classList.toggle('preselected', q === p);
+    if (p){ p.b.focus({ preventScroll: true }); preselect = null; }
+    else if (activeTab !== 'build') preselect = null;
+  }
   setHidden($('buildHint'), !!sel && sel.kind === 'plot');
   $('tabBody').classList.toggle('side-by-side', activeTab === 'build');
   for (let i = 0; i < gridEls.length; i++){
