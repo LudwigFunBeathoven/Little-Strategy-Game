@@ -45,7 +45,7 @@ function freshState(diff, seed){
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
     lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9, repairCd: 0 })), enemyBaseHp: d.enemyBaseHp,
-    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextEnemy: [], nextEnemySiege: false, forms: [],
+    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextOwnWave: C.WAVE_INTERVAL_S, ownWaveNo: 0, lastOrder: null, nextEnemy: [], nextEnemySiege: false, forms: [],
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
@@ -81,6 +81,9 @@ function create(){
         if (e.mul !== undefined) mul[e.stat] = (mul[e.stat] ?? 1) * e.mul;
         if (e.add !== undefined) add[e.stat] = (add[e.stat] ?? 0) + e.add;
       }
+      // Synergie (REQ-45): stärker mit der Zahl gewählter Karten der eigenen Kategorie, die Karte selbst eingeschlossen
+      const syn = OPT[id].synergy;
+      if (syn) mul[syn.stat] = (mul[syn.stat] ?? 1) * (1 + synergyValue(id));
     }
     modCache = { ver: S.draft.ver, key, mul, add };
     return modCache;
@@ -89,6 +92,8 @@ function create(){
   /* Stufe n (1-basiert) einer Karte; null, wenn es sie nicht gibt */
   function cardTier(id, n){ const o = OPT[id]; return o && n > 0 ? o.tiers[Math.min(n, o.tiers.length) - 1] : null; }
   const cardTaken = id => S.draft.stacks[id] || 0;
+  const categoryCount = cat => Object.keys(S.draft.stacks).filter(id => S.draft.stacks[id] > 0 && OPT[id] && OPT[id].category === cat).length;
+  const synergyValue = id => { const o = OPT[id]; return o && o.synergy && cardTaken(id) > 0 ? o.synergy.perCard * categoryCount(o.category) : 0; };
   const mAdd = stat => mods().add[stat] ?? 0;
 
   /* ---------- abgeleitete Werte ---------- */
@@ -105,9 +110,9 @@ function create(){
   // Grundstärke steigt je Altmetall-Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
   const qualityMult  = () => Math.pow(1 + C.FX_QUALITAET, lv('qualitaet'));
-  const hpMultP      = () => levelStrength() * qualityMult();
-  const dmgMultP     = () => levelStrength() * qualityMult();
-  const cdMultP      = () => 1;
+  const hpMultP      = () => levelStrength() * qualityMult() * mMul('unitStrength');
+  const dmgMultP     = () => levelStrength() * qualityMult() * mMul('unitStrength');
+  const cdMultP      = () => mMul('attackCd');
   const bountyMult   = () => mMul('scrapGain');
   /* Abschnitte der Basis (REQ-13): 0 = Mauer oben, 1 = Tor, 2 = Mauer unten */
   const sectionMax   = i => (C.SECTION_HP[i] + C.FX_MAUER_HP * lv('mauer')) * mMul('wallHp');
@@ -118,7 +123,7 @@ function create(){
   const towerBuilt   = lane => lv(towerId('turm', lane)) > 0;
   const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
   const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane)) * mMul('turretDmg');
-  const turretRange  = lane => C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane));
+  const turretRange  = lane => (C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane))) * mMul('towerRange');
   const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane)));
   /* Gegnerstärke wächst linear; nach der Belagerungswelle kommt POST_SIEGE_GROWTH je Minute hinzu (REQ-19.4) */
   const postSiege    = () => S.siegeDone ? C.POST_SIEGE_GROWTH * Math.max(0, S.t - S.siegeWaveT) / 60 : 0;
@@ -126,15 +131,16 @@ function create(){
   const enemyDmgMult = () => 1 + diffCfg().dmgGrowth * S.t / 60 + postSiege();
   const siegeIn      = () => S.siegeDone ? null : Math.max(0, S.siegeWaveT - S.t);
   const siegeAnnounced = () => !S.siegeDone && S.siegeAnnouncedAt !== null;
-  const unitCost     = type => Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost')));
+  const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost')));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
   const rangedRows   = side => C.RANGED_RANGE_ROWS + (side === 'p' ? mAdd('rangedRows') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
-  const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpTotal(S.level), need: xpStep(S.level + 1) });
+  const xpNeed       = n => xpTotal(n) * mMul('xpNeed');
+  const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
-  const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply'));
+  const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply')) * mMul('supplyMult')));
   const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
 
   function upCost(id){
@@ -226,13 +232,13 @@ function create(){
     return true;
   }
   function unlockBuilding(type){ S.unlocked[type] = true; }
-  const repairCost = () => C.REPAIR_COST;
+  const repairCost = () => Math.ceil(C.REPAIR_COST * mMul('repairCost'));
   /* Reparatur je Abschnitt (REQ-13.6). Ein gefallener Abschnitt steht danach wieder, sein Turm feuert wieder. */
-  function repair(i){
+  function repair(i, factor = 1){
     if (i === undefined) i = GATE;
-    const s = S.sections[i];
-    if (S.status !== 'running' || !s || S.material < repairCost() || s.hp >= sectionMax(i) || s.repairCd > 0) return false;
-    S.material -= repairCost();
+    const s = S.sections[i], cost = Math.ceil(repairCost() * factor);
+    if (S.status !== 'running' || !s || S.material < cost || s.hp >= sectionMax(i) || s.repairCd > 0) return false;
+    S.material -= cost;
     s.repairCd = C.REPAIR_COOLDOWN_S;
     s.hp = Math.min(sectionMax(i), s.hp + C.REPAIR_AMOUNT);
     return true;
@@ -275,7 +281,7 @@ function create(){
       const rows = [];
       for (const g of [melee, ranged]) for (let i = 0; i < g.length; i += R) rows.push(g.slice(i, i + R));
       rows.forEach((r, ri) => r.forEach((u, ci) => {
-        u.row = ri; u.col = ci; u.rowSize = r.length; u.x = f.x - dir * ri * C.ROW_GAP; u.lane = f.lane; u.laneF = f.laneF; u.moving = f.moving;
+        u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; u.x = f.x - dir * ri * C.ROW_GAP; u.lane = f.lane; u.laneF = f.laneF; u.moving = f.moving;
       }));
       f.rows = rows.length; f.size = m.length; fronts.set(f.id, rows[0] || []);
     }
@@ -328,6 +334,7 @@ function create(){
   const strongerLane = wave => laneStrength(wave, 2) > laneStrength(wave, 0) ? 2 : 0;
   /* Lanes für eine Gruppe: erst die Nahkämpfer, dann die Fernkämpfer, jeweils nach REQ-12.1 */
   function assignLanes(types, strong){
+    if (mAdd('allMid') > 0) return types.map(type => ({ type, lane: GATE }));   // Alles auf die Mitte (REQ-45)
     const melee = types.filter(t => !isRangedType(t)), ranged = types.filter(isRangedType);
     const lm = distribute(melee.length, strong), lr = distribute(ranged.length, strong);
     return [...melee.map((type, i) => ({ type, lane: lm[i] })), ...ranged.map((type, i) => ({ type, lane: lr[i] }))];
@@ -338,16 +345,27 @@ function create(){
     for (const g of group) (out[g.lane] ||= []).push(g.type);
     return out;
   }
-  function launchWave(){
-    const enemy = S.nextEnemy;
+  /* Eigene Welle; der eigene Takt kann durch Karten vom Takt der Gegnerwellen abweichen (Große Armee, Blitzkrieg) */
+  const ownWaveInterval = () => C.WAVE_INTERVAL_S * mMul('ownWaveInterval');
+  function launchOwnWave(){
     if (S.queue.length){
       // Kennzahl: Anteil der Wellen am Versorgungslimit (REQ-21.2)
       S.stats.waves = (S.stats.waves || 0) + 1;
       if (S.queue.length >= supplyCap()) S.stats.wavesFull = (S.stats.wavesFull || 0) + 1;
-      for (const [lane, types] of Object.entries(byLane(assignLanes(S.queue.map(q => q.type), strongerLane(enemy)))))
-        addFormation('p', Number(lane), types, deployX(Number(lane)));
+      const types = S.queue.map(q => q.type);
+      for (const [lane, ts] of Object.entries(byLane(assignLanes(types, strongerLane(S.nextEnemy)))))
+        addFormation('p', Number(lane), ts, deployX(Number(lane)));
       S.queue = [];
+      S.lastOrder = types;
+      S.stats.maxArmy = Math.max(S.stats.maxArmy || 0, S.units.filter(u => u.side === 'p').length);
     }
+    // Dauerauftrag: Warteschlange mit der zuletzt ausgerückten Zusammensetzung füllen, soweit das Material reicht (REQ-45)
+    if (mAdd('standingOrder') > 0 && S.lastOrder) for (const type of S.lastOrder) spawn(type);
+    S.ownWaveNo++;
+    S.nextOwnWave += ownWaveInterval();
+  }
+  function launchWave(){
+    const enemy = S.nextEnemy;
     // Gegnerwelle: rückt geschlossen aus; was wegen Feldgrenze oder Belagerung nicht passt, folgt später.
     // Die Belagerungswelle rückt immer vollständig aus.
     const siege = S.nextEnemySiege;
@@ -367,7 +385,8 @@ function create(){
     S.nextWave += C.WAVE_INTERVAL_S;
     S.nextEnemy = rollEnemyWave();
   }
-  const waveIn = () => Math.max(0, S.nextWave - S.t);
+  const waveIn = () => Math.max(0, S.nextOwnWave - S.t);
+  const enemyWaveIn = () => Math.max(0, S.nextWave - S.t);
   /* Aufstellpunkt einer Lane: am Tor, mit Vorposten weiter vorn, aber nie hinter der vordersten gegnerischen Einheit */
   function deployX(lane){
     let x = spawnX();
@@ -422,11 +441,21 @@ function create(){
     const s = S.sections[i];
     s.hp -= dmg; s.lastHit = S.t;
     FX.baseFlash.p[i] = 0.12;
-    if (s.hp <= 0 && i !== GATE){ s.hp = 0; log('log.wallDown', { lane: '@lane.' + i }); }
+    if (s.hp <= 0 && i !== GATE){
+      s.hp = 0; log('log.wallDown', { lane: '@lane.' + i });
+      // Verbrannte Erde: alle Gegner der Lane erleiden Schaden, wenn die Mauer fällt (REQ-45)
+      const burn = mAdd('scorchedEarth');
+      if (burn > 0) for (const u of S.units) if (u.side === 'e' && u.lane === i){ u.hp -= burn; u.flash = 0.12; }
+    }
     return i;
   }
   function hitUnit(u, target){
-    target.hp -= u.dmg * (u.side === 'p' ? mMul('dmgVsUnits') : 1); target.flash = 0.12;
+    let dmg = u.dmg;
+    if (u.side === 'p'){
+      dmg *= mMul('dmgVsUnits');
+      if (u.formSize >= (OPT.kriegstrommeln ? OPT.kriegstrommeln.condition.value : Infinity)) dmg *= mMul('drumsDmg');   // Kriegstrommeln
+    } else if (!target.ranged && target.row === 0 && target.rowSize === C.FORMATION_ROW_MAX) dmg /= mMul('shieldHp');        // Schildwall
+    target.hp -= dmg; target.flash = 0.12;
     if (u.ranged) shot({ x0: u.x, x1: target.x, lane: u.laneF, t: 0, dur: 0.3 });
   }
   function hitBase(u){
@@ -553,7 +582,7 @@ function create(){
   /* ---------- Altmetall-Stufen und Draft (REQ-02) ---------- */
   function gainScrap(b){
     S.scrap += b; S.scrapTotal += b;
-    while (S.scrapTotal >= xpTotal(S.level + 1)){
+    while (S.scrapTotal >= xpNeed(S.level + 1)){
       S.level++; S.pendingLevels++;
       log('log.levelUp', { n: S.level });
     }
@@ -570,17 +599,26 @@ function create(){
     for (const e of o.tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
     return true;
   }
-  const cardWeight = o => o.weight * Math.pow(C.CARD_TIER_WEIGHT_BONUS, cardTaken(o.id));
-  const draftSize = () => has('universitaet') ? C.DRAFT_OPTIONS_UNIVERSITY : C.DRAFT_OPTIONS_BASE;
-  /* Gewichtete Ziehung ohne Zurücklegen, über den seedbaren Spielzufall */
+  const cardWeight = o => C.CARD_RARITY_WEIGHTS[o.rarity] * Math.pow(C.CARD_TIER_WEIGHT_BONUS, cardTaken(o.id));
+  const draftSize = () => (has('universitaet') ? C.DRAFT_OPTIONS_UNIVERSITY : C.DRAFT_OPTIONS_BASE) + mAdd('draftSize');
+  /* Gewichtete Ziehung ohne Zurücklegen, über den seedbaren Spielzufall (REQ-45):
+     höchstens eine legendäre Karte je Angebot; die letzte Karte kommt aus einer anderen Kategorie, falls sonst nur eine vertreten wäre */
   function drawOptions(k){
-    const pool = OPTIONS.filter(optionAvailable), out = [];
+    let pool = OPTIONS.filter(optionAvailable);
+    const out = [];
     while (out.length < k && pool.length){
-      const total = pool.reduce((a, o) => a + cardWeight(o), 0);
+      let cand = pool;
+      const cats = new Set(out.map(id => OPT[id].category));
+      if (out.length === k - 1 && cats.size === 1){
+        const other = pool.filter(o => !cats.has(o.category));
+        if (other.length) cand = other;
+      }
+      const total = cand.reduce((a, o) => a + cardWeight(o), 0);
       let r = rnd() * total, i = 0;
-      while (i < pool.length - 1 && r >= cardWeight(pool[i])){ r -= cardWeight(pool[i]); i++; }
-      out.push(pool[i].id);
-      pool.splice(i, 1);
+      while (i < cand.length - 1 && r >= cardWeight(cand[i])){ r -= cardWeight(cand[i]); i++; }
+      const pick = cand[i];
+      out.push(pick.id);
+      pool = pool.filter(o => o !== pick && !(pick.rarity === 'legendary' && o.rarity === 'legendary'));
     }
     return out;
   }
@@ -605,6 +643,17 @@ function create(){
     S.pendingLevels--;
     if (S.pendingLevels > 0) offerDraft();
     return true;
+  }
+  /* Automatisierungskarten (REQ-45): kaufen und reparieren selbst, sobald genug Material da ist */
+  function automation(){
+    const f = mAdd('autoRepairCost');
+    if (f > 0) S.sections.forEach((s, i) => { if ((s.hp > 0 || i === GATE) && s.hp < sectionMax(i) * OPT.instandhaltung.condition.value) repair(i, f); });
+    const smith = mAdd('autoSmith');
+    if (smith > 0 && has('schmiede') && S.material >= upCost('qualitaet') * smith) buy('qualitaet');
+    const fab = mAdd('autoFactory');
+    if (fab > 0 && S.slots.some(x => !x) && S.material >= Math.max(1, factoryCost()) * fab) build('fabrik');
+    const tower = mAdd('autoTower');
+    if (tower > 0) for (const lane of C.TOWER_LANES){ const id = towerId('turm', lane); if (S.lvl[id] > 0 && S.material >= upCost(id) * tower) buy(id); }
   }
   /* Bedingte Wirkungen */
   function applyConditionals(dt){
@@ -652,7 +701,9 @@ function create(){
         addMaterial(Math.min(cap, S.material * interestRate()));
       }
     }
+    if (S.t >= S.nextOwnWave) launchOwnWave();
     if (S.t >= S.nextWave) launchWave();
+    automation();
     // Ankündigung SIEGE_WARNING_S vor der Belagerungswelle (REQ-19.3)
     if (!S.siegeDone && S.siegeAnnouncedAt === null && S.t >= S.siegeWaveT - C.SIEGE_WARNING_S - 1e-9){ S.siegeAnnouncedAt = S.t; log('log.siegeWarning'); }
 
@@ -692,6 +743,7 @@ function create(){
     if (!Array.isArray(S.queue)) S.queue = [];
     const shift = Math.max(0, S.t + C.RELOAD_WAVE_DELAY_S - S.nextWave);
     S.nextWave += shift;
+    S.nextOwnWave = Math.max(S.nextOwnWave || 0, S.t + C.RELOAD_WAVE_DELAY_S);
     if (!S.siegeDone) S.siegeWaveT += shift;       // Belagerungswelle bleibt eine reguläre Welle im Takt
     if (!Array.isArray(S.nextEnemy) || !S.nextEnemy.length) S.nextEnemy = rollEnemyWave();
   }
@@ -710,7 +762,7 @@ function create(){
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
-    addFormation, layoutAll, formMembers, enemyAhead, supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
+    addFormation, layoutAll, formMembers, enemyAhead, supplyCap, supplyFull, waveIn, enemyWaveIn, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, refundFor, interestRate,

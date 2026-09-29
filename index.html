@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   :root{
+    --cat-wirtschaft:#7C6A2E; --cat-armee:#9A4A2A; --cat-basis:#3E5866; --cat-automatisierung:#4F6B3A; --cat-sonderregel:#6B4A7A; --gold:#B08A1E;
     --bg:#F1F2ED; --surface:#FBFBF8; --surface-2:#E9EAE3;
     --ink:#1B1E19; --ink-soft:#565A50; --ink-faint:#8B8F84;
     --rule:#DBDCD3; --rule-strong:#C6C8BC;
@@ -19,6 +20,7 @@
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       color-scheme:dark;
+      --cat-wirtschaft:#D2B45C; --cat-armee:#D98A68; --cat-basis:#8FB4C4; --cat-automatisierung:#9CC08A; --cat-sonderregel:#C3A1D6; --gold:#E3C35A;
       --bg:#15170F; --surface:#1C1F17; --surface-2:#262920;
       --ink:#EAEBE3; --ink-soft:#AFB3A5; --ink-faint:#767A6C;
       --rule:#33362A; --rule-strong:#464A38;
@@ -30,6 +32,7 @@
   }
   :root[data-theme="dark"]{
     color-scheme:dark;
+    --cat-wirtschaft:#D2B45C; --cat-armee:#D98A68; --cat-basis:#8FB4C4; --cat-automatisierung:#9CC08A; --cat-sonderregel:#C3A1D6; --gold:#E3C35A;
     --bg:#15170F; --surface:#1C1F17; --surface-2:#262920;
     --ink:#EAEBE3; --ink-soft:#AFB3A5; --ink-faint:#767A6C;
     --rule:#33362A; --rule-strong:#464A38;
@@ -241,6 +244,16 @@
   .chosen .opt-tag b{font-weight:600; color:var(--ink);}
   .pick .k{font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--brass); align-self:center;}
   .card.wide{max-width:560px;}
+  /* Spezialkarten (REQ-45): Farbe je Kategorie, Rahmen je Seltenheit */
+  .cat-wirtschaft{--cat:var(--cat-wirtschaft);} .cat-armee{--cat:var(--cat-armee);} .cat-basis{--cat:var(--cat-basis);}
+  .cat-automatisierung{--cat:var(--cat-automatisierung);} .cat-sonderregel{--cat:var(--cat-sonderregel);}
+  .card-pick{border-left:5px solid var(--cat);}
+  .card-pick .k{color:var(--cat);}
+  .card-pick.rar-rare{border-top:2px solid var(--cat); border-right:2px solid var(--cat); border-bottom:2px solid var(--cat);}
+  .card-pick.rar-legendary{border:3px double var(--gold); border-left:5px solid var(--cat); background:var(--brass-soft);}
+  .chosen .opt-tag{border-left:4px solid var(--cat);}
+  .chosen .opt-tag.rar-rare{box-shadow:inset 0 0 0 1px var(--cat);}
+  .chosen .opt-tag.rar-legendary{box-shadow:inset 0 0 0 2px var(--gold);}
 
   /* REQ-03.5: Klick-Knopf tritt in Phase Spät optisch zurück, bleibt bedienbar */
   .btn-primary.late{background:var(--surface-2); color:var(--ink-soft); padding:8px 14px; font-size:14px;}

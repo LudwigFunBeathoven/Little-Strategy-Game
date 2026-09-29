@@ -76,6 +76,7 @@ const DESC_PARAMS = {
   kadenz:     () => ({ percent: pct(1 - C.PLAYER_TURRET.cdFactor) }),
 };
 const costText = (cur, n) => n === 0 ? t('cost.free') : t(cur === 'scrap' ? 'cost.scrap' : 'cost.material', { n: fmt(n) });
+const refundText = n => t('cost.material', { n: fmt(n) });   // Erstattung 0 heißt 0 Material, nicht „gratis“
 
 
 /* ================= Tooltips (REQ-05) ================= */
@@ -181,27 +182,27 @@ function tipContent(id){
       const sl = S.slots[a];
       if (!sl) return { title: t('slot.label', { n: Number(a) + 1 }), body: t('tip.slot.empty'), rows: [[t('tip.m.nextFactory'), costText('material', G.factoryCost())]] };
       return { title: t(`bld.${sl.type}.name`), body: bldEffect(sl.type, true) + '. ' + t('tip.slot.built'),
-               rows: [[t('tip.refund'), costText('material', G.refundFor(Number(a)))]] };
+               rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
     }
     case 'pick': {
       const cost = G.buildCost(a), block = G.buildBlock(Number(b), a);
       return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }),
                rows: [[t('tip.cost'), costText('material', cost)]], reason: buildReason(block, cost) };
     }
-    case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), costText('material', G.refundFor(Number(a)))]] };
-    case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: costText('material', G.refundFor(Number(a))) }) };
+    case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
+    case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: refundText(G.refundFor(Number(a))) }) };
     case 'cancel': return { title: t('slot.cancel'), body: t('tip.cancel.body') };
     case 'draftopt': {
       const d = S.pendingDraft; if (!d) return { title: '' };
       const o = G.OPT[d.options[a]], tier = G.cardTaken(o.id) + 1;
       return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)),
-               rows: [[t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.limit'), optLimit(o)]],
+               rows: cardRows(o, [[t('tip.draft.limit'), optLimit(o)]]),
                reason: null, foot: t('tip.draft.choose') };
     }
     case 'chosen': {
       const o = G.OPT[a], tier = G.cardTaken(a);
       const rows = tier < o.tiers.length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
-      return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)), rows };
+      return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)), rows: cardRows(o, rows) };
     }
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
     case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };
@@ -524,7 +525,7 @@ function renderSlots(){
       card.className = 'slot slot-btn built';
       costEl.textContent = '';
       const nm = document.createElement('span'); nm.className = 'slot-name'; nm.textContent = t(`bld.${sl.type}.name`);
-      ex.textContent = t('ex.slot.built', { effect: bldEffect(sl.type, true), refund: costText('material', G.refundFor(i)) });
+      ex.textContent = t('ex.slot.built', { effect: bldEffect(sl.type, true), refund: refundText(G.refundFor(i)) });
       body.append(nm, ex);
     } else {
       card.className = 'slot slot-btn';
@@ -540,16 +541,30 @@ function renderSlots(){
 /* Spezialkarten (REQ-18): Werte der gezeigten Stufe, Name mit römischer Stufenzahl */
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const cardName = (o, tier) => o.tiers.length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
+/* Werte für die Kartentexte: Faktoren als Prozent, außer echte Vielfache; Anteile als Prozent */
+const FACTOR_STATS = ['supplyMult', 'ownWaveInterval'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly'];
 function optParams(o, tier){
-  const val = e => e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? fmtNum(e.add) : e.seconds !== undefined ? e.seconds : '';
+  const val = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
+    : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
   const tr = o.tiers[Math.max(1, tier) - 1], p = {};
-  if (tr.effect && tr.effect[0]) p.e1 = val(tr.effect[0]);
-  if (tr.drawback && tr.drawback[0]) p.d1 = val(tr.drawback[0]);
-  if (o.condition && o.condition.value !== undefined) p.c1 = pct(o.condition.value);
+  (tr.effect || []).forEach((e, i) => { p['e' + (i + 1)] = val(e); });
+  (tr.drawback || []).forEach((e, i) => { p['d' + (i + 1)] = val(e); });
+  if (o.condition && o.condition.value !== undefined) p.c1 = o.condition.value < 1 ? pct(o.condition.value) : o.condition.value;
+  if (o.synergy) p.syn = pct(o.synergy.perCard);
   p.s = C.WALL_REGEN_DELAY_S;
   return p;
 }
 const fmtNum = n => n % 1 ? fmt1(n) : fmt(n);
+/* Zeilen für Kartentooltips: Kategorie, Seltenheit, aktuelle Synergie */
+function cardRows(o, extra){
+  const rows = [[t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.rarity'), t('draft.rarity.' + o.rarity)], ...extra];
+  if (o.synergy){
+    const n = G.categoryCount(o.category) + (G.cardTaken(o.id) ? 0 : 1);
+    rows.push([t('tip.draft.synergy'), '+' + pct(o.synergy.perCard * n) + ' %']);
+  }
+  return rows;
+}
+const cardClass = o => `cat-${o.category} rar-${o.rarity}`;
 function optLimit(o){
   const n = G.cardTaken(o.id) + 1;
   return t('draft.tierOf', { n: ROMAN[n], max: ROMAN[o.tiers.length] });
@@ -564,7 +579,7 @@ function renderChosen(){
   if (!ids.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('level.none'); box.appendChild(e); return; }
   for (const id of ids){
     const o = G.OPT[id], tag = document.createElement('span');
-    tag.className = 'opt-tag'; tag.dataset.tooltip = 'chosen:' + id;
+    tag.className = 'opt-tag ' + cardClass(o); tag.dataset.tooltip = 'chosen:' + id;
     const b = document.createElement('b'); b.textContent = cardName(o, st[id]);
     tag.appendChild(b);
     box.appendChild(tag);
@@ -576,9 +591,9 @@ function openDraft(){
   d.options.forEach((id, i) => {
     const o = G.OPT[id], tier = G.cardTaken(id) + 1;
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = 'draftopt:' + i;
+    b.type = 'button'; b.className = ['pick', 'card-pick', cardClass(o)].join(' '); b.dataset.tooltip = 'draftopt:' + i;
     const nm = document.createElement('b'); nm.textContent = cardName(o, tier);
-    const k = document.createElement('span'); k.className = 'k'; k.textContent = t('draft.cat.' + o.category);
+    const k = document.createElement('span'); k.className = 'k'; k.textContent = `${t('draft.cat.' + o.category)} · ${t('draft.rarity.' + o.rarity)}`;
     const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(o.descKey, optParams(o, tier));
     const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.card', { tier: optLimit(o) });
     b.append(nm, k, ds, ex);
@@ -629,7 +644,7 @@ function openSlotDialog(i){
     showDialog({ eyebrow: t('yard.title'), title: t('slot.label', { n: i + 1 }), text: t('slot.dialogText'),
                  body: [list], actions: [cancel], focus: list.querySelector('.pick:not([aria-disabled="true"])') || cancel });
   } else {
-    const refund = costText('material', G.refundFor(i));
+    const refund = refundText(G.refundFor(i));
     const del = mkButton('btn-ghost', t('slot.demolish'), () => openDemolishConfirm(i), 'demolish:' + i, t('ex.demolish', { refund }));
     showDialog({ eyebrow: t('slot.label', { n: i + 1 }), title: t(`bld.${sl.type}.name`),
                  text: t('slot.bldText', { desc: t(`bld.${sl.type}.desc`), refund }), actions: [del, cancel], focus: cancel });
@@ -638,7 +653,7 @@ function openSlotDialog(i){
 function openDemolishConfirm(i){
   const sl = G.S.slots[i];
   if (!sl) return closeModal();
-  const refund = costText('material', G.refundFor(i));
+  const refund = refundText(G.refundFor(i));
   showHint('demolish');
   const ok = mkButton('btn-danger', t('demolish.confirm'), () => { G.demolish(i); slotKey = ''; closeModal(); render(); }, 'confirmDemolish:' + i, t('ex.demolish', { refund }));
   const cancel = mkButton('btn-ghost', t('slot.cancel'), closeModal, 'cancel', t('ex.cancel'));

@@ -11,7 +11,7 @@ Stand von Iteration 3: `docs/archiv/STAND-iteration-3.md`.
 | I4.2 | Formation | 42 | P0 | fertig |
 | I4.3 | Lane-übergreifender Kampf | 43 | P0 | fertig |
 | I4.4 | Automatisierung und große Armeen | 44 | P1 | fertig (Front folgen und Bildzeit mit I4.6) |
-| I4.5 | Kartenausbau | 45 | P1 | offen |
+| I4.5 | Kartenausbau | 45 | P1 | fertig (Seitenleiste mit I4.6) |
 | I4.6 | Vertikales Layout, Reich in der Spielwelt, Scrollen | 46 | P1 | offen |
 | I4.7 | Gestaffelte Einführung | 47 | P2 | offen |
 | I4.8 | Simulation, Balancing, Bericht, Merge-Bereitschaft | 48 | P2 | offen |
@@ -36,6 +36,8 @@ node tools/simulate.mjs --suite kurz
   Leicht bis knapp 27 Minuten. Beides ist Kalibrierung in I4.8.
 
 - I4.4: `npm test` 68/68, Browser-Prüfung grün, Kurzsimulation 19 Siege, 1 Niederlage, 0 offen.
+
+- I4.5: `npm test` 79/79, Browser-Prüfung grün, Kurzsimulation 17 Siege, 3 Niederlagen, 0 offen. 41 Karten nach `docs/plan-iteration-4.md`.
 
 ## Abweichungen und Auslegungen
 1. **Suche nach „hold“ wörtlich genommen:** Auch Namen, die das Wort nur zufällig enthalten, sind umbenannt: `xpThreshold` → `xpTotal`,
@@ -63,3 +65,12 @@ node tools/simulate.mjs --suite kurz
 13. **Kaserne bis Stufe 6:** „Ausbau“ geht jetzt bis Stufe 6 (3 + 6 × 2 = 15), damit die Obergrenze von 15 ohne Karten erreichbar ist.
     Das Dokument sagt „weiter um 2 je Stufe“; ich lese „weiter“ als „weiterhin, auch über Stufe 3 hinaus“.
 14. **Belagerungswelle** darf die Grenze von 15 Einheiten überschreiten (dreifache Größe); die Grenze gilt für reguläre Wellen.
+15. **Kartenliste:** umgesetzt wie im Plan vorgelegt (41 Karten); die Freigabe durch den PO steht noch aus. Änderungen sind reine
+    Datenänderungen in `data/draft-options.js` plus Texte.
+16. **Zwei Kategorien je Angebot:** Wären alle bisher gezogenen Karten aus einer Kategorie, kommt die letzte Karte aus einer anderen.
+    Bei nur einer möglichen Karte (Pool fast leer) kann das Angebot aus einer Kategorie bestehen.
+17. **Große Armee und Blitzkrieg** ändern nur den Takt der eigenen Wellen; Gegnerwellen bleiben bei 20 s. Sonst wäre der Nachteil keiner.
+    Der Countdown in der Wellenleiste zeigt deshalb den eigenen Takt.
+18. **Synergie:** Die Karte selbst zählt mit. Bei 0 gewählten Karten (Karte nicht gewählt) ist die Wirkung 0, bei 1 Karte +perCard.
+19. **Schildwall** wirkt als Schadensminderung (Schaden ÷ 1,2) für Nahkämpfer einer vollen vordersten Reihe; das entspricht +20 % Lebenspunkten.
+20. **Instandhaltung** repariert wie der Knopf (100 LP), unterliegt also auch der Abklingzeit von 5 s.

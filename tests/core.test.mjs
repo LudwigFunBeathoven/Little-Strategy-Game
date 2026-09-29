@@ -132,7 +132,7 @@ test('Abriss macht den Platz sofort frei', () => {
 });
 
 /* ---------- REQ-02 Draft ---------- */
-function toLevel(G, n){ const { KlammerCore } = loadCore(); G.S.scrapTotal = KlammerCore.xpTotal(n) - 1; G.S.scrap = G.S.scrapTotal; }
+function toLevel(G, n){ G.S.scrapTotal = G.xpNeed(n) - 1; G.S.scrap = G.S.scrapTotal; }
 function killFor(G, amount){ // Altmetall über den regulären Weg gutschreiben
   G.S.units.push({ id: 999, side: 'e', type: 'laeufer', x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0, moving: false, bob: 0 });
   G.tick(0.05);
@@ -193,13 +193,14 @@ test('Handelskontor erst nach Wahl der Karte baubar', () => {
 
 test('Kartendaten sind vollständig und deklarativ (tiers ersetzt maxStacks)', () => {
   const { KF_DRAFT_OPTIONS, KF_CONFIG: C } = loadCore();
-  assert.ok(KF_DRAFT_OPTIONS.length >= 10 && KF_DRAFT_OPTIONS.length <= 20);
+  assert.ok(KF_DRAFT_OPTIONS.length >= 36, 'mindestens 36 Karten');
   for (const o of KF_DRAFT_OPTIONS){
-    for (const f of ['id', 'category', 'nameKey', 'descKey', 'tiers', 'weight']) assert.ok(o[f] !== undefined, `${o.id}: ${f} fehlt`);
-    assert.ok(!('maxStacks' in o) && !('unique' in o) && !('effect' in o), `${o.id}: altes Format`);
+    for (const f of ['id', 'category', 'rarity', 'nameKey', 'descKey', 'tiers']) assert.ok(o[f] !== undefined, `${o.id}: ${f} fehlt`);
+    assert.ok(!('maxStacks' in o) && !('unique' in o) && !('effect' in o) && !('weight' in o), `${o.id}: altes Format`);
     assert.ok(o.tiers.length >= 1 && o.tiers.length <= C.CARD_MAX_TIER, `${o.id}: 1 bis ${C.CARD_MAX_TIER} Stufen`);
-    for (const tr of o.tiers) assert.ok(Array.isArray(tr.effect) && tr.effect.length, `${o.id}: Stufe ohne Wirkung`);
-    assert.ok(['upgrade', 'building'].includes(o.category));
+    for (const tr of o.tiers) assert.ok(Array.isArray(tr.effect) && (tr.effect.length || o.synergy), `${o.id}: Stufe ohne Wirkung`);
+    assert.ok(C.CARD_CATEGORIES.includes(o.category), `${o.id}: Kategorie`);
+    assert.ok(o.rarity in C.CARD_RARITY_WEIGHTS, `${o.id}: Seltenheit`);
   }
 });
 
