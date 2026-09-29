@@ -1,0 +1,1425 @@
+{
+  "runs": 50,
+  "suite": "ziele",
+  "report": {
+    "ziele": [
+      {
+        "diff": "leicht",
+        "profile": "aktiv",
+        "games": 50,
+        "won": 50,
+        "lost": 0,
+        "open": 0,
+        "medWin": 327.80000000004026,
+        "medLoss": null,
+        "maxEnd": 433.5000000000643,
+        "wavesAtCap": 0.9011627906976745
+      },
+      {
+        "diff": "leicht",
+        "profile": "durchschnitt",
+        "games": 50,
+        "won": 50,
+        "lost": 0,
+        "open": 0,
+        "medWin": 368.9000000000496,
+        "medLoss": null,
+        "maxEnd": 510.4000000000818,
+        "wavesAtCap": 0.7333333333333333
+      },
+      {
+        "diff": "leicht",
+        "profile": "gelegentlich",
+        "games": 50,
+        "won": 50,
+        "lost": 0,
+        "open": 0,
+        "medWin": 452.20000000006854,
+        "medLoss": null,
+        "maxEnd": 539.0500000000575,
+        "wavesAtCap": 0.5808823529411765
+      },
+      {
+        "diff": "leicht",
+        "profile": "passiv",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 609.8499999999931,
+        "maxEnd": 976.7499999996594,
+        "wavesAtCap": 0.9633550488599348
+      },
+      {
+        "diff": "leicht",
+        "profile": "verteidigung",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 1249.1499999994116,
+        "maxEnd": 1386.149999999287,
+        "wavesAtCap": null
+      },
+      {
+        "diff": "normal",
+        "profile": "aktiv",
+        "games": 50,
+        "won": 46,
+        "lost": 4,
+        "open": 0,
+        "medWin": 411.1500000000592,
+        "medLoss": 1236.599999999423,
+        "maxEnd": 1314.1499999993525,
+        "wavesAtCap": 0.9001019367991845
+      },
+      {
+        "diff": "normal",
+        "profile": "durchschnitt",
+        "games": 50,
+        "won": 43,
+        "lost": 7,
+        "open": 0,
+        "medWin": 604.0499999999984,
+        "medLoss": 1274.3499999993887,
+        "maxEnd": 1392.5499999992812,
+        "wavesAtCap": 0.8438287153652393
+      },
+      {
+        "diff": "normal",
+        "profile": "gelegentlich",
+        "games": 50,
+        "won": 21,
+        "lost": 29,
+        "open": 0,
+        "medWin": 688.2999999999217,
+        "medLoss": 1097.7999999995493,
+        "maxEnd": 1218.09999999944,
+        "wavesAtCap": 0.5892169448010269
+      },
+      {
+        "diff": "normal",
+        "profile": "passiv",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 307.7500000000357,
+        "maxEnd": 495.5000000000784,
+        "wavesAtCap": 0.9928977272727273
+      },
+      {
+        "diff": "normal",
+        "profile": "verteidigung",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 1136.7499999995139,
+        "maxEnd": 1246.3499999994142,
+        "wavesAtCap": null
+      },
+      {
+        "diff": "schwer",
+        "profile": "aktiv",
+        "games": 50,
+        "won": 42,
+        "lost": 8,
+        "open": 0,
+        "medWin": 538.8500000000577,
+        "medLoss": 1234.8499999994247,
+        "maxEnd": 1278.7499999993847,
+        "wavesAtCap": 0.9016921837228042
+      },
+      {
+        "diff": "schwer",
+        "profile": "durchschnitt",
+        "games": 50,
+        "won": 26,
+        "lost": 24,
+        "open": 0,
+        "medWin": 622.8999999999812,
+        "medLoss": 1254.9999999994063,
+        "maxEnd": 1370.899999999301,
+        "wavesAtCap": 0.8420745920745921
+      },
+      {
+        "diff": "schwer",
+        "profile": "gelegentlich",
+        "games": 50,
+        "won": 13,
+        "lost": 37,
+        "open": 0,
+        "medWin": 698.8999999999121,
+        "medLoss": 1118.0999999995308,
+        "maxEnd": 1195.7499999994602,
+        "wavesAtCap": 0.5695284159613059
+      },
+      {
+        "diff": "schwer",
+        "profile": "passiv",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 238.65000000002001,
+        "maxEnd": 455.9000000000694,
+        "wavesAtCap": 0.9947735191637631
+      },
+      {
+        "diff": "schwer",
+        "profile": "verteidigung",
+        "games": 50,
+        "won": 0,
+        "lost": 50,
+        "open": 0,
+        "medWin": null,
+        "medLoss": 1131.5499999995186,
+        "maxEnd": 1267.1999999993952,
+        "wavesAtCap": null
+      }
+    ],
+    "pattRate": 0,
+    "maxArmy": 21,
+    "wallFall": 590.9500000000103,
+    "wallFallShare": 0.3373333333333333,
+    "legendaryShare": 0.1111111111111111,
+    "cardCompare": {
+      "allesAufDieMitte": {
+        "chosen": 9,
+        "winChosen": 1,
+        "notChosen": 3,
+        "winNot": 1,
+        "deltaPp": 0,
+        "tiers": [
+          {
+            "chosen": 9,
+            "winChosen": 1,
+            "notChosen": 3,
+            "winNot": 1,
+            "deltaPp": 0
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "aushebung": {
+        "chosen": 88,
+        "winChosen": 0.8409090909090909,
+        "notChosen": 49,
+        "winNot": 0.7551020408163265,
+        "deltaPp": 8.580705009276446,
+        "tiers": [
+          {
+            "chosen": 88,
+            "winChosen": 0.8409090909090909,
+            "notChosen": 49,
+            "winNot": 0.7551020408163265,
+            "deltaPp": 8.580705009276446
+          },
+          {
+            "chosen": 14,
+            "winChosen": 0.7142857142857143,
+            "notChosen": 15,
+            "winNot": 0.9333333333333333,
+            "deltaPp": -21.904761904761905
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "bastion": {
+        "chosen": 74,
+        "winChosen": 0.7027027027027027,
+        "notChosen": 82,
+        "winNot": 0.8780487804878049,
+        "deltaPp": -17.534607778510214,
+        "tiers": [
+          {
+            "chosen": 74,
+            "winChosen": 0.7027027027027027,
+            "notChosen": 82,
+            "winNot": 0.8780487804878049,
+            "deltaPp": -17.534607778510214
+          },
+          {
+            "chosen": 10,
+            "winChosen": 0.4,
+            "notChosen": 21,
+            "winNot": 0.7142857142857143,
+            "deltaPp": -31.428571428571427
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "bauleitung": {
+        "chosen": 18,
+        "winChosen": 0.6666666666666666,
+        "notChosen": 39,
+        "winNot": 0.8461538461538461,
+        "deltaPp": -17.948717948717952,
+        "tiers": [
+          {
+            "chosen": 18,
+            "winChosen": 0.6666666666666666,
+            "notChosen": 39,
+            "winNot": 0.8461538461538461,
+            "deltaPp": -17.948717948717952
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "belagerungsgeraet": {
+        "chosen": 89,
+        "winChosen": 0.8089887640449438,
+        "notChosen": 57,
+        "winNot": 0.7017543859649122,
+        "deltaPp": 10.723437808003155,
+        "tiers": [
+          {
+            "chosen": 89,
+            "winChosen": 0.8089887640449438,
+            "notChosen": 57,
+            "winNot": 0.7017543859649122,
+            "deltaPp": 10.723437808003155
+          },
+          {
+            "chosen": 18,
+            "winChosen": 0.9444444444444444,
+            "notChosen": 14,
+            "winNot": 0.42857142857142855,
+            "deltaPp": 51.58730158730158
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "bessereFabriken": {
+        "chosen": 107,
+        "winChosen": 0.7757009345794392,
+        "notChosen": 56,
+        "winNot": 0.8392857142857143,
+        "deltaPp": -6.358477970627508,
+        "tiers": [
+          {
+            "chosen": 107,
+            "winChosen": 0.7757009345794392,
+            "notChosen": 56,
+            "winNot": 0.8392857142857143,
+            "deltaPp": -6.358477970627508
+          },
+          {
+            "chosen": 31,
+            "winChosen": 0.5806451612903226,
+            "notChosen": 14,
+            "winNot": 0.8571428571428571,
+            "deltaPp": -27.64976958525345
+          },
+          {
+            "chosen": 8,
+            "winChosen": 0.125,
+            "notChosen": 2,
+            "winNot": 0.5,
+            "deltaPp": -37.5
+          }
+        ]
+      },
+      "blitzkrieg": {
+        "chosen": 7,
+        "winChosen": 0.8571428571428571,
+        "notChosen": 13,
+        "winNot": 0.38461538461538464,
+        "deltaPp": 47.25274725274725,
+        "tiers": [
+          {
+            "chosen": 7,
+            "winChosen": 0.8571428571428571,
+            "notChosen": 13,
+            "winNot": 0.38461538461538464,
+            "deltaPp": 47.25274725274725
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "dauerauftrag": {
+        "chosen": 35,
+        "winChosen": 0.9142857142857143,
+        "notChosen": 28,
+        "winNot": 0.75,
+        "deltaPp": 16.428571428571427,
+        "tiers": [
+          {
+            "chosen": 35,
+            "winChosen": 0.9142857142857143,
+            "notChosen": 28,
+            "winNot": 0.75,
+            "deltaPp": 16.428571428571427
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "doppelschicht": {
+        "chosen": 102,
+        "winChosen": 0.7941176470588235,
+        "notChosen": 59,
+        "winNot": 0.864406779661017,
+        "deltaPp": -7.028913260219349,
+        "tiers": [
+          {
+            "chosen": 102,
+            "winChosen": 0.7941176470588235,
+            "notChosen": 59,
+            "winNot": 0.864406779661017,
+            "deltaPp": -7.028913260219349
+          },
+          {
+            "chosen": 28,
+            "winChosen": 0.6785714285714286,
+            "notChosen": 11,
+            "winNot": 1,
+            "deltaPp": -32.14285714285714
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "drill": {
+        "chosen": 113,
+        "winChosen": 0.8141592920353983,
+        "notChosen": 46,
+        "winNot": 0.717391304347826,
+        "deltaPp": 9.676798768757223,
+        "tiers": [
+          {
+            "chosen": 113,
+            "winChosen": 0.8141592920353983,
+            "notChosen": 46,
+            "winNot": 0.717391304347826,
+            "deltaPp": 9.676798768757223
+          },
+          {
+            "chosen": 38,
+            "winChosen": 0.631578947368421,
+            "notChosen": 17,
+            "winNot": 0.8823529411764706,
+            "deltaPp": -25.077399380804955
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "festungsbau": {
+        "chosen": 12,
+        "winChosen": 0.9166666666666666,
+        "notChosen": 61,
+        "winNot": 0.819672131147541,
+        "deltaPp": 9.699453551912562,
+        "tiers": [
+          {
+            "chosen": 12,
+            "winChosen": 0.9166666666666666,
+            "notChosen": 61,
+            "winNot": 0.819672131147541,
+            "deltaPp": 9.699453551912562
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "fliessband": {
+        "chosen": 95,
+        "winChosen": 0.7894736842105263,
+        "notChosen": 61,
+        "winNot": 0.7704918032786885,
+        "deltaPp": 1.8981880931837836,
+        "tiers": [
+          {
+            "chosen": 95,
+            "winChosen": 0.7894736842105263,
+            "notChosen": 61,
+            "winNot": 0.7704918032786885,
+            "deltaPp": 1.8981880931837836
+          },
+          {
+            "chosen": 17,
+            "winChosen": 0.6470588235294118,
+            "notChosen": 16,
+            "winNot": 0.8125,
+            "deltaPp": -16.54411764705882
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "gluecksritter": {
+        "chosen": 15,
+        "winChosen": 0.9333333333333333,
+        "notChosen": 55,
+        "winNot": 0.7090909090909091,
+        "deltaPp": 22.424242424242426,
+        "tiers": [
+          {
+            "chosen": 15,
+            "winChosen": 0.9333333333333333,
+            "notChosen": 55,
+            "winNot": 0.7090909090909091,
+            "deltaPp": 22.424242424242426
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "grossauftrag": {
+        "chosen": 42,
+        "winChosen": 0.7380952380952381,
+        "notChosen": 22,
+        "winNot": 0.7727272727272727,
+        "deltaPp": -3.463203463203457,
+        "tiers": [
+          {
+            "chosen": 42,
+            "winChosen": 0.7380952380952381,
+            "notChosen": 22,
+            "winNot": 0.7727272727272727,
+            "deltaPp": -3.463203463203457
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "grosseArmee": {
+        "chosen": 14,
+        "winChosen": 1,
+        "notChosen": 3,
+        "winNot": 0.6666666666666666,
+        "deltaPp": 33.333333333333336,
+        "tiers": [
+          {
+            "chosen": 14,
+            "winChosen": 1,
+            "notChosen": 3,
+            "winNot": 0.6666666666666666,
+            "deltaPp": 33.333333333333336
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "handelskontor": {
+        "chosen": 15,
+        "winChosen": 0.8666666666666667,
+        "notChosen": 37,
+        "winNot": 0.7297297297297297,
+        "deltaPp": 13.693693693693698,
+        "tiers": [
+          {
+            "chosen": 15,
+            "winChosen": 0.8666666666666667,
+            "notChosen": 37,
+            "winNot": 0.7297297297297297,
+            "deltaPp": 13.693693693693698
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "instandhaltung": {
+        "chosen": 59,
+        "winChosen": 0.8305084745762712,
+        "notChosen": 88,
+        "winNot": 0.7613636363636364,
+        "deltaPp": 6.9144838212634845,
+        "tiers": [
+          {
+            "chosen": 59,
+            "winChosen": 0.8305084745762712,
+            "notChosen": 88,
+            "winNot": 0.7613636363636364,
+            "deltaPp": 6.9144838212634845
+          },
+          {
+            "chosen": 9,
+            "winChosen": 0.4444444444444444,
+            "notChosen": 20,
+            "winNot": 0.75,
+            "deltaPp": -30.555555555555557
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 5,
+            "winNot": 0.2,
+            "deltaPp": null
+          }
+        ]
+      },
+      "kriegsanleihe": {
+        "chosen": 30,
+        "winChosen": 0.5,
+        "notChosen": 37,
+        "winNot": 0.918918918918919,
+        "deltaPp": -41.891891891891895,
+        "tiers": [
+          {
+            "chosen": 30,
+            "winChosen": 0.5,
+            "notChosen": 37,
+            "winNot": 0.918918918918919,
+            "deltaPp": -41.891891891891895
+          },
+          {
+            "chosen": 4,
+            "winChosen": 0.5,
+            "notChosen": 1,
+            "winNot": 1,
+            "deltaPp": -50
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 1,
+            "winNot": 1,
+            "deltaPp": null
+          }
+        ]
+      },
+      "kriegstrommeln": {
+        "chosen": 67,
+        "winChosen": 0.8059701492537313,
+        "notChosen": 77,
+        "winNot": 0.8051948051948052,
+        "deltaPp": 0.07753440589260974,
+        "tiers": [
+          {
+            "chosen": 67,
+            "winChosen": 0.8059701492537313,
+            "notChosen": 77,
+            "winNot": 0.8051948051948052,
+            "deltaPp": 0.07753440589260974
+          },
+          {
+            "chosen": 8,
+            "winChosen": 0.5,
+            "notChosen": 19,
+            "winNot": 0.6842105263157895,
+            "deltaPp": -18.42105263157895
+          },
+          {
+            "chosen": 3,
+            "winChosen": 0.3333333333333333,
+            "notChosen": 1,
+            "winNot": 0,
+            "deltaPp": 33.33333333333333
+          }
+        ]
+      },
+      "langeWurfarme": {
+        "chosen": 55,
+        "winChosen": 0.8,
+        "notChosen": 95,
+        "winNot": 0.7894736842105263,
+        "deltaPp": 1.0526315789473717,
+        "tiers": [
+          {
+            "chosen": 55,
+            "winChosen": 0.8,
+            "notChosen": 95,
+            "winNot": 0.7894736842105263,
+            "deltaPp": 1.0526315789473717
+          },
+          {
+            "chosen": 7,
+            "winChosen": 0.7142857142857143,
+            "notChosen": 11,
+            "winNot": 0.8181818181818182,
+            "deltaPp": -10.389610389610393
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "maurerkolonne": {
+        "chosen": 47,
+        "winChosen": 0.7872340425531915,
+        "notChosen": 89,
+        "winNot": 0.8089887640449438,
+        "deltaPp": -2.1754721491752282,
+        "tiers": [
+          {
+            "chosen": 47,
+            "winChosen": 0.7872340425531915,
+            "notChosen": 89,
+            "winNot": 0.8089887640449438,
+            "deltaPp": -2.1754721491752282
+          },
+          {
+            "chosen": 9,
+            "winChosen": 0.7777777777777778,
+            "notChosen": 19,
+            "winNot": 0.6842105263157895,
+            "deltaPp": 9.35672514619883
+          },
+          {
+            "chosen": 2,
+            "winChosen": 0.5,
+            "notChosen": 2,
+            "winNot": 1,
+            "deltaPp": -50
+          }
+        ]
+      },
+      "nachtschicht": {
+        "chosen": 79,
+        "winChosen": 0.759493670886076,
+        "notChosen": 86,
+        "winNot": 0.8023255813953488,
+        "deltaPp": -4.283191050927282,
+        "tiers": [
+          {
+            "chosen": 79,
+            "winChosen": 0.759493670886076,
+            "notChosen": 86,
+            "winNot": 0.8023255813953488,
+            "deltaPp": -4.283191050927282
+          },
+          {
+            "chosen": 9,
+            "winChosen": 0.6666666666666666,
+            "notChosen": 24,
+            "winNot": 0.5,
+            "deltaPp": 16.666666666666664
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "notreserve": {
+        "chosen": 24,
+        "winChosen": 0.5833333333333334,
+        "notChosen": 50,
+        "winNot": 0.8,
+        "deltaPp": -21.666666666666668,
+        "tiers": [
+          {
+            "chosen": 24,
+            "winChosen": 0.5833333333333334,
+            "notChosen": 50,
+            "winNot": 0.8,
+            "deltaPp": -21.666666666666668
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "rationalisierung": {
+        "chosen": 41,
+        "winChosen": 0.7317073170731707,
+        "notChosen": 21,
+        "winNot": 0.8095238095238095,
+        "deltaPp": -7.781649245063882,
+        "tiers": [
+          {
+            "chosen": 41,
+            "winChosen": 0.7317073170731707,
+            "notChosen": 21,
+            "winNot": 0.8095238095238095,
+            "deltaPp": -7.781649245063882
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "sappeure": {
+        "chosen": 36,
+        "winChosen": 0.7222222222222222,
+        "notChosen": 23,
+        "winNot": 0.782608695652174,
+        "deltaPp": -6.038647342995174,
+        "tiers": [
+          {
+            "chosen": 36,
+            "winChosen": 0.7222222222222222,
+            "notChosen": 23,
+            "winNot": 0.782608695652174,
+            "deltaPp": -6.038647342995174
+          },
+          {
+            "chosen": 3,
+            "winChosen": 0.3333333333333333,
+            "notChosen": 2,
+            "winNot": 1,
+            "deltaPp": -66.66666666666667
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "scharfschuetzen": {
+        "chosen": 14,
+        "winChosen": 0.5714285714285714,
+        "notChosen": 39,
+        "winNot": 0.7435897435897436,
+        "deltaPp": -17.216117216117222,
+        "tiers": [
+          {
+            "chosen": 14,
+            "winChosen": 0.5714285714285714,
+            "notChosen": 39,
+            "winNot": 0.7435897435897436,
+            "deltaPp": -17.216117216117222
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "schildwall": {
+        "chosen": 70,
+        "winChosen": 0.7857142857142857,
+        "notChosen": 82,
+        "winNot": 0.7682926829268293,
+        "deltaPp": 1.7421602787456414,
+        "tiers": [
+          {
+            "chosen": 70,
+            "winChosen": 0.7857142857142857,
+            "notChosen": 82,
+            "winNot": 0.7682926829268293,
+            "deltaPp": 1.7421602787456414
+          },
+          {
+            "chosen": 4,
+            "winChosen": 0.5,
+            "notChosen": 22,
+            "winNot": 0.5909090909090909,
+            "deltaPp": -9.090909090909093
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "schrottsammler": {
+        "chosen": 77,
+        "winChosen": 0.8181818181818182,
+        "notChosen": 68,
+        "winNot": 0.8382352941176471,
+        "deltaPp": -2.0053475935828846,
+        "tiers": [
+          {
+            "chosen": 77,
+            "winChosen": 0.8181818181818182,
+            "notChosen": 68,
+            "winNot": 0.8382352941176471,
+            "deltaPp": -2.0053475935828846
+          },
+          {
+            "chosen": 12,
+            "winChosen": 0.75,
+            "notChosen": 19,
+            "winNot": 0.6842105263157895,
+            "deltaPp": 6.578947368421051
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "schwerePressen": {
+        "chosen": 131,
+        "winChosen": 0.8244274809160306,
+        "notChosen": 27,
+        "winNot": 0.8148148148148148,
+        "deltaPp": 0.9612666101215805,
+        "tiers": [
+          {
+            "chosen": 131,
+            "winChosen": 0.8244274809160306,
+            "notChosen": 27,
+            "winNot": 0.8148148148148148,
+            "deltaPp": 0.9612666101215805
+          },
+          {
+            "chosen": 37,
+            "winChosen": 0.7297297297297297,
+            "notChosen": 10,
+            "winNot": 0.9,
+            "deltaPp": -17.02702702702703
+          },
+          {
+            "chosen": 14,
+            "winChosen": 0.6428571428571429,
+            "notChosen": 5,
+            "winNot": 1,
+            "deltaPp": -35.71428571428571
+          }
+        ]
+      },
+      "selbstlaeufer": {
+        "chosen": 43,
+        "winChosen": 0.7674418604651163,
+        "notChosen": 39,
+        "winNot": 0.8717948717948718,
+        "deltaPp": -10.43530113297555,
+        "tiers": [
+          {
+            "chosen": 43,
+            "winChosen": 0.7674418604651163,
+            "notChosen": 39,
+            "winNot": 0.8717948717948718,
+            "deltaPp": -10.43530113297555
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "serienbau": {
+        "chosen": 49,
+        "winChosen": 0.673469387755102,
+        "notChosen": 85,
+        "winNot": 0.8117647058823529,
+        "deltaPp": -13.829531812725094,
+        "tiers": [
+          {
+            "chosen": 49,
+            "winChosen": 0.673469387755102,
+            "notChosen": 85,
+            "winNot": 0.8117647058823529,
+            "deltaPp": -13.829531812725094
+          },
+          {
+            "chosen": 10,
+            "winChosen": 0.7,
+            "notChosen": 14,
+            "winNot": 0.5,
+            "deltaPp": 19.999999999999996
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "soeldnerheer": {
+        "chosen": 3,
+        "winChosen": 1,
+        "notChosen": 14,
+        "winNot": 0.7142857142857143,
+        "deltaPp": 28.57142857142857,
+        "tiers": [
+          {
+            "chosen": 3,
+            "winChosen": 1,
+            "notChosen": 14,
+            "winNot": 0.7142857142857143,
+            "deltaPp": 28.57142857142857
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "taktiker": {
+        "chosen": 33,
+        "winChosen": 0.8181818181818182,
+        "notChosen": 37,
+        "winNot": 0.7567567567567568,
+        "deltaPp": 6.142506142506143,
+        "tiers": [
+          {
+            "chosen": 33,
+            "winChosen": 0.8181818181818182,
+            "notChosen": 37,
+            "winNot": 0.7567567567567568,
+            "deltaPp": 6.142506142506143
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "turmkanoniere": {
+        "chosen": 62,
+        "winChosen": 0.7580645161290323,
+        "notChosen": 104,
+        "winNot": 0.8269230769230769,
+        "deltaPp": -6.885856079404462,
+        "tiers": [
+          {
+            "chosen": 62,
+            "winChosen": 0.7580645161290323,
+            "notChosen": 104,
+            "winNot": 0.8269230769230769,
+            "deltaPp": -6.885856079404462
+          },
+          {
+            "chosen": 9,
+            "winChosen": 0.7777777777777778,
+            "notChosen": 18,
+            "winNot": 0.6666666666666666,
+            "deltaPp": 11.111111111111116
+          },
+          {
+            "chosen": 1,
+            "winChosen": 1,
+            "notChosen": 5,
+            "winNot": 0.6,
+            "deltaPp": 40
+          }
+        ]
+      },
+      "verbrannteErde": {
+        "chosen": 1,
+        "winChosen": 0,
+        "notChosen": 13,
+        "winNot": 0.6923076923076923,
+        "deltaPp": -69.23076923076923,
+        "tiers": [
+          {
+            "chosen": 1,
+            "winChosen": 0,
+            "notChosen": 13,
+            "winNot": 0.6923076923076923,
+            "deltaPp": -69.23076923076923
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "veteranen": {
+        "chosen": 55,
+        "winChosen": 0.9090909090909091,
+        "notChosen": 16,
+        "winNot": 0.8125,
+        "deltaPp": 9.659090909090907,
+        "tiers": [
+          {
+            "chosen": 55,
+            "winChosen": 0.9090909090909091,
+            "notChosen": 16,
+            "winNot": 0.8125,
+            "deltaPp": 9.659090909090907
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "vorposten": {
+        "chosen": 73,
+        "winChosen": 0.821917808219178,
+        "notChosen": 83,
+        "winNot": 0.7590361445783133,
+        "deltaPp": 6.288166364086479,
+        "tiers": [
+          {
+            "chosen": 73,
+            "winChosen": 0.821917808219178,
+            "notChosen": 83,
+            "winNot": 0.7590361445783133,
+            "deltaPp": 6.288166364086479
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "weitschuss": {
+        "chosen": 29,
+        "winChosen": 0.8275862068965517,
+        "notChosen": 37,
+        "winNot": 0.6216216216216216,
+        "deltaPp": 20.596458527493013,
+        "tiers": [
+          {
+            "chosen": 29,
+            "winChosen": 0.8275862068965517,
+            "notChosen": 37,
+            "winNot": 0.6216216216216216,
+            "deltaPp": 20.596458527493013
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "werkmeister": {
+        "chosen": 10,
+        "winChosen": 0.5,
+        "notChosen": 33,
+        "winNot": 0.8181818181818182,
+        "deltaPp": -31.818181818181824,
+        "tiers": [
+          {
+            "chosen": 10,
+            "winChosen": 0.5,
+            "notChosen": 33,
+            "winNot": 0.8181818181818182,
+            "deltaPp": -31.818181818181824
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "zeugmeister": {
+        "chosen": 25,
+        "winChosen": 0.76,
+        "notChosen": 46,
+        "winNot": 0.7608695652173914,
+        "deltaPp": -0.08695652173913437,
+        "tiers": [
+          {
+            "chosen": 25,
+            "winChosen": 0.76,
+            "notChosen": 46,
+            "winNot": 0.7608695652173914,
+            "deltaPp": -0.08695652173913437
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      },
+      "zinnen": {
+        "chosen": 14,
+        "winChosen": 0.6428571428571429,
+        "notChosen": 148,
+        "winNot": 0.8108108108108109,
+        "deltaPp": -16.795366795366796,
+        "tiers": [
+          {
+            "chosen": 14,
+            "winChosen": 0.6428571428571429,
+            "notChosen": 148,
+            "winNot": 0.8108108108108109,
+            "deltaPp": -16.795366795366796
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 6,
+            "winNot": 0.5,
+            "deltaPp": null
+          },
+          {
+            "chosen": 0,
+            "winChosen": null,
+            "notChosen": 0,
+            "winNot": null,
+            "deltaPp": null
+          }
+        ]
+      }
+    }
+  }
+}
