@@ -10,7 +10,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | I5.0 | Merge v0.5 → `main`, Branch, Basislinie | – | fertig |
 | I5.1 | Eingabe: Ursache belegen, beheben | 5.01 | fertig |
 | I5.2 | Umbenennung zu EP | 5.02 | fertig |
-| I5.3 | Drei Bänder, Aufteilung von `ui.js` | 5.03 | offen |
+| I5.3 | Drei Bänder, Aufteilung von `ui.js` | 5.03 | fertig |
 | I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | offen |
 | I5.5 | Einzelsimulation | 5.05 | offen |
 | I5.6 | Armee als gemeinsame Welle | 5.06 | offen |
@@ -46,6 +46,12 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.3: `npm test` 85/85, Browser-Prüfung 161/161, Kurzsimulation unverändert 12 Siege, 8 Niederlagen, 0 offen.
+  Bänder (Leiste / Welt / Arbeitsbereich): 1280×720 72 px / 50,0 % / 40,0 %; 1366×768 77 px / 50,0 % / 40,0 %; 1920×1080 80 px (Höchstwert) / 50,0 % / 42,6 %;
+  2560×1440 80 px / 50,0 % / 44,4 %; nirgends Dokument-Scroll. Bildzeit mit 60 Einheiten 0,3–0,8 ms. Bildschirmfotos: `reports/screens/i5-layout-*.png`.
+  Neue Prüfpunkte: Klick auf Fabrik, Schmiede, Kaserne, Universität, freien Platz und Mauer öffnet den passenden Reiter mit Kontextkopf;
+  Esc und Klick ins Leere heben die Auswahl auf; alle Reiter per Tastatur; Erklärzeilen in jedem Reiter; Kartenwahl über die Leiste.
+  `ui.js` 1.167 → 644 Zeilen; neu `render.js` (263), `hud.js` (79), `panels.js` (341).
 - I5.2: `npm test` 85/85 (neu: Suchtest nach „Altmetall“/„scrap“/„Schrott“), Browser-Prüfung grün (neu: Hinweis bei altem Spielstand),
   Kurzsimulation unverändert 12 Siege, 8 Niederlagen, 0 offen. `SAVE_VERSION` 6, `SAVE_KEY` `klammerfront.save.v6`.
 - I5.1: `npm test` 83/83, Browser-Prüfung 78/78, Kurzsimulation 12 Siege, 8 Niederlagen, 0 offen (Logik unverändert).
@@ -87,3 +93,20 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
    `docs/` gilt als Archiv (Anforderungen und Berichte früherer Iterationen zitieren den alten Begriff).
 6. **Alter Spielstand:** Beim Laden werden Schlüssel mit dem Präfix `klammerfront.save.` außer dem aktuellen sowie ein aktueller Schlüssel mit falscher
    Versionsnummer erkannt. Der Startbildschirm meldet das einmal („Dein Spielstand stammt aus einer älteren Version …“), die Daten werden dabei entfernt.
+7. **Aufteilung ohne Build-Schritt:** Die vier Dateien teilen sich den globalen Namensraum klassischer Skripte (keine Module, damit `index.html` weiter
+   per Doppelklick läuft). `ui.js` lädt zuerst und stellt `C`, `G`, `$`, `t`, `fmt` und die Hilfen bereit, danach `render.js`, `hud.js`, `panels.js`.
+   Gestartet wird bei `DOMContentLoaded`, also erst wenn alle vier geladen sind.
+8. **Bandhöhen:** Leiste 10 % der Fensterhöhe, begrenzt auf 56–80 px; Spielwelt 50 %; der Arbeitsbereich erhält den Rest. Ab 800 px Fensterhöhe greift die
+   Obergrenze der Leiste, der Arbeitsbereich liegt dann über 40 % (1920×1080: 42,6 %). Die Prüfung ± 2 % gilt deshalb für Leiste (oder deren Grenze)
+   und Spielwelt; beim Arbeitsbereich prüft sie, dass die drei Bänder das Fenster lückenlos füllen.
+9. **Kartenwahl:** Der Dialog entfällt. Eine offene Wahl erscheint als pulsierender Knopf in der Leiste und als Punkt am Reiter „Karten“; gewählt wird im Reiter.
+   Das Spiel steht bis zur Wahl (unverändert, Logik in `core.js`).
+10. **Menü in der Leiste:** Pause, Sprachwechsel (wechselt reihum zwischen den Sprachen), Neue Partie (Startbildschirm wie bisher mit Schwierigkeit und Einführung).
+11. **Kontextkopf:** steht über dem Reiterinhalt und erscheint nur, wenn der aktive Reiter zum ausgewählten Objekt gehört (Wechselt der Spieler selbst den Reiter,
+    bleibt die Auswahl in der Welt markiert). Schmiede → Reiter Schmiede, Universität → Reiter Universität, übrige Gebäude und freie Plätze → Bauen,
+    Mauer, Tor und Türme → Mauer & Türme.
+12. **Zustand der Armee** in der Leiste zeigt bis I5.6 „Kampf“, sobald eine eigene Formation kämpft, sonst „Marsch“ (Sammeln kommt mit I5.6).
+13. **EP je Sekunde** in der Leiste: gleitender Mittelwert über 30 s Spielzeit (`UI.xpRateWindowS`).
+14. **Ereignisprotokoll, Wellenvorschau und Abschüsse** stehen im Reiter Armee; Kamera-Knöpfe und Scrollleiste unter der Spielwelt; die Lebenspunkte der
+    gegnerischen Basis zeigt weiter der Balken an der Basis in der Welt.
+15. **Hinweisfenster** liegt jetzt oben unter der Leiste statt unten, damit es den Arbeitsbereich nicht verdeckt.

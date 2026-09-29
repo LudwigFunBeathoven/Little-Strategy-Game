@@ -388,6 +388,13 @@ function create(){
   }
   const waveIn = () => Math.max(0, S.nextOwnWave - S.t);
   const enemyWaveIn = () => Math.max(0, S.nextWave - S.t);
+  const ownOnField = () => S.units.reduce((n, u) => n + (u.side === 'p' ? 1 : 0), 0);
+  /* Zustand der Armee für die Anzeige (REQ-5.03): Kampf, Marsch oder keine Armee */
+  function armyState(side){
+    let any = false;
+    for (const f of S.forms) if (f.side === side && f.size > 0){ if (f.fighting) return 'fight'; any = true; }
+    return any ? 'march' : 'none';
+  }
   /* Aufstellpunkt einer Lane: am Tor, mit Vorposten weiter vorn, aber nie hinter der vordersten gegnerischen Einheit */
   function deployX(lane){
     let x = spawnX();
@@ -773,7 +780,7 @@ function create(){
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
-    addFormation, layoutAll, formMembers, enemyAhead, supplyCap, supplyFull, waveIn, enemyWaveIn, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
+    addFormation, layoutAll, formMembers, enemyAhead, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, interestRate,

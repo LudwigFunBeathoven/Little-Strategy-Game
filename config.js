@@ -52,6 +52,9 @@ const KF_CONFIG = {
   /* Oberfläche (REQ-5.01, REQ-5.03) */
   UI: {
     dragThresholdPx: 6,         // ab dieser Zeigerbewegung ist eine Geste in der Welt ein Ziehen, darunter ein Klick
+    bands: { hud: 0.10, world: 0.50, work: 0.40 },   // Anteile der Fensterhöhe: Ressourcenleiste, Spielwelt, Arbeitsbereich
+    hudMinPx: 56, hudMaxPx: 80,                      // Grenzen der Ressourcenleiste; der Arbeitsbereich erhält den Rest
+    xpRateWindowS: 30,          // EP je Sekunde in der Leiste: gleitend über diese Spielzeit
   },
 
   /* Spielwelt und Kamera (REQ-46) */

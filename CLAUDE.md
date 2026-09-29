@@ -22,7 +22,10 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `data/draft-options.js` | Spezialkarten mit Stufen (`tiers`), deklarativ. Neue Karten nur hier ergänzen. |
 | `hints.js` | Erstkontakt-Hinweise; Speicher wird von außen übergeben (testbar ohne Browser). |
 | `core.js` | Spiellogik ohne Zugriff auf Seite, Fenster oder Speicher. Läuft auch im Simulator. |
-| `ui.js` | Oberfläche, Tooltips, Dialoge, Zeichnen, Speichern. |
+| `ui.js` | Lädt zuerst: gemeinsame Namen (C, G, $, t, fmt), Tooltips, Eingabe, Speichern, Dialoge, Hauptschleife, Start. |
+| `render.js` | Spielwelt: Canvas, Kamera, Zeichnen, `screenToWorld`. |
+| `hud.js` | Ressourcenleiste (oberes Band). |
+| `panels.js` | Arbeitsbereich (unteres Band): Klickfeld, Reiter, Kontextkopf, Kartenwahl. |
 | `i18n/de.js`, `i18n/en.js` | Alle sichtbaren Texte. Schlüssel müssen identisch sein. |
 | `tools/simulate.mjs` | Balancing-Simulation mit Bots (Worker-Threads). |
 | `tools/sim-bot.mjs` | Bot-Strategien `zufall` und `gierig` (Vorausschau per Kopie des Spielstands). |

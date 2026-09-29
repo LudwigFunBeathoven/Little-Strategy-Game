@@ -53,39 +53,19 @@
   button{font:inherit; color:inherit;}
   :focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
 
-  /* Kopf */
-  .top{display:flex; justify-content:space-between; align-items:baseline; gap:10px 24px; flex-wrap:wrap;}
-  .brand{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
-  h1{font-family:"Spectral", Georgia, serif; font-weight:600; font-size:30px; line-height:1; margin:0;}
   .tag{font-family:"IBM Plex Mono", monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--brass);}
-  .meta{display:flex; gap:18px; align-items:baseline; flex-wrap:wrap; font-family:"IBM Plex Mono", monospace; font-size:13px; color:var(--ink-soft);}
-  .meta b{color:var(--ink); font-weight:500;}
 
   .log{list-style:none; margin:0; padding:0; font-family:"IBM Plex Mono", monospace; font-size:13px; color:var(--ink-faint); min-height:4.4em; display:flex; flex-direction:column; gap:1px;}
   .log li:first-child{color:var(--ink);}
   .log .ts{margin-right:10px; color:var(--ink-faint);}
 
-  /* Wellen-Leiste (REQ-14.1) */
-  .wavebar{display:flex; justify-content:space-between; align-items:center; gap:8px 16px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--rule); background:var(--steel-soft);}
-  .wavebar .wave-count{font-family:"IBM Plex Mono", monospace; font-size:13.5px; color:var(--steel);}
-  .wavebar .wave-count b{font-size:17px; font-weight:600; color:var(--steel);}
-  .wavebar .siege{font-family:"IBM Plex Mono", monospace; font-size:13.5px; font-weight:600; color:var(--rust); background:var(--rust-soft); border-radius:4px; padding:3px 8px;}
-  .wavebar .siege[hidden]{display:none;}
 
-  .res{display:flex; flex-direction:column; gap:2px;}
-  .res .big{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; font-size:28px; font-weight:500; line-height:1.05;}
-  .res .lbl{font-size:12.5px; color:var(--ink-soft);}
-  .res .lbl .num{font-size:12px;}
-  .hp{display:flex; flex-direction:column; gap:5px;}
-  .hp-row{display:flex; justify-content:space-between; gap:8px; font-size:13px;}
-  .hp-row .num{font-size:12.5px; color:var(--ink-soft);}
   .bar{height:7px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
   .bar > i{display:block; height:100%; width:100%; border-radius:4px; transition:width .15s linear;}
   .bar.thin{height:4px;}
   .bar.steel > i{background:var(--steel);} .bar.rust > i{background:var(--rust);} .bar.brass > i{background:var(--brass);}
 
 
-  .panel{background:var(--surface); border:1px solid var(--rule); border-radius:6px; padding:16px; display:flex; flex-direction:column; gap:10px;}
   .ph{margin:0; font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;}
   .ph.brass{color:var(--brass);} .ph.steel{color:var(--steel);} .ph.rust{color:var(--rust);} .ph.ink{color:var(--ink-soft);}
   .sub{margin:6px 0 0; font-size:12px; font-weight:600; color:var(--ink-soft); letter-spacing:.02em;}
@@ -200,7 +180,6 @@
   .chosen .opt-tag{font-size:12.5px; background:var(--surface-2); border-radius:3px; padding:2px 8px; color:var(--ink-soft);}
   .chosen .opt-tag b{font-weight:600; color:var(--ink);}
   .pick .k{font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--brass); align-self:center;}
-  .card.wide{max-width:560px;}
   /* Spezialkarten (REQ-45): Farbe je Kategorie, Rahmen je Seltenheit */
   .cat-wirtschaft{--cat:var(--cat-wirtschaft);} .cat-armee{--cat:var(--cat-armee);} .cat-basis{--cat:var(--cat-basis);}
   .cat-automatisierung{--cat:var(--cat-automatisierung);} .cat-sonderregel{--cat:var(--cat-sonderregel);}
@@ -215,140 +194,180 @@
   /* REQ-03.5: Klick-Knopf tritt in Phase Spät optisch zurück, bleibt bedienbar */
   .btn-primary.late{background:var(--surface-2); color:var(--ink-soft); padding:8px 14px; font-size:14px;}
 
-  /* Layout Iteration 4 (REQ-46): Spielwelt links, Seitenleiste rechts; die Seite selbst scrollt nicht */
+  /* Layout Iteration 5 (REQ-5.03): drei Bänder übereinander; Höhen aus config.js (UI.bands) über CSS-Variablen; die Seite scrollt nicht */
   html, body{height:100%;}
   body{overflow:hidden;}
-  .app{display:grid; grid-template-columns:minmax(0, 1fr) 360px; grid-template-rows:auto minmax(0, 1fr); gap:10px 16px;
-       height:100vh; padding-block:12px; padding-inline:16px;}
-  .top{grid-column:1 / -1;}
-  .stage{display:flex; flex-direction:column; gap:6px; min-height:0; min-width:0;}
-  .world-tools{display:flex; justify-content:space-between; align-items:center; gap:8px 16px; flex-wrap:wrap;}
-  .status{display:flex; gap:6px 16px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft);}
-  .hp-mini{display:inline-flex; align-items:center; gap:6px; white-space:nowrap;}
-  .hp-mini .num{font-size:12px; color:var(--ink);}
-  .hp-mini .bar{width:56px; height:5px;}
-  .cam button{display:flex; flex-direction:column; align-items:flex-start; padding:4px 10px;}
-  .cam .btn-label{font-weight:600; font-size:13px;}
-  .cam .expl{font-size:10.5px;}
-  .world{flex:1 1 auto; min-height:260px; position:relative; background:var(--surface); border:1px solid var(--rule); border-radius:6px; overflow:hidden;}
+  .app{display:grid; grid-template-rows:var(--band-hud, 72px) var(--band-world, 50vh) var(--band-work, 1fr); height:100vh; overflow:hidden;}
+  /* Spielflächen: kein Doppeltipp-Zoom, keine versehentliche Textauswahl (REQ-5.01) */
+  .hud, .worldband, .work{touch-action:manipulation; user-select:none; -webkit-user-select:none; min-height:0; min-width:0;}
+
+  /* Band 1: Ressourcenleiste */
+  .hud{display:flex; align-items:stretch; gap:0; padding:0 10px; border-bottom:1px solid var(--rule); background:var(--surface); overflow:hidden;}
+  .hud-item{display:flex; flex-direction:column; justify-content:center; gap:1px; padding:4px 12px; border-right:1px solid var(--rule); min-width:0; white-space:nowrap;}
+  .hud-item[hidden]{display:none;}
+  .hud-l{font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
+  .hud-item > b{font-size:18px; font-weight:500; line-height:1.1; min-width:4ch;}
+  .hud-s{font-size:11.5px; color:var(--ink-soft);}
+  .hud-xp{min-width:170px;} .hud-xp .bar{height:5px; margin-top:2px;}
+  .hud-waves{display:flex; gap:10px; font-size:16px; font-weight:500;}
+  .hud-waves .p{color:var(--steel);} .hud-waves .e{color:var(--rust);}
+  .hud .siege{font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:600; color:var(--rust); background:var(--rust-soft); border-radius:3px; padding:0 5px;}
+  .hud .siege[hidden]{display:none;}
+  .hud-walls .wall-row{display:grid; grid-template-columns:3.2em 52px 3.6em; align-items:center; gap:6px; font-size:11px; line-height:1.25;}
+  .hud-walls .wall-row b{font-size:11px; font-weight:500;} .hud-walls .gate{font-weight:600;} .hud-walls .bar{height:4px;}
+  .w-n{color:var(--ink-soft);}
+  .hud-draft{align-self:center; margin:0 10px; border:2px solid var(--brass); background:var(--brass); color:var(--brass-ink); border-radius:6px; padding:4px 12px; cursor:pointer;
+             display:flex; flex-direction:column; align-items:flex-start; font-weight:600; animation:pulse 1.4s ease-in-out infinite;}
+  .hud-draft .expl{color:inherit; opacity:.85; font-size:10.5px;}
+  .hud-draft[hidden]{display:none;}
+  @keyframes pulse{50%{box-shadow:0 0 0 4px var(--brass-soft);}}
+  .hud-menu{margin-left:auto; display:flex; gap:6px; align-items:center; padding-left:10px;}
+  .hud-menu .btn-ghost{padding:3px 9px; white-space:nowrap;}
+  .hud-menu .btn-ghost .expl{font-size:10px;}
+
+  /* Band 2: Spielwelt */
+  .worldband{display:flex; flex-direction:column; gap:4px; padding:6px 10px 4px;}
+  .world{flex:1 1 auto; min-height:0; position:relative; background:var(--surface); border:1px solid var(--rule); border-radius:6px; overflow:hidden;}
   #lane{display:block; width:100%; height:100%; cursor:grab; touch-action:none;}
   #lane.dragging{cursor:grabbing;}
-  .scrollbar{width:100%; margin:0; accent-color:var(--steel);}
-  .log{min-height:0; max-height:5.6em; overflow:hidden;}
-  /* Spielflächen: kein Doppeltipp-Zoom, keine versehentliche Textauswahl (REQ-5.01) */
-  .stage, .side{touch-action:manipulation; user-select:none; -webkit-user-select:none;}
-  .side{min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:10px; padding-right:4px;}
-  .panel{background:var(--surface); border:1px solid var(--rule); border-radius:6px; padding:12px 14px; display:flex; flex-direction:column; gap:8px;}
-  .panel[hidden]{display:none;}
+  .world-tools{display:flex; align-items:center; gap:10px;}
+  .scrollbar{flex:1 1 auto; margin:0; accent-color:var(--steel);}
+  .cam button{display:flex; flex-direction:column; align-items:flex-start; padding:1px 9px; min-height:28px;}
+  .cam .btn-label{font-weight:600; font-size:12px; line-height:1.2;} .cam .expl{font-size:9.5px;}
+
+  /* Band 3: Arbeitsbereich */
+  .work{display:grid; grid-template-columns:minmax(200px, 25%) minmax(0, 1fr); gap:10px; padding:6px 10px 8px; border-top:1px solid var(--rule); background:var(--bg);}
+  .work-click{display:flex; flex-direction:column; gap:6px; min-height:0; overflow-y:auto;}
+  .work-click .btn-primary{flex:0 0 auto; min-height:72px; font-size:19px;}
+  .work-tabs{display:flex; flex-direction:column; min-height:0; min-width:0; background:var(--surface); border:1px solid var(--rule); border-radius:6px;}
+  .tabs{display:flex; gap:2px; padding:4px 4px 0; border-bottom:1px solid var(--rule); flex:0 0 auto; overflow-x:auto;}
+  .tabs [role="tab"]{position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:0; border:1px solid transparent; border-bottom:none; border-radius:5px 5px 0 0;
+                    background:transparent; padding:3px 12px 4px; cursor:pointer; min-height:32px; color:var(--ink-soft); transition:background .12s ease;}
+  .tabs [role="tab"][hidden]{display:none;}
+  .tabs [role="tab"] .btn-label{font-weight:600; font-size:13px;}
+  .tabs [role="tab"] .expl{font-size:9.5px;}
+  .tabs [role="tab"][aria-selected="true"]{background:var(--surface); border-color:var(--rule); color:var(--ink); margin-bottom:-1px; box-shadow:inset 0 2px 0 var(--brass);}
+  .tabs [role="tab"]:hover{color:var(--ink);}
+  .tabs .mark{position:absolute; top:4px; right:4px; width:8px; height:8px; border-radius:50%; background:var(--rust);}
+  .tabs .mark[hidden]{display:none;}
+  .tab-body{flex:1 1 auto; min-height:0; overflow-y:auto; padding:8px 12px 10px; display:flex; flex-direction:column; gap:8px;}
+  .tabpanel{display:flex; flex-direction:column; gap:8px;}
+  .tabpanel[hidden]{display:none;}
+  .tabpanel.cols{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px 14px; align-items:start;}
+  .tabpanel.cols[hidden]{display:none;}
+  .ctx-head{display:flex; flex-direction:column; gap:6px; padding:8px 10px; border:1px solid var(--brass); border-radius:6px; background:var(--brass-soft);}
+  .ctx-head[hidden]{display:none;}
+  .picks{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:6px;}
+  .picks:empty{display:none;}
+  .draft-offer{grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));}
+  .draft-box{display:flex; flex-direction:column; gap:6px;}
+  .draft-box[hidden]{display:none;}
+  .opt.selected{border-color:var(--brass); box-shadow:0 0 0 1px var(--brass);}
   .lanes-preview{display:grid; grid-template-columns:auto 1fr 1fr; gap:2px 10px; font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--ink-soft);}
-  .lanes-preview b{font-weight:500; color:var(--ink);}
   .lanes-preview .e{color:var(--rust);} .lanes-preview .p{color:var(--steel);}
+  .log{min-height:0; max-height:7.5em; overflow:hidden;}
   .ctx-actions{display:flex; gap:8px; flex-wrap:wrap;}
-  #ctxBuild:empty, #ctxDemolish:empty, #ctxNav:empty{display:none;}
-  @media (max-width:900px){
-    body{overflow:auto;}
-    .app{grid-template-columns:minmax(0, 1fr); height:auto;}
-    .world{height:340px; flex:none;}
-    .side{overflow:visible;}
-  }
+  #ctxDemolish:empty, #ctxRepair:empty{display:none;}
+  #ctxBuilding[hidden], #ctxRepair[hidden]{display:none;}
+  .hintbox{bottom:auto; top:calc(var(--band-hud, 72px) + 8px);}
 </style>
 </head>
 <body>
-<div class="app">
-  <header class="top">
-    <div class="brand">
-      <h1>Klammerfront</h1>
-      <span class="tag" id="eraLabel"></span>
-      <span class="tag" id="diffLabel"></span>
-    </div>
-    <div class="meta">
-      <span><span data-i18n="hdr.clock"></span> <b id="clock" class="num">0:00</b></span>
-      <span><span data-i18n="hdr.kills"></span> <b id="kills" class="num">0</b></span>
-      <button class="btn-ghost" id="newBtn" type="button" data-tooltip="new"><span class="btn-label" data-i18n="hdr.newGame"></span><span class="expl" id="newExpl"></span></button>
+<div class="app" id="app">
+  <!-- Band 1: Ressourcenleiste (REQ-5.03) -->
+  <header class="hud" id="hud">
+    <div class="hud-item" data-tooltip="hud:soldiers"><span class="hud-l" data-i18n="hud.soldiers"></span><b class="num" id="hudSoldiers">0/3</b></div>
+    <div class="hud-item" data-tooltip="hud:material"><span class="hud-l" data-i18n="hud.material"></span><b class="num" id="material">0</b><span class="hud-s num" id="rate"></span></div>
+    <div class="hud-item hud-xp" data-tooltip="hud:xp"><span class="hud-l" data-i18n="hud.xp"></span><b class="num" id="xpVal">0</b>
+      <span class="bar brass"><i id="barLvl"></i></span><span class="hud-s num"><span id="xpRate"></span> · <span id="lvlProg"></span></span></div>
+    <div class="hud-item" id="hudWaves" data-tooltip="hud:waves"><span class="hud-l" data-i18n="hud.waves"></span>
+      <span class="hud-waves"><span class="num p" id="waveIn">0:20</span><span class="num e" id="enemyWaveIn">0:20</span></span><span class="siege num" id="siegeInfo" hidden></span></div>
+    <div class="hud-item hud-walls" data-tooltip="hud:walls"><span class="hud-l" data-i18n="hud.walls"></span>
+      <span class="wall-row"><span class="w-n" data-i18n="hud.wall0s"></span><span class="bar steel thin"><i id="barP0"></i></span><b class="num" id="hpP0"></b></span>
+      <span class="wall-row gate"><span class="w-n" data-i18n="hud.gates"></span><span class="bar steel thin"><i id="barP1"></i></span><b class="num" id="hpP1"></b></span>
+      <span class="wall-row"><span class="w-n" data-i18n="hud.wall2s"></span><span class="bar steel thin"><i id="barP2"></i></span><b class="num" id="hpP2"></b></span></div>
+    <div class="hud-item" data-tooltip="hud:army"><span class="hud-l" data-i18n="hud.army"></span><b id="armyState"></b></div>
+    <div class="hud-item" data-tooltip="hud:time"><span class="hud-l"><span id="diffLabel"></span></span><b class="num" id="clock">0:00</b><span class="hud-s" id="eraLabel"></span></div>
+    <button class="hud-draft" id="draftBtn" type="button" data-tooltip="draftBtn" hidden><span class="btn-label" data-i18n="hud.draft"></span><span class="expl"></span></button>
+    <div class="hud-menu">
+      <button class="btn-ghost" id="pauseBtn" type="button" data-tooltip="menu:pause" aria-pressed="false"><span class="btn-label"></span><span class="expl"></span></button>
+      <button class="btn-ghost" id="langBtn" type="button" data-tooltip="menu:lang"><span class="btn-label"></span><span class="expl"></span></button>
+      <button class="btn-ghost" id="newBtn" type="button" data-tooltip="new"><span class="btn-label" data-i18n="hdr.newGame"></span><span class="expl"></span></button>
     </div>
   </header>
 
-  <main class="stage">
+  <!-- Band 2: Spielwelt, horizontal scrollbar (REQ-46) -->
+  <main class="worldband" id="worldband">
+    <div class="world" id="world"><canvas id="lane" tabindex="0" data-tooltip="world"></canvas></div>
     <div class="world-tools">
-      <div class="status">
-        <span class="hp-mini"><span data-i18n="hud.gate"></span> <b class="num" id="hpP1"></b><span class="bar steel thin"><i id="barP1"></i></span></span>
-        <span class="hp-mini"><span data-i18n="hud.wall0"></span> <b class="num" id="hpP0"></b><span class="bar steel thin"><i id="barP0"></i></span></span>
-        <span class="hp-mini"><span data-i18n="hud.wall2"></span> <b class="num" id="hpP2"></b><span class="bar steel thin"><i id="barP2"></i></span></span>
-        <span class="hp-mini"><span data-i18n="hud.baseE"></span> <b class="num" id="hpE"></b><span class="bar rust thin"><i id="barE"></i></span></span>
-      </div>
+      <input type="range" id="worldScroll" class="scrollbar" min="0" max="1000" step="1" value="0" data-tooltip="scroll">
       <div class="seg cam">
         <button type="button" id="camRealm" data-tooltip="cam:realm"><span class="btn-label" data-i18n="cam.realm"></span><span class="expl" data-i18n="ex.cam.realm"></span></button>
         <button type="button" id="camFront" data-tooltip="cam:front"><span class="btn-label" data-i18n="cam.front"></span><span class="expl" data-i18n="ex.cam.front"></span></button>
         <button type="button" id="camFollow" data-tooltip="cam:follow" aria-pressed="false"><span class="btn-label" data-i18n="cam.follow"></span><span class="expl" id="camFollowExpl"></span></button>
       </div>
     </div>
-    <div class="world" id="world"><canvas id="lane" tabindex="0" data-tooltip="world"></canvas></div>
-    <input type="range" id="worldScroll" class="scrollbar" min="0" max="1000" step="1" value="0" data-tooltip="scroll">
-    <ol class="log" id="log" aria-live="polite"></ol>
   </main>
 
-  <aside class="side" id="side">
-    <section class="panel" id="secRes">
-      <h2 class="ph brass" data-i18n="side.res"></h2>
-      <div class="res"><span class="big" id="material">0</span><span class="lbl"><span data-i18n="hud.material"></span> · <span class="num" id="rate"></span> · <span class="num" id="perClick"></span></span></div>
+  <!-- Band 3: Arbeitsbereich, links Klickfeld, rechts Reiter (REQ-5.03) -->
+  <section class="work" id="work">
+    <div class="work-click">
       <button class="btn-primary" id="clickBtn" type="button" data-tooltip="click"><span data-i18n="btn.click"></span> <span class="plus">+<span id="clickHint">1</span></span><span class="expl" id="clickExpl"></span></button>
+      <p class="statline num" id="perClick"></p>
       <div class="opts" id="optsFertigung"></div>
-      <p class="statline" id="factoryStat"></p>
-      <div class="hp">
-        <div class="hp-row"><span id="lvlLabel"></span><span class="num" id="lvlProg"></span></div>
-        <div class="bar brass"><i id="barLvl"></i></div>
+    </div>
+    <div class="work-tabs">
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div class="tab-body">
+        <div class="ctx-head" id="ctxHead" hidden>
+          <h2 class="ph rust" id="ctxTitle"></h2>
+          <p class="hint" id="ctxText"></p>
+          <div class="picks" id="ctxBuild"></div>
+          <div id="ctxBuilding">
+            <div class="opts" id="optsKaserne"></div>
+            <div class="opts" id="optsKontor"></div>
+          </div>
+          <div class="opts" id="ctxRepair"></div>
+          <div class="ctx-actions" id="ctxDemolish"></div>
+        </div>
+        <div class="tabpanel" id="panel-build" role="tabpanel">
+          <p class="hint" id="buildHint" data-i18n="panel.build.hint"></p>
+          <p class="statline" id="factoryStat"></p>
+        </div>
+        <div class="tabpanel cols" id="panel-wall" role="tabpanel" hidden>
+          <div><h3 class="sub" data-i18n="sub.repair"></h3><div class="opts" id="optsRepair"></div></div>
+          <div><h3 class="sub" data-i18n="sub.mauer"></h3><div class="opts" id="optsMauer"></div></div>
+          <div><h3 class="sub" data-i18n="sub.turm_0"></h3><div class="opts" id="optsTurm0"></div></div>
+          <div><h3 class="sub" data-i18n="sub.turm_2"></h3><div class="opts" id="optsTurm2"></div></div>
+        </div>
+        <div class="tabpanel cols" id="panel-army" role="tabpanel" hidden>
+          <div>
+            <div class="opts" id="optsUnits"></div>
+            <div class="statline"><span data-i18n="front.supply"></span> <b id="queue" class="num">0/3</b> · <span data-i18n="front.field"></span> <b id="ownCount" class="num">0</b> · <span data-i18n="front.losses"></span> <b id="losses" class="num">0</b> · <span data-i18n="hdr.kills"></span> <b id="kills" class="num">0</b></div>
+          </div>
+          <div><div class="lanes-preview" id="wavePreview"></div></div>
+          <div><ol class="log" id="log" aria-live="polite"></ol>
+            <footer><span id="footVersion"></span> <span data-i18n="foot.save"></span></footer></div>
+        </div>
+        <div class="tabpanel" id="panel-smithy" role="tabpanel" hidden>
+          <p class="hint" id="smithyText"></p>
+          <div class="opts" id="optsSchmiede"></div>
+        </div>
+        <div class="tabpanel" id="panel-uni" role="tabpanel" hidden>
+          <p class="hint" id="uniInfo"></p>
+        </div>
+        <div class="tabpanel" id="panel-cards" role="tabpanel" hidden>
+          <div class="draft-box" id="draftBox" hidden>
+            <h2 class="ph brass" id="draftTitle"></h2>
+            <p class="hint" id="draftText"></p>
+            <div class="picks draft-offer" id="draftOffer"></div>
+          </div>
+          <h3 class="sub" data-i18n="panel.levels"></h3>
+          <div class="chosen" id="chosen"></div>
+        </div>
       </div>
-      <p class="hint" id="xpLabel"></p>
-    </section>
-
-    <section class="panel" id="secWave">
-      <h2 class="ph steel" data-i18n="side.wave"></h2>
-      <div class="wavebar" id="waveBar">
-        <span class="wave-count"><span id="waveLabel"></span> <b id="waveIn" class="num"></b></span>
-        <span class="siege num" id="siegeInfo" hidden></span>
-      </div>
-      <div class="statline"><span data-i18n="front.supply"></span> <b id="queue" class="num">0/3</b> · <span data-i18n="front.field"></span> <b id="ownCount" class="num">0</b> · <span data-i18n="front.losses"></span> <b id="losses" class="num">0</b></div>
-      <div class="lanes-preview" id="wavePreview"></div>
-    </section>
-
-    <section class="panel" id="secUnits">
-      <h2 class="ph steel" data-i18n="side.units"></h2>
-      <div class="opts" id="optsUnits"></div>
-    </section>
-
-    <section class="panel" id="secCtx">
-      <h2 class="ph rust" id="ctxTitle"></h2>
-      <p class="hint" id="ctxText"></p>
-      <div class="diffs" id="ctxBuild"></div>
-      <div id="ctxBuilding">
-        <div class="opts" id="optsSchmiede"></div>
-        <div class="opts" id="optsKaserne"></div>
-        <div class="opts" id="optsKontor"></div>
-        <div class="ctx-actions" id="ctxDemolish"></div>
-      </div>
-      <div id="ctxBase">
-        <div class="opts" id="optsRepair"></div>
-        <h3 class="sub" data-i18n="sub.mauer"></h3>
-        <div class="opts" id="optsMauer"></div>
-        <h3 class="sub" data-i18n="sub.turm_0"></h3>
-        <div class="opts" id="optsTurm0"></div>
-        <h3 class="sub" data-i18n="sub.turm_2"></h3>
-        <div class="opts" id="optsTurm2"></div>
-      </div>
-      <div class="ctx-actions" id="ctxNav"></div>
-    </section>
-
-    <section class="panel" id="secCards">
-      <h2 class="ph ink" data-i18n="panel.levels"></h2>
-      <p class="hint" id="uniInfo"></p>
-      <div class="chosen" id="chosen"></div>
-    </section>
-
-    <footer>
-      <span id="footVersion"></span>
-      <span data-i18n="foot.save"></span>
-    </footer>
-  </aside>
+    </div>
+  </section>
 </div>
 
 <div class="hintbox" id="hintBox" role="status" aria-live="polite" hidden>
@@ -373,5 +392,8 @@
 <script src="hints.js"></script>
 <script src="core.js"></script>
 <script src="ui.js"></script>
+<script src="render.js"></script>
+<script src="hud.js"></script>
+<script src="panels.js"></script>
 </body>
 </html>

@@ -52,12 +52,21 @@ for (const lang of ['de', 'en']){
   check(await p.evaluate(b => document.querySelector('#hintBox').hidden || document.querySelector('#hintText').textContent !== b, before), `[${lang}] Hinweis lässt sich wegklicken`);
   await p.evaluate(() => { while (!document.querySelector('#hintBox').hidden) document.querySelector('#hintOk').click(); });
 
-  // Kontextfeld: leerer Bauplatz, bebauter Bauplatz, Basis – Erklärzeilen und Tooltips auch dort
-  for (const sel of [() => __kf.selectPlot(__kf.G.S.slots.findIndex(s => !s)), () => __kf.selectPlot(__kf.G.S.slots.findIndex(s => s && s.type === 'schmiede')), () => __kf.selectBase()]){
+  // Kontextkopf: leerer Bauplatz, Kaserne, Schmiede, Mauer – Erklärzeilen und Tooltips auch dort
+  for (const sel of [() => __kf.selectPlot(__kf.G.S.slots.findIndex(s => !s)), () => __kf.selectPlot(__kf.G.S.slots.findIndex(s => s && s.type === 'kaserne')),
+                     () => __kf.selectPlot(__kf.G.S.slots.findIndex(s => s && s.type === 'schmiede')), () => __kf.selectSection(0)]){
     await p.evaluate(sel); await p.waitForTimeout(150);
     const ex = await p.evaluate(() => __kf.explAudit()), tt = await p.evaluate(() => __kf.tooltipAudit());
-    check(ex.length === 0 && tt.length === 0, `[${lang}] Kontextfeld ${await p.evaluate(() => JSON.stringify(__kf.ctxSel))}: Erklärzeilen und Tooltips${show(ex.concat(tt))}`);
+    check(ex.length === 0 && tt.length === 0, `[${lang}] Kontextkopf ${await p.evaluate(() => JSON.stringify(__kf.ctxSel))}: Erklärzeilen und Tooltips${show(ex.concat(tt))}`);
   }
+  // Jeder Reiter: Erklärzeilen an allen sichtbaren Knöpfen
+  await p.evaluate(() => __kf.clearSelection());
+  for (const tab of ['build', 'wall', 'army', 'smithy', 'uni', 'cards']){
+    await p.evaluate(id => __kf.selectTab(id), tab); await p.waitForTimeout(120);
+    const ex = await p.evaluate(() => __kf.explAudit());
+    check(ex.length === 0 && await p.evaluate(id => __kf.tab === id, tab), `[${lang}] Reiter ${tab}: sichtbar, jeder Knopf mit Erklärzeile${show(ex)}`);
+  }
+  await p.evaluate(() => __kf.selectTab('build'));
 
   await p.locator('#clickBtn').scrollIntoViewIfNeeded();
   await p.mouse.move(2, 2); await p.waitForTimeout(100);
@@ -70,7 +79,7 @@ for (const lang of ['de', 'en']){
   check(r, `[${lang}] Tooltip vollständig im Fenster`);
   await p.mouse.move(5, 5);
   if (lang === 'en'){
-    const text = await p.evaluate(() => document.body.innerText);
+    const text = await p.evaluate(() => document.body.innerText + [...document.querySelectorAll('[role="tabpanel"]')].map(e => e.textContent).join(' '));
     const hits = [...new Set(text.match(/[äöüßÄÖÜ]|\b(und|der|die|das|Stufe|Gegner|Einheiten|Bauplatz|Material pro|Welle)\b/g) || [])];
     check(hits.length === 0, `[en] keine deutschen Reste${show(hits)}`);
   }
@@ -88,22 +97,64 @@ for (const lang of ['de', 'en']){
   check(errors.length === 0, `[${lang}] keine Fehler in der Konsole${show(errors)}`);
   await ctx.close();
 }
-// REQ-46: Layout, Scrollen, Bauplatz-Klick, Bildzeit
-for (const [w, h] of [[1280, 720], [1920, 1080]]){
+// REQ-46 und REQ-5.03: drei Bänder, Scrollen, Bauplatz-Klick, Bildzeit
+import { mkdirSync } from 'node:fs';
+const shotDir = new URL('../reports/screens/', import.meta.url);
+mkdirSync(shotDir, { recursive: true });
+for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080], [2560, 1440]]){
   const ctx = await b.newContext({ viewport: { width: w, height: h } });
   const p = await ctx.newPage();
   const errors = [];
   p.on('pageerror', e => errors.push(e.message));
   await p.goto(url);
-  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); });
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
   await p.reload(); await p.waitForTimeout(300);
   await p.click('.card .btn-primary'); await p.waitForTimeout(200);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; });
   const noH = await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.body.scrollWidth <= innerWidth);
   check(noH, `[${w}×${h}] keine waagrechte Bildlaufleiste`);
-  const vis = await p.evaluate(() => { const r = document.querySelector('#lane').getBoundingClientRect(), s = document.querySelector('.side').getBoundingClientRect();
-    return r.width > 0 && r.bottom <= innerHeight && s.left >= r.right; });
-  check(vis, `[${w}×${h}] Spielwelt und Seitenleiste nebeneinander im Fenster`);
+  const bands = await p.evaluate(() => { const H = innerHeight, g = id => document.getElementById(id).getBoundingClientRect();
+    return { H, hud: g('hud').height, world: g('worldband').height, work: g('work').height, bottom: g('work').bottom,
+             noV: document.documentElement.scrollHeight <= H && document.body.scrollHeight <= H, B: __kf.C.UI }; });
+  const hudOk = bands.hud >= bands.B.hudMinPx - 1 && bands.hud <= bands.B.hudMaxPx + 1 &&
+                (Math.abs(bands.hud / bands.H - bands.B.bands.hud) <= 0.02 || Math.abs(bands.hud - bands.B.hudMinPx) <= 1 || Math.abs(bands.hud - bands.B.hudMaxPx) <= 1);
+  const worldOk = Math.abs(bands.world / bands.H - bands.B.bands.world) <= 0.02;
+  const workOk = Math.abs(bands.work / bands.H - bands.B.bands.work) <= 0.02 || Math.abs(bands.hud + bands.world + bands.work - bands.H) <= 1;
+  check(hudOk && worldOk && workOk && bands.noV && Math.abs(bands.bottom - bands.H) <= 1,
+    `[${w}×${h}] Bänder: Leiste ${Math.round(bands.hud)} px, Welt ${(100 * bands.world / bands.H).toFixed(1)} %, Arbeitsbereich ${(100 * bands.work / bands.H).toFixed(1)} %; kein Dokument-Scroll`);
+  await p.evaluate(() => { const G = __kf.G; G.S.nextWave = G.S.t + 15; G.S.material = 1e5; for (const t of ['fabrik', 'schmiede', 'kaserne', 'universitaet']) G.build(t);
+    for (let l = 0; l < 3; l++){ G.addFormation('p', l, Array(8).fill('laeufer').concat(['werfer', 'werfer', 'werfer']), 560); G.addFormation('e', l, Array(6).fill('laeufer').concat(['werfer']), 640); }
+    for (const u of G.S.units) if (u.id % 3 === 0) u.hp = u.maxHp * 0.5;
+    __kf.selectPlot(5); __kf.Cam.goTo(__kf.Cam.frontTarget() + 150); });
+  await p.waitForTimeout(300);
+  // Bildschirmfoto für den Bericht, auch als Beleg der Lesbarkeit der Einheiten bei 1280×720 (REQ-5.03)
+  await p.screenshot({ path: new URL(`i5-layout-${w}x${h}.png`, shotDir).pathname });
+  await p.evaluate(() => { const G = __kf.G; G.S.nextWave = 1e9; });
+  // Klick auf Objekte in der Welt öffnet den passenden Reiter mit Kontextkopf (je Objekttyp)
+  for (const [kind, want] of [['fabrik', 'build'], ['schmiede', 'smithy'], ['kaserne', 'build'], ['universitaet', 'uni'], ['frei', 'build'], ['mauer', 'wall']]){
+    await p.evaluate(() => { __kf.clearSelection(); __kf.selectTab('army'); __kf.Cam.goTo(0); });
+    await p.waitForTimeout(60);
+    const pt = await p.evaluate(k => { const S = __kf.G.S;
+      const r = k === 'mauer' ? __kf.sectionRects[0] : __kf.plotRects[k === 'frei' ? S.slots.findIndex(s => !s) : S.slots.findIndex(s => s && s.type === k)];
+      return __kf.worldToScreen(r.x + r.w / 2, r.y + r.h / 2); }, kind);
+    await p.mouse.click(pt.x, pt.y); await p.waitForTimeout(80);
+    const st = await p.evaluate(() => ({ tab: __kf.tab, head: !document.querySelector('#ctxHead').hidden, sel: __kf.sel }));
+    check(st.tab === want && st.head, `[${w}×${h}] Klick auf ${kind}: Reiter ${st.tab}, Kontextkopf ${st.head ? 'sichtbar' : 'fehlt'}`);
+  }
+  // Esc und Klick ins Leere heben die Auswahl auf; der Reiter bleibt
+  await p.keyboard.press('Escape'); await p.waitForTimeout(60);
+  check(await p.evaluate(() => __kf.sel === null && __kf.tab === 'wall'), `[${w}×${h}] Esc hebt die Auswahl auf, Reiter bleibt`);
+  await p.evaluate(() => __kf.selectPlot(0)); await p.waitForTimeout(60);
+  const empty = await p.evaluate(() => __kf.worldToScreen(__kf.Cam.x + innerWidth * 0.6, 12));
+  await p.mouse.click(empty.x, empty.y); await p.waitForTimeout(60);
+  check(await p.evaluate(() => __kf.sel === null && __kf.tab === 'build'), `[${w}×${h}] Klick auf leere Stelle hebt die Auswahl auf`);
+  // Alle Reiter per Tastatur erreichbar (Tab-Taste in die Leiste, dann Pfeiltasten)
+  await p.evaluate(() => { __kf.selectTab('build'); document.querySelector('#tab-build').focus(); });
+  const seenTabs = [];
+  for (let k = 0; k < 6; k++){ seenTabs.push(await p.evaluate(() => __kf.tab)); await p.keyboard.press('ArrowRight'); await p.waitForTimeout(40); }
+  const visTabs = await p.evaluate(() => [...document.querySelectorAll('[role="tab"]')].filter(b => !b.hidden).map(b => b.id.slice(4)));
+  check(visTabs.every(id => seenTabs.includes(id)), `[${w}×${h}] alle Reiter per Tastatur erreichbar (${[...new Set(seenTabs)].join(', ')})`);
+  await p.evaluate(() => { __kf.G.S.units = []; __kf.G.S.forms = []; __kf.clearSelection(); });
   const cam = () => p.evaluate(() => __kf.Cam.x);
   const box = await p.locator('#lane').boundingBox();
   await p.evaluate(() => __kf.Cam.goTo(0));
@@ -126,6 +177,7 @@ for (const [w, h] of [[1280, 720], [1920, 1080]]){
   await p.click('#camRealm'); await p.waitForTimeout(50);
   check(await cam() === 0, `[${w}×${h}] „Reich“ springt zum Reich`);
   // Klick auf Bauplatz 5 (Mitte): wählt ihn aus, ohne zu scrollen; kleine Bewegung unter der Schwelle bleibt ein Klick
+  await p.evaluate(() => { __kf.G.S.slots[4] = null; });
   const r = await p.evaluate(() => __kf.plotRects[4]);
   await p.mouse.move(box.x + r.x + r.w / 2, box.y + r.y + r.h / 2); await p.mouse.down();
   await p.mouse.move(box.x + r.x + r.w / 2 + 3, box.y + r.y + r.h / 2); await p.mouse.up(); await p.waitForTimeout(100);
@@ -181,7 +233,8 @@ for (const dsf of [1, 2]){
   check(built === 4, `${tag} Bau-Option mit 120 ms Haltedauer: ${built} von 4 gebaut`);
   // Einheitenknopf mit 120 ms Haltedauer
   let queued = 0;
-  await p.evaluate(() => { __kf.G.S.nextOwnWave = 1e9; });
+  await p.evaluate(() => { __kf.G.S.nextOwnWave = 1e9; __kf.selectTab('army'); });
+  await p.waitForTimeout(60);
   for (let k = 0; k < 10; k++){
     await p.evaluate(() => { __kf.G.S.queue = []; __kf.G.S.material = 1e6; });
     const bx = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="unit:laeufer"]'); e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return { x: r.x + 24, y: r.y + r.height / 2 }; });
@@ -191,13 +244,13 @@ for (const dsf of [1, 2]){
   check(queued === 10, `${tag} „Läufer“ mit 120 ms Haltedauer: ${queued} von 10`);
 
   // 100 Klicks an zufälligen Punkten (Seed) in freien Bauplätzen, laufendes Spiel, wechselnde Kamera, Zitterbewegung unter der Schwelle
-  await p.evaluate(() => { const G = __kf.G; G.S.slots = G.S.slots.map(() => null); __kf.selectBase(); });
+  await p.evaluate(() => { const G = __kf.G; G.S.slots = G.S.slots.map(() => null); __kf.clearSelection(); });
   let seed = 12345; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
   let hits = 0;
   for (let k = 0; k < 100; k++){
     const target = Math.floor(rnd() * 9);
     const pt = await p.evaluate(([i, a, bb, c]) => {
-      __kf.selectBase(); const r = __kf.plotRects[i];
+      __kf.clearSelection(); const r = __kf.plotRects[i];
       __kf.Cam.goTo(Math.min(__kf.Cam.max(), r.x) * c);        // Bauplatz bleibt sichtbar
       const wx = r.x + 2 + a * (r.w - 4), wy = r.y + 2 + bb * (r.h - 4);
       return __kf.worldToScreen(wx, wy);
@@ -212,7 +265,8 @@ for (const dsf of [1, 2]){
   check(hits === 100, `${tag} 100 Klicks in freie Bauplätze: ${hits} Treffer`);
 
   // Klickfeld: 50 Klicks in 5 s ergeben +50 (Klickdeckel angehoben); Latenz bis zur sichtbaren Änderung
-  await p.evaluate(() => { __kf.C.MAX_CLICKS_PER_SECOND = 100; __kf.Cam.goTo(0);
+  // kleiner Bestand, damit jeder Klick die Anzeige sichtbar ändert (die Leiste schreibt nur geänderte Werte)
+  await p.evaluate(() => { __kf.C.MAX_CLICKS_PER_SECOND = 100; __kf.Cam.goTo(0); __kf.G.S.material = 100;
     window.__lat = []; let t0 = null;
     document.querySelector('#clickBtn').addEventListener('pointerdown', () => { t0 = performance.now(); }, true);
     new MutationObserver(() => { if (t0 !== null){ window.__lat.push(performance.now() - t0); t0 = null; } })
@@ -229,7 +283,7 @@ for (const dsf of [1, 2]){
   // Klick in die Welt bis zum nächsten gezeichneten Bild mit Auswahlrahmen
   const wl = [];
   for (let k = 0; k < 20; k++){
-    const pt = await p.evaluate(i => { __kf.selectBase(); const r = __kf.plotRects[i]; return __kf.worldToScreen(r.x + r.w / 2, r.y + r.h / 2); }, k % 9);
+    const pt = await p.evaluate(i => { __kf.clearSelection(); const r = __kf.plotRects[i]; return __kf.worldToScreen(r.x + r.w / 2, r.y + r.h / 2); }, k % 9);
     await p.mouse.move(pt.x, pt.y);
     await p.evaluate(() => { window.__t0 = null; document.querySelector('#lane').addEventListener('pointerdown', () => { window.__t0 = performance.now(); window.__done = new Promise(r => requestAnimationFrame(() => r(performance.now() - window.__t0))); }, { once: true, capture: true }); });
     await p.mouse.down(); await p.mouse.up();
@@ -255,6 +309,32 @@ for (const dsf of [1, 2]){
   await ctx.close();
 }
 
+// REQ-5.03: Kartenwahl als Hinweis in der Leiste, kein automatischer Reiterwechsel; Wahl im Reiter Karten
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  const errors = []; p.on('pageerror', e => errors.push(e.message));
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.click('.card .btn-primary'); await p.waitForTimeout(200);
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.selectTab('army'); const G = __kf.G;
+    G.S.xpTotal = G.xpNeed(1); G.S.xp = G.S.xpTotal; G.S.units.push({ id: 99999, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
+  await p.waitForTimeout(300);
+  const st = await p.evaluate(() => ({ pending: !!__kf.G.S.pendingDraft, btn: !document.querySelector('#draftBtn').hidden, tab: __kf.tab,
+    mark: !document.querySelector('#tab-cards .mark').hidden, modal: !document.querySelector('#modal').hidden }));
+  check(st.pending && st.btn && st.tab === 'army' && st.mark && !st.modal, `Kartenwahl: Hinweis in der Leiste und Markierung am Reiter, kein Reiterwechsel, kein Dialog ${JSON.stringify(st)}`);
+  await p.click('#draftBtn'); await p.waitForTimeout(80);
+  check(await p.evaluate(() => __kf.tab === 'cards' && document.querySelectorAll('#draftOffer .card-pick').length >= 2), 'Kartenwahl: Klick auf den Hinweis öffnet den Reiter Karten mit den Optionen');
+  const t0 = await p.evaluate(() => __kf.G.S.t);
+  await p.waitForTimeout(300);
+  check(await p.evaluate(t => __kf.G.S.t === t, t0), 'Kartenwahl: das Spiel steht bis zur Wahl');
+  await p.click('#draftOffer .card-pick'); await p.waitForTimeout(80);
+  check(await p.evaluate(() => !__kf.G.S.pendingDraft && document.querySelector('#draftBtn').hidden && document.querySelectorAll('#chosen .opt-tag').length === 1), 'Kartenwahl: Karte gewählt, Hinweis verschwindet');
+  check(errors.length === 0, `Kartenwahl: keine Fehler${show(errors)}`);
+  await ctx.close();
+}
+
 // REQ-47: Gestaffelte Einführung (frischer Browser, Einführung an)
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
@@ -266,14 +346,14 @@ for (const dsf of [1, 2]){
   await p.evaluate(() => { __kf.selectPlot(4); __kf.G.S.material = 1e5; });
   await p.waitForTimeout(150);
   const intro = await p.evaluate(() => { return {
-    wave: document.querySelector('#secWave').hidden, cards: document.querySelector('#secCards').hidden,
+    wave: document.querySelector('#hudWaves').hidden, cards: document.querySelector('#tab-cards').hidden,
     picks: [...document.querySelectorAll('#ctxBuild .pick')].map(b => b.dataset.tooltip.split(':')[1]),
     hint: document.querySelector('#hintText').textContent }; });
   check(intro.wave && intro.cards && intro.picks.join() === 'fabrik', `Einführung: zu Beginn weder Wellenleiste noch Karten, nur Fabrik baubar ${JSON.stringify(intro.picks)}`);
   check(intro.hint === await p.evaluate(() => __kf.t('hint.start')), `Einführung: Hinweis zum Start`);
   await p.evaluate(() => { __kf.G.S.level = 2; __kf.selectPlot(4); });
   await p.waitForTimeout(150);
-  const later = await p.evaluate(() => ({ cards: document.querySelector('#secCards').hidden, picks: document.querySelectorAll('#ctxBuild .pick').length }));
+  const later = await p.evaluate(() => ({ cards: document.querySelector('#tab-cards').hidden, picks: document.querySelectorAll('#ctxBuild .pick').length }));
   check(!later.cards && later.picks >= 4, `Einführung: ab Stufe 2 Karten und Verstärkungsgebäude sichtbar`);
   await ctx.close();
 }
