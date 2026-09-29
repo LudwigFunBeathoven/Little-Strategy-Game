@@ -75,7 +75,7 @@ const DESC_PARAMS = {
   reichweite: () => ({ n: C.PLAYER_TURRET.rangePerLevel }),
   kadenz:     () => ({ percent: pct(1 - C.PLAYER_TURRET.cdFactor) }),
 };
-const costText = (cur, n) => t(cur === 'scrap' ? 'cost.scrap' : 'cost.material', { n: fmt(n) });
+const costText = (cur, n) => n === 0 ? t('cost.free') : t(cur === 'scrap' ? 'cost.scrap' : 'cost.material', { n: fmt(n) });
 
 
 /* ================= Tooltips (REQ-05) ================= */
@@ -670,11 +670,12 @@ let lastLogKey = '';
 function render(){
   const S = G.S, running = S.status === 'running';
   $('material').textContent = fmt(S.material);
-  $('rate').textContent = t('hud.perSecond', { n: fmt1(G.matRate()) });
+  $('rate').textContent = t('hud.perSecond', { n: fmt1(G.matRate() + G.autoPressCps() * G.clickPower()) });
   const cp = G.clickPower(), cpText = cp < 10 && cp % 1 ? fmt1(cp) : fmt(cp);
   $('perClick').textContent = t('hud.perClick', { n: cpText });
   $('clickHint').textContent = cpText;
-  $('clickExpl').textContent = t('ex.click', { n: cpText });
+  const auto = G.autoPressCps();
+  $('clickExpl').textContent = auto > 0 ? t('ex.clickAuto', { n: fmt1(auto) }) : t('ex.click', { n: cpText });
   $('newExpl').textContent = t('ex.newGame');
   $('scrap').textContent = fmt(S.scrap);
   $('clock').textContent = clock(S.t);

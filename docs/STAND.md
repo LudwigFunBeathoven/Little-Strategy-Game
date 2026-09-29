@@ -10,7 +10,7 @@ Stand von Iteration 3: `docs/archiv/STAND-iteration-3.md`.
 | I4.1 | „Halten“ entfernen | 41 | P0 | fertig |
 | I4.2 | Formation | 42 | P0 | fertig |
 | I4.3 | Lane-übergreifender Kampf | 43 | P0 | fertig |
-| I4.4 | Automatisierung und große Armeen | 44 | P1 | offen |
+| I4.4 | Automatisierung und große Armeen | 44 | P1 | fertig (Front folgen und Bildzeit mit I4.6) |
 | I4.5 | Kartenausbau | 45 | P1 | offen |
 | I4.6 | Vertikales Layout, Reich in der Spielwelt, Scrollen | 46 | P1 | offen |
 | I4.7 | Gestaffelte Einführung | 47 | P2 | offen |
@@ -35,6 +35,8 @@ node tools/simulate.mjs --suite kurz
   Schwer ist mit Formationen und Lane-Wechsel deutlich schwerer geworden (aktiv 2/10, durchschnitt 0/10), die reine Verteidigung hält auf
   Leicht bis knapp 27 Minuten. Beides ist Kalibrierung in I4.8.
 
+- I4.4: `npm test` 68/68, Browser-Prüfung grün, Kurzsimulation 19 Siege, 1 Niederlage, 0 offen.
+
 ## Abweichungen und Auslegungen
 1. **Suche nach „hold“ wörtlich genommen:** Auch Namen, die das Wort nur zufällig enthalten, sind umbenannt: `xpThreshold` → `xpTotal`,
    `ALARM_THRESHOLDS` → `ALARM_LEVELS`, `GATE_HOLD_DIST` → `GATE_BLOCK_DIST`, „stillgehalten“ → „stillgestanden“.
@@ -53,3 +55,11 @@ node tools/simulate.mjs --suite kurz
 9. **REQ-11.2 „kein Lane-Wechsel“** ist durch REQ-43 ersetzt; der Test prüft jetzt, dass Einheiten ihre Heimat-Lane behalten und
    höchstens eine Lane daneben stehen.
 10. **Gegnerischer Turm** steht an der Mitte: erst Einheiten der Mitte, sonst die nächste Einheit einer anderen Lane.
+11. **„Front folgen“ und die Messung der Bildzeit (REQ-44)** kommen mit dem scrollbaren Weltbild in I4.6; vorher gibt es keine Kamera,
+    und das Zeichnen wird dort ohnehin neu gebaut.
+12. **Maximum aus Automatik und Klicken:** Jeder manuelle Klick bringt den Anteil, um den die Klicks der letzten Sekunde die Rate der
+    Automatik übersteigen. Beispiel Phase Mitte (Automatik 3/s): 2 Klicks/s bringen nichts zusätzlich, 5 Klicks/s ergeben 5/s.
+    Für die Kennzahl „Klickanteil“ (REQ-03) zählt nur dieser Überschuss als Klick.
+13. **Kaserne bis Stufe 6:** „Ausbau“ geht jetzt bis Stufe 6 (3 + 6 × 2 = 15), damit die Obergrenze von 15 ohne Karten erreichbar ist.
+    Das Dokument sagt „weiter um 2 je Stufe“; ich lese „weiter“ als „weiterhin, auch über Stufe 3 hinaus“.
+14. **Belagerungswelle** darf die Grenze von 15 Einheiten überschreiten (dreifache Größe); die Grenze gilt für reguläre Wellen.

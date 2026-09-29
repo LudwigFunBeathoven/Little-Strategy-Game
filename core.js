@@ -134,7 +134,7 @@ function create(){
   const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpTotal(S.level), need: xpStep(S.level + 1) });
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
-  const supplyCap    = () => C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply');
+  const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply'));
   const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
 
   function upCost(id){
@@ -152,7 +152,8 @@ function create(){
   const canBuy = id => S.status === 'running' && isAvailable(id) && !isMaxed(id) && S[C.UPGRADES[id].cur] >= upCost(id);
   const builtCount = () => S.slots.filter(Boolean).length;
   /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
-  const factoryCost = () => Math.ceil(C.FACTORY_BASE_COST * Math.pow(C.FACTORY_COST_GROWTH, factoryCount()) * mMul('factoryCost'));
+  // Die erste Fabrik ist gratis (REQ-44)
+  const factoryCost = () => C.FIRST_FACTORY_FREE && factoryCount() === 0 ? 0 : Math.ceil(C.FACTORY_BASE_COST * Math.pow(C.FACTORY_COST_GROWTH, factoryCount()) * mMul('factoryCost'));
   const buildCost = type => type === 'fabrik' ? factoryCost() : C.BUILDING_COST[type];
   const isBuildable = type => C.START_BUILDINGS.includes(type) || !!S.unlocked[type];
   const refundFor = i => S.slots[i] ? Math.floor(S.slots[i].paid * C.REFUND_RATE) : 0;
@@ -181,9 +182,17 @@ function create(){
     while (ct.length && ct[0] <= S.t - 1) ct.shift();
     if (ct.length >= C.MAX_CLICKS_PER_SECOND) return false;
     ct.push(S.t);
-    addMaterial(clickPower(), 'click');
+    // Ertrag der Presse = Maximum aus automatischem und manuellem Klicken (REQ-44): Jeder Klick bringt den Anteil,
+    // um den die Klicks der letzten Sekunde die Rate der automatischen Presse übersteigen
+    const n = ct.length, excess = Math.max(0, n - autoPressCps()) / n;
+    if (excess > 0) addMaterial(clickPower() * excess, 'click');
     S.clicks++;
     return true;
+  }
+  /* Automatische Presse: ab Phase Mitte AUTO_PRESS_MID, ab Spät AUTO_PRESS_LATE der Referenzrate (Klicks/s) */
+  function autoPressCps(){
+    const ph = phase(), share = ph === 'late' ? C.AUTO_PRESS_LATE : ph === 'mid' ? C.AUTO_PRESS_MID : mAdd('autoPressEarly');
+    return share * C.PRESS_REFERENCE_CPS * mMul('autoPress');
   }
   function buy(id){
     if (!canBuy(id)) return false;
@@ -306,7 +315,7 @@ function create(){
   function rollEnemyWave(){
     const d = diffCfg(), min = S.nextWave / 60;
     S.nextEnemySiege = !S.siegeDone && S.nextWave >= S.siegeWaveT;
-    const size = Math.max(1, Math.round(d.waveBase + d.waveGrowth * min)) * (S.nextEnemySiege ? C.SIEGE_STRENGTH : 1);   // Belagerungswelle: dreifache Größe (REQ-19.2)
+    const size = Math.max(1, Math.min(C.ENEMY_WAVE_MAX, Math.round(d.waveBase + d.waveGrowth * min))) * (S.nextEnemySiege ? C.SIEGE_STRENGTH : 1);   // Belagerungswelle: dreifache Größe (REQ-19.2)
     const out = [];
     for (let i = 0; i < size; i++){
       const type = (min >= d.werferFrom && rnd() < d.werferShare) ? 'werfer' : 'laeufer';
@@ -626,6 +635,7 @@ function create(){
     S.t += dt;
     S.stats.prod[phase()].time += dt;
     addMaterial(matRate() * dt);
+    addMaterial(autoPressCps() * clickPower() * dt);
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
     // Maurerkolonne: stehende Mauern heilen, wenn sie WALL_REGEN_DELAY_S nicht getroffen wurden; das Tor nie (REQ-18.6)
@@ -705,7 +715,7 @@ function create(){
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, refundFor, interestRate,
     chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
-    clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
+    clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     offlineHours, turretDmg, turretRange, turretCd,
   };

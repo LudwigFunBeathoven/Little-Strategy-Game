@@ -48,14 +48,16 @@ test('Verstärkungsgebäude je einmal, Fabriken mehrfach', () => {
   assert.equal(G.factoryCount(), 3);
 });
 
-test('Die dritte Fabrik kostet das 1,6²-Fache der ersten; nach Abriss sinkt der Preis', () => {
+test('Erste Fabrik gratis; die n-te kostet FACTORY_BASE_COST × 1,6^(n−1); nach Abriss sinkt der Preis', () => {
   const { G, C } = game();
   G.S.material = 1e6;
   assert.equal(C.FACTORY_COST_GROWTH, 1.6);
-  const first = G.factoryCost();
-  assert.equal(first, C.FACTORY_BASE_COST);
-  G.build('fabrik'); G.build('fabrik');
-  assert.equal(G.factoryCost(), Math.ceil(C.FACTORY_BASE_COST * 1.6 * 1.6));
+  assert.equal(C.FIRST_FACTORY_FREE, true);
+  assert.equal(G.factoryCost(), 0, 'erste Fabrik gratis (REQ-44)');
+  G.build('fabrik');
+  assert.equal(G.factoryCost(), Math.ceil(C.FACTORY_BASE_COST * 1.6));
+  G.build('fabrik');
+  assert.equal(G.factoryCost(), Math.ceil(C.FACTORY_BASE_COST * 1.6 * 1.6), 'dritte Fabrik: 1,6²-Fache');
   const m = G.S.material; G.build('fabrik');
   assert.equal(m - G.S.material, Math.ceil(C.FACTORY_BASE_COST * 1.6 * 1.6), 'bezahlter Preis');
   G.demolish(0);
@@ -70,20 +72,19 @@ test('Fabriken erzeugen FACTORY_BASE_RATE Material pro Sekunde; keine Fertiger m
   assert.equal(G.matRate(), 2 * C.FACTORY_BASE_RATE);
 });
 
-test('Kaserne Stufe 2 ergibt ein Versorgungslimit von 7', () => {
+test('Kaserne: +2 Versorgung je Stufe, Stufe 2 = 7; harte Obergrenze SUPPLY_CAP_MAX', () => {
   const { G, C } = game();
-  G.S.material = 1e6;
+  G.S.material = 1e9;
   assert.equal(G.supplyCap(), 3);
   G.build('kaserne');
-  assert.equal(G.kaserneLevel(), 1);
   assert.equal(G.supplyCap(), 5);
   assert.ok(G.buy('ausbau'));
   assert.equal(G.kaserneLevel(), 2);
   assert.equal(G.supplyCap(), 7);
-  assert.ok(G.buy('ausbau'));
-  assert.equal(G.supplyCap(), 9);
-  assert.equal(G.buy('ausbau'), false, 'höchstens Stufe 3');
-  assert.equal(C.KASERNE_SUPPLY_PER_LEVEL, 2);
+  while (G.buy('ausbau'));
+  assert.equal(G.supplyCap(), 15, 'Stufe 6');
+  G.S.draft.stacks.aushebung = 2; G.S.draft.ver++;
+  assert.equal(G.supplyCap(), C.SUPPLY_CAP_MAX, 'Karten heben nicht über die Obergrenze');
 });
 
 test('Einheitenstärke steigt mit den Stufen auch ohne Schmiede', () => {

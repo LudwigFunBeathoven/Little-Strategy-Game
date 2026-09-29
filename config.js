@@ -64,6 +64,8 @@ const KF_CONFIG = {
   /* Wellen (REQ-14/15): eigene und gegnerische Wellen rücken im selben Takt aus */
   WAVE_INTERVAL_S: 20,
   SUPPLY_CAP_START: 3,          // Versorgungslimit: Höchstzahl an Einheiten pro Welle
+  SUPPLY_CAP_MAX: 15,           // harte Obergrenze, auch mit Karten (REQ-44)
+  ENEMY_WAVE_MAX: 15,           // reguläre Gegnerwellen wachsen bis zu dieser Größe (REQ-44)
 
   /* Basis: drei Abschnitte am Ende der Lanes (REQ-13). Mauer oben, Tor, Mauer unten.
      Reparatur je Abschnitt, Kosten in Material. */
@@ -99,7 +101,7 @@ const KF_CONFIG = {
     /* Schmiede: Qualitätsstufen mit stark steigenden Kosten, Abfluss für überschüssiges Material (REQ-17.3) */
     qualitaet:  { group: 'schmiede',     baseCost: 80,  cur: 'material' },   // Wachstum: SMITHY_COST_GROWTH
     /* Kaserne: das Gebäude ist Ausbaustufe 1, „Ausbau“ hebt auf Stufe 2 und 3 (REQ-17.1) */
-    ausbau:     { group: 'kaserne',      baseCost: 250, growth: 2.0,  cur: 'material', max: 2 },
+    ausbau:     { group: 'kaserne',      baseCost: 250, growth: 2.0,  cur: 'material', max: 5 },   // Stufe 6: 3 + 6 × 2 = 15
     zinseszins: { group: 'kontor',       baseCost: 300, growth: 2.0,  cur: 'material', max: 4 },
     mauer:      { group: 'mauer',        baseCost: 120, growth: 1.6,  cur: 'material' },
     stacheln:   { group: 'mauer',        baseCost: 150, growth: 1.8,  cur: 'material', max: 5 },
@@ -118,7 +120,7 @@ const KF_CONFIG = {
   FX_PRESSE: 1,
   SMITHY_COST_GROWTH: 2.5,
   FX_QUALITAET: 0.12,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (Faktor 1,12 je Stufe; I7: vorher 0,25)
-  KASERNE_SUPPLY_PER_LEVEL: 2,  // Versorgungslimit je Ausbaustufe der Kaserne: 3 → 5 → 7 → 9
+  KASERNE_SUPPLY_PER_LEVEL: 2,  // Versorgungslimit je Ausbaustufe der Kaserne: 3 → 5 → … → 15
   UNIT_STRENGTH_PER_LEVEL: 0.08,// Grundstärke je Altmetall-Stufe, auch ohne Schmiede (REQ-17.2; Vorgabe 0,05, I7: 0,08, damit Partien ohne Schmiede ≥ 30 % gewinnen)
   FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_MAUER_HP: 150,             // je Abschnitt
@@ -148,6 +150,11 @@ const KF_CONFIG = {
   PHASE_LATE_LEVEL: 5,
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
   MAX_CLICKS_PER_SECOND: 10,    // darüber hinausgehende Klicks verfallen (Schutz gegen Autoklicker)
+  /* Automatische Presse (REQ-44): Anteil der Referenzrate ab Phase Mitte bzw. Spät */
+  PRESS_REFERENCE_CPS: 6,
+  AUTO_PRESS_MID: 0.5,
+  AUTO_PRESS_LATE: 1.0,
+  FIRST_FACTORY_FREE: true,
 
   /* Schwierigkeitsgrade: verändern nur den Gegner. xpMult gleicht aus, dass leichte Stufen weniger Abschüsse liefern,
      damit Stufen und Phasen in allen Schwierigkeitsgraden ähnlich schnell kommen.
