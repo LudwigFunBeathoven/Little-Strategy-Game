@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.4',
-  SAVE_KEY: 'klammerfront.save.v4',
+  VERSION: '0.5',
+  SAVE_KEY: 'klammerfront.save.v5',
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
   HINTS_KEY: 'klammerfront.hints.v1',   // gesehene Erstkontakt-Hinweise (REQ-20.3)
@@ -38,8 +38,11 @@ const KF_CONFIG = {
   PLAYER_BASE_WIDTH: 60,
   ENEMY_BASE_WIDTH: 44,
   SPAWN_BLOCK_DIST: 12,
-  ALLY_GAP: 15,
-  MELEE_STOP_DIST: 12,
+  /* Formationen (REQ-42) */
+  FORMATION_SPEED: 34,          // alle Einheitentypen gleich schnell (Mittel der bisherigen 38 und 30)
+  FORMATION_ROW_MAX: 5,         // höchstens so viele Einheiten je Reihe quer zur Lane
+  ROW_GAP: 16,                  // Abstand zwischen zwei Reihen
+  MELEE_REACH: 14,              // Kontaktabstand der vordersten Nahkampfreihe
   TARGET_BEHIND_TOLERANCE: 6,
   RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
   GATE_BLOCK_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
@@ -68,8 +71,8 @@ const KF_CONFIG = {
 
   /* Einheiten */
   UNITS: {
-    laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, speed: 38, range: 14,  bounty: 8 },
-    werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, speed: 30, range: 105, bounty: 15 },
+    laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, range: 14,  bounty: 8 },
+    werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, range: 105, bounty: 15 },
   },
 
   /* Bauplätze: 3×3-Raster, alle ab Start offen (REQ-16.1).

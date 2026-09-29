@@ -34,21 +34,15 @@ test('Ankündigung genau 60 s vor der Belagerungswelle in Minute 16', () => {
   assert.ok(Math.abs(G.S.t - C.SIEGE_MINUTE * 60) < 0.05 + 1e-9, `Belagerungswelle bei ${G.S.t}`);
 });
 
-test('Belagerungswelle: Einheiten mit dreifacher Stärke, rückt vollständig aus', () => {
+test('Belagerungswelle hat die dreifache Größe einer normalen Welle und rückt vollständig aus', () => {
   const { G, C } = game();
   nearSiege(G, C);
   runUntil(G, () => G.S.nextEnemySiege);
   const d = C.DIFFICULTY.normal, normal = Math.max(1, Math.round(d.waveBase + d.waveGrowth * C.SIEGE_MINUTE));
-  assert.equal(G.S.nextEnemy.length, normal, 'normale Größe');
+  assert.equal(G.S.nextEnemy.length, normal * C.SIEGE_STRENGTH);
   const seen = new Set(G.S.units.map(u => u.id));
   runUntil(G, () => G.S.siegeDone);
-  const siege = G.S.units.filter(u => u.side === 'e' && !seen.has(u.id));
-  assert.equal(siege.length, normal, 'rückt vollständig aus');
-  for (const u of siege){
-    assert.ok(u.siege);
-    assert.ok(Math.abs(u.maxHp - C.UNITS[u.type].hp * G.enemyHpMult() * C.SIEGE_STRENGTH) < 1e-6, 'dreifache Lebenspunkte');
-    assert.ok(Math.abs(u.dmg - C.UNITS[u.type].dmg * G.enemyDmgMult() * C.SIEGE_STRENGTH) < 1e-6, 'dreifacher Schaden');
-  }
+  assert.equal(G.S.units.filter(u => u.side === 'e' && !seen.has(u.id)).length, normal * C.SIEGE_STRENGTH);
 });
 
 test('Nach der Belagerungswelle steigt die Gegnerstärke linear, nicht exponentiell', () => {

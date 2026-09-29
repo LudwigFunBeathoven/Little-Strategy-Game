@@ -71,11 +71,16 @@ Iteration 3: Partien ohne Schmiede gewinnen auf Normal mindestens 30 % (`--suite
 ## Mechaniken gegen Patts (nicht ohne Simulation entfernen)
 - Belagerung: Eigene Einheiten am gegnerischen Tor blockieren reguläre Gegnerwellen in dieser Lane.
 - Notaufgebot: Fällt die gegnerische Basis unter 2/3 bzw. 1/3, schickt der Gegner sofort Reserven.
-- Belagerungswelle in Minute 16 (Einheiten mit dreifacher Stärke), danach +`POST_SIEGE_GROWTH` Gegnerstärke je Minute, linear.
-- Gegner im Feld werden mit jeder Welle auf die aktuelle Stärke angehoben (sonst hält ein Stau alter Einheiten die Feldgrenze).
-- Reparatur je Abschnitt höchstens alle `REPAIR_COOLDOWN_S` Sekunden.
-- Der Rang in der Kolonne zählt nur eigene Einheiten zwischen Einheit und Ziel.
+- Belagerungswelle in Minute 16 (dreifache Größe), danach +`POST_SIEGE_GROWTH` Gegnerstärke je Minute, linear.
+- Reparatur je Abschnitt höchstens alle `REPAIR_COOLDOWN_S` Sekunden (sonst hält reine Verteidigung auf Leicht bis Minute 30).
 - Gegnerische Einheiten auf dem Feld sind begrenzt (`maxField`); die Belagerungswelle rückt immer vollständig aus.
+- Entfernt in I4.2 (Simulation ohne sie: 0–2 % Patts): Belagerung als Stärke je Einheit, Nachskalieren der Gegner im Feld.
+
+## Kampf in Formationen (REQ-42)
+Alle Einheiten einer Welle in derselben Lane bilden eine Formation, die sich als Block mit `FORMATION_SPEED` bewegt.
+Vorn Nahkämpfer in Reihen zu höchstens `FORMATION_ROW_MAX`, dahinter Fernkämpfer; die Reihen werden laufend neu gebildet.
+Die ganze vorderste Reihe greift an, Fernkämpfer mit höchstens `RANGED_RANGE_ROWS` Reihen vor sich. Formationen, die eine
+stehende eigene Formation einholen, verschmelzen. Transiente Daten (vorderste Reihe, Ziel) liegen nicht im Spielstand.
 
 ## Arbeitsweise in Inkrementen
 Ein Inkrement ist fertig, wenn: das Spiel über `index.html` ohne Konsolenfehler startet; `npm test` und `npm run test:browser`

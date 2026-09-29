@@ -338,7 +338,7 @@ function load(){
   if (!raw) return false;
   try {
     const d = JSON.parse(raw);
-    if (!d || d.v !== 3 || !C.DIFFICULTY[d.diff]) return false;
+    if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]) return false;
     G.adopt(d);
     if (d.savedAt) G.applyAway((Date.now() - d.savedAt) / 1000);
     return true;
@@ -789,17 +789,14 @@ function hpBar(x, y, w, frac, col){
   ctx.fillStyle = col; ctx.fillRect(x, y, w * Math.max(0, Math.min(1, frac)), 4);
 }
 /* Bodenhöhe einer Einheit: eigene Einheiten laufen vom Tor in ihre Lane; Gegner einer gefallenen Mauer ziehen zum Tor */
+/* Bodenhöhe einer Einheit: Lane der Formation (auch zwischen zwei Lanes) plus Platz in der Reihe quer zur Lane (REQ-42).
+   Eigene Einheiten laufen vom Tor in ihre Lane; Gegner einer gefallenen Mauer ziehen zum Tor. */
 function unitGround(u){
-  const own = groundY(u.lane), gate = groundY(GATE);
-  if (u.side === 'p'){
-    const p = Math.max(0, Math.min(1, (u.x - PBW) / DRAW.entry));
-    return gate + (own - gate) * p;
-  }
-  if (u.lane !== GATE && !G.sectionUp(u.lane)){
-    const p = Math.max(0, Math.min(1, (u.x - PBW) / DRAW.entry));
-    return gate + (own - gate) * p;
-  }
-  return own;
+  let lane = u.laneF ?? u.lane;
+  const toGate = u.side === 'p' || (u.lane !== GATE && !G.sectionUp(u.lane));
+  if (toGate){ const p = Math.max(0, Math.min(1, (u.x - PBW) / DRAW.entry)); lane = GATE + (lane - GATE) * p; }
+  const spread = laneH() * 0.13, mid = ((u.rowSize || 1) - 1) / 2;
+  return laneTop(lane) + laneH() * 0.62 + ((u.col || 0) - mid) * spread;
 }
 function drawLanes(){
   const sx = cw / W;
@@ -859,7 +856,7 @@ function drawEnemyBase(){
 }
 function drawUnit(u, now){
   const sx = cw / W, gy = unitGround(u);
-  const us = Math.max(0.7, Math.min(1.25, sx * 1.2)) * (u.siege ? 1.35 : 1);   // Belagerungseinheiten größer
+  const us = Math.max(0.55, Math.min(0.9, sx * 0.9));
   const px = u.x * sx;
   const bob = (!reduceMotion && u.moving) ? Math.abs(Math.sin(now / 90 + u.bob)) * 1.5 : 0;
   ctx.fillStyle = u.flash > 0 ? COL.ink : (u.side === 'p' ? COL.steel : COL.rust);

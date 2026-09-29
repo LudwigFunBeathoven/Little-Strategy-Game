@@ -11,6 +11,7 @@ const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
 /* Stufenschwellen: kumuliertes Altmetall für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpTotal(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
+const SAVE_VERSION = 5;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
@@ -39,12 +40,12 @@ function freshState(diff, seed){
   for (const id in C.UPGRADES) lvl[id] = 0;
   const d = C.DIFFICULTY[diff || C.DEFAULT_DIFFICULTY];
   return {
-    v: 4, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
+    v: SAVE_VERSION, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
     lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9, repairCd: 0 })), enemyBaseHp: d.enemyBaseHp,
-    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextEnemy: [], nextEnemySiege: false,
+    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextEnemy: [], nextEnemySiege: false, forms: [],
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
@@ -227,14 +228,63 @@ function create(){
     s.hp = Math.min(sectionMax(i), s.hp + C.REPAIR_AMOUNT);
     return true;
   }
-  function makeUnit(side, type, lane, x){
+  /* ---------- Formationen (REQ-42) ----------
+     Alle Einheiten einer Welle in derselben Lane bilden eine Formation. Sie bewegt sich als Block mit FORMATION_SPEED.
+     Aufbau: vorn Nahkämpfer in Reihen zu höchstens FORMATION_ROW_MAX quer zur Lane, dahinter die Fernkämpfer.
+     Fällt eine Einheit, rücken die hinteren nach; die Reihen werden laufend neu gebildet. */
+  const dirOf = side => side === 'p' ? 1 : -1;
+  const baseX = side => side === 'p' ? W - EBW : PBW;
+  function makeUnit(side, type, lane, x, form){
     const spec = C.UNITS[type], p = side === 'p';
     const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
     return {
-      id: S.nextId++, side, type, lane, x: x ?? (p ? spawnX() : W - EBW), range: unitRange(side, type), ranged: isRangedType(type),
+      id: S.nextId++, side, type, lane, laneF: lane, x: x ?? (p ? spawnX() : W - EBW), form: form ?? null,
+      range: unitRange(side, type), ranged: isRangedType(type),
       hp, maxHp: hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()),
-      cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, moving: false, bob: rnd() * 6, rank: 0,
+      cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, bob: rnd() * 6, row: 0, col: 0, rowSize: 1,
     };
+  }
+  /* Neue Formation aus einer Liste von Einheitentypen; x = Position der vordersten Reihe */
+  function addFormation(side, lane, types, x){
+    const f = { id: S.nextId++, side, home: lane, lane, laneF: lane, x, moving: false, fighting: false, rows: 0, size: 0 };
+    S.forms.push(f);
+    for (const type of types) S.units.push(makeUnit(side, type, lane, x, f.id));
+    layoutAll();
+    return f;
+  }
+  /* Reihen je Formation bilden und die Position jeder Einheit daraus ableiten */
+  let fronts = new Map();                           // vorderste Reihe je Formation; nicht im Spielstand (Kopien per JSON)
+  const frontOf = f => fronts.get(f.id) || [];
+  function layoutAll(){
+    const byForm = new Map();
+    fronts = new Map();
+    for (const f of S.forms) byForm.set(f.id, []);
+    for (const u of S.units) if (u.hp > 0 && byForm.has(u.form)) byForm.get(u.form).push(u);
+    for (const f of S.forms){
+      const m = byForm.get(f.id), dir = dirOf(f.side), R = C.FORMATION_ROW_MAX;
+      const melee = m.filter(u => !u.ranged).sort((a, b) => a.id - b.id), ranged = m.filter(u => u.ranged).sort((a, b) => a.id - b.id);
+      const rows = [];
+      for (const g of [melee, ranged]) for (let i = 0; i < g.length; i += R) rows.push(g.slice(i, i + R));
+      rows.forEach((r, ri) => r.forEach((u, ci) => {
+        u.row = ri; u.col = ci; u.rowSize = r.length; u.x = f.x - dir * ri * C.ROW_GAP; u.lane = f.lane; u.laneF = f.laneF; u.moving = f.moving;
+      }));
+      f.rows = rows.length; f.size = m.length; fronts.set(f.id, rows[0] || []);
+    }
+    S.forms = S.forms.filter(f => f.size > 0);
+  }
+  const formMembers = f => S.units.filter(u => u.form === f.id && u.hp > 0);
+  /* Reichweite der vordersten Reihe: Nahkampf-Kontakt oder, bei reiner Fernkampf-Front, deren Reichweite */
+  const frontReach = f => { const fr = frontOf(f); return fr.length && fr[0].ranged ? Math.min(...fr.map(u => u.range)) : C.MELEE_REACH; };
+  /* Nächste gegnerische Formation vor f in derselben Lane; d = Abstand der vordersten Reihen */
+  function enemyAhead(f){
+    const dir = dirOf(f.side);
+    let best = null, bd = Infinity;
+    for (const o of S.forms){
+      if (o.side === f.side || o.lane !== f.lane || o.size === 0) continue;
+      const d = (o.x - f.x) * dir;
+      if (d > -C.TARGET_BEHIND_TOLERANCE && d < bd){ bd = d; best = o; }
+    }
+    return best ? { f: best, d: bd } : null;
   }
   const spawnBlocked = lane => S.units.some(u => u.side === 'e' && u.lane === lane && Math.abs(u.x - (W - EBW)) < C.SPAWN_BLOCK_DIST);
   const gateBlocked = lane => S.units.some(u => u.side === 'p' && u.lane === lane && u.hp > 0 && u.x >= W - EBW - C.GATE_BLOCK_DIST);
@@ -254,7 +304,7 @@ function create(){
   function rollEnemyWave(){
     const d = diffCfg(), min = S.nextWave / 60;
     S.nextEnemySiege = !S.siegeDone && S.nextWave >= S.siegeWaveT;
-    const size = Math.max(1, Math.round(d.waveBase + d.waveGrowth * min));
+    const size = Math.max(1, Math.round(d.waveBase + d.waveGrowth * min)) * (S.nextEnemySiege ? C.SIEGE_STRENGTH : 1);   // Belagerungswelle: dreifache Größe (REQ-19.2)
     const out = [];
     for (let i = 0; i < size; i++){
       const type = (min >= d.werferFrom && rnd() < d.werferShare) ? 'werfer' : 'laeufer';
@@ -271,15 +321,10 @@ function create(){
     const lm = distribute(melee.length, strong), lr = distribute(ranged.length, strong);
     return [...melee.map((type, i) => ({ type, lane: lm[i] })), ...ranged.map((type, i) => ({ type, lane: lr[i] }))];
   }
-  /* Aufstellung in Formation: je Lane Nahkämpfer vorn, Fernkämpfer dahinter (REQ-12.3) */
-  function formation(group){
-    const byLane = {};
-    for (const g of group) (byLane[g.lane] ||= []).push(g);
-    const out = [];
-    for (const lane in byLane){
-      const g = byLane[lane].sort((a, b) => isRangedType(a.type) - isRangedType(b.type));
-      g.forEach((q, k) => out.push(Object.assign({}, q, { lane: Number(lane), k })));
-    }
+  /* Gruppiert eine Welle nach Lane: { lane: [typen] } */
+  function byLane(group){
+    const out = {};
+    for (const g of group) (out[g.lane] ||= []).push(g.type);
     return out;
   }
   function launchWave(){
@@ -288,25 +333,23 @@ function create(){
       // Kennzahl: Anteil der Wellen am Versorgungslimit (REQ-21.2)
       S.stats.waves = (S.stats.waves || 0) + 1;
       if (S.queue.length >= supplyCap()) S.stats.wavesFull = (S.stats.wavesFull || 0) + 1;
-      for (const q of formation(assignLanes(S.queue.map(q => q.type), strongerLane(enemy))))
-        S.units.push(makeUnit('p', q.type, q.lane, deployX(q.lane) - q.k * C.ALLY_GAP));
+      for (const [lane, types] of Object.entries(byLane(assignLanes(S.queue.map(q => q.type), strongerLane(enemy)))))
+        addFormation('p', Number(lane), types, deployX(Number(lane)));
       S.queue = [];
     }
     // Gegnerwelle: rückt geschlossen aus; was wegen Feldgrenze oder Belagerung nicht passt, folgt später.
     // Die Belagerungswelle rückt immer vollständig aus.
     const siege = S.nextEnemySiege;
     if (siege){ S.siegeDone = true; S.siegeWaveT = S.t; log('log.siege'); }
-    rescaleEnemies();
     let field = S.units.filter(u => u.side === 'e').length;
-    for (const q of formation(enemy)){
-      if (siege || (field < diffCfg().maxField && !gateBlocked(q.lane))){
-        const u = makeUnit('e', q.type, q.lane, W - EBW + q.k * C.ALLY_GAP);
-        // Belagerungswelle: jede Einheit mit SIEGE_STRENGTH-facher Stärke. In der Kolonne kämpfen nur die vordersten
-        // Einheiten, deshalb wirkt Stärke je Einheit, eine größere Anzahl dagegen kaum (REQ-19.2, Auslegung).
-        if (siege){ u.siege = true; u.hp *= C.SIEGE_STRENGTH; u.maxHp *= C.SIEGE_STRENGTH; u.dmg *= C.SIEGE_STRENGTH; }
-        S.units.push(u); field++;
+    for (const [ls, types] of Object.entries(byLane(enemy))){
+      const lane = Number(ls), now = [];
+      for (const type of types){
+        if (siege || (field < diffCfg().maxField && !gateBlocked(lane))){ now.push(type); field++; }
+        else S.enemyQueue.push({ type, lane, at: S.t });
       }
-      else S.enemyQueue.push({ type: q.type, lane: q.lane, at: S.t });
+      if (!now.length) continue;
+      addFormation('e', lane, now, W - EBW);
     }
     if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('log.firstWave'); }
     S.waveNo++;
@@ -314,21 +357,10 @@ function create(){
     S.nextEnemy = rollEnemyWave();
   }
   const waveIn = () => Math.max(0, S.nextWave - S.t);
-  /* Mit jeder Welle erreicht das Stärkewachstum auch die Gegner im Feld. Sonst hält ein Stau alter, schwacher Einheiten
-     die Feldgrenze besetzt, und das Wachstum kommt nie an der Front an (Patt in der Simulation). */
-  function rescaleEnemies(){
-    const hpM = enemyHpMult(), dmgM = enemyDmgMult();
-    for (const u of S.units){
-      if (u.side !== 'e' || u.hp <= 0) continue;
-      const k = u.siege ? C.SIEGE_STRENGTH : 1, max = C.UNITS[u.type].hp * hpM * k;
-      if (max > u.maxHp){ u.hp *= max / u.maxHp; u.maxHp = max; }
-      u.dmg = Math.max(u.dmg, C.UNITS[u.type].dmg * dmgM * k);
-    }
-  }
   /* Aufstellpunkt einer Lane: am Tor, mit Vorposten weiter vorn, aber nie hinter der vordersten gegnerischen Einheit */
   function deployX(lane){
     let x = spawnX();
-    for (const u of S.units) if (u.side === 'e' && u.lane === lane && u.hp > 0) x = Math.min(x, u.x - C.ALLY_GAP);
+    for (const u of S.units) if (u.side === 'e' && u.lane === lane && u.hp > 0) x = Math.min(x, u.x - C.ROW_GAP);
     return Math.max(PBW, x);
   }
   function nearestInLane(side, lane, x, range){
@@ -372,21 +404,6 @@ function create(){
     }
   }
 
-  /* Rang in der Lane-Kolonne: Zahl der eigenen Einheiten, die zwischen der Einheit und ihrem Ziel stehen (0 = vorn).
-     Einheiten, die schon an der gegnerischen Kolonne vorbei sind, zählen nicht mit. */
-  function computeRanks(){
-    for (const u of S.units){
-      if (u.hp <= 0) continue;
-      const dir = u.side === 'p' ? 1 : -1;
-      let reach = ((u.side === 'p' ? W - EBW : PBW) - u.x) * dir, rank = 0;
-      for (const o of S.units) if (o.hp > 0 && o.lane === u.lane && o.side !== u.side){ const dd = (o.x - u.x) * dir; if (dd > -C.TARGET_BEHIND_TOLERANCE && dd < reach) reach = dd; }
-      for (const o of S.units) if (o !== u && o.hp > 0 && o.lane === u.lane && o.side === u.side){ const dd = (o.x - u.x) * dir; if (dd > 0 && dd <= reach) rank++; }
-      u.rank = rank;
-    }
-  }
-  /* In der Kolonne kämpft vorn nur die vorderste Einheit; Fernkämpfer auch mit bis zu RANGED_RANGE_ROWS Einheiten vor sich (REQ-12.4) */
-  const canAttack = u => u.ranged ? u.rank <= rangedRows(u.side) : u.rank === 0;
-
   /* Schaden an einem Abschnitt der eigenen Basis. Ist eine Mauer gefallen, trifft es das Tor (REQ-13.3). */
   function hitSection(lane, dmg){
     const i = sectionUp(lane) ? lane : GATE;
@@ -396,59 +413,92 @@ function create(){
     if (s.hp <= 0 && i !== GATE){ s.hp = 0; log('log.wallDown', { lane: '@lane.' + i }); }
     return i;
   }
+  function hitUnit(u, target){
+    target.hp -= u.dmg * (u.side === 'p' ? mMul('dmgVsUnits') : 1); target.flash = 0.12;
+    if (u.ranged) shot({ x0: u.x, x1: target.x, lane: u.laneF, t: 0, dur: 0.3 });
+  }
+  function hitBase(u){
+    if (u.side === 'p'){ S.enemyBaseHp -= u.dmg * mMul('dmgVsBase'); FX.baseFlash.e = 0.12; }
+    else {
+      hitSection(u.lane, u.dmg);
+      if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
+    }
+    if (u.ranged) shot({ x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, lane: u.laneF, t: 0, dur: 0.3 });
+  }
 
-  function updateUnits(dt){
-    const us = S.units;
-    computeRanks();
-    for (const u of us){
-      if (u.hp <= 0) continue;
-      const spec = C.UNITS[u.type], dir = u.side === 'p' ? 1 : -1;
-      u.cd -= dt;
-      u.flash = Math.max(0, u.flash - dt);
-      u.moving = false;
-      let target = null, dist = Infinity, allyGap = Infinity;
-      for (const o of us){
-        if (o === u || o.hp <= 0 || o.lane !== u.lane) continue;
-        const dd = (o.x - u.x) * dir;
-        if (o.side !== u.side){ if (dd > -C.TARGET_BEHIND_TOLERANCE && dd < dist){ dist = dd; target = o; } }
-        // Nahkämpfer gehen durch eigene Fernkämpfer hindurch nach vorn (Formation, REQ-12.3)
-        else if (dd > 0 && dd < allyGap && !(!u.ranged && o.ranged)) allyGap = dd;
+  /* Bewegung und Kampf aller Formationen. Die Formation hält, sobald die vorderste Reihe Kontakt hat.
+     Die ganze vorderste Reihe greift an; Fernkämpfer, solange höchstens rangedRows Reihen vor ihnen stehen (REQ-42). */
+  function updateForms(dt){
+    const aheads = new Map();
+    layoutAll();
+    for (const f of S.forms){
+      const dir = dirOf(f.side), reach = frontReach(f), ahead = enemyAhead(f);
+      const baseD = (baseX(f.side) - f.x) * dir;
+      const contact = !!ahead && ahead.d <= reach;
+      const baseContact = !contact && baseD <= reach;
+      f.fighting = contact || baseContact;
+      f.moving = false;
+      if (!f.fighting){
+        let step = C.FORMATION_SPEED * dt;
+        if (ahead) step = Math.min(step, Math.max(0, ahead.d - reach));
+        step = Math.min(step, Math.max(0, baseD - reach));
+        f.x += dir * step;
+        f.moving = step > 0;
       }
-      const baseDist = ((u.side === 'p' ? W - EBW : PBW) - u.x) * dir;
-      const range = u.range ?? spec.range;
-      if (target && dist <= range){
-        if (canAttack(u) && u.cd <= 0){
+      aheads.set(f.id, ahead);
+    }
+    layoutAll();
+    for (const f of S.forms){
+      const dir = dirOf(f.side), ahead = aheads.get(f.id), rows = rangedRows(f.side);
+      const tgtFront = ahead ? frontOf(ahead.f).filter(u => u.hp > 0) : [];
+      for (const u of S.units){
+        if (u.form !== f.id || u.hp <= 0) continue;
+        u.cd -= dt;
+        u.flash = Math.max(0, u.flash - dt);
+        if (u.cd > 0) continue;
+        const inFront = u.row === 0, rangedOk = u.ranged && u.row <= rows;
+        if (!inFront && !rangedOk) continue;
+        const dist = ahead ? ahead.d + u.row * C.ROW_GAP : Infinity;
+        const reach = u.ranged ? u.range : C.MELEE_REACH;
+        if (tgtFront.length && dist <= reach){
+          const live = tgtFront.filter(t => t.hp > 0);
+          if (!live.length) continue;
           u.cd = u.cdMax;
-          target.hp -= u.dmg * (u.side === 'p' ? mMul('dmgVsUnits') : 1); target.flash = 0.12;
-          if (u.ranged) shot({ x0: u.x, x1: target.x, lane: u.lane, t: 0, dur: 0.3 });
-        }
-      } else if (baseDist <= range){
-        if (canAttack(u) && u.cd <= 0){
+          hitUnit(u, live[u.col % live.length]);
+        } else if ((baseX(f.side) - u.x) * dir <= reach && !(tgtFront.length && dist <= reach + C.ROW_GAP)){
           u.cd = u.cdMax;
-          if (u.side === 'p'){ S.enemyBaseHp -= u.dmg * mMul('dmgVsBase'); FX.baseFlash.e = 0.12; }
-          else {
-            hitSection(u.lane, u.dmg);
-            if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
-          }
-          if (u.ranged) shot({ x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, lane: u.lane, t: 0, dur: 0.3 });
+          hitBase(u);
         }
-      } else if (allyGap > C.ALLY_GAP){
-        let step = spec.speed * dt;
-        if (target) step = Math.min(step, Math.max(0, dist - C.MELEE_STOP_DIST));
-        u.x += dir * step;
-        u.moving = step > 0;
       }
     }
-    for (const u of us){
+    mergeForms();
+    for (const u of S.units){
       if (u.hp > 0 || u.dead) continue;
       u.dead = true;
       if (u.side === 'e'){
         gainScrap(C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult);
         S.kills++;
       } else S.losses++;
-      if (FX.on) FX.fx.push({ x: u.x, lane: u.lane, t: 0, side: u.side });
+      if (FX.on) FX.fx.push({ x: u.x, lane: u.laneF, t: 0, side: u.side });
     }
-    S.units = us.filter(u => !u.dead);
+    S.units = S.units.filter(u => !u.dead);
+    layoutAll();
+  }
+  /* Holt eine Formation eine kämpfende oder stehende eigene Formation derselben Lane ein, verschmelzen beide (REQ-42) */
+  function mergeForms(){
+    for (const a of S.forms){
+      if (a.size === 0 || a.moving) continue;
+      const dir = dirOf(a.side), tail = a.x - dir * (a.rows - 1) * C.ROW_GAP;
+      for (const b of S.forms){
+        if (b === a || b.size === 0 || b.side !== a.side || b.lane !== a.lane || b.laneF !== a.laneF) continue;
+        const gap = (tail - b.x) * dir;
+        if (gap >= 0 && gap <= C.ROW_GAP * 1.5){
+          for (const u of S.units) if (u.form === b.id) u.form = a.id;
+          b.size = 0;
+        }
+      }
+    }
+    S.forms = S.forms.filter(f => f.size > 0);
   }
 
   function checkReveals(){
@@ -537,7 +587,7 @@ function create(){
       if (q.at > S.t) continue;
       if (spawnBlocked(q.lane)) continue;
       if (!q.alarm && (gateBlocked(q.lane) || field >= diffCfg().maxField)) continue;
-      S.units.push(makeUnit('e', q.type, q.lane));
+      addFormation('e', q.lane, [q.type], W - EBW);
       S.enemyQueue.splice(i, 1); i--; field++;
     }
   }
@@ -579,7 +629,7 @@ function create(){
     }
     spawnEnemies();
     updateTurrets(dt);
-    updateUnits(dt);
+    updateForms(dt);
     applyConditionals(dt);
     checkReveals();
     if (S.enemyBaseHp <= 0){ S.enemyBaseHp = 0; S.status = 'won';  log('log.won'); }
@@ -595,7 +645,7 @@ function create(){
   }
   function adopt(saved){
     const base = freshState(saved.diff, saved.rng);
-    S = Object.assign(base, saved, { units: [], enemyQueue: [] });
+    S = Object.assign(base, saved, { units: [], forms: [], enemyQueue: [] });
     modCache = { ver: -1, key: null, mul: {}, add: {} };
     S.lvl = Object.assign(freshState(saved.diff, 1).lvl, saved.lvl || {});
     if (!Array.isArray(S.slots) || S.slots.length !== SLOTS) S.slots = new Array(SLOTS).fill(null);
@@ -621,16 +671,16 @@ function create(){
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
-    supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
+    addFormation, layoutAll, formMembers, enemyAhead, supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, refundFor, interestRate,
     chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, rangedRows, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
-    sectionMax, sectionUp, gateHp, towerBuilt, towerActive, computeRanks, canAttack,
+    sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     offlineHours, turretDmg, turretRange, turretCd,
   };
 }
 
-return { create, freshState, nextRandom, xpTotal, xpStep, distribute, SLOTS };
+return { create, freshState, nextRandom, xpTotal, xpStep, distribute, SLOTS, SAVE_VERSION };
 })();

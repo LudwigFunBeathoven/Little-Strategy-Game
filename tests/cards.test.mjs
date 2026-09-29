@@ -99,13 +99,15 @@ test('Ohne Fabrik wird das Handelskontor nie angeboten', () => {
   assert.ok(G.optionAvailable(G.OPT.handelskontor));
 });
 
-test('Weitschuss: Fernkämpfer greift mit zwei Einheiten vor sich an', () => {
+test('Weitschuss: Fernkämpfer greift mit zwei Reihen vor sich an', () => {
   const { G } = game();
-  G.S.nextWave = Infinity; G.S.enemyTurretCd = Infinity;
+  G.S.nextWave = Infinity; G.S.enemyTurretCd = Infinity; G.S.units = []; G.S.forms = [];
   force(G, 'weitschuss');
-  const e = G.makeUnit('e', 'laeufer', MID, 500); e.hp = e.maxHp = 1000; e.dmg = 0; G.S.units.push(e);
-  for (const x of [440, 425]){ const m = G.makeUnit('p', 'laeufer', MID, x); m.dmg = 0; G.S.units.push(m); }
-  G.S.units.push(G.makeUnit('p', 'werfer', MID, 410));
+  const e = G.addFormation('e', MID, ['laeufer'], 500);
+  for (const u of G.formMembers(e)){ u.hp = u.maxHp = 1e6; u.dmg = 0; }
+  const f = G.addFormation('p', MID, [...Array(6).fill('laeufer'), 'werfer'], 490);
+  for (const u of G.formMembers(f)) if (!u.ranged) u.dmg = 0;
+  const hp0 = G.formMembers(e)[0].hp;
   G.tick(0.05);
-  assert.ok(e.hp < 1000);
+  assert.ok(G.formMembers(e)[0].hp < hp0);
 });

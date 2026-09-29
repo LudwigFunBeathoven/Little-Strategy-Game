@@ -1,4 +1,4 @@
-// Tests Inkrement 1: drei Lanes, Formation, Basis mit Abschnitten (REQ-11 bis REQ-13).
+// Tests: drei Lanes, Aufbau der Formation, Basis mit Abschnitten (REQ-11 bis REQ-13, REQ-42).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCore } from '../tools/load-core.mjs';
@@ -10,7 +10,7 @@ function game(diff = 'normal', seed = 7){
   return { G, C: KF_CONFIG, K: KlammerCore };
 }
 /* Nur die vorgegebenen Einheiten auf dem Feld: keine Gegnerwellen, kein gegnerischer Turm in Reichweite */
-function quiet(G){ G.S.nextWave = Infinity; G.S.enemyQueue = []; G.S.units = []; G.S.enemyTurretCd = Infinity; }
+function quiet(G){ G.S.nextWave = Infinity; G.S.enemyQueue = []; G.S.units = []; G.S.forms = []; G.S.enemyTurretCd = Infinity; }
 function place(G, side, type, lane, x){ const u = G.makeUnit(side, type, lane, x); G.S.units.push(u); return u; }
 
 test('Einheiten wechseln nie die Lane', () => {
@@ -42,34 +42,31 @@ test('Verteilung für n = 1 bis 6 nach REQ-12.1', () => {
   assert.deepEqual(Array.from(K.distribute(6, BOT)), [MID, TOP, BOT, MID, TOP, BOT]);
 });
 
-test('Fernkämpfer mit einer Einheit vor sich greift an, mit zwei nicht', () => {
-  for (const [ahead, expectHit] of [[1, true], [2, false]]){
+test('Fernkämpfer mit einer Reihe vor sich greift an, mit zwei nicht', () => {
+  for (const [melee, expectHit] of [[5, true], [6, false]]){
     const { G } = game();
     quiet(G);
-    const enemy = place(G, 'e', 'laeufer', MID, 500);
-    enemy.hp = enemy.maxHp = 1000; enemy.dmg = 0;
-    for (let k = 0; k < ahead; k++){ const m = place(G, 'p', 'laeufer', MID, 440 - k * 15); m.dmg = 0; }
-    const r = place(G, 'p', 'werfer', MID, 440 - ahead * 15);
-    assert.ok(500 - r.x <= r.range, 'Ziel in Reichweite');
+    const e = G.addFormation('e', MID, ['laeufer'], 500);
+    for (const u of G.formMembers(e)){ u.hp = u.maxHp = 1e6; u.dmg = 0; }
+    const f = G.addFormation('p', MID, [...Array(melee).fill('laeufer'), 'werfer'], 490);
+    const r = G.formMembers(f).find(u => u.ranged);
+    for (const u of G.formMembers(f)) if (!u.ranged) u.dmg = 0;
+    assert.equal(r.row, melee > 5 ? 2 : 1);
+    const hp0 = G.formMembers(e)[0].hp;
     G.tick(0.05);
-    assert.equal(r.rank, ahead);
-    assert.equal(enemy.hp < 1000, expectHit, `${ahead} Einheit(en) vor dem Fernkämpfer`);
+    assert.equal(G.formMembers(e)[0].hp < hp0, expectHit, `${melee} Nahkämpfer vor dem Fernkämpfer`);
   }
 });
 
-test('Formation: Nahkämpfer vorn, Fernkämpfer ohne Nahkämpfer in der Lane steht vorn', () => {
+test('Formation: Nahkämpfer vorn, Fernkämpfer ohne Nahkämpfer stehen vorn', () => {
   const { G } = game();
   quiet(G);
-  const r = place(G, 'p', 'werfer', TOP, 200);
-  const m = place(G, 'p', 'laeufer', TOP, 170);        // Nahkämpfer hinter dem Fernkämpfer gekauft
-  const solo = place(G, 'p', 'werfer', BOT, 150);
-  G.tick(0.05);
-  assert.equal(solo.rank, 0, 'Fernkämpfer allein in der Lane steht vorn');
-  assert.ok(G.canAttack(solo));
-  for (let i = 0; i < 20 * 20; i++) G.tick(0.05);
-  assert.ok(m.x > r.x, 'Nahkämpfer hat den Fernkämpfer überholt');
-  assert.equal(m.rank, 0);
-  assert.equal(r.rank, 1);
+  const f = G.addFormation('p', TOP, ['werfer', 'werfer', 'laeufer'], 200);
+  const m = G.formMembers(f);
+  assert.equal(m.find(u => !u.ranged).row, 0, 'Nahkämpfer vorn, auch wenn später gekauft');
+  assert.ok(m.filter(u => u.ranged).every(u => u.row === 1));
+  const solo = G.addFormation('p', BOT, ['werfer'], 150);
+  assert.equal(G.formMembers(solo)[0].row, 0, 'Fernkämpfer allein stehen vorn');
 });
 
 test('Mauer oben fällt: Turm oben inaktiv, Gegner der oberen Lane greifen das Tor an', () => {
@@ -79,8 +76,8 @@ test('Mauer oben fällt: Turm oben inaktiv, Gegner der oberen Lane greifen das T
   assert.ok(G.buy('turm_0'));
   assert.ok(G.towerActive(TOP));
   G.S.sections[TOP].hp = 1;
-  const e = place(G, 'e', 'laeufer', TOP, C.PLAYER_BASE_WIDTH + 5);
-  e.hp = e.maxHp = 1e6; e.dmg = 50;
+  const e = G.addFormation('e', TOP, ['laeufer'], C.PLAYER_BASE_WIDTH + 5);
+  for (const u of G.formMembers(e)){ u.hp = u.maxHp = 1e6; u.dmg = 50; }
   const gateBefore = G.S.sections[MID].hp;
   for (let i = 0; i < 20 * 3; i++) G.tick(0.05);
   assert.equal(G.S.sections[TOP].hp, 0, 'Mauer oben gefallen');
@@ -91,11 +88,11 @@ test('Mauer oben fällt: Turm oben inaktiv, Gegner der oberen Lane greifen das T
 });
 
 test('Tor auf 0 ergibt eine Niederlage', () => {
-  const { G } = game();
+  const { G, C } = game();
   quiet(G);
   G.S.sections[MID].hp = 1;
-  const e = place(G, 'e', 'laeufer', MID, 60 + 5);
-  e.hp = e.maxHp = 1e6; e.dmg = 50;
+  const e = G.addFormation('e', MID, ['laeufer'], C.PLAYER_BASE_WIDTH + 5);
+  for (const u of G.formMembers(e)){ u.hp = u.maxHp = 1e6; u.dmg = 50; }
   for (let i = 0; i < 20 * 3 && G.S.status === 'running'; i++) G.tick(0.05);
   assert.equal(G.S.status, 'lost');
 });
