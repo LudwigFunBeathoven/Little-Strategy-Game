@@ -7,7 +7,7 @@ Stand von Iteration 3: `docs/archiv/STAND-iteration-3.md`.
 
 | Inkrement | Inhalt | REQ | Prio | Status |
 |---|---|---|---|---|
-| I4.1 | „Halten“ entfernen | 41 | P0 | offen |
+| I4.1 | „Halten“ entfernen | 41 | P0 | fertig |
 | I4.2 | Formation | 42 | P0 | offen |
 | I4.3 | Lane-übergreifender Kampf | 43 | P0 | offen |
 | I4.4 | Automatisierung und große Armeen | 44 | P1 | offen |
@@ -26,5 +26,9 @@ node tools/simulate.mjs --suite kurz
 ```
 
 ## Prüfergebnisse
+- I4.1: `npm test` 52/52, Browser-Prüfung grün, Kurzsimulation 20 Siege, 0 offen. Suche nach `hold`/„Halten“ in `*.js`, `*.mjs`, `*.html`: keine Treffer.
 
 ## Abweichungen und Auslegungen
+1. **Suche nach „hold“ wörtlich genommen:** Auch Namen, die das Wort nur zufällig enthalten, sind umbenannt: `xpThreshold` → `xpTotal`,
+   `ALARM_THRESHOLDS` → `ALARM_LEVELS`, `GATE_HOLD_DIST` → `GATE_BLOCK_DIST`, „stillgehalten“ → „stillgestanden“.
+   Die Simulationsreihe `halten` entfällt. Rohdaten aus Iteration 3 unter `reports/` bleiben unverändert.

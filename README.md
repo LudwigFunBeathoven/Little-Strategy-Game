@@ -8,11 +8,10 @@ Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fer
 - **Drei Lanes:** oben, Mitte, unten. Einheiten bleiben in ihrer Lane. Nahkämpfer stehen vorn, Fernkämpfer greifen mit höchstens einer Einheit vor sich an.
 - **Deine Basis** hat drei Abschnitte: Mauer oben, Tor, Mauer unten. Auf den Mauern stehen die Türme. Fällt eine Mauer, schweigt ihr Turm und die Gegner ziehen zum Tor. **Fällt das Tor, ist die Partie verloren.**
 - **Wellen:** Gekaufte Einheiten warten in der Warteschlange und rücken alle 20 s gemeinsam aus, höchstens so viele wie das Versorgungslimit (Start 3). Die Welle verteilt sich selbst auf die Lanes. Rechts am Schlachtfeld siehst du die nächste Gegnerwelle je Lane.
-- **Halten:** Der Befehl behält die nächste Welle in der Basis; solange er gilt, kosten Turm, Mauer und Reparatur 30 % weniger.
 - **Wirtschaft:** Klicken („Fertigen“) trägt den Anfang, danach Fabriken. Neun Bauplätze; Fabriken mehrfach baubar, Schmiede, Kaserne, Universität und Handelskontor je einmal. Die Kaserne hebt das Versorgungslimit, die Schmiede verstärkt in Qualitätsstufen.
 - **Spezialkarten:** Jede Altmetall-Stufe bietet 2 Karten zur Wahl (mit Universität 3). Karten haben bis zu drei Stufen I–III.
 - **Belagerungswelle:** In Minute 16 greift eine angekündigte Welle mit dreifacher Stärke an; danach wird der Gegner jede Minute stärker.
-- Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Beim ersten Kontakt mit Wellen, Karten, Halten, Abriss und Belagerung erscheint ein kurzer Hinweis.
+- Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Beim ersten Kontakt mit Wellen, Karten, Abriss und Belagerung erscheint ein kurzer Hinweis.
 
 ## Entwicklung
 ```

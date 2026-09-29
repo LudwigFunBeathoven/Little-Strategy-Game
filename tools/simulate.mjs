@@ -2,7 +2,6 @@
 // Aufruf:  node tools/simulate.mjs [--runs 20] [--suite alle|ziele|strategie|phasen] [--diff leicht,normal] [--json ergebnis.json]
 //   ziele      Siegquote und Dauer je Schwierigkeitsgrad und Spielertyp (gierige Heuristik), inkl. Bot „verteidigung“;
 //              Patt-Quote, Anteil der Wellen am Versorgungslimit, Siegquote mit und ohne jede Spezialkarte (REQ-21.2)
-//   halten     Wellenbefehl als Strategie: nie halten gegen halten unter 50 % (Normal, durchschnitt)
 //   strategie  Zufall gegen gierige Heuristik: Gebäudewahl, Gebäudekombinationen, Draft-Wahlraten, Draft-Abstände
 //   phasen     REQ-03: Klickanteil je Phase (SIM_CLICK_RATE) sowie Dauerklick / Stopp ab Phase Spät / nie klicken
 //   ohneSchmiede  REQ-17: Normal, durchschnitt, gierige Heuristik ohne Schmiede (Soll: Siegquote ≥ 30 %)
@@ -35,10 +34,6 @@ if (!isMainThread){
       if (PROFILE_FILTER && !PROFILE_FILTER.includes(profile)) return;
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff, profile, strategy: 'gierig', seed: seedOf(di * 10 + pi, r) });
     }));
-  if (SUITE === 'alle' || SUITE === 'halten')
-    ['never', 'lowSection'].forEach((holdPolicy, hi) => {
-      for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'halten', diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', holdPolicy, seed: seedOf(300 + hi, r) });
-    });
   if (SUITE === 'ohneSchmiede')
     for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'ziele', diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', forbid: ['schmiede'], seed: seedOf(3, r) });
   if (SUITE === 'kurz')
@@ -169,18 +164,6 @@ if (!isMainThread){
     console.log('');
   }
 
-  const H = results.filter(r => r.suite === 'halten');
-  if (H.length){
-    console.log('HALTEN – Wellenbefehl als Strategie (Normal, durchschnitt)\n');
-    report.halten = {};
-    for (const hp of ['never', 'lowSection']){
-      const R = H.filter(r => r.holdPolicy === hp), w = R.filter(r => r.status === 'won');
-      report.halten[hp] = { games: R.length, winRate: R.length ? w.length / R.length : null, medWin: median(w.map(r => r.t)) };
-      console.log(`${pad(hp === 'never' ? 'nie halten' : 'halten unter 50 %', 18)} Siegquote ${lpad(pct(w.length, R.length), 5)}  Median Sieg ${lpad(mmss(median(w.map(r => r.t))), 6)}`);
-    }
-    console.log('');
-  }
-
   const P = results.filter(r => r.suite === 'phasen');
   if (P.length){
     console.log(`PHASEN – ${CPS} Klicks/s, gierige Heuristik, Spielertyp aktiv\n`);
@@ -200,7 +183,7 @@ if (!isMainThread){
       }
       console.log('');
     }
-    console.log('Siegquote nach Klickverhalten');
+    console.log('Siegquote je Klickstrategie');
     console.log('Schwierigkeit | Dauerklick | Stopp ab Spät | nie klicken | Stopp/Dauer | nie/Dauer');
     report.clickPolicies = {};
     for (const diff of DIFFS){

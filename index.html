@@ -68,17 +68,12 @@
   /* Schlachtfeld */
   .front{background:var(--surface); border:1px solid var(--rule); border-radius:6px; overflow:hidden;}
   #lane{display:block; width:100%; height:300px;}
-  /* Wellen-Leiste (REQ-14.1/15.4): bei „Halten“ in Messing statt Stahl */
+  /* Wellen-Leiste (REQ-14.1) */
   .wavebar{display:flex; justify-content:space-between; align-items:center; gap:8px 16px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--rule); background:var(--steel-soft);}
   .wavebar .wave-count{font-family:"IBM Plex Mono", monospace; font-size:13.5px; color:var(--steel);}
   .wavebar .wave-count b{font-size:17px; font-weight:600; color:var(--steel);}
-  .wavebar.hold{background:var(--brass-soft);}
   .wavebar .siege{font-family:"IBM Plex Mono", monospace; font-size:13.5px; font-weight:600; color:var(--rust); background:var(--rust-soft); border-radius:4px; padding:3px 8px;}
   .wavebar .siege[hidden]{display:none;}
-  .wavebar.hold .wave-count, .wavebar.hold .wave-count b{color:var(--brass);}
-  .hold-seg button{display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding:5px 12px;}
-  .hold-seg .hold-name{font-weight:600; font-size:13.5px;}
-  .hold-seg .expl{font-size:11px;}
   @media (max-width:640px){ #lane{height:240px;} }
 
   /* HUD */
@@ -270,12 +265,8 @@
 
   <section class="front">
     <div class="wavebar" id="waveBar">
-      <span class="wave-count"><span id="waveLabel"></span> <b id="waveIn" class="num"></b> · <span id="waveCmd"></span></span>
+      <span class="wave-count"><span id="waveLabel"></span> <b id="waveIn" class="num"></b></span>
       <span class="siege num" id="siegeInfo" hidden></span>
-      <span class="seg hold-seg">
-        <button type="button" id="hold_go" data-tooltip="hold:go"><span class="hold-name"></span><span class="expl"></span></button>
-        <button type="button" id="hold_hold" data-tooltip="hold:hold"><span class="hold-name"></span><span class="expl"></span></button>
-      </span>
     </div>
     <canvas id="lane"></canvas>
   </section>

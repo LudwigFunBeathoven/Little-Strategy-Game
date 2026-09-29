@@ -24,7 +24,7 @@ test('index.html enthält außer dem Spieltitel keinen sichtbaren Text', () => {
   assert.deepEqual(text.filter(w => w !== 'Klammerfront'), []);
 });
 
-test('ui.js und core.js enthalten keine fest codierten Sätze', () => {
+test('ui.js und core.js: keine festen Sätze', () => {
   for (const f of ['ui.js', 'core.js']){
     const code = readFileSync(new URL('../' + f, import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const strings = [...code.matchAll(/'([^'\\\n]*)'|`([^`\\]*)`/g)].map(m => m[1] ?? m[2]);

@@ -203,11 +203,6 @@ function tipContent(id){
       const rows = tier < o.tiers.length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
       return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)), rows };
     }
-    case 'hold': {
-      const on = a === 'hold';
-      return { title: t('hold.' + a), body: t(on ? 'tip.hold.hold.body' : 'tip.hold.go.body', { percent: pct(C.HOLD_DISCOUNT) }),
-               rows: [[t('tip.hold.now'), t(S.hold ? 'hold.hold' : 'hold.go')]], reason: S.status !== 'running' ? t('tip.notRunning') : null };
-    }
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
     case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };
     case 'diff':  return { title: t(`diff.${a}.name`), body: t(`diff.${a}.desc`) };
@@ -369,7 +364,7 @@ function renderHint(){
   box.hidden = !id;
   if (!id) return;
   $('hintTitle').textContent = t('hint.title');
-  $('hintText').textContent = t('hint.' + id, { x: C.SIEGE_STRENGTH, percent: pct(C.HOLD_DISCOUNT), cap: G.supplyCap() });
+  $('hintText').textContent = t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() });
   $('hintOk').querySelector('.btn-label').textContent = t('hint.ok');
   $('hintOk').querySelector('.expl').textContent = t('ex.hintOk');
 }
@@ -492,8 +487,6 @@ function buildUI(){
     $('slots').appendChild(card);
   }
   $('clickBtn').addEventListener('click', () => { if (!isDis($('clickBtn'))){ G.doClick(); render(); } });
-  $('hold_go').addEventListener('click', () => { if (!isDis($('hold_go'))){ G.setHold(false); render(); } });
-  $('hold_hold').addEventListener('click', () => { if (!isDis($('hold_hold'))){ G.setHold(true); showHint('hold'); render(); } });
   $('hintOk').addEventListener('click', dismissHint);
   $('newBtn').addEventListener('click', () => openStart(G.S.status === 'running'));
   document.addEventListener('keydown', e => {
@@ -655,22 +648,14 @@ function openDemolishConfirm(i){
 
 /* Wellen-Leiste über dem Schlachtfeld: Countdown und Befehl (REQ-14.1, REQ-15.4) */
 function renderWave(){
-  const S = G.S, hold = S.hold, running = S.status === 'running';
-  $('waveBar').classList.toggle('hold', hold);
+  const S = G.S;
   $('waveLabel').textContent = t('wave.next', { n: S.waveNo + 1 });
   $('waveIn').textContent = clock(Math.ceil(G.waveIn()));
-  $('waveCmd').textContent = t(hold ? 'wave.cmd.hold' : 'wave.cmd.go');
   // Belagerungswelle: Countdown ab der Ankündigung (REQ-19.3)
   const siege = G.siegeAnnounced();
   $('siegeInfo').hidden = !siege;
   if (siege) $('siegeInfo').textContent = t('wave.siege', { time: clock(Math.ceil(G.siegeIn())), x: C.SIEGE_STRENGTH });
-  for (const k of ['go', 'hold']){
-    const b = $('hold_' + k), pressed = (k === 'hold') === hold;
-    b.setAttribute('aria-pressed', String(pressed));
-    setDis(b, !running);
-    b.querySelector('.hold-name').textContent = t('hold.' + k);
-    b.querySelector('.expl').textContent = t('ex.hold.' + k, { percent: pct(C.HOLD_DISCOUNT) });
-  }
+
 }
 
 function logParams(entry){
@@ -915,7 +900,7 @@ function drawPreviews(){
   if (S.status === 'setup') return;
   ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textBaseline = 'alphabetic';
   const enemy = previewCounts(S.nextEnemy || []);
-  const own = S.hold ? previewCounts([]) : previewCounts(G.assignLanes(S.queue.map(q => q.type), G.strongerLane(S.nextEnemy || [])));
+  const own = previewCounts(G.assignLanes(S.queue.map(q => q.type), G.strongerLane(S.nextEnemy || [])));
   for (let l = 0; l < C.LANE_COUNT; l++){
     const y = laneTop(l) + 18;
     let x = (W - EBW) * sx - 8;
@@ -935,13 +920,7 @@ function drawPreviews(){
       x += ctx.measureText('×' + n).width + 10;
     }
   }
-  if (S.hold){
-    // Basis-Symbol für „Halten“: Schild am Tor (REQ-15.4)
-    const w = Math.max(18, PBW * sx * 0.55), cx = PBW * sx - w / 2, cy = laneTop(GATE) + 28;
-    ctx.fillStyle = COL.brass;
-    ctx.beginPath(); ctx.moveTo(cx - 8, cy - 9); ctx.lineTo(cx + 8, cy - 9); ctx.lineTo(cx + 8, cy); ctx.quadraticCurveTo(cx + 8, cy + 8, cx, cy + 11);
-    ctx.quadraticCurveTo(cx - 8, cy + 8, cx - 8, cy); ctx.closePath(); ctx.fill();
-  }
+
 }
 function draw(realDt, now){
   const FX = G.FX;

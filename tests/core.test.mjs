@@ -131,7 +131,7 @@ test('Abriss macht den Platz sofort frei', () => {
 });
 
 /* ---------- REQ-02 Draft ---------- */
-function toLevel(G, n){ const { KlammerCore } = loadCore(); G.S.scrapTotal = KlammerCore.xpThreshold(n) - 1; G.S.scrap = G.S.scrapTotal; }
+function toLevel(G, n){ const { KlammerCore } = loadCore(); G.S.scrapTotal = KlammerCore.xpTotal(n) - 1; G.S.scrap = G.S.scrapTotal; }
 function killFor(G, amount){ // Altmetall über den regulären Weg gutschreiben
   G.S.units.push({ id: 999, side: 'e', type: 'laeufer', x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0, moving: false, bob: 0 });
   G.tick(0.05);

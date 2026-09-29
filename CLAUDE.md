@@ -51,7 +51,7 @@ node tools/simulate.mjs --runs 20 --suite strategie   # Gebäude, Draft-Wahlrate
 node tools/simulate.mjs --runs 50 --suite phasen      # Klickanteile je Phase (für die Abnahme: --runs 200)
 ```
 Für Versuche ohne Dateiänderung: `KF_OVERRIDE='{"POST_SIEGE_GROWTH":0.5}' node tools/simulate.mjs …`.
-Patt-Quote (offen nach 30 Minuten) höchstens 2 %. Der Bot „verteidigung“ (immer Halten, keine Einheiten) gewinnt nie und
+Patt-Quote (offen nach 30 Minuten) höchstens 2 %. Der Bot „verteidigung“ (kauft keine Einheiten) gewinnt nie und
 verliert spätestens in Minute 25. „aktiv“ gewinnt je Schwierigkeitsgrad mindestens so oft wie „durchschnitt“. Die Simulation misst Stärke, nicht Spielspaß:
 Auffälligkeiten berichten, nicht automatisch wegbalancieren.
 

@@ -66,7 +66,7 @@ for (const lang of ['de', 'en']){
   await p.mouse.move(5, 5);
   if (lang === 'en'){
     const text = await p.evaluate(() => document.body.innerText);
-    const hits = [...new Set(text.match(/[äöüßÄÖÜ]|\b(und|der|die|das|Stufe|Gegner|Einheiten|Bauplatz|Material pro|Welle|Halten)\b/g) || [])];
+    const hits = [...new Set(text.match(/[äöüßÄÖÜ]|\b(und|der|die|das|Stufe|Gegner|Einheiten|Bauplatz|Material pro|Welle)\b/g) || [])];
     check(hits.length === 0, `[en] keine deutschen Reste${show(hits)}`);
   }
 

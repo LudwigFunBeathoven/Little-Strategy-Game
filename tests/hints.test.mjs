@@ -27,8 +27,8 @@ test('Jeder Hinweis erscheint pro Browser nur einmal; nach dem Zurücksetzen wie
   for (const id of H.IDS) assert.equal(c.trigger(id), true, `${id} nach dem Zurücksetzen wieder`);
 });
 
-test('Betroffene Systeme: erste Welle, Spezialkarte, Halten, Abriss, Belagerungswelle', () => {
-  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['card', 'demolish', 'hold', 'siege', 'wave']);
+test('Betroffene Systeme: erste Welle, Spezialkarte, Abriss, Belagerungswelle', () => {
+  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['card', 'demolish', 'siege', 'wave']);
 });
 
 test('Nicht verfügbarer oder kaputter Speicher bricht nichts', () => {

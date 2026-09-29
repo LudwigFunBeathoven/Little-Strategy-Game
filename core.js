@@ -10,7 +10,7 @@ const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [
 const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
 /* Stufenschwellen: kumuliertes Altmetall für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
-function xpThreshold(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
+function xpTotal(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
@@ -44,7 +44,7 @@ function freshState(diff, seed){
     material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
     lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9, repairCd: 0 })), enemyBaseHp: d.enemyBaseHp,
-    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, hold: false, nextEnemy: [], nextEnemySiege: false,
+    nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextEnemy: [], nextEnemySiege: false,
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
@@ -130,19 +130,15 @@ function create(){
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
   const rangedRows   = side => C.RANGED_RANGE_ROWS + (side === 'p' ? mAdd('rangedRows') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
-  const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpThreshold(S.level), need: xpStep(S.level + 1) });
+  const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpTotal(S.level), need: xpStep(S.level + 1) });
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
   const supplyCap    = () => C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply');
-  // „Halten“ verbilligt Turm, Mauer und Reparatur (REQ-15.3)
-  const holdFactor   = () => S.hold ? 1 - C.HOLD_DISCOUNT : 1;
-  const holdDiscounted = id => { const g = C.UPGRADES[id].group; return g === 'mauer' || C.UPGRADES[id].tower !== undefined; };
   const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
 
   function upCost(id){
     const u = C.UPGRADES[id];
     let c = u.baseCost * Math.pow(u.growth, S.lvl[id]);
-    if (holdDiscounted(id)) c *= holdFactor();
     return Math.ceil(c);
   }
   const isMaxed = id => C.UPGRADES[id].max !== undefined && S.lvl[id] >= C.UPGRADES[id].max;
@@ -220,7 +216,7 @@ function create(){
     return true;
   }
   function unlockBuilding(type){ S.unlocked[type] = true; }
-  const repairCost = () => Math.ceil(C.REPAIR_COST * holdFactor());
+  const repairCost = () => C.REPAIR_COST;
   /* Reparatur je Abschnitt (REQ-13.6). Ein gefallener Abschnitt steht danach wieder, sein Turm feuert wieder. */
   function repair(i){
     if (i === undefined) i = GATE;
@@ -241,7 +237,7 @@ function create(){
     };
   }
   const spawnBlocked = lane => S.units.some(u => u.side === 'e' && u.lane === lane && Math.abs(u.x - (W - EBW)) < C.SPAWN_BLOCK_DIST);
-  const gateHeld = lane => S.units.some(u => u.side === 'p' && u.lane === lane && u.hp > 0 && u.x >= W - EBW - C.GATE_HOLD_DIST);
+  const gateBlocked = lane => S.units.some(u => u.side === 'p' && u.lane === lane && u.hp > 0 && u.x >= W - EBW - C.GATE_BLOCK_DIST);
 
   /* Kauf legt die Einheit in die Warteschlange; sie rückt mit der nächsten Welle aus (REQ-14.1/14.2) */
   const supplyFull = () => S.queue.length >= supplyCap();
@@ -250,12 +246,6 @@ function create(){
     if (S.status !== 'running' || supplyFull() || S.material < cost) return false;
     S.material -= cost;
     S.queue.push({ type });
-    return true;
-  }
-  /* Wellenbefehl für die nächste Welle: Ausrücken (false) oder Halten (true) (REQ-15.1) */
-  function setHold(on){
-    if (S.status !== 'running') return false;
-    S.hold = !!on;
     return true;
   }
 
@@ -294,9 +284,7 @@ function create(){
   }
   function launchWave(){
     const enemy = S.nextEnemy;
-    // Eigene Welle: bei „Halten“ bleibt die Warteschlange stehen; der Befehl springt danach zurück (REQ-15.1/15.2)
-    if (S.hold){ S.hold = false; if (S.queue.length) log('log.held', { n: S.queue.length }); }
-    else if (S.queue.length){
+    if (S.queue.length){
       // Kennzahl: Anteil der Wellen am Versorgungslimit (REQ-21.2)
       S.stats.waves = (S.stats.waves || 0) + 1;
       if (S.queue.length >= supplyCap()) S.stats.wavesFull = (S.stats.wavesFull || 0) + 1;
@@ -311,7 +299,7 @@ function create(){
     rescaleEnemies();
     let field = S.units.filter(u => u.side === 'e').length;
     for (const q of formation(enemy)){
-      if (siege || (field < diffCfg().maxField && !gateHeld(q.lane))){
+      if (siege || (field < diffCfg().maxField && !gateBlocked(q.lane))){
         const u = makeUnit('e', q.type, q.lane, W - EBW + q.k * C.ALLY_GAP);
         // Belagerungswelle: jede Einheit mit SIEGE_STRENGTH-facher Stärke. In der Kolonne kämpfen nur die vordersten
         // Einheiten, deshalb wirkt Stärke je Einheit, eine größere Anzahl dagegen kaum (REQ-19.2, Auslegung).
@@ -477,7 +465,7 @@ function create(){
   /* ---------- Altmetall-Stufen und Draft (REQ-02) ---------- */
   function gainScrap(b){
     S.scrap += b; S.scrapTotal += b;
-    while (S.scrapTotal >= xpThreshold(S.level + 1)){
+    while (S.scrapTotal >= xpTotal(S.level + 1)){
       S.level++; S.pendingLevels++;
       log('log.levelUp', { n: S.level });
     }
@@ -548,7 +536,7 @@ function create(){
       const q = S.enemyQueue[i];
       if (q.at > S.t) continue;
       if (spawnBlocked(q.lane)) continue;
-      if (!q.alarm && (gateHeld(q.lane) || field >= diffCfg().maxField)) continue;
+      if (!q.alarm && (gateBlocked(q.lane) || field >= diffCfg().maxField)) continue;
       S.units.push(makeUnit('e', q.type, q.lane));
       S.enemyQueue.splice(i, 1); i--; field++;
     }
@@ -581,7 +569,7 @@ function create(){
 
     const eFrac = S.enemyBaseHp / diffCfg().enemyBaseHp;
     let alarmLevel = 0;
-    C.ALARM_THRESHOLDS.forEach((th, i) => { if (eFrac < th) alarmLevel = i + 1; });
+    C.ALARM_LEVELS.forEach((th, i) => { if (eFrac < th) alarmLevel = i + 1; });
     if (alarmLevel > S.alarms){
       S.alarms = alarmLevel;
       for (let i = 0; i < diffCfg().alarmSize; i++)
@@ -632,7 +620,7 @@ function create(){
   return {
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
-    doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit, setHold,
+    doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     supplyCap, supplyFull, waveIn, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
@@ -644,5 +632,5 @@ function create(){
   };
 }
 
-return { create, freshState, nextRandom, xpThreshold, xpStep, distribute, SLOTS };
+return { create, freshState, nextRandom, xpTotal, xpStep, distribute, SLOTS };
 })();

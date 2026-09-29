@@ -42,9 +42,9 @@ const KF_CONFIG = {
   MELEE_STOP_DIST: 12,
   TARGET_BEHIND_TOLERANCE: 6,
   RANGED_MIN_RANGE: 30,         // ab dieser Reichweite gilt eine Einheit als Fernkämpfer
-  GATE_HOLD_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
+  GATE_BLOCK_DIST: 20,           // Belagerung: so nah am gegnerischen Tor blockieren eigene Einheiten den Nachschub
   ALARM_SPACING_S: 0.4,
-  ALARM_THRESHOLDS: [2 / 3, 1 / 3],
+  ALARM_LEVELS: [2 / 3, 1 / 3],
   ALARM_WERFER_EVERY: 3,
   /* Belagerungswelle statt Eskalation (REQ-19): in Minute SIEGE_MINUTE greift eine Welle mit SIEGE_STRENGTH-facher Größe an,
      SIEGE_WARNING_S vorher angekündigt. Danach wächst die Gegnerstärke linear um POST_SIEGE_GROWTH je Minute. */
@@ -57,7 +57,6 @@ const KF_CONFIG = {
   /* Wellen (REQ-14/15): eigene und gegnerische Wellen rücken im selben Takt aus */
   WAVE_INTERVAL_S: 20,
   SUPPLY_CAP_START: 3,          // Versorgungslimit: Höchstzahl an Einheiten pro Welle
-  HOLD_DISCOUNT: 0.3,           // „Halten“: Turm, Mauer und Reparatur so viel günstiger
 
   /* Basis: drei Abschnitte am Ende der Lanes (REQ-13). Mauer oben, Tor, Mauer unten.
      Reparatur je Abschnitt, Kosten in Material. */

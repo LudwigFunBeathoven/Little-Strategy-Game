@@ -1,4 +1,4 @@
-// Tests Inkrement 2: Wellen mit Versorgungslimit, Wellenbefehl „Halten“ (REQ-14, REQ-15).
+// Tests Inkrement 2: Wellen mit Versorgungslimit (REQ-14).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCore } from '../tools/load-core.mjs';
@@ -71,26 +71,4 @@ test('Verteilung der Welle nach 12.1 mit der stärkeren angekündigten Gegnerwel
   const p = G.S.units.filter(u => u.side === 'p');
   assert.deepEqual(Array.from(p.filter(u => u.type === 'laeufer').map(u => u.lane)).sort(), [MID, BOT].sort());
   assert.deepEqual(Array.from(p.filter(u => u.type === 'werfer').map(u => u.lane)), [MID]);
-});
-
-test('Halten: Reparatur kostet 70 %, Warteschlange bleibt, Befehl springt nach der Welle zurück', () => {
-  const { G, C } = game();
-  G.S.material = 1e6;
-  G.S.sections[MID].hp = 100;
-  const normal = G.repairCost();
-  assert.equal(normal, C.REPAIR_COST);
-  G.spawn('laeufer'); G.spawn('werfer');
-  assert.ok(G.setHold(true));
-  assert.equal(G.repairCost(), Math.ceil(C.REPAIR_COST * (1 - C.HOLD_DISCOUNT)));
-  assert.equal(G.repairCost(), 42);
-  const m = G.S.material; G.repair(MID);
-  assert.equal(m - G.S.material, 42);
-  assert.ok(G.upCost('mauer') < Math.ceil(C.UPGRADES.mauer.baseCost), 'Mauer-Upgrade verbilligt');
-  while (G.S.waveNo === 0 && G.S.status === 'running') G.tick(0.05);
-  assert.equal(G.S.hold, false, 'Befehl springt zurück');
-  assert.equal(G.S.queue.length, 2, 'Warteschlange bleibt erhalten');
-  assert.equal(own(G), 0);
-  assert.equal(G.repairCost(), C.REPAIR_COST);
-  while (G.S.waveNo === 1 && G.S.status === 'running') G.tick(0.05);
-  assert.equal(own(G), 2, 'rückt mit der folgenden Welle aus');
 });
