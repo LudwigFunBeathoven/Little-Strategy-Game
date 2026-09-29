@@ -75,7 +75,7 @@ const DESC_PARAMS = {
   reichweite: () => ({ n: C.PLAYER_TURRET.rangePerLevel }),
   kadenz:     () => ({ percent: pct(1 - C.PLAYER_TURRET.cdFactor) }),
 };
-const costText = (cur, n) => n === 0 ? t('cost.free') : t(cur === 'scrap' ? 'cost.scrap' : 'cost.material', { n: fmt(n) });
+const costText = (cur, n) => n === 0 ? t('cost.free') : t(cur === 'xp' ? 'cost.xp' : 'cost.material', { n: fmt(n) });
 const refundText = n => t('cost.material', { n: fmt(n) });   // Erstattung 0 heißt 0 Material, nicht „gratis“
 
 
@@ -340,12 +340,28 @@ function save(){
   if (S.status === 'setup') return;
   storageSet(C.SAVE_KEY, JSON.stringify(Object.assign(G.snapshot(), { units: [], enemyQueue: [], savedAt: Date.now() })));
 }
+/* Spielstände älterer Versionen (anderer Schlüssel oder andere Versionsnummer) werden nicht übernommen, sondern dem Spieler
+   auf dem Startbildschirm gemeldet und erst danach entfernt (Anforderung Iteration 5, Abschnitt 1) */
+let discardedSave = false;
+function findStaleSaves(){
+  const keys = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if (k && k.startsWith(C.SAVE_PREFIX) && k !== C.SAVE_KEY) keys.push(k);
+    }
+  } catch (e) { /* Speicher nicht verfügbar */ }
+  return keys;
+}
+function dropStaleSaves(keys){ try { keys.forEach(k => localStorage.removeItem(k)); } catch (e) { /* Speicher nicht verfügbar */ } }
 function load(){
+  const stale = findStaleSaves();
+  if (stale.length){ discardedSave = true; dropStaleSaves(stale); }
   const raw = storageGet(C.SAVE_KEY);
   if (!raw) return false;
   try {
     const d = JSON.parse(raw);
-    if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]) return false;
+    if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]){ discardedSave = true; dropStaleSaves([C.SAVE_KEY]); return false; }
     G.adopt(d);
     if (d.savedAt) G.applyAway((Date.now() - d.savedAt) / 1000);
     return true;
@@ -402,7 +418,7 @@ function renderStart(){
   const rec = readRecords();
   $('mEyebrow').textContent = t('start.eyebrow');
   $('mTitle').textContent = t('start.title');
-  $('mText').textContent = canCancel ? t('start.discard') : t('start.note');
+  $('mText').textContent = (discardedSave ? t('start.oldSave') + ' ' : '') + (canCancel ? t('start.discard') : t('start.note'));
   const body = $('mBody'); body.innerHTML = '';
 
   const langField = document.createElement('div'); langField.className = 'field';
@@ -469,6 +485,7 @@ function openResult(){
 }
 function closeModal(){ Tip.hide(); modalOpen = false; $('modal').hidden = true; last = performance.now(); acc = 0; }
 function startGame(diff){
+  discardedSave = false;
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0, { intro: storageGet(C.INTRO_SKIP_KEY) !== '1' });
   resultShownFor = null;
   save();
@@ -730,7 +747,7 @@ function render(){
   renderWave();
   $('diffLabel').textContent = S.status === 'setup' ? '' : t(`diff.${S.diff}.name`);
   $('eraLabel').textContent = S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) });
-  $('scrapLabel').textContent = t('hud.scrapLevel', { n: S.level, amount: fmt(S.scrap) });
+  setText($('xpLabel'), t('hud.xpLevel', { n: S.level, amount: fmt(S.xp) }));
   setDis($('clickBtn'), !running);
   $('clickBtn').classList.toggle('late', G.phase() === 'late');   // REQ-03.5: tritt in Phase Spät zurück
 

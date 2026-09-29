@@ -240,6 +240,21 @@ for (const dsf of [1, 2]){
   await ctx.close();
 }
 
+// Spielstand älterer Version: wird verworfen und auf dem Startbildschirm gemeldet (Iteration 5, Abschnitt 1)
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.save.v5', JSON.stringify({ v: 5, diff: 'normal' })); });
+  await p.reload(); await p.waitForTimeout(300);
+  const r = await p.evaluate(() => ({ text: document.querySelector('#mText').textContent, open: !document.querySelector('#modal').hidden,
+    note: __kf.t('start.oldSave'), left: localStorage.getItem('klammerfront.save.v5') }));
+  check(r.open && r.text.includes(r.note) && r.left === null, 'Alter Spielstand: Hinweis auf dem Startbildschirm, danach entfernt');
+  await p.reload(); await p.waitForTimeout(300);
+  check(!(await p.evaluate(() => document.querySelector('#mText').textContent.includes(__kf.t('start.oldSave')))), 'Alter Spielstand: Hinweis nur einmal');
+  await ctx.close();
+}
+
 // REQ-47: Gestaffelte Einführung (frischer Browser, Einführung an)
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });

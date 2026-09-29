@@ -3,7 +3,8 @@
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
   VERSION: '0.5',
-  SAVE_KEY: 'klammerfront.save.v5',
+  SAVE_KEY: 'klammerfront.save.v6',
+  SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
   HINTS_KEY: 'klammerfront.hints.v1',   // gesehene Erstkontakt-Hinweise (REQ-20.3)
@@ -135,7 +136,7 @@ const KF_CONFIG = {
   SMITHY_COST_GROWTH: 2.5,
   FX_QUALITAET: 0.05,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (I4.8: 0,12 → 0,05, Ausgleich zur höheren Grundstärke)
   KASERNE_SUPPLY_PER_LEVEL: 2,  // Versorgungslimit je Ausbaustufe der Kaserne: 3 → 5 → … → 15
-  UNIT_STRENGTH_PER_LEVEL: 0.16,// Grundstärke je Altmetall-Stufe, auch ohne Schmiede (REQ-17.2; I4.8: 0,08 → 0,16, damit Partien ohne Schmiede ≥ 30 % gewinnen)
+  UNIT_STRENGTH_PER_LEVEL: 0.16,// Grundstärke je Stufe, auch ohne Schmiede (REQ-17.2; I4.8: 0,08 → 0,16, damit Partien ohne Schmiede ≥ 30 % gewinnen)
   FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_MAUER_HP: 150,             // je Abschnitt
   FX_STACHELN_DMG: 4,
@@ -145,8 +146,8 @@ const KF_CONFIG = {
   PLAYER_TURRET: { dmgPerLevel: 5, cd: 1.0, rangePerLevel: 20, cdFactor: 0.87 },
   ENEMY_TURRET:  { cd: 1.2, range: 95 },
 
-  /* Altmetall-Stufen und Draft (REQ-02). Altmetall wird nur gesammelt, nicht ausgegeben.
-     Stufe n verlangt XP_BASE × XP_GROWTH^(n−1) Altmetall zusätzlich zur vorigen Stufe (kumulierte Summe). */
+  /* EP-Stufen und Draft (REQ-02). Erfahrungspunkte (EP) werden nur gesammelt, nicht ausgegeben.
+     Stufe n verlangt XP_BASE × XP_GROWTH^(n−1) EP zusätzlich zur vorigen Stufe (kumulierte Summe). */
   XP_BASE: 47,                  // I4.8: 40 → 47, damit der Median-Abstand der Karten im Frühspiel ≥ 45 s liegt (REQ-48)
   XP_GROWTH: 1.4,
   DRAFT_OPTIONS_BASE: 2,

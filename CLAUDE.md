@@ -3,7 +3,7 @@
 ## Was das ist
 Browser-Spiel zwischen *Universal Paperclips* (Clicker/Idle-Ökonomie) und *Age of War* (Lane-Kampf).
 Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen über drei Lanes. Material bezahlt Einheiten,
-Gebäude und Upgrades. Abschüsse bringen Altmetall, das nur als Erfahrung zählt. Jeder Stufenaufstieg bietet Spezialkarten
+Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
 Stand: v0.5 (Iteration 4: `docs/anforderungen-iteration-4.md`, Stand je Inkrement in `docs/STAND.md`,

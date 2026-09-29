@@ -11,7 +11,7 @@ function game(seed = 7){
 }
 const force = (G, id) => { G.S.pendingDraft = { level: G.S.level + 1, options: [id] }; G.S.pendingLevels = 1; G.chooseDraft(0); };
 function levelUp(G){
-  G.S.scrapTotal = G.xpNeed(G.S.level + 1) - 1; G.S.scrap = G.S.scrapTotal;
+  G.S.xpTotal = G.xpNeed(G.S.level + 1) - 1; G.S.xp = G.S.xpTotal;
   G.S.units.push({ id: 90000 + G.S.level, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 });
   G.tick(0.05);
 }

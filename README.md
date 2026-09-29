@@ -17,7 +17,7 @@ Die Partie wird im Browser gespeichert und beim nächsten Öffnen fortgesetzt.
 - **Armee:** Gekaufte Einheiten rücken alle 20 s als Welle aus, höchstens so viele wie das Versorgungslimit (Kaserne, bis 15).
   Jede Lane-Gruppe marschiert als **Formation**: Nahkämpfer vorn in Reihen zu höchstens fünf, Fernkämpfer dahinter, alle im gleichen Tempo.
   Formationen helfen der Nachbar-Lane, wenn dort gekämpft wird, und kehren zurück, sobald in der eigenen Lane ein Gegner auftaucht.
-- **Spezialkarten:** Jede Altmetall-Stufe bietet 2 Karten (mit Universität 3) aus fünf Kategorien, teils selten oder legendär
+- **Spezialkarten:** Jede Stufe (Erfahrungspunkte, EP, aus Abschüssen) bietet 2 Karten (mit Universität 3) aus fünf Kategorien, teils selten oder legendär
   (einmalig, mit Nachteil). Synergiekarten wirken stärker, je mehr Karten ihrer Kategorie du hast.
 - **Belagerungswelle** in Minute 16, eine Minute vorher angekündigt; danach wird der Gegner jede Minute stärker.
 - Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Jedes System erklärt sich beim ersten Auftreten mit einem kurzen Hinweis.

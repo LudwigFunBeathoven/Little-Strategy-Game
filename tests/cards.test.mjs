@@ -9,7 +9,7 @@ function game(diff = 'normal', seed = 7){
   const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed);
   return { G, C: KF_CONFIG, K: KlammerCore, OPTS: KF_DRAFT_OPTIONS };
 }
-function toLevel(G, K, n){ G.S.scrapTotal = G.xpNeed(n) - 1; G.S.scrap = G.S.scrapTotal; }
+function toLevel(G, K, n){ G.S.xpTotal = G.xpNeed(n) - 1; G.S.xp = G.S.xpTotal; }
 function levelUp(G){
   G.S.units.push({ id: 9999 + G.S.level, side: 'e', type: 'laeufer', lane: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0, moving: false, bob: 0 });
   G.tick(0.05);

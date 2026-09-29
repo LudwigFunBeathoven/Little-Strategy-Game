@@ -8,10 +8,10 @@ const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH;
 const LANES = C.LANE_COUNT, GATE = C.GATE_LANE, SLOTS = C.GRID_SIZE * C.GRID_SIZE;
 const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [];
 const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
-/* Stufenschwellen: kumuliertes Altmetall für Stufe n */
+/* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
-function xpTotal(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 5;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
+const SAVE_VERSION = 6;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
@@ -42,7 +42,7 @@ function freshState(diff, seed){
   return {
     v: SAVE_VERSION, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
     rng: (seed >>> 0) || 1,
-    material: 0, materialTotal: 0, scrap: 0, scrapTotal: 0,
+    material: 0, materialTotal: 0, xp: 0, xpTotal: 0,
     lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0, intro: false,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9, repairCd: 0 })), enemyBaseHp: d.enemyBaseHp,
     nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextOwnWave: C.WAVE_INTERVAL_S, ownWaveNo: 0, lastOrder: null, nextEnemy: [], nextEnemySiege: false, forms: [],
@@ -107,13 +107,13 @@ function create(){
   const factoryCount = () => countType('fabrik');
   const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd');
   const matRate      = () => factoryCount() * factoryRate();
-  // Grundstärke steigt je Altmetall-Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
+  // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
   const qualityMult  = () => Math.pow(1 + C.FX_QUALITAET, lv('qualitaet'));
   const hpMultP      = () => levelStrength() * qualityMult() * mMul('unitStrength');
   const dmgMultP     = () => levelStrength() * qualityMult() * mMul('unitStrength');
   const cdMultP      = () => mMul('attackCd');
-  const bountyMult   = () => mMul('scrapGain');
+  const bountyMult   = () => mMul('xpGain');
   /* Abschnitte der Basis (REQ-13): 0 = Mauer oben, 1 = Tor, 2 = Mauer unten */
   const sectionMax   = i => (C.SECTION_HP[i] + C.FX_MAUER_HP * lv('mauer')) * mMul('wallHp');
   const sectionUp    = i => S.sections[i].hp > 0;
@@ -136,8 +136,8 @@ function create(){
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
   const rangedRows   = side => C.RANGED_RANGE_ROWS + (side === 'p' ? mAdd('rangedRows') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
-  const xpNeed       = n => xpTotal(n) * mMul('xpNeed');
-  const xpProgress   = () => ({ level: S.level, cur: S.scrapTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
+  const xpNeed       = n => xpForLevel(n) * mMul('xpNeed');
+  const xpProgress   = () => ({ level: S.level, cur: S.xpTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
   const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply')) * mMul('supplyMult')));
@@ -544,7 +544,7 @@ function create(){
       if (u.hp > 0 || u.dead) continue;
       u.dead = true;
       if (u.side === 'e'){
-        gainScrap(C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult);
+        gainXp(C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult);
         S.kills++;
       } else S.losses++;
       if (FX.on) FX.fx.push({ x: u.x, lane: u.laneF, t: 0, side: u.side });
@@ -580,10 +580,10 @@ function create(){
     }
     S.sections.forEach((s, i) => { if (!S.revealed['repair_' + i] && s.hp < sectionMax(i)) S.revealed['repair_' + i] = true; });
   }
-  /* ---------- Altmetall-Stufen und Draft (REQ-02) ---------- */
-  function gainScrap(b){
-    S.scrap += b; S.scrapTotal += b;
-    while (S.scrapTotal >= xpNeed(S.level + 1)){
+  /* ---------- EP-Stufen und Draft (REQ-02, REQ-5.02) ---------- */
+  function gainXp(b){
+    S.xp += b; S.xpTotal += b;
+    while (S.xpTotal >= xpNeed(S.level + 1)){
       S.level++; S.pendingLevels++;
       log('log.levelUp', { n: S.level });
     }
@@ -784,5 +784,5 @@ function create(){
   };
 }
 
-return { create, freshState, nextRandom, xpTotal, xpStep, distribute, SLOTS, SAVE_VERSION };
+return { create, freshState, nextRandom, xpForLevel, xpStep, distribute, SLOTS, SAVE_VERSION };
 })();

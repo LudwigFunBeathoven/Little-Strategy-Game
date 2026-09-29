@@ -9,7 +9,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 |---|---|---|---|
 | I5.0 | Merge v0.5 → `main`, Branch, Basislinie | – | fertig |
 | I5.1 | Eingabe: Ursache belegen, beheben | 5.01 | fertig |
-| I5.2 | Umbenennung zu EP | 5.02 | offen |
+| I5.2 | Umbenennung zu EP | 5.02 | fertig |
 | I5.3 | Drei Bänder, Aufteilung von `ui.js` | 5.03 | offen |
 | I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | offen |
 | I5.5 | Einzelsimulation | 5.05 | offen |
@@ -46,6 +46,8 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.2: `npm test` 85/85 (neu: Suchtest nach „Altmetall“/„scrap“/„Schrott“), Browser-Prüfung grün (neu: Hinweis bei altem Spielstand),
+  Kurzsimulation unverändert 12 Siege, 8 Niederlagen, 0 offen. `SAVE_VERSION` 6, `SAVE_KEY` `klammerfront.save.v6`.
 - I5.1: `npm test` 83/83, Browser-Prüfung 78/78, Kurzsimulation 12 Siege, 8 Niederlagen, 0 offen (Logik unverändert).
   Neue Prüfpunkte (je bei devicePixelRatio 1 und 2): Bau-Option und „Läufer“ mit 120 ms Haltedauer, 100 Klicks an zufälligen Punkten freier Bauplätze
   bei wechselnder Kamera und 0–4 px Zittern, 50 Klicks auf das Klickfeld in 5 s, Latenz Klickfeld (Median 13–14 ms, p95 15–16 ms) und Welt-Klick
@@ -78,3 +80,10 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
    Tasten wiederholen nicht, weil Browser für Knöpfe nur beim Loslassen bzw. einmal auslösen.
 3. **Latenz-Messung:** Ab dem `pointerdown` bis zur ersten DOM-Änderung am Materialzähler bzw. bis zum nächsten `requestAnimationFrame` nach einem Welt-Klick.
    Die Anzeige folgt dadurch im nächsten Bild (höchstens 16,7 ms bei 60 Hz), nicht mehr sofort im Handler.
+4. **Umbenennung:** `S.scrap`/`S.scrapTotal` → `S.xp`/`S.xpTotal`, `gainScrap` → `gainXp`, Kartenwert `scrapGain` → `xpGain`. Die bisherige
+   Funktion `xpTotal(n)` (kumulierte Schwelle) heißt jetzt `xpForLevel(n)`, damit sie nicht mit `S.xpTotal` verwechselt wird.
+   Die Karte „Schrottsammler“ heißt „Kriegserfahrung“ (`kriegserfahrung`, englisch „Battle experience“), Wirkung unverändert.
+5. **Suchtest** prüft `.js`, `.mjs`, `.html`, `.md`, `.json` außerhalb von `docs/`, `reports/` und `CHANGELOG.md` auf „Altmetall“, „scrap“ und „Schrott“.
+   `docs/` gilt als Archiv (Anforderungen und Berichte früherer Iterationen zitieren den alten Begriff).
+6. **Alter Spielstand:** Beim Laden werden Schlüssel mit dem Präfix `klammerfront.save.` außer dem aktuellen sowie ein aktueller Schlüssel mit falscher
+   Versionsnummer erkannt. Der Startbildschirm meldet das einmal („Dein Spielstand stammt aus einer älteren Version …“), die Daten werden dabei entfernt.
