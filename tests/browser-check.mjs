@@ -145,7 +145,8 @@ for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080], [2560, 1440]]){
   await p.keyboard.press('Escape'); await p.waitForTimeout(60);
   check(await p.evaluate(() => __kf.sel === null && __kf.tab === 'wall'), `[${w}×${h}] Esc hebt die Auswahl auf, Reiter bleibt`);
   await p.evaluate(() => __kf.selectPlot(0)); await p.waitForTimeout(150);
-  const empty = await p.evaluate(() => __kf.worldToScreen(__kf.Cam.x + innerWidth * 0.6, 12));
+  const empty = await p.evaluate(() => { while (!document.querySelector('#hintBox').hidden) document.querySelector('#hintOk').click();
+    const r = document.querySelector('#lane').getBoundingClientRect(); return __kf.worldToScreen(__kf.Cam.x + r.width * 0.6, r.height - 20); });
   await p.mouse.click(empty.x, empty.y); await p.waitForTimeout(150);
   check(await p.evaluate(() => __kf.sel === null && __kf.tab === 'build'), `[${w}×${h}] Klick auf leere Stelle hebt die Auswahl auf`);
   // Alle Reiter per Tastatur erreichbar (Tab-Taste in die Leiste, dann Pfeiltasten)

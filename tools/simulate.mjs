@@ -83,6 +83,9 @@ if (!isMainThread){
     const open = Z.filter(r => r.status === 'running').length;
     report.pattRate = Z.length ? open / Z.length : null;
     console.log(`\nPatt-Quote (offen nach 30 min): ${open} von ${Z.length} = ${pct(open, Z.length)} (Soll ≤ 2 %)`);
+    const openGames = Z.filter(r => r.status === 'running').map(r => `${r.diff}/${r.profile}/Seed ${r.seed}`);
+    report.openGames = openGames;
+    if (openGames.length) console.log('Offene Partien (zum Nachspielen): ' + openGames.join(', '));
     // Weitere Kennzahlen (REQ-48)
     const known = Z.filter(r => r.profile !== 'verteidigung' && r.profile !== 'passiv');
     const legendary = new Set(OPTS.filter(o => o.rarity === 'legendary').map(o => o.id));
@@ -92,6 +95,10 @@ if (!isMainThread){
     report.legendaryShare = known.length ? known.filter(r => r.cards.some(id => legendary.has(id))).length / known.length : null;
     report.fightShare = median(known.map(r => r.fightShare).filter(v => v != null));
     console.log(`Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): ${report.fightShare == null ? '–' : Math.round(100 * report.fightShare) + ' %'}`);
+    // Anteil der EP-Automatik (Hörsaal) am EP-Ertrag, Normal aktiv (REQ-5.08, Soll ≤ 25 %)
+    const na = Z.filter(r => r.diff === 'normal' && r.profile === 'aktiv' && r.xpPassive + r.xpKill > 0);
+    report.xpPassiveShare = na.length ? na.reduce((a, r) => a + r.xpPassive, 0) / na.reduce((a, r) => a + r.xpPassive + r.xpKill, 0) : null;
+    console.log(`Anteil der EP-Automatik am EP-Ertrag (Normal, aktiv; Soll ≤ 25 %): ${report.xpPassiveShare == null ? '–' : (100 * report.xpPassiveShare).toFixed(1) + ' %'}`);
     console.log(`Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): ${report.maxArmy ?? '–'} Einheiten`);
     console.log(`Fall des ersten Mauerabschnitts (Median der Partien mit Fall): ${mmss(report.wallFall)} · in ${pct(Z.filter(r => r.wallFall != null).length, Z.length)} der Partien`);
     console.log(`Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): ${pct(known.filter(r => r.cards.some(id => legendary.has(id))).length, known.length)}`);
@@ -107,6 +114,19 @@ if (!isMainThread){
       const d = q(chosen) != null && q(not) != null ? (q(chosen) - q(not)) * 100 : null;
       return { chosen: chosen.length, winChosen: q(chosen), notChosen: not.length, winNot: q(not), deltaPp: d };
     };
+    // Forschungen: Siegquote erforscht gegen nicht erforscht, unter Partien mit Universität (REQ-5.07; Meldung ab +25 pp)
+    const U = C2.filter(r => r.uni);
+    const rids = [...new Set(U.flatMap(r => r.research))].sort();
+    if (rids.length){
+      console.log('\nForschungen: Siegquote erforscht gegen nicht erforscht (Partien mit Universität; aktiv und durchschnitt)');
+      report.researchCompare = {};
+      for (const id of rids){
+        const w = U.filter(r => r.research.includes(id)), wo = U.filter(r => !r.research.includes(id));
+        const d = q(w) != null && q(wo) != null ? (q(w) - q(wo)) * 100 : null;
+        report.researchCompare[id] = { done: w.length, notDone: wo.length, deltaPp: d };
+        console.log(`${pad(id, 20)} erforscht ${lpad(w.length, 4)}  nicht ${lpad(wo.length, 4)}  Differenz ${lpad(fmtD(d), 7)}${d != null && d > 25 && w.length >= 5 && wo.length >= 5 ? '  ← über +25' : ''}`);
+      }
+    }
     const ids = [...new Set(C2.flatMap(r => r.offers.map(o => o.id)))].sort();
     if (ids.length){
       const maxTier = Math.max(...OPTS.map(o => o.tiers.length));
@@ -145,6 +165,10 @@ if (!isMainThread){
       report.buildRates[s] = Object.fromEntries(C.BUILDINGS.map(t => [t, R.length ? R.filter(r => r.built[t]).length / R.length : 0]));
       console.log(`${pad(s, 9)} | ` + C.BUILDINGS.map(t => pad(pct(R.filter(r => r.built[t]).length, R.length), 12)).join(' | '));
     }
+    // Universität auf Normal, gierige Heuristik (REQ-5.07: Soll ≥ 40 % der Partien)
+    const NG = T.filter(r => r.diff === 'normal' && r.strategy === 'gierig');
+    if (NG.length){ report.uniRateNormalGreedy = NG.filter(r => r.built.universitaet).length / NG.length;
+      console.log(`Universität gebaut (Normal, gierig; Soll ≥ 40 %): ${pct(NG.filter(r => r.built.universitaet).length, NG.length)}`); }
     console.log('\nSiegquote je Gebäudekombination am Partieende (beide Strategien, alle Schwierigkeitsgrade, mind. 3 Partien)');
     const combos = {};
     for (const r of T) (combos[r.combo] ||= []).push(r);

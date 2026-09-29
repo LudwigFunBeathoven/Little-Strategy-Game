@@ -88,6 +88,10 @@ function buildPanels(){
   for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
   ctxRepairOpt = makeOpt($('ctxRepair'), '', 'repair:' + C.GATE_LANE, () => { if (sel && sel.kind === 'section') G.repair(sel.lane); });
+  // Forschungsbaum: ein Knopf je Forschung, einmal erzeugt (REQ-5.07)
+  const BRANCH_BOX = { lehre: 'resLehre', archiv: 'resArchiv', forschung: 'resForschung', freischaltung: 'resFreischaltung' };
+  for (const r of G.RESEARCH) resEls[r.id] = makeOpt($(BRANCH_BOX[r.branch]), 'res', 'res:' + r.id, () => G.startResearch(r.id));
+  $('rerollBtn').addEventListener('click', () => { if (!isDis($('rerollBtn')) && G.rerollDraft()){ draftKey = ''; requestRender(); } });
   // Klickfeld löst auf pointerdown aus (REQ-5.01); Tastatur (Enter, Leertaste) kommt als click ohne Zeigerereignis
   const press = () => { if (!isDis($('clickBtn'))){ G.doClick(); requestRender(); } };
   $('clickBtn').addEventListener('pointerdown', e => { if (e.button === 0 && e.isPrimary) press(); });
@@ -173,6 +177,7 @@ function renderContext(){
 
 /* ---------- Kaufknöpfe (Upgrades, Einheiten, Reparatur): nur Inhalt und Zustand ändern sich ---------- */
 let ctxRepairOpt = null;
+const resEls = {};
 function updateOpt(el, kind, a){
   const S = G.S;
   if (kind === 'repair'){
@@ -198,6 +203,7 @@ function renderOpts(){
   }
   for (const id in C.UNITS){
     const spec = C.UNITS[id], el = optEls['unit_' + id];
+    setHidden(el.btn, !G.unitUnlocked(id));
     setHidden(el.kbd, false); setText(el.kbd, spec.key);
     setText(el.label, t(`unit.${id}.name`));
     setText(el.expl, explUnit(id));
@@ -261,7 +267,10 @@ function renderChosen(){
 function renderDraft(){
   const S = G.S, d = S.pendingDraft;
   setHidden($('draftBox'), !d);
-  const key = lang + JSON.stringify(d);
+  setHidden($('draftTools'), !(d && G.mAdd('rerolls') > 0));
+  setText($('rerollBtn').querySelector('.expl'), t('ex.draft.reroll', { n: G.rerollsLeft() }));
+  setDis($('rerollBtn'), G.rerollsLeft() <= 0);
+  const key = lang + JSON.stringify(d) + G.bansLeft();
   if (key === draftKey) return;
   draftKey = key;
   const list = $('draftOffer'); list.innerHTML = '';
@@ -269,6 +278,12 @@ function renderDraft(){
   setText($('draftTitle'), t('draft.eyebrow', { n: d.level }));
   const more = S.pendingLevels - 1;
   setText($('draftText'), t('draft.text') + (more > 0 ? ' ' + t('draft.queue', { n: more }) : ''));
+  // Bann: je angebotener Karte ein Knopf, solange Banne übrig sind (REQ-5.07)
+  const bans = $('banTools'); bans.innerHTML = '';
+  if (G.bansLeft() > 0) d.options.forEach((id, i) => {
+    bans.appendChild(mkButton('btn-ghost', t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }),
+      () => { if (G.banOption(i)){ draftKey = ''; requestRender(); } }, 'ban:' + i, t('ex.draft.ban', { n: G.bansLeft() })));
+  });
   d.options.forEach((id, i) => {
     const o = G.OPT[id], tier = G.cardTaken(id) + 1;
     const b = document.createElement('button');
@@ -284,7 +299,7 @@ function renderDraft(){
 }
 
 /* ---------- Armee: Vorschau je Lane (REQ-14.3) und Ereignisse ---------- */
-const GLYPH = { laeufer: '■', werfer: '▲' };
+const GLYPH = { laeufer: '\u25A0', werfer: '\u25B2', schild: '\u25C6' };
 let previewKey = '', lastLogKey = '';
 function countLine(group, lane){
   const n = {};
@@ -321,6 +336,56 @@ function renderLog(){
   }
 }
 
+/* ---------- Universität: Forschungsbaum (REQ-5.07) ---------- */
+const researchName = (r, tier) => r.tiers.length > 1 ? `${t(r.nameKey)} ${ROMAN[tier]}` : t(r.nameKey);
+function researchParams(r, tier){
+  const e = (r.tiers[Math.max(1, tier) - 1].effect || [])[0] || {};
+  return { e1: e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? fmtNum(e.add) : '' };
+}
+function researchReason(id){
+  const b = G.researchBlock(id), r = G.RES[id];
+  switch (b){
+    case null: case 'maxed': return null;
+    case 'notRunning': return t('tip.notRunning');
+    case 'noUni': return t('tip.needsBuilding', { name: t('bld.universitaet.name') });
+    case 'requires': return t('research.requires', { name: researchName(G.RES[r.requires.research], r.requires.tier) });
+    case 'active': return t('research.running');
+    case 'busy': return t('research.busy', { n: G.researchSlots() });
+    case 'material': return missing('material', G.researchCost(id), G.S.material);
+  }
+  return null;
+}
+let resRunKey = '';
+function renderResearch(){
+  const S = G.S;
+  for (const r of G.RESEARCH){
+    const el = resEls[r.id], n = G.researchTier(r.id), next = G.researchNext(r.id);
+    setText(el.label, researchName(r, Math.min(n + 1, r.tiers.length)));
+    setHidden(el.tag, n === 0);
+    if (n > 0) setText(el.tag, `${n}/${r.tiers.length}`);
+    setText(el.expl, next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
+                          : t('opt.max'));
+    setDis(el.btn, !!G.researchBlock(r.id));
+  }
+  // Laufende Forschung mit Fortschrittsbalken; Knoten nur neu bei geänderter Liste
+  const box = $('resActive'), key = lang + S.research.active.map(a => a.id + a.tier).join();
+  if (key !== resRunKey){
+    resRunKey = key; box.innerHTML = '';
+    for (const a of S.research.active){
+      const row = document.createElement('div'); row.className = 'res-run';
+      row.innerHTML = '<span></span><span class="num"></span><span class="bar steel"><i></i></span>';
+      row.children[0].textContent = t('research.runningName', { name: researchName(G.RES[a.id], a.tier) });
+      box.appendChild(row);
+    }
+  }
+  S.research.active.forEach((a, i) => {
+    const row = box.children[i]; if (!row) return;
+    setText(row.children[1], clock(Math.max(0, Math.ceil(a.timeS - a.t))));
+    setWidth(row.children[2].firstChild, 100 * Math.min(1, a.t / a.timeS));
+  });
+  if (activeTab === 'uni') S.research.fresh = false;
+}
+
 /* ---------- Gesamter Arbeitsbereich ---------- */
 function renderPanels(){
   const S = G.S, running = S.status === 'running';
@@ -336,6 +401,7 @@ function renderPanels(){
   }
   // Markierung: Reiter mit neuem Inhalt (offene Kartenwahl)
   setHidden(tabEls.cards.mark, !(S.pendingDraft && activeTab !== 'cards'));
+  setHidden(tabEls.uni.mark, !(S.research.fresh && activeTab !== 'uni'));
 
   // Klickfeld
   const cp = G.clickPower(), cpText = cp < 10 && cp % 1 ? fmt1(cp) : fmt(cp), auto = G.autoPressCps();
@@ -368,7 +434,8 @@ function renderPanels(){
   setText($('camFollowExpl'), t(Cam.follow ? 'ex.cam.followOn' : 'ex.cam.followOff'));
   // Schmiede, Universität, Karten
   setText($('smithyText'), t('panel.smithy.text', { n: S.lvl.qualitaet }));
-  setText($('uniInfo'), t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() }));
+  setText($('uniInfo'), t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() }) + ' ' + t(G.has('universitaet') ? 'research.intro' : 'research.needUni', { n: G.researchSlots() }));
+  renderResearch();
   renderDraft();
   renderChosen();
 }

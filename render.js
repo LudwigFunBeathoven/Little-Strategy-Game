@@ -177,7 +177,10 @@ function drawUnit(u){
   if (lt !== undefined && !reduceMotion) p.x += dir * r * 0.9 * Math.sin(Math.PI * lt / LUNGE_S);   // Ausfallschritt im Nahkampf (REQ-5.05)
   if (p.x < realmR() - 4) return;                        // noch im Tor
   ctx.fillStyle = u.flash > 0 ? COL.ink : (u.side === 'p' ? COL.steel : COL.rust);
-  if (!u.ranged){
+  if (u.type === 'schild'){
+    ctx.fillRect(p.x - r, p.y - r, 2 * r, 2 * r);                                                // Schildträger: Quadrat mit breitem Schild
+    ctx.fillRect(p.x + dir * r * 1.1 - (dir < 0 ? r * 0.7 : 0), p.y - r * 1.3, r * 0.7, r * 2.6);
+  } else if (!u.ranged){
     ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();                       // Nahkämpfer: Kreis mit Schild
     ctx.fillRect(p.x + dir * r * 0.9 - (dir < 0 ? r * 0.5 : 0), p.y - r, r * 0.5, r * 2);
   } else {

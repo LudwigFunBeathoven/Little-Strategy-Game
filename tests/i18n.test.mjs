@@ -36,5 +36,5 @@ test('Oberflächen-Dateien und core.js: keine festen Sätze', () => {
 test('index.html lädt alle Spieldateien in der richtigen Reihenfolge', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const srcs = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]);
-  assert.deepEqual(srcs, ['config.js', 'i18n/de.js', 'i18n/en.js', 'data/draft-options.js', 'hints.js', 'core.js', 'ui.js', 'render.js', 'hud.js', 'panels.js']);
+  assert.deepEqual(srcs, ['config.js', 'i18n/de.js', 'i18n/en.js', 'data/draft-options.js', 'data/research.js', 'hints.js', 'core.js', 'ui.js', 'render.js', 'hud.js', 'panels.js']);
 });

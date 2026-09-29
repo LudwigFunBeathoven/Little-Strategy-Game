@@ -263,6 +263,13 @@
   .draft-box{display:flex; flex-direction:column; gap:6px;}
   .draft-box[hidden]{display:none;}
   .opt.selected{border-color:var(--brass); box-shadow:0 0 0 1px var(--brass);}
+  /* Universität (REQ-5.07): eine Spalte je Zweig, laufende Forschung mit Fortschrittsbalken */
+  .res-tree{display:grid; grid-template-columns:repeat(4, minmax(170px, 1fr)); gap:8px 12px; align-items:start;}
+  .res-active{display:flex; flex-direction:column; gap:4px;}
+  .res-active:empty{display:none;}
+  .res-run{display:grid; grid-template-columns:1fr auto; gap:2px 10px; font-size:12.5px;}
+  .res-run .bar{grid-column:1 / -1; height:5px;}
+  #draftTools[hidden], #banTools:empty{display:none;}
   .lanes-preview{display:grid; grid-template-columns:auto 1fr 1fr; gap:2px 10px; font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--ink-soft);}
   .lanes-preview .e{color:var(--rust);} .lanes-preview .p{color:var(--steel);}
   .log{min-height:0; max-height:7.5em; overflow:hidden;}
@@ -365,12 +372,23 @@
         </div>
         <div class="tabpanel" id="panel-uni" role="tabpanel" hidden>
           <p class="hint" id="uniInfo"></p>
+          <div class="res-active" id="resActive"></div>
+          <div class="res-tree">
+            <div><h3 class="sub" data-i18n="research.branch.lehre"></h3><div class="opts" id="resLehre"></div></div>
+            <div><h3 class="sub" data-i18n="research.branch.archiv"></h3><div class="opts" id="resArchiv"></div></div>
+            <div><h3 class="sub" data-i18n="research.branch.forschung"></h3><div class="opts" id="resForschung"></div></div>
+            <div><h3 class="sub" data-i18n="research.branch.freischaltung"></h3><div class="opts" id="resFreischaltung"></div></div>
+          </div>
         </div>
         <div class="tabpanel" id="panel-cards" role="tabpanel" hidden>
           <div class="draft-box" id="draftBox" hidden>
             <h2 class="ph brass" id="draftTitle"></h2>
             <p class="hint" id="draftText"></p>
             <div class="picks draft-offer" id="draftOffer"></div>
+            <div class="ctx-actions" id="draftTools">
+              <button class="btn-ghost" id="rerollBtn" type="button" data-tooltip="reroll"><span class="btn-label" data-i18n="draft.reroll"></span><span class="expl"></span></button>
+            </div>
+            <div class="ctx-actions" id="banTools"></div>
           </div>
           <h3 class="sub" data-i18n="panel.levels"></h3>
           <div class="chosen" id="chosen"></div>
@@ -399,6 +417,7 @@
 <script src="i18n/de.js"></script>
 <script src="i18n/en.js"></script>
 <script src="data/draft-options.js"></script>
+<script src="data/research.js"></script>
 <script src="hints.js"></script>
 <script src="core.js"></script>
 <script src="ui.js"></script>

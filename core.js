@@ -8,6 +8,8 @@ const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH;
 const LANES = C.LANE_COUNT, GATE = C.GATE_LANE, SLOTS = C.GRID_SIZE * C.GRID_SIZE;
 const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [];
 const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
+const RESEARCH = (typeof KF_RESEARCH !== 'undefined') ? KF_RESEARCH : [];
+const RES = Object.fromEntries(RESEARCH.map(r => [r.id, r]));
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
@@ -51,6 +53,7 @@ function freshState(diff, seed){
     turretCd: {}, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
+    research: { done: {}, active: [], ver: 0, banned: [], fresh: false },     // Forschungsbaum der Universität (REQ-5.07)
     clickTimes: [],
     stats: { prod: { early: { click: 0, auto: 0, time: 0 }, mid: { click: 0, auto: 0, time: 0 }, late: { click: 0, auto: 0, time: 0 } } },
     log: [], savedAt: 0,
@@ -70,9 +73,18 @@ function create(){
   /* ---------- Draft-Modifikatoren (zwischengespeichert, bis sich die Wahl ändert) ---------- */
   let modCache = { ver: -1, key: null, mul: {}, add: {} };
   function mods(){
-    const key = S.draft;
-    if (modCache.key === key && modCache.ver === S.draft.ver) return modCache;
+    const key = S.draft, ver = S.draft.ver + ':' + S.research.ver;
+    if (modCache.key === key && modCache.ver === ver) return modCache;
     const mul = {}, add = {};
+    // Forschung wirkt über dieselbe Pipeline wie Karten (REQ-5.07); es zählt die höchste erforschte Stufe
+    for (const [id, n] of Object.entries(S.research.done)){
+      const tier = RES[id] && n > 0 ? RES[id].tiers[Math.min(n, RES[id].tiers.length) - 1] : null;
+      if (!tier) continue;
+      for (const e of tier.effect || []){
+        if (e.mul !== undefined) mul[e.stat] = (mul[e.stat] ?? 1) * e.mul;
+        if (e.add !== undefined) add[e.stat] = (add[e.stat] ?? 0) + e.add;
+      }
+    }
     // Es wirkt nur die höchste gewählte Stufe einer Karte; ihre Werte sind absolut (REQ-18.2/18.3)
     for (const [id, n] of Object.entries(S.draft.stacks)){
       const tier = cardTier(id, n); if (!tier) continue;
@@ -85,7 +97,7 @@ function create(){
       const syn = OPT[id].synergy;
       if (syn) mul[syn.stat] = (mul[syn.stat] ?? 1) * (1 + synergyValue(id));
     }
-    modCache = { ver: S.draft.ver, key, mul, add };
+    modCache = { ver, key, mul, add };
     return modCache;
   }
   const mMul = stat => mods().mul[stat] ?? 1;
@@ -105,11 +117,11 @@ function create(){
   // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Material kommt sonst aus Fabriken (REQ-16.2)
   const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * mMul('clickYield');
   const factoryCount = () => countType('fabrik');
-  const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd');
+  const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd') * mMul('materialYield');
   const matRate      = () => factoryCount() * factoryRate();
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
-  const qualityMult  = () => Math.pow(1 + C.FX_QUALITAET, lv('qualitaet'));
+  const qualityMult  = () => Math.pow(1 + C.FX_QUALITAET + mAdd('qualityBonus'), lv('qualitaet'));
   const hpMultP      = () => levelStrength() * qualityMult() * mMul('unitStrength');
   const dmgMultP     = () => levelStrength() * qualityMult() * mMul('unitStrength');
   const cdMultP      = () => mMul('attackCd');
@@ -158,8 +170,8 @@ function create(){
   const builtCount = () => S.slots.filter(Boolean).length;
   /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
   // Die erste Fabrik ist gratis (REQ-44)
-  const factoryCost = () => C.FIRST_FACTORY_FREE && factoryCount() === 0 ? 0 : Math.ceil(C.FACTORY_BASE_COST * Math.pow(C.FACTORY_COST_GROWTH, factoryCount()) * mMul('factoryCost'));
-  const buildCost = type => type === 'fabrik' ? factoryCost() : C.BUILDING_COST[type];
+  const factoryCost = () => C.FIRST_FACTORY_FREE && factoryCount() === 0 ? 0 : Math.ceil(C.FACTORY_BASE_COST * Math.pow(C.FACTORY_COST_GROWTH, factoryCount()) * mMul('factoryCost') * mMul('buildCost'));
+  const buildCost = type => type === 'fabrik' ? factoryCost() : Math.ceil(C.BUILDING_COST[type] * mMul('buildCost'));
   const isBuildable = type => C.START_BUILDINGS.includes(type) || !!S.unlocked[type];
   const refundFor = i => S.slots[i] ? Math.floor(S.slots[i].paid * C.REFUND_RATE) : 0;
   /* Warum ein Gebäude nicht baubar ist (null = baubar) */
@@ -239,7 +251,7 @@ function create(){
     const s = S.sections[i], cost = Math.ceil(repairCost() * factor);
     if (S.status !== 'running' || !s || S.material < cost || s.hp >= sectionMax(i) || s.repairCd > 0) return false;
     S.material -= cost;
-    s.repairCd = C.REPAIR_COOLDOWN_S;
+    s.repairCd = C.REPAIR_COOLDOWN_S * mMul('repairCd');
     s.hp = Math.min(sectionMax(i), s.hp + C.REPAIR_AMOUNT);
     return true;
   }
@@ -316,9 +328,11 @@ function create(){
 
   /* Kauf legt die Einheit in die Warteschlange; sie rückt mit der nächsten Welle aus (REQ-14.1/14.2) */
   const supplyFull = () => S.queue.length >= supplyCap();
+  /* Schildträger erst nach der Forschung (REQ-5.07, Zweig D) */
+  const unitUnlocked = type => !C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0;
   function spawn(type){
     const cost = unitCost(type);
-    if (S.status !== 'running' || supplyFull() || S.material < cost) return false;
+    if (S.status !== 'running' || supplyFull() || S.material < cost || !unitUnlocked(type)) return false;
     S.material -= cost;
     S.queue.push({ type });
     return true;
@@ -582,9 +596,13 @@ function create(){
     for (const f of S.forms) mem.set(f.id, []);
     for (const u of S.units) if (u.hp > 0){ const m = mem.get(u.form); if (m) m.push(u); }
     const idx = laneIndexBoth();
+    // Für die Lage einer Lane zählen auch Einheiten, die gerade in sie wechseln (Ziel-Lane): sonst laufen zwei Armeen in
+    // verschiedenen Lanes einander hinterher und tauschen endlos die Lanes
+    const bound = { p: [[], [], []], e: [[], [], []] };
+    for (const u of S.units) if (u.hp > 0) bound[u.side][u.lane].push(u);
     let relayout = false, reindex = false;
     for (const g of S.forms){
-      const members = mem.get(g.id), foes = idx[g.side === 'p' ? 'e' : 'p'], dir = dirTo(g.side);
+      const members = mem.get(g.id), foes = bound[g.side === 'p' ? 'e' : 'p'], dir = dirTo(g.side);
       const dist = [threat(g, 0, foes), threat(g, 1, foes), threat(g, 2, foes)];
       const enter = dist.map(d => d <= AR.contactRange), stay = dist.map(d => d <= AR.contactRange + AR.contactHysteresis);
       if (g.state === 'march' && enter.some(Boolean)) g.state = 'fight';
@@ -603,8 +621,12 @@ function create(){
         let bn = -1;
         for (const l of [0, 2]) if (stay[l]){ const n = foesNear(g, l, foes); if (n > bn){ bn = n; help = l; } }
       }
+      // Vorrang der Mitte (Fix aus I4.3, REQ-5.06): Einheiten in der Mitte helfen einer äußeren Lane nur dort, wo eigene Einheiten schon kämpfen
+      const engaged = [false, false, false];
+      if (g.fighting) for (const u of members) if (u.laneF === u.lane && stay[u.lane]) engaged[u.lane] = true;
       for (const u of members){
-        const lane = g.fighting && !stay[u.home] ? help : u.home;
+        let lane = g.fighting && !stay[u.home] ? help : u.home;
+        if (g.fighting && lane !== GATE && lane !== u.home && u.lane === GATE && u.laneF === GATE && !engaged[lane]) lane = GATE;
         if (u.lane !== lane){ u.lane = lane; relayout = true; }
         // Querbewegung: während des Wechsels kämpft eine Einheit nicht und ist nicht greifbar
         if (u.laneF !== u.lane){ const step = dt / C.LANE_SHIFT_S; u.laneF = Math.abs(u.lane - u.laneF) <= step ? u.lane : u.laneF + Math.sign(u.lane - u.laneF) * step; reindex = true; }
@@ -639,7 +661,9 @@ function create(){
       u.dead = true;
       if (u.home === GATE) lostMid.add(u.form);
       if (u.side === 'e'){
-        gainXp(C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult);
+        const xp = C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult;
+        S.stats.xpKill = (S.stats.xpKill || 0) + xp;
+        gainXp(xp);
         S.kills++;
       } else S.losses++;
       if (FX.on) FX.fx.push({ x: u.x, lane: u.laneF, t: 0, side: u.side });
@@ -678,6 +702,7 @@ function create(){
   /* Nach der höchsten Stufe erscheint eine Karte nicht mehr; sonst liegt genau die nächste Stufe im Pool (REQ-18.2) */
   function optionAvailable(o){
     const n = cardTaken(o.id);
+    if (S.research.banned.includes(o.id)) return false;
     if (n >= Math.min(o.tiers.length, C.CARD_MAX_TIER)) return false;
     if (o.requires){
       if (o.requires.upgrade && !Object.keys(C.UPGRADES).some(id => (C.UPGRADES[id].base || id) === o.requires.upgrade && S.lvl[id] > 0)) return false;
@@ -686,7 +711,12 @@ function create(){
     for (const e of o.tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
     return true;
   }
-  const cardWeight = o => C.CARD_RARITY_WEIGHTS[o.rarity] * Math.pow(C.CARD_TIER_WEIGHT_BONUS, cardTaken(o.id));
+  /* Glücksgriff (REQ-5.07): verschiebt Ziehgewicht von gewöhnlichen zu seltenen Karten */
+  function rarityWeight(r){
+    const w = C.CARD_RARITY_WEIGHTS, b = mAdd('rareBonus');
+    return r === 'rare' ? w.rare + b : r === 'common' ? Math.max(0, w.common - b) : w[r];
+  }
+  const cardWeight = o => rarityWeight(o.rarity) * Math.pow(C.CARD_TIER_WEIGHT_BONUS, cardTaken(o.id));
   const draftSize = () => (has('universitaet') ? C.DRAFT_OPTIONS_UNIVERSITY : C.DRAFT_OPTIONS_BASE) + mAdd('draftSize');
   /* Gewichtete Ziehung ohne Zurücklegen, über den seedbaren Spielzufall (REQ-45):
      höchstens eine legendäre Karte je Angebot; die letzte Karte kommt aus einer anderen Kategorie, falls sonst nur eine vertreten wäre */
@@ -712,7 +742,67 @@ function create(){
   function offerDraft(){
     const options = drawOptions(draftSize());
     if (!options.length){ S.pendingLevels = 0; return; }
-    S.pendingDraft = { level: S.level - S.pendingLevels + 1, options };
+    S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0 };
+  }
+  /* Neu ziehen (REQ-5.07): alle Optionen der offenen Wahl neu ziehen, je Wahl höchstens mAdd('rerolls')-mal */
+  const rerollsLeft = () => S.pendingDraft ? Math.max(0, mAdd('rerolls') - (S.pendingDraft.rerolled || 0)) : 0;
+  function rerollDraft(){
+    if (!S.pendingDraft || rerollsLeft() <= 0) return false;
+    const options = drawOptions(draftSize());
+    if (!options.length) return false;
+    S.pendingDraft.options = options; S.pendingDraft.rerolled = (S.pendingDraft.rerolled || 0) + 1;
+    return true;
+  }
+  /* Bann (REQ-5.07): eine angebotene Karte für diese Partie aus dem Pool nehmen; an ihre Stelle tritt eine neue */
+  const bansLeft = () => Math.max(0, mAdd('bans') - S.research.banned.length);
+  function banOption(i){
+    const d = S.pendingDraft;
+    if (!d || bansLeft() <= 0 || i < 0 || i >= d.options.length) return false;
+    S.research.banned.push(d.options[i]);
+    const rest = d.options.filter((_, k) => k !== i);
+    const pool = OPTIONS.filter(o => optionAvailable(o) && !rest.includes(o.id));
+    const total = pool.reduce((a, o) => a + cardWeight(o), 0);
+    let repl = null;
+    if (pool.length){ let r = rnd() * total, k = 0; while (k < pool.length - 1 && r >= cardWeight(pool[k])){ r -= cardWeight(pool[k]); k++; } repl = pool[k].id; }
+    d.options = repl ? d.options.map((id, k) => k === i ? repl : id) : rest;
+    return true;
+  }
+
+  /* ---------- Forschung (REQ-5.07): Material und Zeit, eine gleichzeitig (Zweiter Forschungsplatz: zwei) ---------- */
+  const researchTier = id => S.research.done[id] || 0;
+  const researchSlots = () => 1 + mAdd('researchSlots');
+  const researchNext = id => { const r = RES[id], n = researchTier(id); return r && n < r.tiers.length ? r.tiers[n] : null; };
+  const researchCost = id => { const t = researchNext(id); return t ? t.cost : null; };
+  function researchBlock(id){
+    const r = RES[id];
+    if (!r) return 'unknown';
+    if (S.status !== 'running') return 'notRunning';
+    if (!has('universitaet')) return 'noUni';
+    if (!researchNext(id)) return 'maxed';
+    if (r.requires && researchTier(r.requires.research) < r.requires.tier) return 'requires';
+    if (S.research.active.some(a => a.id === id)) return 'active';
+    if (S.research.active.length >= researchSlots()) return 'busy';
+    if (S.material < researchCost(id)) return 'material';
+    return null;
+  }
+  function startResearch(id){
+    if (researchBlock(id)) return false;
+    const t = researchNext(id);
+    S.material -= t.cost;
+    S.research.active.push({ id, tier: researchTier(id) + 1, t: 0, timeS: t.timeS });
+    return true;
+  }
+  /* Fortschritt nur, solange die Universität steht */
+  function progressResearch(dt){
+    if (!S.research.active.length || !has('universitaet')) return;
+    for (const a of S.research.active) a.t += dt;
+    const done = S.research.active.filter(a => a.t >= a.timeS);
+    if (!done.length) return;
+    S.research.active = S.research.active.filter(a => a.t < a.timeS);
+    for (const a of done){
+      S.research.done[a.id] = a.tier; S.research.ver++; S.research.fresh = true;
+      log('log.research', { name: '@' + RES[a.id].nameKey, tier: a.tier });
+    }
   }
   function chooseDraft(i){
     const d = S.pendingDraft;
@@ -788,6 +878,10 @@ function create(){
         addMaterial(Math.min(cap, S.material * interestRate()));
       }
     }
+    progressResearch(dt);
+    // Hörsaal: passiver EP-Ertrag (REQ-5.07, Zweig A); Kennzahl Anteil am EP-Ertrag (REQ-5.08)
+    const xpPassive = mAdd('xpPassive') * dt;
+    if (xpPassive > 0){ S.stats.xpPassive = (S.stats.xpPassive || 0) + xpPassive; gainXp(xpPassive); }
     if (S.t >= S.nextOwnWave) launchOwnWave();
     if (S.t >= S.nextWave) launchWave();
     automation();
@@ -837,6 +931,7 @@ function create(){
     if (!Array.isArray(S.slots) || S.slots.length !== SLOTS) S.slots = new Array(SLOTS).fill(null);
     S.sections = S.sections.map(s => ({ hp: s.hp, lastHit: -1e9, repairCd: 0 }));
     if (!Array.isArray(S.queue)) S.queue = [];
+    S.research = Object.assign(freshState(saved.diff, 1).research, saved.research || {});
     const shift = Math.max(0, S.t + C.RELOAD_WAVE_DELAY_S - S.nextWave);
     S.nextWave += shift;
     S.nextOwnWave = Math.max(S.nextOwnWave || 0, S.t + C.RELOAD_WAVE_DELAY_S);
@@ -862,7 +957,8 @@ function create(){
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, interestRate,
-    chooseDraft, phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, unitUnlocked,
+    phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     offlineHours, turretDmg, turretRange, turretCd,

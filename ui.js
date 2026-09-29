@@ -225,6 +225,14 @@ function tipContent(id){
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
+    case 'res': { const r = G.RES[a], n = G.researchTier(a), next = G.researchNext(a);
+      const rows = [[t('tip.level'), `${n}/${r.tiers.length}`]];
+      if (next) rows.push([t('tip.cost'), costText('material', next.cost)], [t('research.time'), t('research.seconds', { s: next.timeS })]);
+      return { title: researchName(r, Math.min(n + 1, r.tiers.length)), body: t(r.descKey, researchParams(r, Math.min(n + 1, r.tiers.length))) + ' ' + t('research.branchOf.' + r.branch),
+               rows, reason: researchReason(a) }; }
+    case 'reroll': return { title: t('draft.reroll'), body: t('tip.draft.reroll', { n: G.rerollsLeft() }) };
+    case 'ban': { const d = S.pendingDraft; const id = d && d.options[a];
+      return { title: id ? t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }) : t('draft.reroll'), body: t('tip.draft.ban', { n: G.bansLeft() }) }; }
     case 'grid': { const sl = S.slots[a];
       return { title: t('slot.label', { n: Number(a) + 1 }), body: sl ? t(`bld.${sl.type}.name`) + ' · ' + t(`bld.${sl.type}.desc`) : t('tip.grid.empty') }; }
   }

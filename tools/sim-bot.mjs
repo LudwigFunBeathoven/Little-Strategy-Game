@@ -59,7 +59,7 @@ export class Bot {
     this.o = Object.assign({ cps: 1.5, every: 1, cap: 22, useWall: true, strategy: 'gierig', clickPolicy: 'always',
                              horizon: 45, buildHorizon: 120, lookahead: true }, opts);
     this.rng = botRng(opts.seed || 1);
-    this.clickAcc = 0; this.actAcc = 0; this.mix = 0;
+    this.clickAcc = 0; this.actAcc = 0; this.mix = 0; this.resNext = 0; this.resWait = C.SIM_RESEARCH_EVERY_S;
   }
   /* Vorausschau bis nach der Belagerungswelle, sobald sie innerhalb von SIM_SIEGE_LOOKAHEAD_S bevorsteht (REQ-48):
      sonst bewertet die Heuristik Karten und Gebäude, ohne den stärksten Angriff der Partie zu sehen */
@@ -99,6 +99,24 @@ export class Bot {
       if (sc > bestScore){ bestScore = sc; best = type; }
     }
     return best;
+  }
+  /* Forschung wählen: höchstens alle SIM_RESEARCH_EVERY_S; die gierige Heuristik vergleicht die günstigsten bezahlbaren Forschungen
+     per Vorausschau mit „nichts erforschen“ und startet nur bei Vorteil */
+  research(G, stats){
+    const S = G.S;
+    if (!G.has('universitaet') || S.research.active.length >= G.researchSlots()) return;
+    if (S.t < this.resNext) return;
+    const cand = G.RESEARCH.filter(r => G.researchBlock(r.id) === null).sort((a, b) => G.researchCost(a.id) - G.researchCost(b.id)).slice(0, C.SIM_RESEARCH_CANDIDATES);
+    if (!cand.length) return;
+    let pick = null;
+    if (this.o.strategy === 'gierig' && this.o.lookahead){
+      const sim = F => { const sub = new Bot(Object.assign({}, this.o, { lookahead: false, strategy: 'zufall', seed: 33 })); const h = this.horizonFor(G, this.o.buildHorizon);
+                         for (let t = 0; t < h / DT && F.S.status === 'running'; t++) sub.step(F, null); return score(F); };
+      let best = sim(forkGame(G)) + 2;                                  // Forschung nur bei klarem Vorteil
+      for (const r of cand){ const F = forkGame(G); F.startResearch(r.id); const sc = sim(F); if (sc > best){ best = sc; pick = r.id; } }
+    } else if (this.rng() < 0.5) pick = cand[Math.floor(this.rng() * cand.length)].id;
+    if (pick && G.startResearch(pick)){ if (stats) stats.researched[pick] = (stats.researched[pick] || 0) + 1; this.resWait = C.SIM_RESEARCH_EVERY_S; this.resNext = S.t; }
+    else { this.resNext = S.t + this.resWait; this.resWait = Math.min(C.SIM_RESEARCH_MAX_WAIT_S, this.resWait * 2); }   // nach Ablehnung seltener prüfen
   }
   /* Draft-Wahl (REQ-02): zufällig oder per Vorausschau */
   draft(G, stats){
@@ -173,6 +191,8 @@ export class Bot {
         }
       }
     }
+    // Forschung (REQ-5.07): gierig per Vorausschau über buildHorizon, Zufall zufällig; passive Profile forschen nicht
+    if (!o.noUpgrades) this.research(G, stats);
     // Upgrades
     if (!o.noUpgrades){
       for (const id of MAT_PRIO){
@@ -197,7 +217,7 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
   if (cps !== undefined) prof.cps = cps;
   const G = newGame(diff, seed);
   const bot = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
-  const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [] };
+  const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {} };
   let wallFall = null;
   const steps = maxMin * 60 / DT;
   for (let i = 0; i < steps && G.S.status === 'running'; i++){
@@ -211,7 +231,8 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
     combo: S.slots.filter(Boolean).map(x => x.type).sort().join('+') || '–',
     built: stats.built, demolished: stats.demolished,
     offered: stats.offered, picked: stats.picked, draftTimes: stats.draftTimes, offers: stats.offers,
-    wallFall, maxArmy: S.stats.maxArmy || 0, fightShare: S.stats.armyTime ? (S.stats.fightTime || 0) / S.stats.armyTime : null,
+    wallFall, maxArmy: S.stats.maxArmy || 0, research: Object.keys(S.research.done), uni: !!stats.built.universitaet,
+    xpPassive: S.stats.xpPassive || 0, xpKill: S.stats.xpKill || 0, fightShare: S.stats.armyTime ? (S.stats.fightTime || 0) / S.stats.armyTime : null,
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
   };

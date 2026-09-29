@@ -14,7 +14,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | fertig |
 | I5.5 | Einzelsimulation | 5.05 | fertig |
 | I5.6 | Armee als gemeinsame Welle | 5.06 | fertig |
-| I5.7 | Universität | 5.07 | offen |
+| I5.7 | Universität | 5.07 | fertig |
 | I5.8 | Balancing-Serie | 5.08 | offen |
 | I5.9 | Polish, Fehlerbehebung, Testpaket, Bericht | 5.09–5.11 | offen |
 
@@ -46,6 +46,14 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.7: `npm test` 106/106 (neu `tests/research.test.mjs`: Universität, Kosten, Zeit, eine gleichzeitig, Voraussetzungen, Ruhen ohne Universität,
+  je Wirkung ein Test, Neu ziehen und Bann, Freischaltungen, Schildträger bremst die Armee, Speichern und Laden), Browser-Prüfung 166/166.
+  Universität gebaut (Normal, gierig, 30 Partien): 90 % (Soll ≥ 40 %). Kurzsimulation mit 200 Partien: 197 Siege, 3 Niederlagen, 0 offen, 61 s.
+  **Patt gefunden und behoben:** Mit Forschung blieb 1 von 200 Partien offen (Seed 1246065). Ursache: Beide Armeen standen in verschiedenen Lanes und
+  liefen einander hinterher (eigene Armee oben → Mitte, Gegner Mitte → oben), niemand traf. Behebung: Vorrang der Mitte wie in I4.3 (Einheiten in der
+  Mitte helfen einer äußeren Lane nur, wo eigene Einheiten schon kämpfen) und die Lage einer Lane zählt auch Einheiten, die gerade in sie wechseln.
+  Die Simulation gibt offene Partien jetzt mit Seed aus. Rechenzeit: Die gierige Heuristik prüft Forschung nach einer Ablehnung erst nach 30, 60, 120 s
+  erneut (vorher alle 10 s: 1.128 s statt 61 s für 200 Partien).
 - I5.6: `npm test` 99/99 (neu `tests/army.test.mjs`: gemeinsame Front und Tempo, Marsch → Kampf, Hysterese, Kampf → Sammeln → Marsch, Zeitlimit,
   Kampfreihenfolge mit Vorrang der Mitte, meisten Gegnern und oben, Einreihen, Ausnahme Mitte, Nachschub mit Aufschlusstempo und schwächster Lane,
   neue Armee nach Totalverlust, Gegner mit derselben Logik, Türme; `tests/crosslane.test.mjs` entfällt), Browser-Prüfung 166/166.
@@ -159,3 +167,21 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
     die als Nachschub zur gegnerischen Armee aufschließen.
 29. **Leistung:** Reihen werden nur neu gebildet, wenn sich Lanes oder Bestand ändern; im Marsch rücken die Einheiten mit ihrer Front. Der Lane-Index wird
     einmal je Tick für beide Seiten gebaut.
+30. **Forschung wirkt dauerhaft**, auch wenn die Universität später abgerissen wird (anders als Gebäude-Upgrades, REQ-01.8). Laufende Forschung ruht ohne
+    Universität und läuft nach dem Neubau weiter. Begründung: Forschung ist Wissen, kein Ausbau des Gebäudes.
+31. **Neu ziehen** gilt je Kartenwahl (Zähler je offener Wahl); **Bann** gilt für die ganze Partie: Die gebannte Karte verlässt den Pool, an ihre Stelle im
+    aktuellen Angebot tritt eine neu gezogene. Beides nur mit offener Kartenwahl im Reiter Karten.
+32. **Glücksgriff** verschiebt Ziehgewicht von gewöhnlichen zu seltenen Karten (70/25/5 → 60/35/5 bzw. 50/45/5); legendäre bleiben bei 5.
+33. **Metallurgie** erhöht den Ertrag der Fabriken, nicht Klicks und Presse („Materialertrag“ als automatischer Ertrag gelesen).
+34. **Ingenieurwesen** senkt die Kosten aller Gebäude einschließlich Fabriken.
+35. **Schmiede-Ausbau:** Die Qualitätsstufe der Schmiede hat keine Obergrenze, eine „weitere Ausbaustufe“ gäbe es also schon. Umgesetzt als stärkere
+    Stufen: jede Qualitätsstufe wirkt 2 Prozentpunkte mehr (5 % → 7 % je Stufe).
+36. **Voraussetzungen im Zweig D:** Schildträger braucht Drill I, Zweiter Forschungsplatz braucht Logistik I, Schmiede-Ausbau braucht Metallurgie I.
+37. **Schildträger** (Taste 3): 110 LP, 3 Schaden, Tempo 24 statt 34, 40 Material. Nur für den Spieler (keine neuen Gegnertypen). Die Armee geht im Tempo
+    der langsamsten Einheit; ein Schildträger bremst also die ganze Armee.
+38. **Bots und Forschung:** Die gierige Heuristik prüft höchstens alle 10 s die vier günstigsten bezahlbaren Forschungen per Vorausschau (120 s bzw. bis nach
+    der Belagerungswelle) gegen „nichts erforschen“ und startet nur bei klarem Vorteil; die Zufallsstrategie forscht zufällig; „passiv“ forscht nicht.
+    Neu ziehen und Bann nutzen die Bots nicht.
+39. **Vorrang der Mitte im Armeemodell:** Einheiten, die in der Mitte stehen, wechseln in eine äußere kämpfende Lane nur, wenn dort schon eigene Einheiten
+    im Kampfbereich stehen; sonst halten sie die Mitte, und der Gegner kommt zu ihnen (dessen Einheiten haben in ihrer Lane keinen Gegner und helfen
+    der Mitte). Das ist die Regel aus I4.3, die REQ-5.06 ausdrücklich beibehält; ohne sie tauschten zwei Armeen endlos die Lanes (Patt, siehe I5.7).

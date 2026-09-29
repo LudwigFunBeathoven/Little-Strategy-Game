@@ -68,6 +68,17 @@ test('Sammeln endet spätestens nach dem Zeitlimit', () => {
   assert.equal(a.state, 'march');
 });
 
+test('Vorrang der Mitte: die Mitte hilft keiner äußeren Lane, in der keine eigene Einheit kämpft (kein Lane-Tausch)', () => {
+  const { G, C } = game();
+  const a = G.addGroup('p', spread(Array(3).fill('laeufer'), [MID]), 300); set(G, a, 1e6, 0);
+  const e = G.addFormation('e', TOP, ['laeufer'], 300 + C.ARMY.contactRange); set(G, e, 1e6, 0); e.state = 'fight';
+  G.tick(0.05);
+  assert.equal(a.state, 'fight');
+  assert.ok(G.formMembers(a).every(u => u.lane === MID), 'Mitte bleibt, der Gegner kommt');
+  run(G, 3);
+  assert.ok(G.formMembers(e).every(u => u.lane === MID), 'der Gegner wechselt in die Mitte (seine Lane ist frei, die Mitte kämpft)');
+});
+
 test('Kampfreihenfolge: freie Lanes helfen, Mitte zuerst; eigene Lane mit Gegner geht vor', () => {
   const { G, C } = game();
   const a = G.addGroup('p', spread(Array(6).fill('laeufer'), [TOP, MID, BOT]), 300); set(G, a, 1e6, 0);
@@ -81,14 +92,17 @@ test('Kampfreihenfolge: freie Lanes helfen, Mitte zuerst; eigene Lane mit Gegner
 });
 
 test('Kampfreihenfolge ohne Mitte: Lane mit den meisten Gegnern, bei Gleichstand die obere', () => {
+  // Einheiten der Mitte helfen nur dort, wo eigene Einheiten schon kämpfen (Vorrang der Mitte); hier kämpfen oben und unten je eine
   for (const [nTop, nBot, want] of [[1, 2, BOT], [2, 1, TOP], [1, 1, TOP]]){
     const { G, C } = game();
-    const a = G.addGroup('p', spread(Array(3).fill('laeufer'), [MID]), 300); set(G, a, 1e6, 0);
+    const a = G.addGroup('p', spread(Array(3).fill('laeufer'), [MID]).concat(spread(['laeufer', 'laeufer'], [TOP, BOT])), 300); set(G, a, 1e6, 0);
     const x = 300 + C.ARMY.contactRange;
     const t = G.addFormation('e', TOP, Array(nTop).fill('laeufer'), x); set(G, t, 1e6, 0); t.state = 'fight';
     const b = G.addFormation('e', BOT, Array(nBot).fill('laeufer'), x); set(G, b, 1e6, 0); b.state = 'fight';
     G.tick(0.05);
-    assert.ok(G.formMembers(a).every(u => u.lane === want), `${nTop}:${nBot} → Lane ${want}`);
+    const m = G.formMembers(a);
+    assert.ok(m.filter(u => u.home === MID).every(u => u.lane === want), `${nTop}:${nBot} → Lane ${want}`);
+    assert.ok(m.filter(u => u.home !== MID).every(u => u.lane === u.home), 'äußere bleiben in ihrer kämpfenden Lane');
   }
 });
 

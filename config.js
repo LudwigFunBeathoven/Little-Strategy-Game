@@ -104,6 +104,8 @@ const KF_CONFIG = {
   UNITS: {
     laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, range: 14,  bounty: 8,  speed: 34 },   // speed: Marschtempo; die Armee geht im Tempo der langsamsten Einheit
     werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, range: 105, bounty: 15, speed: 34 },
+    // Schildträger (REQ-5.07, Zweig D): viel Lebenspunkte, langsam; bremst die ganze Armee (gewollter Zielkonflikt)
+    schild:  { key: '3', cost: 40, hp: 110, dmg: 3, cd: 1.0, range: 14,  bounty: 12, speed: 24, research: 'unlockSchild' },
   },
 
   /* Bauplätze: 3×3-Raster, alle ab Start offen (REQ-16.1).
@@ -178,6 +180,9 @@ const KF_CONFIG = {
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
   SIM_SIEGE_LOOKAHEAD_S: 120,   // Bot-Vorausschau reicht bis nach der Belagerungswelle, sobald sie so nah ist (REQ-48)
   SIM_SIEGE_EVAL_S: 40,         // … und so lange über ihr Ausrücken hinaus
+  SIM_RESEARCH_EVERY_S: 30,     // nach einer abgelehnten Forschung prüfen Bots erst wieder nach dieser Zeit, danach doppelt so lange …
+  SIM_RESEARCH_MAX_WAIT_S: 120, // … bis höchstens so lange (Rechenzeit der Vorausschau)
+  SIM_RESEARCH_CANDIDATES: 3,   // gierige Heuristik vergleicht die so vielen günstigsten bezahlbaren Forschungen
   MAX_CLICKS_PER_SECOND: 10,    // darüber hinausgehende Klicks verfallen (Schutz gegen Autoklicker)
   /* Automatische Presse (REQ-44): Anteil der Referenzrate ab Phase Mitte bzw. Spät */
   PRESS_REFERENCE_CPS: 6,
