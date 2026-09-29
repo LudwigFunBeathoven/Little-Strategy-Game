@@ -411,4 +411,5 @@ KF_I18N.en = {
   'grid.free': 'free',
   'grid.aria': 'Plots in your realm',
   'grid.cell': 'Plot {n}',
+  'log.midRefill': 'The centre has fallen: units from the outer lanes take it over.',
 };

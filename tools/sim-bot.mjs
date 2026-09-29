@@ -211,7 +211,7 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
     combo: S.slots.filter(Boolean).map(x => x.type).sort().join('+') || '–',
     built: stats.built, demolished: stats.demolished,
     offered: stats.offered, picked: stats.picked, draftTimes: stats.draftTimes, offers: stats.offers,
-    wallFall, maxArmy: S.stats.maxArmy || 0,
+    wallFall, maxArmy: S.stats.maxArmy || 0, fightShare: S.stats.armyTime ? (S.stats.fightTime || 0) / S.stats.armyTime : null,
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
   };

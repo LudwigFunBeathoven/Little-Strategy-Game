@@ -90,6 +90,8 @@ if (!isMainThread){
     report.wallFall = median(Z.map(r => r.wallFall).filter(t => t != null));
     report.wallFallShare = Z.length ? Z.filter(r => r.wallFall != null).length / Z.length : null;
     report.legendaryShare = known.length ? known.filter(r => r.cards.some(id => legendary.has(id))).length / known.length : null;
+    report.fightShare = median(known.map(r => r.fightShare).filter(v => v != null));
+    console.log(`Zeitanteil der eigenen Armee im Zustand Kampf (Median; aktiv, durchschnitt, gelegentlich): ${report.fightShare == null ? '–' : Math.round(100 * report.fightShare) + ' %'}`);
     console.log(`Größte eigene Armee je Partie (Median; aktiv, durchschnitt, gelegentlich): ${report.maxArmy ?? '–'} Einheiten`);
     console.log(`Fall des ersten Mauerabschnitts (Median der Partien mit Fall): ${mmss(report.wallFall)} · in ${pct(Z.filter(r => r.wallFall != null).length, Z.length)} der Partien`);
     console.log(`Partien mit mindestens einer legendären Karte (aktiv, durchschnitt, gelegentlich): ${pct(known.filter(r => r.cards.some(id => legendary.has(id))).length, known.length)}`);

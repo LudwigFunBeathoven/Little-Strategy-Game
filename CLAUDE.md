@@ -80,12 +80,15 @@ Iteration 4: Vergleichswert einer Karte ist „angeboten und nicht gewählt“ (
 - Gegnerische Einheiten auf dem Feld sind begrenzt (`maxField`); die Belagerungswelle rückt immer vollständig aus.
 - Entfernt in I4.2 (Simulation ohne sie: 0–2 % Patts): Belagerung als Stärke je Einheit, Nachskalieren der Gegner im Feld.
 
-## Kampf in Formationen (REQ-42)
-Alle Einheiten einer Welle in derselben Lane bilden eine Formation, die sich als Block mit `FORMATION_SPEED` bewegt.
-Vorn Nahkämpfer in Reihen zu höchstens `FORMATION_ROW_MAX`, dahinter Fernkämpfer; die Reihen werden laufend neu gebildet.
-Seit I5.5 kämpft jede Einheit einzeln (`resolveCombat`): eigenes Ziel (nächster Gegner der Lane in Reichweite, Gleichstand → niedrigste Id),
-eigene Abklingzeit, alle Angriffe eines Ticks gleichzeitig; Nahkämpfer brauchen Kontakt, Fernkämpfer schießen über eigene Reihen. Formationen, die eine
-stehende eigene Formation einholen, verschmelzen. Transiente Daten (vorderste Reihe, Ziel) liegen nicht im Spielstand.
+## Armee und Kampf (REQ-5.05, REQ-5.06)
+Jede Welle bildet eine Gruppe über alle Lanes (`S.forms`); die älteste Gruppe einer Seite ist die Armee (`main`), spätere sind Nachschub.
+Alle Lanes einer Gruppe teilen die Front `x`. Je Lane vorn Nahkämpfer in Reihen zu höchstens `FORMATION_ROW_MAX`, dahinter Fernkämpfer.
+Zustände: Marsch (Tempo der langsamsten Einheit, Nachschub × `ARMY.catchUpFactor`) → Kampf (Gegner, Mauer oder Basis in `ARMY.contactRange`,
+die Gruppe hält) → Sammeln (nichts mehr in `contactRange + contactHysteresis`; alle zurück in die Heimat-Lane, höchstens `regroupTimeoutS`) → Marsch.
+Im Kampf gehen Einheiten ohne Gegner in ihrer Heimat-Lane in die kämpfende Lane (Mitte zuerst, dann die mit den meisten Gegnern, dann oben).
+Fällt die letzte Einheit der Mitte, geben die äußeren Lanes ein Drittel der Armee ab (Nahkämpfer zuerst). Der Gegner nutzt denselben Code.
+Gekämpft wird je Einheit (`resolveCombat`): eigenes Ziel (nächster Gegner der aktuellen Lane in Reichweite, Gleichstand → niedrigste Id),
+eigene Abklingzeit, alle Angriffe eines Ticks gleichzeitig. Transiente Daten (Ziele, vorderste Reihe) liegen in Closure-Maps, nicht im Spielstand.
 
 ## Arbeitsweise in Inkrementen
 Ein Inkrement ist fertig, wenn: das Spiel über `index.html` ohne Konsolenfehler startet; `npm test` und `npm run test:browser`

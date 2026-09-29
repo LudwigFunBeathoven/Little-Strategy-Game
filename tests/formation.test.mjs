@@ -19,7 +19,7 @@ test('Alle Einheiten einer Formation haben dieselbe Geschwindigkeit', () => {
   for (let i = 0; i < 20; i++) G.tick(0.05);
   const moved = G.formMembers(f).map(u => u.x - before.get(u.id));
   assert.ok(moved.every(d => Math.abs(d - moved[0]) < 1e-9), 'gleicher Weg für alle');
-  assert.ok(Math.abs(moved[0] - C.FORMATION_SPEED * 1) < 1e-6, 'Weg = FORMATION_SPEED × Zeit');
+  assert.ok(Math.abs(moved[0] - C.UNITS.laeufer.speed * 1) < 1e-6, 'Weg = Marschtempo × Zeit');
 });
 
 test('Aufbau: höchstens FORMATION_ROW_MAX Nahkämpfer je Reihe, Fernkämpfer dahinter', () => {
@@ -77,12 +77,12 @@ test('Eine Formation verschmilzt mit einer kämpfenden eigenen Formation', () =>
   assert.equal(G.formMembers(G.S.forms.find(f => f.side === 'p')).length, 4);
 });
 
-test('Formationen gelten auch für Gegner: eine Gegnerwelle je Lane rückt als Formation aus', () => {
+test('Gegnerwellen rücken als eine Gruppe über ihre Lanes aus (REQ-5.06)', () => {
   const { G } = game();
   G.S.nextWave = G.S.t + 0.05;
   G.S.nextEnemy = [{ type: 'laeufer', lane: MID }, { type: 'werfer', lane: MID }, { type: 'laeufer', lane: 0 }];
   G.tick(0.05);
   const ef = G.S.forms.filter(f => f.side === 'e');
-  assert.equal(ef.length, 2);
-  assert.equal(G.formMembers(ef.find(f => f.lane === MID)).length, 2);
+  assert.equal(ef.length, 1);
+  assert.deepEqual(G.formMembers(ef[0]).map(u => u.lane).sort(), [0, MID, MID]);
 });

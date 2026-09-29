@@ -13,7 +13,7 @@ Stand von Iteration 4: `docs/archiv/STAND-iteration-4.md`.
 | I5.3 | Drei Bänder, Aufteilung von `ui.js` | 5.03 | fertig |
 | I5.4 | Bauen über den Arbeitsbereich, Tastatur | 5.04 | fertig |
 | I5.5 | Einzelsimulation | 5.05 | fertig |
-| I5.6 | Armee als gemeinsame Welle | 5.06 | offen |
+| I5.6 | Armee als gemeinsame Welle | 5.06 | fertig |
 | I5.7 | Universität | 5.07 | offen |
 | I5.8 | Balancing-Serie | 5.08 | offen |
 | I5.9 | Polish, Fehlerbehebung, Testpaket, Bericht | 5.09–5.11 | offen |
@@ -46,6 +46,17 @@ Kennzahlen der Basisserie (Median Sieg; Siegquote):
 | Schwer | 8:59 · 84 % | 10:23 · 52 % | 11:39 · 26 % | 0 % | 0 %, spätestens 21:07 |
 
 ## Prüfergebnisse
+- I5.6: `npm test` 99/99 (neu `tests/army.test.mjs`: gemeinsame Front und Tempo, Marsch → Kampf, Hysterese, Kampf → Sammeln → Marsch, Zeitlimit,
+  Kampfreihenfolge mit Vorrang der Mitte, meisten Gegnern und oben, Einreihen, Ausnahme Mitte, Nachschub mit Aufschlusstempo und schwächster Lane,
+  neue Armee nach Totalverlust, Gegner mit derselben Logik, Türme; `tests/crosslane.test.mjs` entfällt), Browser-Prüfung 166/166.
+  **Pattprüfung vor jedem Balancing:** Kurzsimulation mit 200 Partien 198 Siege, 2 Niederlagen, 0 offen; Serie mit 50 Partien je Feld (750):
+  0 offen, Dauer 2:18 min (Basislinie 4:19). Zeitanteil der Armee im Kampf: Median 55 %. Tick-Zeit mit 2 × 60 Einheiten: Median 0,10–0,11 ms
+  (Basislinie 0,093 ms, gleiche Maschine, gleicher Messlauf; +10–18 %). Rohdaten `reports/i5-6-ziele.*`, Bildschirmfoto der Front im Marsch
+  `reports/screens/i5-armee-marsch-1280x720.png`.
+  Patt-Risiken aus REQ-5.06: (1) ein einzelner Gegner hält die Armee an – fällt schnell, Kampf-Zeitanteil 55 %, keine offene Partie; (2) Sammeln ohne Ende –
+  Zeitlimit 4 s, getestet; (3) Flattern zwischen Sammeln und Kampf – Hysterese 16, getestet; (4) Warten auf die langsamste Einheit – alle Einheiten
+  gleich schnell, Partien kürzer als in v0.5. **Die Armee ist durch die Bündelung deutlich stärker**: Normal „durchschnitt“ gewinnt 98 % nach 6:19
+  (v0.5: 86 % nach 10:04). Ausgleich in I5.8.
 - I5.5: `npm test` 93/93 (neu: zwei gegen einen, nächstes Ziel, Gleichstand und Zielbindung, symmetrisches Duell, Kontakt und Nachrücken, Turm mit
   Einzelziel, gleicher Seed = gleiche Partie, Tick ≤ 1 ms), Browser-Prüfung grün. Kurzsimulation mit 200 Partien: 144 Siege, 56 Niederlagen,
   **0 offen**, Dauer 1:39 min. Tick-Zeit mit 2 × 60 Einheiten: Median 0,11 ms, p95 0,25 ms (Basislinie 0,09–0,11 / 0,24–0,34).
@@ -130,3 +141,21 @@ und `user-select: none`. Tastenwiederholung löst keine Einheitenkäufe aus.
     vorrangigen Lane ein Gegner in Reichweite ist. Innerhalb derselben Lane bleibt das Ziel, bis es fällt oder die Reichweite verlässt.
 21. **Gleichzeitigkeit:** Ziele werden aus dem Zustand zu Tickbeginn bestimmt, danach werden alle Treffer angewendet. Wirkungen, die erst durch den Treffer
     entstehen (Stacheln der Mauer), treffen den Angreifer im selben Schritt.
+22. **Gruppe statt Formation je Lane:** Jede Welle ist eine Gruppe über alle Lanes (`S.forms` enthält jetzt Gruppen). Die älteste Gruppe einer Seite ist die Armee;
+    fällt sie ganz, übernimmt die nächste vorhandene Gruppe, sonst die nächste Welle ab dem Tor.
+23. **Kontaktreichweite = Nahkampf-Kontakt (14):** Die Armee hält, sobald die Front auf 14 an einen Gegner, die Mauer oder die Basis heranrückt. Bei einem
+    größeren Wert stünde die Armee außerhalb der Nahkampfreichweite still. Fernkämpfer schießen auch im Marsch auf alles in Reichweite.
+    Hysterese 16: Kampf endet erst, wenn nichts mehr innerhalb von 30 ist.
+24. **„Gegner in der eigenen Lane“** heißt: die Heimat-Lane ist im Kampfbereich (Gegner, Mauer oder Basis innerhalb 30 von der Front). Einheiten ohne Kampf
+    in der Heimat-Lane gehen in die kämpfende Lane: Mitte zuerst; sonst die mit den meisten Gegnern im Kampfbereich der Front (Tiefe: fünf Reihen);
+    bei Gleichstand die obere.
+25. **Ausnahme Mitte** wird ausgelöst, wenn die letzte Einheit mit **Heimat** Mitte fällt (nicht, wenn Einheiten die Mitte verlassen, um zu helfen; sonst
+    entstünde eine Schleife zwischen Nachrücken und Helfen). Abgegeben wird je Schritt die hinterste Einheit der volleren äußeren Lane; Nahkämpfer
+    vor Fernkämpfern über beide Lanes hinweg.
+26. **Nachschub** steht, wenn er die Armee erreicht, eine Reihe hinter deren letzter Reihe und verschmilzt dort. Jede Einheit geht einzeln in die dann
+    schwächste Lane (nach Heimat gezählt); Gleichstand mit der Mitte → Mitte, sonst → oben. Mit „Alles auf die Mitte“ bleibt alles in der Mitte.
+27. **Aufstellung der eigenen Welle:** am Tor (bzw. Vorposten), aber nie vor dem vordersten Gegner in irgendeiner Lane (vorher je Lane).
+28. **Gegnerische Wellen** rücken als eine Gruppe aus; Nachzügler aus der Warteschlange (Feldgrenze, Belagerung, Notaufgebot) als eigene kleine Gruppen,
+    die als Nachschub zur gegnerischen Armee aufschließen.
+29. **Leistung:** Reihen werden nur neu gebildet, wenn sich Lanes oder Bestand ändern; im Marsch rücken die Einheiten mit ihrer Front. Der Lane-Index wird
+    einmal je Tick für beide Seiten gebaut.

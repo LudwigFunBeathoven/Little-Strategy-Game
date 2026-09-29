@@ -39,14 +39,22 @@ const KF_CONFIG = {
   ENEMY_BASE_WIDTH: 44,
   SPAWN_BLOCK_DIST: 12,
   /* Formationen (REQ-42) */
-  FORMATION_SPEED: 34,          // alle Einheitentypen gleich schnell (Mittel der bisherigen 38 und 30)
   FORMATION_ROW_MAX: 5,         // höchstens so viele Einheiten je Reihe quer zur Lane
   ROW_GAP: 16,                  // Abstand zwischen zwei Reihen
   MELEE_REACH: 14,              // Kontaktabstand der vordersten Nahkampfreihe
   /* Lane-übergreifender Kampf (REQ-43) */
-  SUPPORT_RANGE: 60,            // eine Formationslänge: drei Reihen plus Kontakt
   LANE_SHIFT_S: 1.2,            // Dauer der Querbewegung in eine Nachbar-Lane
   TOWER_RANGE: 120,             // Grundreichweite der eigenen Türme (bisher PLAYER_TURRET.range)
+
+  /* Armee als gemeinsame Welle (REQ-5.06); gilt gespiegelt auch für den Gegner */
+  ARMY: {
+    contactRange: 14,           // Abstand der Front zu Gegner, Mauer oder Basis, ab dem die Armee in den Kampf geht (Nahkampf-Kontakt)
+    contactHysteresis: 16,      // Zusatzabstand für das Verlassen des Kampfes (verhindert Flattern zwischen Kampf und Sammeln)
+    regroupTimeoutS: 4,         // Sammeln endet spätestens nach dieser Zeit
+    catchUpFactor: 1.5,         // Aufschlusstempo des Nachschubs relativ zum Marschtempo
+    speedRule: 'slowest',       // Marschtempo = langsamste Einheit der Armee
+    midRefillShare: 1 / 3,      // fällt die letzte Einheit der Mitte, erhält die Mitte diesen Anteil der Armee (aufgerundet)
+  },
 
   /* Oberfläche (REQ-5.01, REQ-5.03) */
   UI: {
@@ -94,8 +102,8 @@ const KF_CONFIG = {
 
   /* Einheiten */
   UNITS: {
-    laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, range: 14,  bounty: 8 },
-    werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, range: 105, bounty: 15 },
+    laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, range: 14,  bounty: 8,  speed: 34 },   // speed: Marschtempo; die Armee geht im Tempo der langsamsten Einheit
+    werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, range: 105, bounty: 15, speed: 34 },
   },
 
   /* Bauplätze: 3×3-Raster, alle ab Start offen (REQ-16.1).

@@ -253,56 +253,64 @@ function create(){
     const spec = C.UNITS[type], p = side === 'p';
     const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
     return {
-      id: S.nextId++, side, type, lane, laneF: lane, x: x ?? (p ? spawnX() : W - EBW), form: form ?? null,
+      id: S.nextId++, side, type, lane, laneF: lane, home: lane, x: x ?? (p ? spawnX() : W - EBW), form: form ?? null, speed: spec.speed,
       range: unitRange(side, type), ranged: isRangedType(type),
       hp, maxHp: hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()),
       cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, bob: rnd() * 6, row: 0, col: 0, rowSize: 1,
     };
   }
-  /* Neue Formation aus einer Liste von Einheitentypen; x = Position der vordersten Reihe */
-  function addFormation(side, lane, types, x){
-    const f = { id: S.nextId++, side, home: lane, lane, laneF: lane, x, moving: false, fighting: false, rows: 0, size: 0 };
-    S.forms.push(f);
-    for (const type of types) S.units.push(makeUnit(side, type, lane, x, f.id));
-    layoutAll();
-    return f;
+  /* ---------- Armee als gemeinsame Welle (REQ-5.06) ----------
+     Eine Gruppe (S.forms) ist die Armee einer Seite (main) oder Nachschub auf dem Weg zu ihr. Alle Lanes einer Gruppe teilen die Front x.
+     Je Lane stehen vorn Nahkämpfer in Reihen zu höchstens FORMATION_ROW_MAX, dahinter Fernkämpfer (Reihen werden laufend neu gebildet).
+     Jede Einheit hat eine Heimat-Lane (home) und eine aktuelle Lane (lane); laneF ist die Querbewegung dazwischen. */
+  function makeGroup(side, x){
+    const g = { id: S.nextId++, side, main: !S.forms.some(o => o.side === side && o.main), state: 'march', x, t: 0,
+                size: 0, rows: 0, fighting: false, moving: false, lane: null };
+    S.forms.push(g);
+    return g;
   }
-  /* Reihen je Formation bilden und die Position jeder Einheit daraus ableiten */
-  let fronts = new Map();                           // vorderste Reihe je Formation; nicht im Spielstand (Kopien per JSON)
-  const frontOf = f => fronts.get(f.id) || [];
+  /* Neue Gruppe mit allen Einheiten in einer Lane (Kurzform für Tests und Nachzügler); x = Front */
+  function addFormation(side, lane, types, x){
+    const g = makeGroup(side, x); g.lane = lane;
+    for (const type of types) S.units.push(makeUnit(side, type, lane, x, g.id));
+    layoutAll();
+    return g;
+  }
+  /* Neue Gruppe aus [{ type, lane }] */
+  function addGroup(side, placed, x){
+    const g = makeGroup(side, x);
+    for (const q of placed) S.units.push(makeUnit(side, q.type, q.lane, x, g.id));
+    layoutAll();
+    return g;
+  }
+  /* Reihen je Gruppe und Lane bilden und die Position jeder Einheit daraus ableiten */
+  let fronts = new Map();                           // vorderste Reihe je Gruppe und Lane; nicht im Spielstand (Kopien per JSON)
   function layoutAll(){
     const byForm = new Map();
     fronts = new Map();
-    for (const f of S.forms) byForm.set(f.id, []);
-    for (const u of S.units) if (u.hp > 0 && byForm.has(u.form)) byForm.get(u.form).push(u);
+    for (const f of S.forms) byForm.set(f.id, Array.from({ length: LANES }, () => []));
+    for (const u of S.units) if (u.hp > 0 && byForm.has(u.form)) byForm.get(u.form)[u.lane].push(u);
     for (const f of S.forms){
-      const m = byForm.get(f.id), dir = dirOf(f.side), R = C.FORMATION_ROW_MAX;
-      const melee = m.filter(u => !u.ranged).sort((a, b) => a.id - b.id), ranged = m.filter(u => u.ranged).sort((a, b) => a.id - b.id);
-      const rows = [];
-      for (const g of [melee, ranged]) for (let i = 0; i < g.length; i += R) rows.push(g.slice(i, i + R));
-      rows.forEach((r, ri) => r.forEach((u, ci) => {
-        u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; u.x = f.x - dir * ri * C.ROW_GAP; u.lane = f.lane; u.laneF = f.laneF; u.moving = f.moving;
-      }));
-      f.rows = rows.length; f.size = m.length; fronts.set(f.id, rows[0] || []);
+      const dir = dirOf(f.side), R = C.FORMATION_ROW_MAX;
+      f.size = 0; f.rows = 0;
+      byForm.get(f.id).forEach((m, lane) => {
+        const melee = m.filter(u => !u.ranged).sort((a, b) => a.id - b.id), ranged = m.filter(u => u.ranged).sort((a, b) => a.id - b.id);
+        const rows = [];
+        for (const g of [melee, ranged]) for (let i = 0; i < g.length; i += R) rows.push(g.slice(i, i + R));
+        rows.forEach((r, ri) => r.forEach((u, ci) => {
+          u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; u.x = f.x - dir * ri * C.ROW_GAP; u.moving = f.moving;
+        }));
+        f.size += m.length; f.rows = Math.max(f.rows, rows.length);
+        fronts.set(f.id + ':' + lane, rows[0] || []);
+      });
     }
+    const gone = S.forms.filter(f => f.size === 0);
     S.forms = S.forms.filter(f => f.size > 0);
+    // Fällt die Armee vollständig, wird die älteste verbliebene Gruppe dieser Seite zur Armee; sonst die nächste Welle ab dem Tor
+    for (const g of gone) if (g.main){ const next = S.forms.find(o => o.side === g.side); if (next) next.main = true; }
   }
   const formMembers = f => S.units.filter(u => u.form === f.id && u.hp > 0);
-  /* Reichweite der vordersten Reihe: Nahkampf-Kontakt oder, bei reiner Fernkampf-Front, deren Reichweite */
-  const frontReach = f => { const fr = frontOf(f); return fr.length && fr[0].ranged ? Math.min(...fr.map(u => u.range)) : C.MELEE_REACH; };
-  /* Nächste gegnerische Formation vor f in derselben Lane; d = Abstand der vordersten Reihen */
-  const arrived = f => f.laneF === f.lane;
-  function enemyAhead(f, lane){
-    const dir = dirOf(f.side);
-    if (lane === undefined) lane = f.lane;
-    let best = null, bd = Infinity;
-    for (const o of S.forms){
-      if (o.side === f.side || o.lane !== lane || !arrived(o) || o.size === 0) continue;
-      const d = (o.x - f.x) * dir;
-      if (d > -C.TARGET_BEHIND_TOLERANCE && d < bd){ bd = d; best = o; }
-    }
-    return best ? { f: best, d: bd } : null;
-  }
+  const mainOf = side => S.forms.find(f => f.side === side && f.main) || null;
   const spawnBlocked = lane => S.units.some(u => u.side === 'e' && u.lane === lane && Math.abs(u.x - (W - EBW)) < C.SPAWN_BLOCK_DIST);
   const gateBlocked = lane => S.units.some(u => u.side === 'p' && u.lane === lane && u.hp > 0 && u.x >= W - EBW - C.GATE_BLOCK_DIST);
 
@@ -339,12 +347,6 @@ function create(){
     const lm = distribute(melee.length, strong), lr = distribute(ranged.length, strong);
     return [...melee.map((type, i) => ({ type, lane: lm[i] })), ...ranged.map((type, i) => ({ type, lane: lr[i] }))];
   }
-  /* Gruppiert eine Welle nach Lane: { lane: [typen] } */
-  function byLane(group){
-    const out = {};
-    for (const g of group) (out[g.lane] ||= []).push(g.type);
-    return out;
-  }
   /* Eigene Welle; der eigene Takt kann durch Karten vom Takt der Gegnerwellen abweichen (Große Armee, Blitzkrieg) */
   const ownWaveInterval = () => C.WAVE_INTERVAL_S * mMul('ownWaveInterval');
   function launchOwnWave(){
@@ -353,8 +355,8 @@ function create(){
       S.stats.waves = (S.stats.waves || 0) + 1;
       if (S.queue.length >= supplyCap()) S.stats.wavesFull = (S.stats.wavesFull || 0) + 1;
       const types = S.queue.map(q => q.type);
-      for (const [lane, ts] of Object.entries(byLane(assignLanes(types, strongerLane(S.nextEnemy)))))
-        addFormation('p', Number(lane), ts, deployX(Number(lane)));
+      // eine Gruppe über alle Lanes: Armee, falls es keine gibt, sonst Nachschub (REQ-5.06)
+      addGroup('p', assignLanes(types, strongerLane(S.nextEnemy)), deployX());
       S.queue = [];
       S.lastOrder = types;
       S.stats.maxArmy = Math.max(S.stats.maxArmy || 0, S.units.filter(u => u.side === 'p').length);
@@ -371,15 +373,12 @@ function create(){
     const siege = S.nextEnemySiege;
     if (siege){ S.siegeDone = true; S.siegeWaveT = S.t; log('log.siege'); }
     let field = S.units.filter(u => u.side === 'e').length;
-    for (const [ls, types] of Object.entries(byLane(enemy))){
-      const lane = Number(ls), now = [];
-      for (const type of types){
-        if (siege || (field < diffCfg().maxField && !gateBlocked(lane))){ now.push(type); field++; }
-        else S.enemyQueue.push({ type, lane, at: S.t });
-      }
-      if (!now.length) continue;
-      addFormation('e', lane, now, W - EBW);
+    const now = [];
+    for (const q of enemy){
+      if (siege || (field < diffCfg().maxField && !gateBlocked(q.lane))){ now.push(q); field++; }
+      else S.enemyQueue.push({ type: q.type, lane: q.lane, at: S.t });
     }
+    if (now.length) addGroup('e', now, W - EBW);          // gespiegelte Armeelogik für den Gegner (REQ-5.06)
     if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('log.firstWave'); }
     S.waveNo++;
     S.nextWave += C.WAVE_INTERVAL_S;
@@ -388,16 +387,12 @@ function create(){
   const waveIn = () => Math.max(0, S.nextOwnWave - S.t);
   const enemyWaveIn = () => Math.max(0, S.nextWave - S.t);
   const ownOnField = () => S.units.reduce((n, u) => n + (u.side === 'p' ? 1 : 0), 0);
-  /* Zustand der Armee für die Anzeige (REQ-5.03): Kampf, Marsch oder keine Armee */
-  function armyState(side){
-    let any = false;
-    for (const f of S.forms) if (f.side === side && f.size > 0){ if (f.fighting) return 'fight'; any = true; }
-    return any ? 'march' : 'none';
-  }
-  /* Aufstellpunkt einer Lane: am Tor, mit Vorposten weiter vorn, aber nie hinter der vordersten gegnerischen Einheit */
-  function deployX(lane){
+  /* Zustand der Armee für die Anzeige (REQ-5.03, REQ-5.06): march, fight, regroup oder none */
+  function armyState(side){ const m = mainOf(side); return m ? m.state : 'none'; }
+  /* Aufstellpunkt der eigenen Welle: am Tor, mit Vorposten weiter vorn, aber nie hinter der vordersten gegnerischen Einheit */
+  function deployX(){
     let x = spawnX();
-    for (const u of S.units) if (u.side === 'e' && u.lane === lane && u.hp > 0) x = Math.min(x, u.x - C.ROW_GAP);
+    for (const u of S.units) if (u.side === 'e' && u.hp > 0) x = Math.min(x, u.x - C.ROW_GAP);
     return Math.max(PBW, x);
   }
   const shot = s => { if (FX.on) FX.shots.push(s); };
@@ -436,31 +431,6 @@ function create(){
     if (u.ranged) shot({ x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, lane: u.laneF, t: 0, dur: 0.3 });
   }
 
-  /* Bewegung und Kampf aller Formationen. Die Formation hält, sobald die vorderste Reihe Kontakt hat.
-     Gekämpft wird je Einheit in resolveCombat (REQ-5.05). */
-  /* Lane-übergreifender Kampf (REQ-43): Ohne Ziel in der eigenen Lane innerhalb von SUPPORT_RANGE wechselt eine Formation in eine
-     Nachbar-Lane mit Gegner in diesem Abstand (von oben oder unten nur in die Mitte). Ziele in der eigenen Lane gehen immer vor;
-     nach dem Kampf kehrt die Formation zurück. Der Wechsel ist eine Querbewegung, währenddessen kämpft die Formation nicht. */
-  const neighbours = lane => lane === GATE ? [0, LANES - 1] : [GATE];
-  const inSupport = (f, lane) => { const a = enemyAhead(f, lane); return a && a.d <= C.SUPPORT_RANGE ? a : null; };
-  function chooseLane(f){
-    if (!arrived(f)) return;
-    if (inSupport(f, f.home)){ f.lane = f.home; return; }              // eigene Lane hat ein Ziel: dort bleiben oder zurück
-    if (f.lane !== f.home){ if (!inSupport(f, f.lane)) f.lane = f.home; return; }
-    // Die Mitte hat Vorrang: Formationen oben und unten wechseln frei in die Mitte; eine Formation der Mitte hilft einer
-    // Seiten-Lane nur dort, wo der Gegner schon kämpft (sonst tauschen zwei zielfreie Formationen endlos die Lanes)
-    let best = null;
-    for (const l of neighbours(f.home)){
-      const a = inSupport(f, l);
-      if (!a || (f.home === GATE && !(a.f.fighting || inSupport(a.f, a.f.home)))) continue;
-      if (!best || a.d < best.d) best = { lane: l, d: a.d };
-    }
-    if (best) f.lane = best.lane;
-  }
-  function shiftLane(f, dt){
-    const step = dt / C.LANE_SHIFT_S;
-    f.laneF = Math.abs(f.lane - f.laneF) <= step ? f.lane : f.laneF + Math.sign(f.lane - f.laneF) * step;
-  }
   /* ---------- Einzelsimulation (REQ-5.05) ----------
      Jede Einheit wählt ihr Ziel selbst: den nächsten Gegner der eigenen Lane in Reichweite, bei Gleichstand die niedrigste Id.
      Ein Ziel bleibt, bis es fällt oder die Reichweite verlässt. Nahkämpfer brauchen Kontakt (MELEE_REACH), Fernkämpfer schießen
@@ -471,10 +441,14 @@ function create(){
   const reachOf = u => u.ranged ? u.range : C.MELEE_REACH;
   const fighting = u => u.hp > 0 && u.laneF === u.lane;        // während der Querbewegung weder Angreifer noch Ziel
   /* Je Seite und Lane die kampffähigen Einheiten, nach x sortiert: Zielsuche per Binärsuche statt über alle Einheiten */
-  function laneIndex(side){
-    const idx = Array.from({ length: LANES }, () => []);
-    for (const u of S.units) if (u.side === side && fighting(u)) idx[u.lane].push(u);
-    for (const a of idx) a.sort((p, q) => p.x - q.x || p.id - q.id);
+  const byX = (p, q) => p.x - q.x || p.id - q.id;
+  function laneIndex(side){ return laneIndexBoth()[side]; }
+  /* Beide Seiten in einem Durchlauf */
+  function laneIndexBoth(){
+    const idx = { p: [[], [], []], e: [[], [], []] };
+    for (const u of S.units) if (fighting(u)) idx[u.side][u.lane].push(u);
+    for (const a of idx.p) a.sort(byX);
+    for (const a of idx.e) a.sort(byX);
     return idx;
   }
   /* Nächste Einheit zu x innerhalb von reach; bei gleichem Abstand die niedrigste Id */
@@ -492,10 +466,11 @@ function create(){
     const id = targets.get(key), tg = id !== undefined ? byId.get(id) : null;
     return tg && fighting(tg) && lanes.includes(tg.lane) && Math.abs(tg.x - x) <= reach ? tg : null;
   }
-  function resolveCombat(dt){
-    byId.clear();
-    for (const u of S.units) byId.set(u.id, u);
-    const idx = { p: laneIndex('p'), e: laneIndex('e') };
+  let byIdFor = null, byIdLen = -1;
+  function resolveCombat(dt, given){
+    // Zuordnung Id → Einheit nur neu aufbauen, wenn sich die Einheitenliste geändert hat
+    if (byIdFor !== S.units || byIdLen !== S.units.length){ byId.clear(); for (const u of S.units) byId.set(u.id, u); byIdFor = S.units; byIdLen = S.units.length; }
+    const idx = given || laneIndexBoth();
     const attacks = [];
     // 1. Ziele bestimmen, Zustand zu Tickbeginn
     for (const u of S.units){
@@ -543,55 +518,141 @@ function create(){
   /* Ausfallschritt im Nahkampf (nur Darstellung, außerhalb des Spielstands) */
   function lunge(u){ if (FX.on) FX.lunge.set(u.id, 0); }
 
-  function updateForms(dt){
-    layoutAll();
-    for (const f of S.forms) chooseLane(f);
-    for (const f of S.forms){
-      if (!arrived(f)){ shiftLane(f, dt); f.fighting = false; f.moving = true; continue; }
-      const dir = dirOf(f.side), reach = frontReach(f), ahead = enemyAhead(f);
-      const baseD = (baseX(f.side) - f.x) * dir;
-      const contact = !!ahead && ahead.d <= reach;
-      const baseContact = !contact && baseD <= reach;
-      f.fighting = contact || baseContact;
-      f.moving = false;
-      if (!f.fighting){
-        let step = C.FORMATION_SPEED * dt;
-        if (ahead) step = Math.min(step, Math.max(0, ahead.d - reach));
-        step = Math.min(step, Math.max(0, baseD - reach));
-        f.x += dir * step;
-        f.moving = step > 0;
+  /* ---------- Zustände der Armee (REQ-5.06): Marsch → Kampf → Sammeln → Marsch ----------
+     Marsch: gemeinsame Front über alle Lanes, Tempo der langsamsten Einheit; Nachschub mit Aufschlusstempo bis hinter die Armee.
+     Kampf: sobald in irgendeiner Lane ein Gegner, eine Mauer oder die Basis in Kontaktreichweite ist; die Gruppe hält an.
+       Jede Einheit: 1. Gegner in der Heimat-Lane → dorthin; 2. sonst in die kämpfende Lane (Mitte zuerst, dann die mit den meisten
+       Gegnern, bei Gleichstand die obere); dort reiht sie sich ein (Nahkämpfer füllen vorn, Fernkämpfer dahinter).
+     Sammeln: kein Gegner mehr in Kontaktreichweite plus Hysterese; alle kehren in ihre Heimat-Lane zurück, dann Marsch
+       (spätestens nach ARMY.regroupTimeoutS).
+     Ausnahme Mitte: Fällt die letzte Einheit mit Heimat Mitte, geben die äußeren Lanes Einheiten ab, bis die Mitte ein Drittel hat. */
+  const AR = C.ARMY;
+  const dirTo = side => dirOf(side);
+  /* Abstand von der Front einer Gruppe zum nächsten Gegner, zur Mauer oder zur Basis in einer Lane */
+  function threat(g, lane, foes){
+    const dir = dirTo(g.side);
+    let d = (baseX(g.side) - g.x) * dir;
+    for (const u of foes[lane]){ const dd = (u.x - g.x) * dir; if (dd > -C.TARGET_BEHIND_TOLERANCE && dd < d) d = dd; }
+    return d;
+  }
+  /* Zahl der Gegner einer Lane im Kampfbereich der Front, für die Wahl der kämpfenden Lane */
+  function foesNear(g, lane, foes){
+    const dir = dirTo(g.side), zone = AR.contactRange + AR.contactHysteresis + C.ROW_GAP * C.FORMATION_ROW_MAX;
+    let n = 0;
+    for (const u of foes[lane]){ const dd = (u.x - g.x) * dir; if (dd > -C.TARGET_BEHIND_TOLERANCE && dd <= zone) n++; }
+    return n;
+  }
+  const groupSpeed = (g, members) => Math.min(...members.map(u => u.speed || C.UNITS[u.type].speed)) * (g.main ? 1 : AR.catchUpFactor);
+  const lanesOf = members => { const c = new Array(LANES).fill(0); for (const u of members) c[u.home]++; return c; };
+  /* Schwächste Lane (wenigste Einheiten nach Heimat), bei Gleichstand die Mitte, sonst die obere */
+  function weakestLane(counts, side){
+    if (side === 'p' && mAdd('allMid') > 0) return GATE;               // Alles auf die Mitte (REQ-45)
+    let best = GATE;
+    for (const l of [0, 2]) if (counts[l] < counts[best] || (counts[l] === counts[best] && best !== GATE && l < best)) best = l;
+    return best;
+  }
+  /* Ausnahme Mitte: äußere Lanes geben Einheiten ab (Nahkämpfer zuerst, aus der volleren Lane), bis die Mitte ein Drittel hat */
+  function refillMid(g){
+    const m = formMembers(g), need = Math.ceil(m.length * AR.midRefillShare);
+    const c = lanesOf(m);
+    while (c[GATE] < need){
+      // Nahkämpfer zuerst; unter gleichen Typen aus der volleren äußeren Lane (bei Gleichstand oben), dort die hinterste Einheit
+      const outer = m.filter(u => u.home !== GATE);
+      if (!outer.length) break;
+      const pool = outer.some(u => !u.ranged) ? outer.filter(u => !u.ranged) : outer;
+      const from = [0, 2].filter(l => pool.some(u => u.home === l)).sort((a, b) => c[b] - c[a] || a - b)[0];
+      const pick = pool.filter(u => u.home === from).sort((a, b) => b.id - a.id)[0];
+      pick.home = GATE; if (!g.fighting) pick.lane = GATE; c[from]--; c[GATE]++;
+    }
+    log('log.midRefill');
+  }
+  /* Nachschub: hinter der Armee angekommen, verschmilzt er und füllt die schwächste Lane auf */
+  function mergeInto(main, g){
+    const c = lanesOf(formMembers(main));
+    for (const u of formMembers(g).sort((a, b) => a.id - b.id)){
+      const l = weakestLane(c, g.side);
+      u.home = l; if (main.state !== 'fight') u.lane = l;
+      u.form = main.id; c[l]++;
+    }
+    g.size = 0;
+  }
+  function updateArmies(dt){
+    // Mitglieder je Gruppe in einem Durchlauf; Lage der Gegner zu Tickbeginn (Leistung: REQ-5.05)
+    const mem = new Map();
+    for (const f of S.forms) mem.set(f.id, []);
+    for (const u of S.units) if (u.hp > 0){ const m = mem.get(u.form); if (m) m.push(u); }
+    const idx = laneIndexBoth();
+    let relayout = false, reindex = false;
+    for (const g of S.forms){
+      const members = mem.get(g.id), foes = idx[g.side === 'p' ? 'e' : 'p'], dir = dirTo(g.side);
+      const dist = [threat(g, 0, foes), threat(g, 1, foes), threat(g, 2, foes)];
+      const enter = dist.map(d => d <= AR.contactRange), stay = dist.map(d => d <= AR.contactRange + AR.contactHysteresis);
+      if (g.state === 'march' && enter.some(Boolean)) g.state = 'fight';
+      else if (g.state === 'fight' && !stay.some(Boolean)){ g.state = 'regroup'; g.t = 0; }
+      else if (g.state === 'regroup'){
+        if (enter.some(Boolean)) g.state = 'fight';
+        else {
+          g.t += dt;
+          if (g.t >= AR.regroupTimeoutS || members.every(u => u.lane === u.home && u.laneF === u.home)) g.state = 'march';
+        }
+      }
+      g.fighting = g.state === 'fight';
+      // Lane je Einheit
+      let help = GATE;
+      if (g.fighting && !stay[GATE]){
+        let bn = -1;
+        for (const l of [0, 2]) if (stay[l]){ const n = foesNear(g, l, foes); if (n > bn){ bn = n; help = l; } }
+      }
+      for (const u of members){
+        const lane = g.fighting && !stay[u.home] ? help : u.home;
+        if (u.lane !== lane){ u.lane = lane; relayout = true; }
+        // Querbewegung: während des Wechsels kämpft eine Einheit nicht und ist nicht greifbar
+        if (u.laneF !== u.lane){ const step = dt / C.LANE_SHIFT_S; u.laneF = Math.abs(u.lane - u.laneF) <= step ? u.lane : u.laneF + Math.sign(u.lane - u.laneF) * step; reindex = true; }
+      }
+      // Bewegung nur im Marsch; bis auf Kontaktreichweite, Nachschub höchstens bis hinter die Armee
+      g.moving = false;
+      if (g.state === 'march' && members.length){
+        let step = groupSpeed(g, members) * dt;
+        for (const d of dist) step = Math.min(step, Math.max(0, d - AR.contactRange));
+        const main = mainOf(g.side);
+        if (main && main !== g){
+          const rear = main.x - dir * (main.rows) * C.ROW_GAP;           // eine Reihe Abstand hinter der letzten Reihe
+          step = Math.min(step, Math.max(0, (rear - g.x) * dir));
+        }
+        if (step > 0){ g.x += dir * step; for (const u of members) u.x += dir * step; g.moving = true; }
       }
     }
-    layoutAll();
-    resolveCombat(dt);
-    mergeForms();
+    // Nachschub hinter der Armee verschmilzt mit ihr
+    for (const g of S.forms){
+      const main = mainOf(g.side);
+      if (!main || main === g || g.size === 0) continue;
+      const rear = main.x - dirTo(g.side) * main.rows * C.ROW_GAP;
+      if ((rear - g.x) * dirTo(g.side) <= 0.5){ mergeInto(main, g); relayout = true; }
+    }
+    if (relayout) layoutAll();
+    if (relayout || reindex) resolveCombat(dt);
+    else { for (const side of ['p', 'e']) for (const a of idx[side]) a.sort(byX); resolveCombat(dt, idx); }
+    // Gruppen, die in diesem Schritt eine Einheit der Mitte verloren haben (für die Ausnahme Mitte)
+    const lostMid = new Set();
     for (const u of S.units){
       if (u.hp > 0 || u.dead) continue;
       u.dead = true;
+      if (u.home === GATE) lostMid.add(u.form);
       if (u.side === 'e'){
         gainXp(C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult);
         S.kills++;
       } else S.losses++;
       if (FX.on) FX.fx.push({ x: u.x, lane: u.laneF, t: 0, side: u.side });
     }
+    const before = S.units.length;
     S.units = S.units.filter(u => !u.dead);
-    layoutAll();
-  }
-  /* Holt eine Formation eine kämpfende oder stehende eigene Formation derselben Lane ein, verschmelzen beide (REQ-42) */
-  function mergeForms(){
-    for (const a of S.forms){
-      if (a.size === 0 || a.moving || a.home !== a.lane) continue;
-      const dir = dirOf(a.side), tail = a.x - dir * (a.rows - 1) * C.ROW_GAP;
-      for (const b of S.forms){
-        if (b === a || b.size === 0 || b.side !== a.side || b.lane !== a.lane || b.home !== a.home || !arrived(a) || !arrived(b)) continue;
-        const gap = (tail - b.x) * dir;
-        if (gap >= 0 && gap <= C.ROW_GAP * 1.5){
-          for (const u of S.units) if (u.form === b.id) u.form = a.id;
-          b.size = 0;
-        }
-      }
-    }
-    S.forms = S.forms.filter(f => f.size > 0);
+    const died = S.units.length !== before;
+    // Ausnahme Mitte: die letzte Einheit der Mitte ist gefallen (Vorrang vor allen anderen Regeln)
+    for (const g of S.forms) if (g.main && lostMid.has(g.id)){ const m = formMembers(g); if (m.length && !m.some(u => u.home === GATE)) refillMid(g); }
+    // Kennzahl: Zeitanteil der eigenen Armee im Kampf (REQ-5.08)
+    const pm = mainOf('p');
+    if (pm){ S.stats.armyTime = (S.stats.armyTime || 0) + dt; if (pm.fighting) S.stats.fightTime = (S.stats.fightTime || 0) + dt; }
+    if (died) layoutAll();
   }
 
   function checkReveals(){
@@ -744,7 +805,7 @@ function create(){
       log('log.alarm');
     }
     spawnEnemies();
-    updateForms(dt);
+    updateArmies(dt);
     applyConditionals(dt);
     checkReveals();
     if (S.enemyBaseHp <= 0){ S.enemyBaseHp = 0; S.status = 'won';  log('log.won'); }
@@ -797,7 +858,7 @@ function create(){
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, applyAway,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
-    addFormation, layoutAll, formMembers, enemyAhead, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
+    addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, interestRate,

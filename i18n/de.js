@@ -411,4 +411,5 @@ KF_I18N.de = {
   'grid.free': 'frei',
   'grid.aria': 'Bauplätze im Reich',
   'grid.cell': 'Platz {n}',
+  'log.midRefill': 'Die Mitte ist gefallen: Einheiten der äußeren Lanes besetzen sie neu.',
 };
