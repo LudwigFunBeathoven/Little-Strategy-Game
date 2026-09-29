@@ -8,6 +8,23 @@
 const DEBUG = /[?&]debug=1\b/.test(location.search);
 const Session = (() => {
   let P = null, lastSample = -1, lastPhase = null;
+  /* Debug-Protokoll je Einheit (REQ-6.01): Zustand der Gruppe, Lane, Querbewegung, Platz, Bewegungsrichtung je Takt; die letzten
+     UI.debugUnitLogS Sekunden. Abruf: __kf.unitLog(id) in der Konsole oder im exportierten Protokoll (unitLog). */
+  let unitLog = [];
+  const lastPos = new Map();
+  function sampleUnits(){
+    const S = G.S, state = new Map(S.forms.map(f => [f.id, f.state]));
+    for (const u of S.units){
+      const p = lastPos.get(u.id), sx = p ? Math.sign(+(u.x - p.x).toFixed(6)) : 0, sy = p ? Math.sign(+(u.laneF - p.laneF).toFixed(6)) : 0;
+      lastPos.set(u.id, { x: u.x, laneF: u.laneF });
+      unitLog.push({ t: +S.t.toFixed(2), id: u.id, side: u.side, state: state.get(u.form) || null, home: u.home, lane: u.lane,
+                     laneF: +u.laneF.toFixed(3), row: u.row, col: u.col, x: +u.x.toFixed(1), dirX: sx, dirLane: sy });
+    }
+    const from = S.t - C.UI.debugUnitLogS;
+    let k = 0; while (k < unitLog.length && unitLog[k].t < from) k++;
+    if (k) unitLog = unitLog.slice(k);
+    if (lastPos.size > 4 * S.units.length + 50){ const ids = new Set(S.units.map(u => u.id)); for (const id of lastPos.keys()) if (!ids.has(id)) lastPos.delete(id); }
+  }
   const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption'];
   function reset(){
     const S = G.S;
@@ -20,7 +37,7 @@ const Session = (() => {
   /* Stichprobe nach jedem Logik-Tick: Phasenzeit, Einheiten, erster Mauerfall, Ergebnis */
   function sample(){
     const S = G.S;
-    if (!P || S.t < lastSample){ reset(); return; }                       // neue Partie
+    if (!P || S.t < lastSample){ reset(); unitLog = []; lastPos.clear(); return; }   // neue Partie
     const dt = S.t - lastSample; lastSample = S.t;
     const ph = G.phase(); P.timeByPhase[ph] += dt; lastPhase = ph;
     P.maxUnits = Math.max(P.maxUnits, G.ownOnField() + S.queue.length);
@@ -61,11 +78,11 @@ const Session = (() => {
       return ok;
     };
     const tick = G.tick;
-    G.tick = dt => { tick(dt); sample(); };
+    G.tick = dt => { tick(dt); sample(); sampleUnits(); };
   }
   function exportJSON(){
     sample();
-    const blob = new Blob([JSON.stringify(P, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(Object.assign({}, P, { unitLog }), null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `klammerfront-protokoll-${P.diff}-${P.startedAt.replace(/[:.]/g, '-')}.json`;
@@ -79,5 +96,5 @@ const Session = (() => {
     b.hidden = false;
     b.addEventListener('click', exportJSON);
   }
-  return { init, get data(){ if (P) sample(); return P; }, reset };
+  return { init, get data(){ if (P) sample(); return P; }, reset, unitLog: id => id == null ? unitLog : unitLog.filter(e => e.id === id) };
 })();

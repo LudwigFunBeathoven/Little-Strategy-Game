@@ -279,8 +279,8 @@ function create(){
      Je Lane stehen vorn Nahkämpfer in Reihen zu höchstens FORMATION_ROW_MAX, dahinter Fernkämpfer (Reihen werden laufend neu gebildet).
      Jede Einheit hat eine Heimat-Lane (home) und eine aktuelle Lane (lane); laneF ist die Querbewegung dazwischen. */
   function makeGroup(side, x){
-    const g = { id: S.nextId++, side, main: !S.forms.some(o => o.side === side && o.main), state: 'march', x, t: 0,
-                size: 0, rows: 0, fighting: false, moving: false, lane: null };
+    const g = { id: S.nextId++, side, main: !S.forms.some(o => o.side === side && o.main), state: 'march', x, t: 0, st: 0,
+                size: 0, rows: 0, fighting: false, moving: false, lane: null, nextSlot: 0 };
     S.forms.push(g);
     return g;
   }
@@ -304,18 +304,29 @@ function create(){
     const byForm = new Map();
     fronts = new Map();
     for (const f of S.forms) byForm.set(f.id, Array.from({ length: LANES }, () => []));
-    for (const u of S.units) if (u.hp > 0 && byForm.has(u.form)) byForm.get(u.form)[u.lane].push(u);
+    // Einheiten auf dem Weg in eine andere Lane erhalten ihren Platz in der Ziel-Lane schon beim Losgehen (hinten angereiht): so läuft
+    // die Querbewegung direkt auf den Platz zu, ohne Sprung bei der Ankunft
+    const alive = new Map();
+    for (const u of S.units) if (u.hp > 0 && byForm.has(u.form)){
+      alive.set(u.form, (alive.get(u.form) || 0) + 1);
+      byForm.get(u.form)[u.lane].push(u);
+    }
     for (const f of S.forms){
       const dir = dirOf(f.side), R = C.FORMATION_ROW_MAX;
-      f.size = 0; f.rows = 0;
+      f.size = alive.get(f.id) || 0; f.rows = 0;
       byForm.get(f.id).forEach((m, lane) => {
-        const melee = m.filter(u => !u.ranged).sort((a, b) => a.id - b.id), ranged = m.filter(u => u.ranged).sort((a, b) => a.id - b.id);
+        // Feste Plätze (REQ-6.01): Reihenfolge nach Ankunft in der Lane (slot), Neue hinten; Lücken füllen nur Einheiten von hinten
+        const fresh = m.filter(u => u.slot == null || u.slotLane !== lane).sort((a, b) => a.id - b.id);
+        for (const u of fresh){ u.slot = f.nextSlot = (f.nextSlot || 0) + 1; u.slotLane = lane; }
+        const bySlot = (a, b) => a.slot - b.slot || a.id - b.id;
+        const melee = m.filter(u => !u.ranged).sort(bySlot), ranged = m.filter(u => u.ranged).sort(bySlot);
         const rows = [];
         for (const g of [melee, ranged]) for (let i = 0; i < g.length; i += R) rows.push(g.slice(i, i + R));
         rows.forEach((r, ri) => r.forEach((u, ci) => {
           u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; u.x = f.x - dir * ri * C.ROW_GAP; u.moving = f.moving;
+          if (u.laneF !== u.lane && u.toOff == null) u.toOff = colOffset(ci);
         }));
-        f.size += m.length; f.rows = Math.max(f.rows, rows.length);
+        f.rows = Math.max(f.rows, rows.length);
         fronts.set(f.id + ':' + lane, rows[0] || []);
       });
     }
@@ -324,6 +335,21 @@ function create(){
     // Fällt die Armee vollständig, wird die älteste verbliebene Gruppe dieser Seite zur Armee; sonst die nächste Welle ab dem Tor
     for (const g of gone) if (g.main){ const next = S.forms.find(o => o.side === g.side); if (next) next.main = true; }
   }
+  /* Querplatz in der Reihe (REQ-6.01): feste Plätze über die volle Reihenbreite (FORMATION_ROW_MAX), nicht je Reihe zentriert. Kommt jemand
+     hinzu oder fällt jemand hinter einer Einheit weg, bleibt ihr Platz; entsteht vor ihr eine Lücke, rückt sie stets zur selben Seite nach.
+     (Die Füllung von der Mitte nach außen ließ nachrückende Einheiten bei jedem Schritt die Seite wechseln.) In Lane-Höhen. */
+  const colOffset = col => (col - (C.FORMATION_ROW_MAX - 1) / 2) * C.ROW_SPREAD;
+  /* Querposition einer Einheit in Lane-Einheiten, wie gezeichnet: Lane plus Querplatz. Auf dem Weg in eine andere Lane geht der Querplatz
+     gleichmäßig vom alten in den neuen über (fromLane, fromOff beim Losgehen), damit die Bewegung ohne Sprung und in eine Richtung läuft. */
+  function lateralOf(u){
+    const to = colOffset(u.col || 0);
+    if (u.laneF === u.lane || u.fromLane == null || u.fromLane === u.lane) return u.laneF + to;
+    // unterwegs zählt der Zielplatz beim Losgehen (toOff): rückt die Ziel-Reihe während des Wechsels nach, springt die Bahn nicht
+    const k = Math.max(0, Math.min(1, (u.laneF - u.fromLane) / (u.lane - u.fromLane))), end = u.toOff ?? to;
+    return u.laneF + (u.fromOff ?? end) + (end - (u.fromOff ?? end)) * k;
+  }
+  /* Neues Lane-Ziel setzen und den Ausgangspunkt der Querbewegung merken; der Zielplatz wird nach der Neuordnung festgehalten */
+  function setLane(u, lane){ u.fromOff = lateralOf(u) - u.laneF; u.fromLane = u.laneF; u.lane = lane; u.toOff = null; }
   const formMembers = f => S.units.filter(u => u.form === f.id && u.hp > 0);
   const mainOf = side => S.forms.find(f => f.side === side && f.main) || null;
   const spawnBlocked = lane => S.units.some(u => u.side === 'e' && u.lane === lane && Math.abs(u.x - (W - EBW)) < C.SPAWN_BLOCK_DIST);
@@ -592,7 +618,7 @@ function create(){
       const pool = outer.some(u => !u.ranged) ? outer.filter(u => !u.ranged) : outer;
       const from = [0, 2].filter(l => pool.some(u => u.home === l)).sort((a, b) => c[b] - c[a] || a - b)[0];
       const pick = pool.filter(u => u.home === from).sort((a, b) => b.id - a.id)[0];
-      pick.home = GATE; if (!g.fighting) pick.lane = GATE; c[from]--; c[GATE]++;
+      pick.home = GATE; if (!g.fighting) setLane(pick, GATE); c[from]--; c[GATE]++;
     }
     log('log.midRefill');
   }
@@ -601,8 +627,8 @@ function create(){
     const c = lanesOf(formMembers(main));
     for (const u of formMembers(g).sort((a, b) => a.id - b.id)){
       const l = weakestLane(c, g.side);
-      u.home = l; if (main.state !== 'fight') u.lane = l;
-      u.form = main.id; c[l]++;
+      u.home = l; if (main.state !== 'fight') setLane(u, l);
+      u.form = main.id; u.slot = null; c[l]++;                      // Nachschub reiht sich hinten ein (feste Plätze, REQ-6.01)
     }
     g.size = 0;
   }
@@ -620,15 +646,22 @@ function create(){
       const members = mem.get(g.id), foes = bound[g.side === 'p' ? 'e' : 'p'], dir = dirTo(g.side);
       const dist = [threat(g, 0, foes), threat(g, 1, foes), threat(g, 2, foes)];
       const enter = dist.map(d => d <= AR.contactRange), stay = dist.map(d => d <= AR.contactRange + AR.contactHysteresis);
+      // Zustandswechsel frühestens nach ARMY.minStateS im alten Zustand (REQ-6.01). Ausnahme: Marsch → Kampf sofort, sonst liefe die
+      // Armee in den Gegner hinein; die Bewegung hält ohnehin an der Kontaktreichweite.
+      const prevState = g.state, settled = (g.st || 0) >= AR.minStateS;
       if (g.state === 'march' && enter.some(Boolean)) g.state = 'fight';
-      else if (g.state === 'fight' && !stay.some(Boolean)){ g.state = 'regroup'; g.t = 0; }
+      else if (g.state === 'fight' && settled && !stay.some(Boolean)){ g.state = 'regroup'; g.t = 0; }
       else if (g.state === 'regroup'){
-        if (enter.some(Boolean)) g.state = 'fight';
+        if (enter.some(Boolean)){ if (settled) g.state = 'fight'; }
         else {
           g.t += dt;
-          if (g.t >= AR.regroupTimeoutS || members.every(u => u.lane === u.home && u.laneF === u.home)) g.state = 'march';
+          if (settled && (g.t >= AR.regroupTimeoutS || members.every(u => u.lane === u.home && u.laneF === u.home))) g.state = 'march';
         }
       }
+      if (g.state !== prevState){
+        g.st = 0;
+        if (g.state === 'regroup') for (const u of members) u.slot = null;       // beim Sammeln werden die Plätze neu vergeben
+      } else g.st = (g.st || 0) + dt;
       g.fighting = g.state === 'fight';
       // Lane je Einheit
       let help = GATE;
@@ -642,9 +675,21 @@ function create(){
       for (const u of members){
         let lane = g.fighting && !stay[u.home] ? help : u.home;
         if (g.fighting && lane !== GATE && lane !== u.home && u.lane === GATE && u.laneF === GATE && !engaged[lane]) lane = GATE;
-        if (u.lane !== lane){ u.lane = lane; relayout = true; }
-        // Querbewegung: während des Wechsels kämpft eine Einheit nicht und ist nicht greifbar
-        if (u.laneF !== u.lane){ const step = dt / C.LANE_SHIFT_S; u.laneF = Math.abs(u.lane - u.laneF) <= step ? u.lane : u.laneF + Math.sign(u.lane - u.laneF) * step; }
+        // Gebundene Lane-Wahl (REQ-6.01): eine helfende Einheit bleibt in ihrer Ziel-Lane, bis dort kein Gegner mehr ist;
+        // nur ein Gegner in der eigenen Heimat-Lane ruft sie vorher zurück
+        if (g.fighting && u.lane !== u.home && stay[u.lane] && !stay[u.home]) lane = u.lane;
+        // Unterwegs bleibt das Ziel bis zur Ankunft: sonst entscheiden beide Seiten im selben Takt gegeneinander und tauschen
+        // in jedem Takt die Lane (Befund I6.1: Mitte hilft oben, der Gegner der Mitte ebenso, beide kehren um …)
+        if (g.fighting && u.laneF !== u.lane) lane = u.lane;
+        // Nach der Ankunft bleibt eine Einheit mindestens ARMY.minLaneStayS in der Lane (kein sofortiges Umkehren, REQ-6.01)
+        if (g.fighting && u.arrived != null && S.t - u.arrived < AR.minLaneStayS) lane = u.lane;
+        if (u.lane !== lane){ setLane(u, lane); relayout = true; }
+        // Querbewegung: während des Wechsels kämpft eine Einheit nicht und ist nicht greifbar; Totzone ARMY.deadZone
+        if (u.laneF !== u.lane){
+          const step = dt / C.LANE_SHIFT_S;
+          u.laneF = Math.abs(u.lane - u.laneF) <= Math.max(step, AR.deadZone) ? u.lane : u.laneF + Math.sign(u.lane - u.laneF) * step;
+          if (u.laneF === u.lane) u.arrived = S.t;                      // Ankunft: Mindestverweildauer beginnt
+        }
       }
       // Bewegung nur im Marsch; bis auf Kontaktreichweite, Nachschub höchstens bis hinter die Armee
       g.moving = false;
@@ -974,7 +1019,7 @@ function create(){
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, interestRate,
     chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, unitUnlocked,
-    phase, xpProgress, draftSize, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    phase, xpProgress, draftSize, colOffset, lateralOf, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, momentumBonus, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     offlineHours, turretDmg, turretRange, turretCd,

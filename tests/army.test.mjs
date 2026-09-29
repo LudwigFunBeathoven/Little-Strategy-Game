@@ -48,10 +48,13 @@ test('Kampf → Sammeln → Marsch; Hysterese beim Verlassen des Kampfes', () =>
   // Gegner weicht innerhalb der Hysterese zurück: Kampf bleibt
   e.x = a.x + C.ARMY.contactRange + C.ARMY.contactHysteresis * 0.5; G.tick(0.05);
   assert.equal(a.state, 'fight', 'Hysterese');
-  // Gegner fällt: Sammeln, alle kehren heim; danach Marsch
+  // Gegner fällt: Sammeln (frühestens nach der Mindestverweildauer im Kampf, REQ-6.01), alle kehren heim; danach Marsch
   for (const u of G.formMembers(e)) u.hp = 0;
   G.tick(0.05);
+  const since = a.st;
+  for (let i = 0; i < 40 && a.state === 'fight'; i++) G.tick(0.05);
   assert.equal(a.state, 'regroup');
+  assert.ok(a.st === 0 && since < C.ARMY.minStateS, 'Wechsel erst nach ARMY.minStateS');
   for (let i = 0; i < 200 && a.state === 'regroup'; i++) G.tick(0.05);
   assert.equal(a.state, 'march');
   assert.ok(G.formMembers(a).every(u => u.lane === u.home && u.laneF === u.home));
@@ -166,7 +169,7 @@ test('Der Gegner folgt derselben Logik: Kampf an der Mauer, Zustand für beide S
 test('Türme: zuerst die eigene Lane, sonst Gegner in der Mitte', () => {
   const { G, C } = game();
   G.S.material = 1e6; G.buy('turm_0');
-  const e = G.addGroup('e', [{ type: 'laeufer', lane: MID }], C.PLAYER_BASE_WIDTH + 60); set(G, e, 1e6, 0); e.state = 'fight';
+  const e = G.addGroup('e', [{ type: 'laeufer', lane: MID }], C.PLAYER_BASE_WIDTH + 60); set(G, e, 1e6, 0); e.state = 'fight'; e.st = C.ARMY.minStateS;
   run(G, 0.1);
   const m = G.formMembers(e)[0];
   assert.ok(m.hp < 1e6, 'Turm oben trifft die Mitte, wenn oben niemand ist');

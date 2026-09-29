@@ -167,12 +167,25 @@ function unitPos(u){
   let lane = u.laneF ?? u.lane;
   const toGate = u.side === 'p' || (u.lane !== GATE && !G.sectionUp(u.lane));
   if (toGate){ const p = Math.max(0, Math.min(1, (u.x - PBW) / ENTRY)); lane = GATE + (lane - GATE) * p; }
-  const spread = laneH() * 0.15, mid = ((u.rowSize || 1) - 1) / 2;
-  return { x: wx(u.x), y: laneMid(lane) + ((u.col || 0) - mid) * spread };
+  return { x: wx(u.x), y: laneMid(lane) + (G.lateralOf(u) - u.laneF) * laneH() };
 }
 const LUNGE_S = 0.18;
+/* Gezeichnete Position folgt der Logik-Position weich (REQ-6.01, Ursache 5): Aufrücken und Platzwechsel springen nicht, sondern gleiten.
+   Totzone UI.unitEaseSnapPx; bei reduzierter Bewegung ohne Nachführen. Nur Darstellung, nicht im Spielstand. */
+const shown = new Map();
+let easeK = 1;
+function easedPos(u){
+  const p = unitPos(u), s = shown.get(u.id);
+  if (!s || reduceMotion){ shown.set(u.id, { x: p.x, y: p.y, seen: true }); return p; }
+  s.x += (p.x - s.x) * easeK; s.y += (p.y - s.y) * easeK; s.seen = true;
+  if (Math.abs(p.x - s.x) < C.UI.unitEaseSnapPx) s.x = p.x;
+  if (Math.abs(p.y - s.y) < C.UI.unitEaseSnapPx) s.y = p.y;
+  return { x: s.x, y: s.y };
+}
+/* Für die Browser-Prüfung: gezeichnete Positionen je Einheit (ohne Ausfallschritt) */
+function drawnPositions(){ return [...shown].map(([id, v]) => ({ id, x: v.x, y: v.y })); }
 function drawUnit(u){
-  const p = unitPos(u), r = Math.max(3.5, Math.min(8, laneH() * 0.055)), dir = u.side === 'p' ? 1 : -1;
+  const p = easedPos(u), r = Math.max(3.5, Math.min(8, laneH() * 0.055)), dir = u.side === 'p' ? 1 : -1;
   const lt = G.FX.lunge.get(u.id);
   if (lt !== undefined && !reduceMotion) p.x += dir * r * 0.9 * Math.sin(Math.PI * lt / LUNGE_S);   // Ausfallschritt im Nahkampf (REQ-5.05)
   if (p.x < realmR() - 4) return;                        // noch im Tor
@@ -223,7 +236,10 @@ function draw(realDt, now){
     ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   const left = Cam.x - 40, right = Cam.x + cw + 40;
+  easeK = 1 - Math.exp(-realDt / C.UI.unitEaseS);
+  for (const v of shown.values()) v.seen = false;
   for (const u of G.S.units){ const x = wx(u.x); if (x > left && x < right) drawUnit(u); }
+  for (const [id, v] of shown) if (!v.seen) shown.delete(id);         // außerhalb des Bildes oder gefallen: beim nächsten Auftauchen ohne Gleiten
   for (const [id, lt] of FX.lunge){ if (lt + realDt >= LUNGE_S) FX.lunge.delete(id); else FX.lunge.set(id, lt + realDt); }
   FX.shots = FX.shots.filter(s => (s.t += realDt) < s.dur);
   for (const s of FX.shots){

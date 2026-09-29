@@ -243,7 +243,7 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
     const b = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
     bot = { step: () => b.step(G, stats) };
   }
-  const dirs = directionTracker();
+  const dirs = directionTracker({ lateralOf: G.lateralOf });
   let wallFall = null;
   const steps = maxMin * 60 / DT;
   for (let i = 0; i < steps && G.S.status === 'running'; i++){

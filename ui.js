@@ -635,7 +635,7 @@ function boot(){
   setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
   // Schnittstelle für automatisierte Browser-Tests
-  window.__kf = { G, C, t, session: () => Session.data, sessionReset: () => Session.reset(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw,
+  window.__kf = { G, C, t, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw,
                   selectPlot, selectSection, clearSelection, selectTab, setPaused,
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };

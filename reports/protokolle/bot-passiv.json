@@ -1,28 +1,29 @@
 {
   "format": "klammerfront-session",
   "formatVersion": 1,
-  "version": "0.5",
+  "version": "0.6",
   "lang": "de",
   "diff": "normal",
-  "startedAt": "2026-09-29T13:09:56.950Z",
-  "result": "lost",
-  "durationS": 286.2,
-  "clicks": 85,
+  "startedAt": "2026-09-29T15:40:25.866Z",
+  "result": "running",
+  "durationS": 300.7,
+  "clicks": 90,
   "clicksPerMinute": [
     17,
     18,
     18,
     18,
-    14
+    18,
+    1
   ],
   "clicksByPhase": {
-    "early": 43,
-    "mid": 42,
+    "early": 40,
+    "mid": 50,
     "late": 0
   },
   "timeByPhase": {
-    "early": 144.7499999999987,
-    "mid": 141.3000000000321,
+    "early": 135.4999999999966,
+    "mid": 165.1000000000375,
     "late": 0
   },
   "actions": [
@@ -87,6 +88,11 @@
       "arg": "laeufer"
     },
     {
+      "t": 74.9,
+      "kind": "chooseDraft",
+      "arg": "schildwall"
+    },
+    {
       "t": 82.6,
       "kind": "spawn",
       "arg": "werfer"
@@ -97,27 +103,22 @@
       "arg": "laeufer"
     },
     {
-      "t": 87.85,
-      "kind": "chooseDraft",
-      "arg": "bauleitung"
-    },
-    {
       "t": 91.75,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 100.9,
+      "t": 100.95,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 103.95,
+      "t": 104,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 110.05,
+      "t": 110.1,
       "kind": "spawn",
       "arg": "laeufer"
     },
@@ -137,19 +138,19 @@
       "arg": "laeufer"
     },
     {
+      "t": 135.6,
+      "kind": "chooseDraft",
+      "arg": "instandhaltung"
+    },
+    {
       "t": 140.65,
+      "kind": "buildAt",
+      "arg": 1
+    },
+    {
+      "t": 146.75,
       "kind": "spawn",
       "arg": "werfer"
-    },
-    {
-      "t": 143.7,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 144.9,
-      "kind": "chooseDraft",
-      "arg": "nachtschicht"
     },
     {
       "t": 146.75,
@@ -157,183 +158,202 @@
       "arg": "laeufer"
     },
     {
-      "t": 155.9,
-      "kind": "buildAt",
-      "arg": 1
-    },
-    {
-      "t": 162,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 162,
+      "t": 149.8,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 162,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 174.2,
+      "t": 158.95,
       "kind": "buildAt",
       "arg": 2
     },
     {
-      "t": 180.3,
+      "t": 162.05,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 180.3,
+      "t": 162.05,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 180.3,
+      "t": 165.1,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 189.5,
+      "t": 174.25,
       "kind": "buildAt",
       "arg": 3
     },
     {
-      "t": 201.75,
+      "t": 175.9,
+      "kind": "chooseDraft",
+      "arg": "instandhaltung"
+    },
+    {
+      "t": 180.35,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 201.75,
+      "t": 180.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 201.75,
+      "t": 180.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 202.4,
-      "kind": "chooseDraft",
-      "arg": "drill"
-    },
-    {
-      "t": 210.9,
+      "t": 195.65,
       "kind": "buildAt",
       "arg": 4
     },
     {
-      "t": 220.05,
+      "t": 201.75,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 220.05,
+      "t": 201.75,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 201.75,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
       "t": 220.05,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 235.3,
       "kind": "buildAt",
       "arg": 5
     },
     {
-      "t": 241.45,
+      "t": 220.05,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 241.45,
+      "t": 223.15,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 241.45,
+      "t": 223.15,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 262.85,
+      "t": 241.5,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 262.85,
+      "t": 241.5,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 262.85,
+      "t": 241.5,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 268.95,
+      "t": 253.7,
       "kind": "buildAt",
       "arg": 6
     },
     {
-      "t": 281.15,
+      "t": 262.9,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 281.15,
+      "t": 262.9,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 281.15,
+      "t": 262.9,
       "kind": "spawn",
       "arg": "laeufer"
+    },
+    {
+      "t": 264.65,
+      "kind": "chooseDraft",
+      "arg": "drill"
+    },
+    {
+      "t": 281.25,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 281.25,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 281.25,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 299.55,
+      "kind": "buildAt",
+      "arg": 7
     }
   ],
   "drafts": [
     {
-      "t": 87.8,
+      "t": 74.9,
       "level": 1,
-      "chosen": "bauleitung",
+      "chosen": "schildwall",
       "offered": [
-        "bauleitung",
-        "aushebung"
+        "schildwall",
+        "zinnen"
       ]
     },
     {
-      "t": 144.9,
+      "t": 135.6,
       "level": 2,
-      "chosen": "nachtschicht",
+      "chosen": "instandhaltung",
       "offered": [
-        "nachtschicht",
-        "aushebung"
+        "instandhaltung",
+        "belagerungsgeraet"
       ]
     },
     {
-      "t": 202.4,
+      "t": 175.9,
       "level": 3,
+      "chosen": "instandhaltung",
+      "offered": [
+        "instandhaltung",
+        "langeWurfarme"
+      ]
+    },
+    {
+      "t": 264.7,
+      "level": 4,
       "chosen": "drill",
       "offered": [
         "drill",
-        "doppelschicht"
+        "bessereFabriken"
       ]
     }
   ],
   "research": [],
-  "maxUnits": 7,
-  "maxArmy": 4,
-  "firstWallFallS": 279.4,
+  "maxUnits": 9,
+  "maxArmy": 6,
+  "firstWallFallS": null,
   "wallUse": {
     "repairs": 0,
     "upgrades": 0
   },
-  "kills": 40,
+  "kills": 44,
   "losses": 41
 }

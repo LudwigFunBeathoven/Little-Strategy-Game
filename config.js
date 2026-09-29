@@ -41,6 +41,7 @@ const KF_CONFIG = {
   /* Formationen (REQ-42) */
   FORMATION_ROW_MAX: 5,         // höchstens so viele Einheiten je Reihe quer zur Lane
   ROW_GAP: 16,                  // Abstand zwischen zwei Reihen
+  ROW_SPREAD: 0.15,             // Abstand zweier Plätze einer Reihe quer zur Lane, in Lane-Höhen (Darstellung und Messung)
   MELEE_REACH: 14,              // Kontaktabstand der vordersten Nahkampfreihe
   /* Lane-übergreifender Kampf (REQ-43) */
   LANE_SHIFT_S: 1.2,            // Dauer der Querbewegung in eine Nachbar-Lane
@@ -54,6 +55,9 @@ const KF_CONFIG = {
     catchUpFactor: 1.5,         // Aufschlusstempo des Nachschubs relativ zum Marschtempo
     speedRule: 'slowest',       // Marschtempo = langsamste Einheit der Armee
     midRefillShare: 1 / 3,      // fällt die letzte Einheit der Mitte, erhält die Mitte diesen Anteil der Armee (aufgerundet)
+    minStateS: 0.5,             // Mindestverweildauer je Zustand (Marsch, Kampf, Sammeln), gegen Zustandspendeln (REQ-6.01)
+    minLaneStayS: 1.5,          // nach der Ankunft in einer Lane bleibt eine Einheit im Kampf mindestens so lange dort
+    deadZone: 0.02,             // Totzone quer (in Lanes): näher an der Ziel-Lane rastet eine Einheit ein und bewegt sich nicht mehr
   },
 
   /* Experimente (REQ-5.08): nur simulieren und berichten; die Einführung entscheidet der PO */
@@ -70,6 +74,9 @@ const KF_CONFIG = {
     xpRateWindowS: 30,          // EP je Sekunde in der Leiste: gleitend über diese Spielzeit
     floatMs: 900,               // Dauer der schwebenden Zahlen bei Material- und EP-Gewinn (REQ-5.10)
     fadeS: 0.6,                 // gefallene Einheiten verblassen so lange
+    unitEaseS: 0.08,            // gezeichnete Einheiten folgen ihrer Position mit dieser Zeitkonstante (kein Springen beim Aufrücken, REQ-6.01)
+    unitEaseSnapPx: 0.3,        // Totzone der Darstellung: näher als so viele Pixel wird nicht mehr nachgeführt
+    debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
   },
 
   /* Spielwelt und Kamera (REQ-46) */

@@ -418,8 +418,10 @@ for (const dsf of [1, 2]){
     const file = new URL(`bot-${profile}.json`, protoDir).pathname;
     writeFileSync(file, JSON.stringify(proto, null, 2));
     const res = execFileSync('node', [new URL('../tools/compare-human.mjs', import.meta.url).pathname, file], { encoding: 'utf8' });
-    const got = (res.match(/nächstes Bot-Profil: (\w+)/) || [])[1];
-    check(got === profile && sessionBtn, `Protokoll einer Bot-Partie (${profile}, ${Math.round(proto.durationS)} s, ${proto.clicks} Klicks, ${proto.actions.length} Handlungen) → compare-human: ${got}`);
+    const got = (res.match(/nächstes Bot-Profil: (\w+)/) || [])[1], strat = (res.match(/nächste Strategie: (\S+)/) || [])[1];
+    // Die Bot-Partie im Browser spielt „Einheiten zuerst“ (REQ-6.09): Profil und Strategie müssen erkannt werden; passiv kauft kaum und bleibt offen
+    check(got === profile && sessionBtn && (profile === 'passiv' || strat === 'einheiten-zuerst'),
+      `Protokoll einer Bot-Partie (${profile}, ${Math.round(proto.durationS)} s, ${proto.clicks} Klicks, ${proto.actions.length} Handlungen) → compare-human: ${got}, Strategie ${strat}`);
     check(issues.length === 0, `Protokoll-Partie ${profile}: Konsole ohne Fehler und Warnungen${show(issues)}`);
   }
   for (const diff of ['leicht', 'normal', 'schwer']){
@@ -427,6 +429,54 @@ for (const dsf of [1, 2]){
     check(proto.result === 'won' || proto.result === 'lost', `Durchlauftest ${diff}: Partie endet (${proto.result} nach ${Math.floor(proto.durationS / 60)}:${String(Math.round(proto.durationS % 60)).padStart(2, '0')})`);
     check(issues.length === 0, `Durchlauftest ${diff}: Konsole ohne Fehler und Warnungen${show(issues)}`);
   }
+}
+
+// REQ-6.01: Über 10 Sekunden Kampf zeigt keine gezeichnete Einheit ein Hin-und-her-Muster (Positionsprüfung je Bild);
+// dazu das Debug-Protokoll je Einheit (?debug=1)
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto(url.replace('dev=1', 'debug=1'));
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.evaluate(() => __kf.startGame('normal')); await p.waitForTimeout(100);
+  await p.evaluate(() => {
+    const G = __kf.G, W = G.S;
+    document.querySelector('#hintBox').hidden = true;
+    W.nextWave = 1e9; W.nextOwnWave = 1e9; W.enemyQueue = []; W.units = []; W.forms = []; W.enemyBaseHp = 1e12; W.sections.forEach(s => { s.hp = 1e12; });
+    // eigene Armee über alle Lanes, Gegner nur in der Mitte: oben und unten helfen, Querbewegung und Einreihen
+    const types = Array.from({ length: 15 }, (_, i) => ({ type: i % 3 === 2 ? 'werfer' : 'laeufer', lane: i % 3 }));
+    const a = G.addGroup('p', types, 700);
+    const e = G.addGroup('e', Array.from({ length: 8 }, (_, i) => ({ type: i % 4 === 3 ? 'werfer' : 'laeufer', lane: 1 })), 760);
+    for (const u of W.units){ u.hp = u.maxHp = 1e7; }
+    __kf.Cam.follow = false; __kf.Cam.goTo(wx(730) - 500);
+  });
+  const frames = await p.evaluate(() => new Promise(res => {
+    const out = [], t0 = performance.now();
+    const f = () => { out.push({ t: performance.now() - t0, pos: __kf.drawnPositions() }); if (performance.now() - t0 < 10000) requestAnimationFrame(f); else res(out); };
+    requestAnimationFrame(f);
+  }));
+  const tracks = new Map();
+  let worst = { n: 0 };
+  for (const fr of frames) for (const q of fr.pos){
+    let r = tracks.get(q.id);
+    if (!r){ tracks.set(q.id, { x: q.x, y: q.y, sx: 0, sy: 0, times: [] }); continue; }
+    for (const [axis, d] of [['sx', q.x - r.x], ['sy', q.y - r.y]]){
+      if (Math.abs(d) < 0.05) continue;
+      const sgn = Math.sign(d);
+      if (r[axis] && sgn !== r[axis]){ r.times.push(fr.t); while (fr.t - r.times[0] > 1000) r.times.shift(); if (r.times.length > worst.n) worst = { n: r.times.length, id: q.id, t: Math.round(fr.t) }; }
+      r[axis] = sgn;
+    }
+    r.x = q.x; r.y = q.y;
+  }
+  const inFight = await p.evaluate(() => __kf.G.S.forms.filter(f => f.side === 'p').map(f => f.state).join());
+  check(frames.length > 300 && tracks.size >= 20 && worst.n <= 2,
+    `Kampfbild 10 s: ${frames.length} Bilder, ${tracks.size} Einheiten, höchstens ${worst.n} Richtungswechsel je Einheit und Sekunde (Soll ≤ 2)${worst.id ? `, Einheit ${worst.id} bei ${worst.t} ms` : ''}; Armee: ${inFight}`);
+  const log = await p.evaluate(() => { const l = __kf.unitLog(); return { n: l.length, keys: l.length ? Object.keys(l[0]).join() : '' }; });
+  check(log.n > 0 && /state/.test(log.keys) && /lane/.test(log.keys) && /row/.test(log.keys) && /dirX/.test(log.keys), `Debug-Protokoll je Einheit: ${log.n} Einträge (${log.keys})`);
+  check(errs.length === 0, `Kampfbild: keine Fehler${show(errs)}`);
+  await ctx.close();
 }
 
 // REQ-47: Gestaffelte Einführung (frischer Browser, Einführung an)
