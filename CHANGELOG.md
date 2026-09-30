@@ -14,6 +14,7 @@
 - REQ-6.08 Anlauf der Gegnerwellen als Schalter (aus: Zielkonflikt, Entscheidung beim PO).
 - REQ-6.09/6.10 Zweite Simulationsstrategie „einheiten-zuerst“, neue Kennzahlen; Experiment „Schwung“ entfernt; Leistungsziel ≤ 1 ms je Takt.
 - REQ-6.11 Abnahmeserie mit beiden Strategien, Bericht, Testbuild mit Protokoll.
+- Spieltest PO: gestrichelte Frontlinie der eigenen Armee im Marsch entfernt (REQ-5.06 meinte die gemeinsame Front aller Lanes, keine sichtbare Linie; das gemeinsame Vorrücken bleibt).
 
 ## v0.6 – Iteration 5 (29.09.2026)
 - REQ-5.01 Klicks kommen an: Knöpfe werden beim Aktualisieren nicht mehr ersetzt (vorher gingen Klicks mit normaler Haltedauer verloren),

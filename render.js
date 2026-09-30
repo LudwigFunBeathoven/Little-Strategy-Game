@@ -227,14 +227,6 @@ function draw(realDt, now){
   drawEnemyBase();
   for (let l = 0; l < C.LANE_COUNT; l++) FX.baseFlash.p[l] = Math.max(0, FX.baseFlash.p[l] - realDt);
   FX.baseFlash.e = Math.max(0, FX.baseFlash.e - realDt);
-  // Frontlinie der eigenen Armee im Marsch, dezent über alle drei Lanes (REQ-5.06)
-  const army = G.mainOf('p');
-  if (army && army.state === 'march'){
-    const fx = wx(army.x) + 6;
-    ctx.strokeStyle = COL.steel; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
-    ctx.beginPath(); ctx.moveTo(fx, PAD); ctx.lineTo(fx, ch - PAD); ctx.stroke();
-    ctx.setLineDash([]); ctx.globalAlpha = 1;
-  }
   const left = Cam.x - 40, right = Cam.x + cw + 40;
   easeK = 1 - Math.exp(-realDt / C.UI.unitEaseS);
   for (const v of shown.values()) v.seen = false;

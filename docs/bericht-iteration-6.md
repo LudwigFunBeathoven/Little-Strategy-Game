@@ -146,6 +146,10 @@ Soll ≤ 35 %. Bei „einheiten-zuerst“ liegt der Wert höher; die Ursache ist
 - **Werkzeugausfall:** Während I6.6 fiel die Freigabeprüfung für Befehle aus; die Arbeit wurde unterbrochen und nach „weiter“ fortgesetzt.
   I6.6 und I6.7 sind dennoch getrennte, einzeln geprüfte Commits.
 
+- **Frontlinie (Spieltest PO nach I6.9):** Die gestrichelte Linie vor der eigenen Armee im Marsch (REQ-5.06) wanderte mit den Einheiten
+  und wirkte wie ein Fehler. Der PO stellte klar: „Frontlinie“ in REQ-5.06 war bildlich gemeint (alle Lanes rücken gemeinsam vor), keine gezeichnete Linie.
+  Die Linie ist entfernt; das gemeinsame Vorrücken, Spiellogik und Simulation sind unverändert.
+
 ## 8. Technische Schulden und Risiken
 - Zwei Bot-Strategien mit sehr unterschiedlicher Stärke; die Balancing-Aussagen hängen an der Wahl. Daten von Menschen fehlen weiterhin.
 - Viele Paarvergleiche mit 40–50 Partien je Arm: Differenzen unter ± 10–20 pp sind nicht von null zu unterscheiden (REQ-6.02 „≤ 3 pp“ ist

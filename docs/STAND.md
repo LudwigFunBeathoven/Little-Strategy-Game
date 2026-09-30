@@ -65,6 +65,7 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- Nach I6.9 (Spieltest PO): Frontlinie der Armee im Marsch entfernt (`render.js`). Auslegung korrigiert: REQ-5.06 meinte bildlich das gemeinsame Vorrücken aller Lanes, das bleibt.
 - I6.9: `npm test` 135/135, Browser-Prüfung 196/196, Kurzsimulation beide Strategien 100 % ohne Patt, Tick-Zeit Median 0,14 ms mit
   120 Einheiten. Abnahmeserie mit 200 Partien je Feld und beiden Strategien (`reports/i6-ziele.*`, `i6-phasen.*`, `i6-strategie.*`,
   `i6-ohneSchmiede.*`, `i6-forschung.*`); Ergebnis und Abweichungen in `docs/bericht-iteration-6.md`. Testbuild mit festem Protokoll
