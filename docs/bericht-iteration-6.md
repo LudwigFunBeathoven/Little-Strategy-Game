@@ -171,7 +171,7 @@ Soll ≤ 35 %. Bei „einheiten-zuerst“ liegt der Wert höher; die Ursache ist
    Mittel verteuern?
 4. **Richtungswechsel knapp über dem Soll** (Auffälligkeit 3): so lassen und im Spieltest beobachten?
 5. **Heimat-Reiter** (bitte bestätigen): Fabrik → Bauen, Kaserne → Armee, Schmiede → Schmiede, Universität → Universität, Handelskontor → Bauen.
-6. **Merge nach `main`:** `iteration-6` ist per Fast-Forward übernehmbar; wartet auf Freigabe.
+6. **Merge nach `main`:** `iteration-6` ist per Fast-Forward übernehmbar; vom PO freigegeben und per Fast-Forward übernommen (30.09.2026).
 7. **Spieltest** (Aufgabe des PO): Testbuild mit Protokoll ist veröffentlicht; Ablauf in `docs/testleitfaden-iteration-6.md`.
 
 Weitere Auslegungen (Nr. 1–22) stehen in `docs/STAND.md`.
