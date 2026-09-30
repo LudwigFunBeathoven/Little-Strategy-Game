@@ -1,0 +1,107 @@
+{
+  "runs": 50,
+  "suite": "forschung",
+  "report": {
+    "strategies": {},
+    "researchTempo": {
+      "gierig": {
+        "firstMedian": null,
+        "by10Median": 0,
+        "firstBefore3": 0,
+        "rushSpent": 0
+      },
+      "einheiten-zuerst": {
+        "firstMedian": 250.8,
+        "by10Median": 2,
+        "firstBefore3": 0,
+        "rushSpent": 0
+      },
+      "uni-zuerst": {
+        "firstMedian": 163.6,
+        "by10Median": 15,
+        "firstBefore3": 1,
+        "rushSpent": 0
+      }
+    },
+    "researchPairs": {
+      "r_hoersaal": {
+        "with": 0.98,
+        "without": 0.94,
+        "deltaPp": 4.0000000000000036,
+        "n": 50
+      },
+      "r_weitblick": {
+        "with": 0.98,
+        "without": 0.94,
+        "deltaPp": 4.0000000000000036,
+        "n": 50
+      },
+      "r_neuziehen": {
+        "with": 0.9,
+        "without": 0.9,
+        "deltaPp": 0,
+        "n": 50
+      },
+      "r_bann": {
+        "with": 0.9,
+        "without": 0.9,
+        "deltaPp": 0,
+        "n": 50
+      },
+      "r_gluecksgriff": {
+        "with": 0.94,
+        "without": 0.94,
+        "deltaPp": 0,
+        "n": 50
+      },
+      "r_ingenieur": {
+        "with": 0.92,
+        "without": 0.96,
+        "deltaPp": -3.9999999999999925,
+        "n": 50
+      },
+      "r_logistik": {
+        "with": 1,
+        "without": 0.96,
+        "deltaPp": 4.0000000000000036,
+        "n": 50
+      },
+      "r_drill": {
+        "with": 0.98,
+        "without": 0.96,
+        "deltaPp": 2.0000000000000018,
+        "n": 50
+      },
+      "r_metallurgie": {
+        "with": 0.96,
+        "without": 0.94,
+        "deltaPp": 2.0000000000000018,
+        "n": 50
+      },
+      "r_maurerkunst": {
+        "with": 0.9,
+        "without": 0.9,
+        "deltaPp": 0,
+        "n": 50
+      },
+      "r_schildtraeger": {
+        "with": 0.94,
+        "without": 0.94,
+        "deltaPp": 0,
+        "n": 50
+      },
+      "r_zweiterplatz": {
+        "with": 0.92,
+        "without": 0.94,
+        "deltaPp": -1.9999999999999907,
+        "n": 50
+      },
+      "r_schmiedeausbau": {
+        "with": 0.98,
+        "without": 0.94,
+        "deltaPp": 4.0000000000000036,
+        "n": 50
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+1800 Partien auf 4 Kernen …
+fertig in 1257 s · 244.4 simulierte Spielstunden · 5.1 s Rechenzeit je Spielstunde
+
+PHASEN – 6 Klicks/s, gierige Heuristik, Spielertyp aktiv
+
+Klickanteil an der Materialproduktion je Phase (Soll: Früh ≥ 50 %, Mitte 10–30 %, Spät ≤ 3 %)
+leicht   Früh   59.8 %  Mitte   21.6 %  Spät    1.1 %
+normal   Früh   59.6 %  Mitte   23.0 %  Spät    1.7 %
+schwer   Früh   64.5 %  Mitte   24.9 %  Spät    0.6 %
+
+Siegquote und Median-Siegzeit je Klickstrategie
+Schwierigkeit | Dauerklick     | Stopp ab Spät  | nie klicken    | Stopp/Dauer | nie/Dauer (Verhältnis der Siegquoten)
+leicht        |   100 % · 9:04 |   100 % · 9:03 |   100 % · 7:01 |       100 % |     100 %
+normal        |    99 % · 9:51 |    99 % · 9:37 |    79 % · 7:07 |       100 % |      80 %
+schwer        |    98 % · 8:32 |    94 % · 8:53 |        0 % · – |        96 % |       0 %
+(Soll: Stopp/Dauer ≥ 95 %, nie/Dauer ≤ 50 %; über 100 % = „nie klicken“ gewann in der Stichprobe öfter)
+

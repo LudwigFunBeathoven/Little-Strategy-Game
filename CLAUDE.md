@@ -6,8 +6,8 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.6 (Iteration 5: `docs/anforderungen-iteration-5.md`, Stand je Inkrement in `docs/STAND.md`,
-Bericht in `docs/bericht-iteration-5.md`). Frühere Iterationen: `docs/archiv/`, `docs/bericht-iteration-4.md`.
+Stand: v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, Stand je Inkrement in `docs/STAND.md`,
+Bericht in `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`, `docs/bericht-iteration-5.md`.
 
 ## Der Nutzer
 Nick ist Product Owner, kein Entwickler. Erkläre Änderungen in Klartext und übersetze Fachbegriffe kurz.
@@ -21,6 +21,7 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `config.js` | **Alle** Zahlenwerte (Balancing, Regeln, Tooltip-Zeiten, Schwierigkeitsgrade). |
 | `data/draft-options.js` | Spezialkarten mit Stufen (`tiers`), deklarativ. Neue Karten nur hier ergänzen. |
 | `data/research.js` | Forschungsbaum der Universität, deklarativ; Wirkungen über dieselbe Pipeline wie Karten. |
+| `data/neighbors.js` | Nachbarschaftsregeln im 3×3-Raster, je Gebäudetyp eine, nur orthogonal. |
 | `hints.js` | Erstkontakt-Hinweise; Speicher wird von außen übergeben (testbar ohne Browser). |
 | `core.js` | Spiellogik ohne Zugriff auf Seite, Fenster oder Speicher. Läuft auch im Simulator. |
 | `ui.js` | Lädt zuerst: gemeinsame Namen (C, G, $, t, fmt), Tooltips, Eingabe, Speichern, Dialoge, Hauptschleife, Start. |
@@ -82,7 +83,8 @@ Iteration 5: Profilabstand Leicht aktiv ↔ gelegentlich (Median) ≥ 4 min; Sch
 Offene Partien gibt die Simulation mit Seed aus (Nachspielen: `playGame` aus `tools/sim-bot.mjs`).
 Iteration 6: Die Suiten `ziele`, `kurz` und `ohneSchmiede` spielen beide Strategien (`gierig`, `einheiten-zuerst`) mit denselben Seeds und
 berichten sie nebeneinander (`--strategy` schränkt ein). Neue Kennzahlen: Richtungswechsel (≤ 2 je Einheit und Sekunde), Partielänge
-(90. Perzentil der Siege ≤ 20 min), ungenutztes Material, Forschungstempo. Keine globale Neukalibrierung vor Iteration 7.
+(90. Perzentil der Siege ≤ 20 min), ungenutztes Material, Forschungstempo. Deckel der passiven EP jetzt 35 % (PO).
+Keine globale Neukalibrierung vor Iteration 7.
 
 ## Mechaniken gegen Patts (nicht ohne Simulation entfernen)
 - Belagerung: Eigene Einheiten am gegnerischen Tor blockieren reguläre Gegnerwellen in dieser Lane.
@@ -102,7 +104,9 @@ die Gruppe hält) → Sammeln (nichts mehr in `contactRange + contactHysteresis`
 Im Kampf gehen Einheiten ohne Gegner in ihrer Heimat-Lane in die kämpfende Lane (Mitte zuerst, dann die mit den meisten Gegnern, dann oben).
 Fällt die letzte Einheit der Mitte, geben die äußeren Lanes ein Drittel der Armee ab (Nahkämpfer zuerst). Der Gegner nutzt denselben Code.
 Gekämpft wird je Einheit (`resolveCombat`): eigenes Ziel (nächster Gegner der aktuellen Lane in Reichweite, Gleichstand → niedrigste Id),
-eigene Abklingzeit, alle Angriffe eines Ticks gleichzeitig. Transiente Daten (Ziele, vorderste Reihe) liegen in Closure-Maps, nicht im Spielstand.
+eigene Abklingzeit mit zufälligem Versatz und Streuung (`COMBAT`), alle Angriffe eines Ticks gleichzeitig.
+Gegen Pendeln (I6.1, nicht ohne Test `tests/pendel.test.mjs` ändern): Mindestverweildauer je Zustand (`ARMY.minStateS`), feste Plätze (`slot`),
+Ziel-Lane bis zur Ankunft gebunden, danach `ARMY.minLaneStayS`, Querplatz gleitend (`lateralOf`). Transiente Daten (Ziele, vorderste Reihe) liegen in Closure-Maps, nicht im Spielstand.
 
 ## Arbeitsweise in Inkrementen
 Ein Inkrement ist fertig, wenn: das Spiel über `index.html` ohne Konsolenfehler startet; `npm test` und `npm run test:browser`
@@ -115,4 +119,4 @@ Bericht `docs/bericht-iteration-<n>.md` mit: Ergebnis in drei Sätzen, Entscheid
 wegbalanciert), offene Punkte für den PO. Rohdaten der Simulation unter `reports/`.
 
 ## Bekannte offene Punkte
-Siehe Abschnitt „Offen“ in `docs/bericht-iteration-4.md`.
+Siehe Abschnitt „Offen“ in `docs/bericht-iteration-6.md`.

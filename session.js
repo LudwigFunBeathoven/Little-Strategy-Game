@@ -5,7 +5,8 @@
    Die Aktionen der Spiellogik werden dazu umhüllt; das Spiel selbst ändert sich nicht. Export als JSON über den Knopf „Protokoll“. */
 'use strict';
 
-const DEBUG = /[?&]debug=1\b/.test(location.search);
+// Debug-Modus: ?debug=1, #debug oder im Testbuild fest eingeschaltet (window.KF_DEBUG = true vor den Skripten, REQ-6.11)
+const DEBUG = /[?&]debug=1\b/.test(location.search) || /(^#|[#&])debug\b/.test(location.hash) || window.KF_DEBUG === true;
 const Session = (() => {
   let P = null, lastSample = -1, lastPhase = null;
   /* Debug-Protokoll je Einheit (REQ-6.01): Zustand der Gruppe, Lane, Querbewegung, Platz, Bewegungsrichtung je Takt; die letzten

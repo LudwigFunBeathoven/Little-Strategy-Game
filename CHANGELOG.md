@@ -1,5 +1,20 @@
 # Änderungen
 
+## v0.7 – Iteration 6 (30.09.2026)
+- REQ-6.01 Formationen pendeln nicht mehr: Mindestverweildauer je Armeezustand, feste Plätze, gebundene Lane-Wahl (Hauptursache: beide Seiten
+  tauschten in jedem Takt die Lane), gleitende Querbewegung, Totzone, weich nachgeführte Darstellung; Debug-Protokoll je Einheit.
+- REQ-6.02 Angriffe versetzt: zufällige erste Angriffspause, ± 10 % Streuung, eigenes Geschoss je Wurf vom Werfer zum Ziel; Overkill-Schalter (aus).
+- REQ-6.03 Reines Online-Spiel: kein Fortschritt außerhalb der Partie, Pause bei verdecktem Tab, Laden startet pausiert; Karte Nachtschicht
+  wirkt jetzt in der Spätphase (+25 %/+50 % Fabrikertrag). Spielstand-Version 7.
+- REQ-6.04/6.05 Kartenwahl öffnet sich automatisch (400 ms Eingabesperre, Rückkehr zum vorigen Reiter); Kaserne im Reiter Armee; Heimat-Reiter je Gebäude.
+- REQ-6.06 Universität: Forschung schneller und billiger, Beschleunigen gegen Material, Hörsaal bis 35 %, Hinweis bei Abschluss, EP/s und
+  Zeit bis zur nächsten Karte in der Leiste.
+- REQ-6.07 Nachbarschaftsboni im 3×3-Raster mit Vorschau; Handelskontor ohne Karte baubar, gedeckelte Zinsen (Karte Handelskontor hebt den Deckel);
+  „Welle vorziehen“ in der Kaserne.
+- REQ-6.08 Anlauf der Gegnerwellen als Schalter (aus: Zielkonflikt, Entscheidung beim PO).
+- REQ-6.09/6.10 Zweite Simulationsstrategie „einheiten-zuerst“, neue Kennzahlen; Experiment „Schwung“ entfernt; Leistungsziel ≤ 1 ms je Takt.
+- REQ-6.11 Abnahmeserie mit beiden Strategien, Bericht, Testbuild mit Protokoll.
+
 ## v0.6 – Iteration 5 (29.09.2026)
 - REQ-5.01 Klicks kommen an: Knöpfe werden beim Aktualisieren nicht mehr ersetzt (vorher gingen Klicks mit normaler Haltedauer verloren),
   „Fertigen“ löst beim Drücken aus, Ziehschwelle 6 px, eine Umrechnung Bildschirm → Welt; Oberfläche höchstens einmal je Bild.

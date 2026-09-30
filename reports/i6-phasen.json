@@ -1,0 +1,56 @@
+{
+  "runs": 200,
+  "suite": "phasen",
+  "report": {
+    "strategies": {},
+    "clickShare": {
+      "leicht": {
+        "early": 0.5984689732732452,
+        "mid": 0.216106779964827,
+        "late": 0.011291302618329016
+      },
+      "normal": {
+        "early": 0.5957054296977914,
+        "mid": 0.2295357732869826,
+        "late": 0.01668911772735972
+      },
+      "schwer": {
+        "early": 0.6445491924421781,
+        "mid": 0.24939962792678846,
+        "late": 0.005512429561503842
+      }
+    },
+    "clickPolicies": {
+      "leicht": {
+        "always": 1,
+        "stopLate": 1,
+        "never": 1,
+        "winTime": {
+          "always": 544.2500000000528,
+          "stopLate": 543.0500000000538,
+          "never": 420.8000000000614
+        }
+      },
+      "normal": {
+        "always": 0.99,
+        "stopLate": 0.99,
+        "never": 0.79,
+        "winTime": {
+          "always": 591.4000000000099,
+          "stopLate": 577.4000000000226,
+          "never": 426.6000000000627
+        }
+      },
+      "schwer": {
+        "always": 0.975,
+        "stopLate": 0.94,
+        "never": 0,
+        "winTime": {
+          "always": 511.55000000008204,
+          "stopLate": 532.6000000000633,
+          "never": null
+        }
+      }
+    }
+  }
+}

@@ -16,7 +16,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 | I6.6 | Universität | 6.06 | fertig (Paarvergleich teils unter +3 pp, siehe Befund) |
 | I6.7 | Nachbarschaftsboni | 6.07 a | fertig |
 | I6.8 | Handelskontor mit Zinsen, „Welle vorziehen“ | 6.07 b, c | fertig |
-| I6.9 | Abnahmeserie, Bericht, Testbuild | 6.11 | offen |
+| I6.9 | Abnahmeserie, Bericht, Testbuild | 6.11 | fertig (Abnahme mit Abweichungen, siehe Bericht) |
 
 ## Prüfung je Inkrement
 ```
@@ -65,6 +65,10 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- I6.9: `npm test` 135/135, Browser-Prüfung 196/196, Kurzsimulation beide Strategien 100 % ohne Patt, Tick-Zeit Median 0,14 ms mit
+  120 Einheiten. Abnahmeserie mit 200 Partien je Feld und beiden Strategien (`reports/i6-ziele.*`, `i6-phasen.*`, `i6-strategie.*`,
+  `i6-ohneSchmiede.*`, `i6-forschung.*`); Ergebnis und Abweichungen in `docs/bericht-iteration-6.md`. Testbuild mit festem Protokoll
+  (`window.KF_DEBUG = true` bzw. `#debug` in der Adresse) für den Spieltest nach `docs/testleitfaden-iteration-6.md`.
 - I6.8: `npm test` 135/135 (Kontor-Tests an das neue Verhalten angepasst; neu: Zinsen gedeckelt, Welle vorziehen), Browser-Prüfung 196/196
   (Welle vorziehen im Reiter Armee, Zinsen in der Leiste). Neue Suite `wirtschaft`.
 - I6.7: `npm test` 134/134 (neu `tests/neighbors.test.mjs`; Fabrik-Ertragstest baut auf nicht benachbarten Plätzen), Browser-Prüfung 194/194
