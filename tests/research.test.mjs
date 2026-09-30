@@ -46,23 +46,24 @@ test('Ohne Universität ruht die laufende Forschung', () => {
 });
 
 test('Wirkungen: Hörsaal, Weitblick, Glücksgriff, Ingenieurwesen, Logistik, Drill, Metallurgie, Maurerkunst', () => {
-  const { G, C } = game();
+  const { G, C, R } = game();
+  const eff = id => R.find(r => r.id === id).tiers[0].effect[0].mul;          // Werte aus data/research.js
   G.build('universitaet'); G.build('fabrik');
   const base = { draft: G.draftSize(), bld: G.buildCost('kaserne'), fab: G.factoryCost(), sup: G.supplyCap(), wave: G.ownWaveInterval(), rate: G.factoryRate() };
   research(G, 'r_hoersaal');
   const xp0 = G.S.xpTotal; G.tick(1);
   assert.ok(Math.abs(G.S.xpTotal - xp0 - G.RES.r_hoersaal.tiers[0].effect[0].add) < 1e-9, 'Hörsaal: passive EP je Sekunde');
   research(G, 'r_weitblick'); assert.equal(G.draftSize(), base.draft + 1);
-  research(G, 'r_ingenieur'); assert.equal(G.buildCost('kaserne'), Math.ceil(C.BUILDING_COST.kaserne * 0.9));
+  research(G, 'r_ingenieur'); assert.equal(G.buildCost('kaserne'), Math.ceil(C.BUILDING_COST.kaserne * eff('r_ingenieur')));
   assert.ok(G.factoryCost() < base.fab, 'auch Fabriken');
   research(G, 'r_logistik', 2); assert.equal(G.supplyCap(), base.sup + 2);
   G.S.draft.stacks = {}; G.S.draft.ver++;                       // Karten aus Stufenaufstiegen neutralisieren
   const wave0 = G.ownWaveInterval(), rate0 = G.factoryRate();
   research(G, 'r_drill'); G.S.draft.stacks = {}; G.S.draft.ver++; assert.ok(Math.abs(G.ownWaveInterval() - wave0 * 0.92) < 1e-9);
-  research(G, 'r_metallurgie'); G.S.draft.stacks = {}; G.S.draft.ver++; assert.ok(Math.abs(G.factoryRate() - rate0 * 1.1) < 1e-9);
+  research(G, 'r_metallurgie'); G.S.draft.stacks = {}; G.S.draft.ver++; assert.ok(Math.abs(G.factoryRate() - rate0 * eff('r_metallurgie')) < 1e-9);
   research(G, 'r_maurerkunst');
   G.S.sections[0].hp = 10; assert.ok(G.repair(0));
-  assert.ok(Math.abs(G.S.sections[0].repairCd - C.REPAIR_COOLDOWN_S * 0.85) < 1e-9, 'Maurerkunst: kürzere Abklingzeit');
+  assert.ok(Math.abs(G.S.sections[0].repairCd - C.REPAIR_COOLDOWN_S * eff('r_maurerkunst')) < 1e-9, 'Maurerkunst: kürzere Abklingzeit');
   G.S.draft.stacks = {}; G.S.draft.ver++;
   const rare = G.OPT.veteranen, common = G.OPT.drill, wR = G.cardWeight(rare), wC = G.cardWeight(common);
   research(G, 'r_gluecksgriff'); G.S.draft.stacks = {}; G.S.draft.ver++;
@@ -117,4 +118,22 @@ test('Forschungsstand wird gespeichert und geladen', () => {
   assert.equal(H.supplyCap(), G.supplyCap());
   assert.equal(H.S.research.active[0].id, 'r_drill');
   assert.ok(Math.abs(H.S.research.active[0].t - 5) < 1e-9);
+});
+
+test('Beschleunigen gegen Material (REQ-6.06): Preis je Restsekunde, teurer je Stufe, schließt sofort ab', () => {
+  const { G, C } = game();
+  G.build('universitaet');
+  assert.ok(G.startResearch('r_ingenieur'));
+  G.tick(1);
+  const a = G.S.research.active[0], rest = a.timeS - a.t;
+  assert.equal(G.rushCost('r_ingenieur'), Math.ceil(rest * C.RESEARCH_RUSH.perS));
+  const m0 = G.S.material, cost = G.rushCost('r_ingenieur');
+  assert.ok(G.rushResearch('r_ingenieur'));
+  assert.equal(G.researchTier('r_ingenieur'), 1, 'sofort fertig');
+  assert.equal(m0 - G.S.material, cost);
+  assert.ok(G.startResearch('r_ingenieur'));                          // Stufe II: 50 % teurer je Sekunde
+  const b = G.S.research.active[0];
+  assert.equal(G.rushCost('r_ingenieur'), Math.ceil((b.timeS - b.t) * C.RESEARCH_RUSH.perS * (1 + C.RESEARCH_RUSH.tierStep)));
+  G.S.material = 0;
+  assert.equal(G.rushResearch('r_ingenieur'), false, 'ohne Material nicht');
 });

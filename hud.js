@@ -65,7 +65,9 @@ function renderHud(){
   setText(E.rate, t('hud.perSecond', { n: fmt1(G.matRate() + G.autoPressCps() * G.clickPower()) }));
   const x = G.xpProgress();
   setText(E.xpVal, fmt(S.xp));
-  setText(E.xpRate, t('hud.perSecond', { n: fmt1(xpRate()) }));
+  // EP je Sekunde und geschätzte Zeit bis zur nächsten Kartenwahl (REQ-6.06)
+  const xr = xpRate(), eta = xr > 0 ? Math.ceil(Math.max(0, x.need - x.cur) / xr) : null;
+  setText(E.xpRate, eta != null && running ? t('hud.xpEta', { n: fmt1(xr), s: clock(eta) }) : t('hud.perSecond', { n: fmt1(xr) }));
   setText(E.lvlProg, t('hud.toLevel', { n: x.level + 1, cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
   setWidth(E.barLvl, 100 * Math.max(0, Math.min(1, x.cur / x.need)));
   // Wellen erst mit der ersten Welle (REQ-47)

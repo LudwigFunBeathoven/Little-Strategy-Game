@@ -220,6 +220,10 @@
   #draftOffer.locked .pick{animation:draftin var(--draft-lock, 400ms) linear both; cursor:default;}
   .pick.preselected{border-color:var(--brass); background:var(--brass-soft);}
   .barracks{margin-top:10px;}
+  .toast{position:fixed; z-index:25; left:50%; transform:translateX(-50%); top:calc(var(--band-hud, 64px) + 8px); margin:0; padding:6px 14px;
+         background:var(--surface); border:1px solid var(--brass); border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,.14); font-size:13.5px;}
+  .toast[hidden]{display:none;}
+  .res-run .rush{margin-left:8px;}
   @media (prefers-reduced-motion: reduce){ .tabpanel:not([hidden]), .float, .hud-draft{animation:none;} }
   .hud-s{font-size:11.5px; color:var(--ink-soft);}
   .hud-xp{min-width:170px;} .hud-xp .bar{height:5px; margin-top:2px;}
@@ -345,6 +349,7 @@
   </main>
 
   <!-- Band 3: Arbeitsbereich, links Klickfeld, rechts Reiter (REQ-5.03) -->
+  <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
   <section class="work" id="work">
     <div class="work-click">
       <button class="btn-primary" id="clickBtn" type="button" data-tooltip="click"><span data-i18n="btn.click"></span> <span class="plus">+<span id="clickHint">1</span></span><span class="expl" id="clickExpl"></span></button>

@@ -420,6 +420,9 @@ function renderResearch(){
       const row = document.createElement('div'); row.className = 'res-run';
       row.innerHTML = '<span></span><span class="num"></span><span class="bar steel"><i></i></span>';
       row.children[0].textContent = t('research.runningName', { name: researchName(G.RES[a.id], a.tier) });
+      // Beschleunigen gegen Material (REQ-6.06)
+      const id = a.id;
+      row.appendChild(mkButton('btn-ghost rush', t('research.rush'), () => { if (G.rushResearch(id)) requestRender(); }, 'rush:' + id, ''));
       box.appendChild(row);
     }
   }
@@ -427,8 +430,23 @@ function renderResearch(){
     const row = box.children[i]; if (!row) return;
     setText(row.children[1], clock(Math.max(0, Math.ceil(a.timeS - a.t))));
     setWidth(row.children[2].firstChild, 100 * Math.min(1, a.t / a.timeS));
+    const rb = row.children[3], cost = G.rushCost(a.id);
+    setText(rb.querySelector('.expl'), t('ex.research.rush', { cost: costText('material', cost), s: Math.max(0, Math.ceil(a.timeS - a.t)) }));
+    setDis(rb, S.status !== 'running' || S.material < cost);
   });
   if (activeTab === 'uni') S.research.fresh = false;
+  // Rückmeldung bei abgeschlossener Forschung (REQ-6.06): kurzer Hinweis über dem Arbeitsbereich, dazu die Markierung am Reiter
+  const done = S.stats.researchDone || [];
+  if (done.length !== resDoneSeen){
+    if (done.length > resDoneSeen && resDoneSeen >= 0){ const d = done[done.length - 1]; toast(t('research.doneToast', { name: researchName(G.RES[d.id], d.tier) })); }
+    resDoneSeen = done.length;
+  }
+}
+let resDoneSeen = -1, toastTimer = null;
+function toast(text){
+  const el = $('toast'); if (!el) return;
+  setText(el, text); setHidden(el, false);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => setHidden(el, true), C.UI.toastMs);
 }
 
 /* ---------- Gesamter Arbeitsbereich ---------- */

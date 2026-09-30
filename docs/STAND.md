@@ -13,7 +13,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 | I6.3 | Offline-Reste, Pause bei verdecktem Tab, Kartenersatz | 6.03 | fertig |
 | I6.4 | Kartenwahl automatisch, Kaserne im Reiter „Armee“ | 6.04, 6.05 | fertig |
 | I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | fertig (REQ-6.08: Zielkonflikt, PO-Entscheidung offen) |
-| I6.6 | Universität | 6.06 | offen |
+| I6.6 | Universität | 6.06 | fertig (Paarvergleich teils unter +3 pp, siehe Befund) |
 | I6.7 | Nachbarschaftsboni | 6.07 a | offen |
 | I6.8 | Handelskontor mit Zinsen, „Welle vorziehen“ | 6.07 b, c | offen |
 | I6.9 | Abnahmeserie, Bericht, Testbuild | 6.11 | offen |
@@ -65,6 +65,8 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- I6.6: `npm test` 128/128 (neu: Beschleunigen in `tests/research.test.mjs`; Wirkungstest liest die Werte aus `data/research.js`),
+  Browser-Prüfung 191/191. Neue Suite `forschung` (Tempo in drei Spielweisen, Paarvergleich je Forschung).
 - I6.5: `npm test` 127/127 (Schwung-Test entfällt, neu `tests/anlauf.test.mjs`), Tick-Zeit Median 0,10–0,14 ms (Soll ≤ 1 ms). Die Simulation
   meldet die früheste Niederlage je Feld.
 - I6.4: `npm test` 127/127 (neu `tests/hometab.test.mjs`), Browser-Prüfung 191/191. Kartenwahl: Reiter Karten öffnet sich selbst, Knöpfe
@@ -138,6 +140,32 @@ Fernkämpfer setzt (Regel „Nahkämpfer vorn“). Kein Muster in aufeinanderfol
 beobachten; eine weitere Absenkung verlangte, die Regel „Nahkämpfer vorn“ für Nachzügler aufzuweichen.
 Playwright: 10 Sekunden Kampfbild, Positionsprüfung je Bild, höchstens 1 Wechsel je Einheit und Sekunde.
 
+## Befund REQ-6.06: Universität
+Änderungen: Forschungszeiten halbiert, Kosten −40 %; Einstieg (Neu ziehen, Bann, Maurerkunst Stufe I) 100 Material, 15 s; Ingenieurwesen,
+Metallurgie und Maurerkunst in allen Stufen stärker; Hörsaal 0,15/0,35/0,55 EP/s (III = 34 % des Abschuss-Ertrags eines aktiven Spielers auf
+Normal, Soll ≤ 35 %). Neu: Beschleunigen gegen Material (`RESEARCH_RUSH`: 6 Material je gesparter Sekunde, +50 % je Stufe über der ersten),
+Vorher/Nachher im Tooltip, Hinweis „Forschung abgeschlossen“ über dem Arbeitsbereich plus Markierung am Reiter, in der Leiste EP je Sekunde und
+Zeit bis zur nächsten Karte. Serie `node tools/simulate.mjs --suite forschung --runs 50` (`reports/i6-6-forschung.*`, vor der Verstärkung der
+drei globalen Forschungen gemessen).
+
+**Tempo** (Normal, durchschnitt, 50 Partien je Spielweise):
+
+| Spielweise | erste Forschung fertig (Median) | vor 3:00 | fertig bis Minute 10 (Median) |
+|---|---|---|---|
+| gierig (Standard-Bot) | 6:32 | 0 % | 1 |
+| einheiten-zuerst | 4:16 | 0 % | 2 |
+| „Universität zuerst“ (Messvariante: baut die Universität, sobald die Einführung sie zeigt, spart dafür und für die günstigste Forschung) | 2:50 | 92 % | 14 |
+
+Soll erfüllt für die Frage „kann ein durchschnittlicher Spieler …“ (Auslegung 16). Die Standard-Bots bauen die Universität erst nach 4–5,5 min
+und forschen selten; das ist ihre Spielweise, nicht das Tempo der Forschung.
+
+**Paarvergleich** (Normal, durchschnitt, gierig; 50 Paare je Forschung, Stufe I bei 3:00 geschenkt gegen gesperrt):
+Logistik +16 pp, Drill +10, Schmiede-Ausbau +6, Hörsaal +4 im Soll; unter +3: Weitblick +2, Neu ziehen, Bann, Glücksgriff, Metallurgie,
+Maurerkunst, Schildträger je 0, Ingenieurwesen −2, Zweiter Forschungsplatz −6. Keine über +25. **Einordnung:** Neu ziehen, Bann, Glücksgriff und
+Schildträger kann die Simulation nicht messen, weil die Bots weder neu ziehen noch bannen noch Schildträger kaufen. Bei 50 Paaren streut die
+Differenz um etwa ± 10 pp; Werte zwischen −6 und +6 sind nicht von null zu unterscheiden. Ingenieurwesen, Metallurgie und Maurerkunst wurden
+danach verstärkt (siehe oben); die Abnahmeserie misst erneut.
+
 ## Befund REQ-6.08: Schwer, kein Verlust vor Minute 4
 Stellschraube: Anlauf der Grundwelle (`startBase` → `waveBase` bis Minute `rampMin`), dazu Versuche mit späteren Werfern. Screening mit 30–50
 Partien je Feld, beide Strategien (`KF_OVERRIDE`), Werte: früheste Niederlage „passiv“ · Siegquote „gelegentlich“ (gierig / einheiten-zuerst).
@@ -200,3 +228,12 @@ Schwierigkeitsgrad, **Standard aus** (Werte wie v0.6). Entscheidung beim PO, sie
     gilt dem Reiter und der Auswahl vor der ersten automatisch geöffneten Wahl.
 15. **„Kaserne bauen“** wählt den ersten freien Platz, auf dem die Kaserne baubar wäre; ist keiner frei, öffnet es nur den Reiter Bauen.
     Gebaut wird erst mit dem zweiten Klick (oder Enter), wie beim Bauen aus dem Raster (REQ-5.04).
+16. **Forschungstempo „kann“:** gemessen als Machbarkeit mit einer Messvariante des gierigen Bots („Universität zuerst“: Profilwerte
+    „durchschnitt“, baut die Universität, sobald die Einführung sie zeigt, spart dafür und für die günstigste Forschung). Die Standard-Bots
+    werden daneben berichtet; sie bestimmen die Siegquoten.
+17. **Beschleunigen** schließt die laufende Forschung sofort ab (kein teilweises Beschleunigen); Preis = Restsekunden × 6 Material ×
+    (1 + 0,5 × (Stufe − 1)), aufgerundet. Die Bots beschleunigen nicht.
+18. **Paarvergleich:** „erzwungen“ = Stufe I wird zum Zeitpunkt 3:00 geschenkt (ohne Universität, ohne Kosten), danach ist die Forschung für
+    den Bot gesperrt; „gesperrt“ = die Forschung ist die ganze Partie nicht verfügbar. Gleicher Seed, gierige Heuristik, Normal durchschnitt.
+19. **EP-Anteil der Lehre:** rechnerisch über Hörsaal III gegen den Abschuss-Ertrag eines aktiven Spielers (wie in Iteration 5); gemessen
+    bleibt der Anteil nahe null, weil die Bots den Hörsaal selten erforschen.

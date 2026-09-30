@@ -77,7 +77,8 @@ const KF_CONFIG = {
     unitEaseSnapPx: 0.3,        // Totzone der Darstellung: näher als so viele Pixel wird nicht mehr nachgeführt
     // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
     homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
-    draftLockMs: 400,           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
+    draftLockMs: 400,
+    toastMs: 2500,              // kurzer Hinweis über dem Arbeitsbereich (abgeschlossene Forschung, REQ-6.06)           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
     debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
   },
 
@@ -194,9 +195,11 @@ const KF_CONFIG = {
   /* Spielphasen (REQ-03), abgeleitet aus der Stufe */
   PHASE_MID_LEVEL: 2,
   PHASE_LATE_LEVEL: 5,
+  RESEARCH_RUSH: { perS: 6, tierStep: 0.5 },   // Forschung beschleunigen: Material je gesparter Sekunde, +50 % je Stufe über der ersten (REQ-6.06)
   PERF_TICK_MAX_MS: 1,          // Leistungsziel (REQ-6.10): Median eines Logik-Takts mit 2 × 60 Einheiten in Node höchstens so lange
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
-  SIM_STYLE_WINDOW_S: 300,      // Anteil der Einheitenkäufe an allen Handlungen in diesem Zeitraum (Strategie-Merkmal, REQ-6.09)
+  SIM_STYLE_WINDOW_S: 300,
+  SIM_RESEARCH_FORCE_S: 180,    // Paarvergleich der Forschung: Zeitpunkt, zu dem die Forschung in Stufe 1 geschenkt wird (REQ-6.06)      // Anteil der Einheitenkäufe an allen Handlungen in diesem Zeitraum (Strategie-Merkmal, REQ-6.09)
   SIM_SIEGE_LOOKAHEAD_S: 120,   // Bot-Vorausschau reicht bis nach der Belagerungswelle, sobald sie so nah ist (REQ-48)
   SIM_SIEGE_EVAL_S: 40,         // … und so lange über ihr Ausrücken hinaus
   SIM_RESEARCH_EVERY_S: 60,     // nach einer abgelehnten Forschung prüfen Bots erst wieder nach dieser Zeit, danach doppelt so lange …

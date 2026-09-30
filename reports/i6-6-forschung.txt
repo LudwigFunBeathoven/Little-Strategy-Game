@@ -1,0 +1,26 @@
+1450 Partien auf 4 Kernen …
+fertig in 1087 s · 278.7 simulierte Spielstunden · 3.9 s Rechenzeit je Spielstunde
+
+FORSCHUNG – Tempo (Normal, durchschnitt; Soll: erste Forschung vor 3:00, bis Minute 10 mindestens 5)
+
+gierig            erste Forschung fertig (Median)  6:32 · vor 3:00 in   0 % · bis Minute 10 fertig (Median) 1
+einheiten-zuerst  erste Forschung fertig (Median)  4:16 · vor 3:00 in   0 % · bis Minute 10 fertig (Median) 2
+uni-zuerst        erste Forschung fertig (Median)  2:50 · vor 3:00 in  92 % · bis Minute 10 fertig (Median) 14
+
+FORSCHUNG – Paarvergleich (Normal, durchschnitt, gierig; Stufe 1 bei 3:00 geschenkt gegen gesperrt; Soll +3 … +25 pp)
+
+r_hoersaal         mit  88 %  ohne  84 %  Differenz   +4 pp
+r_weitblick        mit  84 %  ohne  82 %  Differenz   +2 pp  ← unter +3
+r_neuziehen        mit  84 %  ohne  84 %  Differenz   +0 pp  ← unter +3
+r_bann             mit  84 %  ohne  84 %  Differenz   +0 pp  ← unter +3
+r_gluecksgriff     mit  86 %  ohne  86 %  Differenz   +0 pp  ← unter +3
+r_ingenieur        mit  80 %  ohne  82 %  Differenz   -2 pp  ← unter +3
+r_logistik         mit  96 %  ohne  80 %  Differenz  +16 pp
+r_drill            mit  88 %  ohne  78 %  Differenz  +10 pp
+r_metallurgie      mit  86 %  ohne  86 %  Differenz   +0 pp  ← unter +3
+r_maurerkunst      mit  84 %  ohne  84 %  Differenz   +0 pp  ← unter +3
+r_schildtraeger    mit  82 %  ohne  82 %  Differenz   +0 pp  ← unter +3
+r_zweiterplatz     mit  76 %  ohne  82 %  Differenz   -6 pp  ← unter +3
+r_schmiedeausbau   mit  88 %  ohne  82 %  Differenz   +6 pp
+
+FERTIG

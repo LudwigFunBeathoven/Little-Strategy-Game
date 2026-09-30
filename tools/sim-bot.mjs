@@ -89,6 +89,7 @@ export class Bot {
   }
   chooseBuilding(G, slot, options, stats){
     if (options.length === 1) return options[0];
+    if (this.o.uniFirst && options.includes('universitaet') && !G.has('universitaet')) return 'universitaet';   // Messung REQ-6.06
     if (this.o.strategy === 'zufall' || !this.o.lookahead) return options[Math.floor(this.rng() * options.length)];
     let best = null, bestScore = -Infinity;
     for (const type of options){
@@ -108,6 +109,11 @@ export class Bot {
   research(G, stats){
     const S = G.S;
     if (!G.has('universitaet') || S.research.active.length >= G.researchSlots()) return;
+    if (this.o.uniFirst){                                                  // Messung REQ-6.06: günstigste bezahlbare Forschung sofort
+      const r = G.RESEARCH.filter(x => G.researchBlock(x.id) === null).sort((a, b) => G.researchCost(a.id) - G.researchCost(b.id))[0];
+      if (r && G.startResearch(r.id) && stats) stats.researched[r.id] = (stats.researched[r.id] || 0) + 1;
+      return;
+    }
     if (S.t < this.resNext) return;
     const cand = G.RESEARCH.filter(r => G.researchBlock(r.id) === null).sort((a, b) => G.researchCost(a.id) - G.researchCost(b.id)).slice(0, C.SIM_RESEARCH_CANDIDATES);
     if (!cand.length) return;
@@ -158,10 +164,12 @@ export class Bot {
     const needFactory = G.factoryCount() === 0;
     if (threat && own < 4 && !needFactory) trySpawn(2);
 
+    // „Universität zuerst“ (Messung REQ-6.06): solange die Universität fehlt, nur für sie sparen
+    const saveForUni = o.uniFirst && !G.has('universitaet') && G.introShows('buildings') && G.factoryCount() > 0;
     // Bauen: passive Spieler bauen nur Fabriken
     const free = S.slots.findIndex(x => !x);
     if (free >= 0){
-      const options = C.BUILDINGS.filter(b => G.buildBlock(free, b) === null && (!o.noBuild || b === 'fabrik') && !(o.forbid || []).includes(b));
+      const options = C.BUILDINGS.filter(b => G.buildBlock(free, b) === null && (!o.noBuild || b === 'fabrik') && !(o.forbid || []).includes(b) && (!saveForUni || b === 'universitaet'));
       if (options.length){
         const type = this.chooseBuilding(G, free, options, stats);
         if (G.buildAt(free, type) && stats) stats.built[type] = (stats.built[type] || 0) + 1;
@@ -197,7 +205,7 @@ export class Bot {
     // Forschung (REQ-5.07): gierig per Vorausschau über buildHorizon, Zufall zufällig; passive Profile forschen nicht
     if (!o.noUpgrades) this.research(G, stats);
     // Upgrades
-    if (!o.noUpgrades){
+    if (!o.noUpgrades && !saveForUni){
       for (const id of MAT_PRIO){
         if (!C.UPGRADES[id]) continue;
         const g = C.UPGRADES[id].group;
@@ -206,7 +214,15 @@ export class Bot {
       }
     }
     // Einheiten mit Rücklage für Wirtschaft
-    const econTarget = S.slots.some(x => !x) ? G.factoryCost() : Infinity;
+    let econTarget = S.slots.some(x => !x) ? G.factoryCost() : Infinity;
+    // „Universität zuerst“ (Messung REQ-6.06): für die Universität und danach für die günstigste Forschung sparen
+    if (o.uniFirst){
+      if (!G.has('universitaet') && G.isBuildable('universitaet') && G.introShows('buildings')) econTarget = G.buildCost('universitaet') / 0.7;
+      else if (G.has('universitaet') && S.research.active.length < G.researchSlots()){
+        const c = Math.min(...G.RESEARCH.filter(x => G.researchNext(x.id) && !['requires', 'maxed', 'locked'].includes(G.researchBlock(x.id))).map(x => G.researchCost(x.id)));
+        if (Number.isFinite(c)) econTarget = c / 0.7;
+      }
+    }
     const reserve = threat ? 0 : econTarget * 0.7;
     while (!o.noUnits && G.factoryCount() > 0 && S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
       const q = S.queue.length; trySpawn(1); if (S.queue.length === q) break;
@@ -215,7 +231,7 @@ export class Bot {
 }
 
 /* Eine vollständige Partie. Liefert Kennzahlen für den Bericht. */
-export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid }){
+export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   const G = newGame(diff, seed);
@@ -240,13 +256,18 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
       researched: id => { stats.researched[id] = (stats.researched[id] || 0) + 1; } });
     bot = { step: () => simple.step(DT) };
   } else {
-    const b = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid }));
+    const b = new Bot(Object.assign(prof, { strategy, clickPolicy, seed, horizon, forbid, uniFirst }));
     bot = { step: () => b.step(G, stats) };
   }
   const dirs = directionTracker({ lateralOf: G.lateralOf });
   let wallFall = null;
   const steps = maxMin * 60 / DT;
+  // Paarvergleich (REQ-6.06): Forschung gesperrt bzw. zum Zeitpunkt forceResearch.at in Stufe 1 geschenkt
+  if (lockResearch || forceResearch) G.S.research.locked = [lockResearch || forceResearch.id];
   for (let i = 0; i < steps && G.S.status === 'running'; i++){
+    if (forceResearch && G.S.t >= forceResearch.at && !G.S.research.done[forceResearch.id]){
+      G.S.research.done[forceResearch.id] = 1; G.S.research.ver++;
+    }
     bot.step();
     dirs.sample(G.S, DT);
     if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
@@ -266,6 +287,6 @@ export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
-    researchTimes: S.stats.researchDone || [],
+    researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0,
   };
 }

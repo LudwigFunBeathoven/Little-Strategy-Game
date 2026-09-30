@@ -7,6 +7,7 @@
 //   ohneSchmiede  REQ-17: Normal, durchschnitt, gierige Heuristik ohne Schmiede (Soll: Siegquote ≥ 30 %)
 //   --profile aktiv,durchschnitt   nur diese Spielertypen (Suite ziele)
 //   --strategy gierig,einheiten-zuerst   Strategien der Suiten ziele, kurz, ohneSchmiede (Standard: beide, REQ-6.09)
+//   forschung  REQ-6.06: Forschungstempo (drei Spielweisen) und Paarvergleich je Forschung (--runs Paare je Forschung)
 //   kurz       Kurzsimulation nach Anhang A: Normal, Spielertyp durchschnitt, gierige Heuristik (Soll: 0 offen, Siegquote 20–100 %)
 // Die Simulation misst Stärke, nicht Spielspaß. Auffälligkeiten werden berichtet, nicht automatisch wegbalanciert.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -15,7 +16,7 @@ import { writeFileSync } from 'node:fs';
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
-  parentPort.postMessage(workerData.jobs.map(j => Object.assign(playGame(j), { suite: j.suite })));
+  parentPort.postMessage(workerData.jobs.map(j => Object.assign(playGame(j), { suite: j.suite, variant: j.variant, arm: j.arm, res: j.res })));
 } else {
   const { loadCore } = await import('./load-core.mjs');
   const { KF_CONFIG: C, KF_DRAFT_OPTIONS: OPTS, KF_RESEARCH: RESEARCH } = loadCore();
@@ -45,6 +46,17 @@ if (!isMainThread){
     DIFFS.forEach((diff, di) => ['zufall', 'gierig'].forEach((strategy, si) => {
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'strategie', diff, profile: 'durchschnitt', strategy, seed: seedOf(100 + di * 10 + si, r) });
     }));
+  // REQ-6.06: Forschungstempo (Normal, durchschnitt; beide Strategien und „Universität zuerst“) und Paarvergleich je Forschung
+  // (gleicher Seed, gleiche Strategie: einmal zum Zeitpunkt SIM_RESEARCH_FORCE_S in Stufe 1 geschenkt, einmal gesperrt)
+  if (SUITE === 'forschung'){
+    for (const [variant, strategy, uniFirst] of [['gierig', 'gierig', false], ['einheiten-zuerst', 'einheiten-zuerst', false], ['uni-zuerst', 'gierig', true]])
+      for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'tempo', variant, diff: 'normal', profile: 'durchschnitt', strategy, uniFirst, seed: seedOf(300, r) });
+    for (const res of RESEARCH) for (let r = 0; r < RUNS; r++){
+      const seed = seedOf(400, r);
+      jobs.push({ suite: 'paar', arm: 'mit', res: res.id, diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', seed, forceResearch: { id: res.id, at: C.SIM_RESEARCH_FORCE_S } });
+      jobs.push({ suite: 'paar', arm: 'ohne', res: res.id, diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', seed, lockResearch: res.id });
+    }
+  }
   if (SUITE === 'alle' || SUITE === 'phasen')
     DIFFS.forEach((diff, di) => ['always', 'stopLate', 'never'].forEach((clickPolicy, ci) => {
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'phasen', diff, profile: 'aktiv', strategy: 'gierig', clickPolicy, cps: CPS, seed: seedOf(200 + di * 10 + ci, r) });
@@ -276,6 +288,34 @@ if (!isMainThread){
       }
       report.firstDraft = median(first);
       console.log(`Erster Draft (Median): ${Math.round(median(first) || 0)} s (Soll 60–90 s)`);
+    }
+    console.log('');
+  }
+
+  const TP = results.filter(r => r.suite === 'tempo');
+  if (TP.length){
+    console.log('FORSCHUNG – Tempo (Normal, durchschnitt; Soll: erste Forschung vor 3:00, bis Minute 10 mindestens 5)\n');
+    report.researchTempo = {};
+    for (const v of ['gierig', 'einheiten-zuerst', 'uni-zuerst']){
+      const R = TP.filter(r => r.variant === v);
+      const first = R.map(r => r.researchTimes[0]?.t ?? Infinity), by10 = R.map(r => r.researchTimes.filter(x => x.t <= 600).length);
+      const f = median(first), n = median(by10), share3 = R.filter(r => (r.researchTimes[0]?.t ?? Infinity) < 180).length;
+      report.researchTempo[v] = { firstMedian: f === Infinity ? null : f, by10Median: n, firstBefore3: share3 / R.length, rushSpent: median(R.map(r => r.rushSpent || 0)) };
+      console.log(`${pad(v, 17)} erste Forschung fertig (Median) ${lpad(f === Infinity ? 'nie' : mmss(f), 5)} · vor 3:00 in ${lpad(pct(share3, R.length), 5)} · bis Minute 10 fertig (Median) ${n}`);
+    }
+    console.log('');
+  }
+  const PA = results.filter(r => r.suite === 'paar');
+  if (PA.length){
+    console.log(`FORSCHUNG – Paarvergleich (Normal, durchschnitt, gierig; Stufe 1 bei ${mmss(C.SIM_RESEARCH_FORCE_S)} geschenkt gegen gesperrt; Soll +3 … +25 pp)\n`);
+    report.researchPairs = {};
+    for (const res of RESEARCH){
+      const mit = PA.filter(r => r.res === res.id && r.arm === 'mit'), ohne = PA.filter(r => r.res === res.id && r.arm === 'ohne');
+      const q = R => R.length ? R.filter(r => r.status === 'won').length / R.length : null;
+      const d = (q(mit) - q(ohne)) * 100;
+      report.researchPairs[res.id] = { with: q(mit), without: q(ohne), deltaPp: d, n: mit.length };
+      const flag = d < 3 ? '  ← unter +3' : d > 25 ? '  ← über +25' : '';
+      console.log(`${pad(res.id, 18)} mit ${lpad(pct(mit.filter(r => r.status === 'won').length, mit.length), 5)}  ohne ${lpad(pct(ohne.filter(r => r.status === 'won').length, ohne.length), 5)}  Differenz ${lpad((d >= 0 ? '+' : '') + d.toFixed(0) + ' pp', 7)}${flag}`);
     }
     console.log('');
   }

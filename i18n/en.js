@@ -474,4 +474,11 @@ KF_I18N.en = {
   'kaserne.build': 'Build barracks',
   'ex.kaserne.build': 'Opens Build with barracks preselected · {cost}',
   'tip.kaserne.build': 'Selects the first free plot and highlights the barracks there. The second click builds it.',
+  'research.rush': 'Speed up',
+  'ex.research.rush': 'Finish now · {cost}',
+  'tip.research.rush': 'Completes “{name}” at once. The price depends on the remaining time and rises with the tier.',
+  'research.doneToast': 'Research complete: {name}',
+  'tip.research.before': 'Now',
+  'tip.research.after': 'Then',
+  'hud.xpEta': '{n}/s · card in {s}',
 };

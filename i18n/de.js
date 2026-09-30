@@ -474,4 +474,11 @@ KF_I18N.de = {
   'kaserne.build': 'Kaserne bauen',
   'ex.kaserne.build': 'Zum Reiter Bauen, Kaserne vorausgewählt · {cost}',
   'tip.kaserne.build': 'Wählt den ersten freien Bauplatz und hebt dort die Kaserne hervor. Gebaut wird erst mit dem zweiten Klick.',
+  'research.rush': 'Beschleunigen',
+  'ex.research.rush': 'Sofort fertig · {cost}',
+  'tip.research.rush': 'Schließt „{name}“ sofort ab. Der Preis richtet sich nach der restlichen Zeit und steigt mit der Stufe.',
+  'research.doneToast': 'Forschung abgeschlossen: {name}',
+  'tip.research.before': 'Jetzt',
+  'tip.research.after': 'Danach',
+  'hud.xpEta': '{n}/s · Karte in {s}',
 };

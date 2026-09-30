@@ -225,9 +225,14 @@ function tipContent(id){
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
+    case 'rush': { const act = S.research.active.find(x => x.id === a);
+      return { title: t('research.rush'), body: t('tip.research.rush', { name: act ? researchName(G.RES[a], act.tier) : '' }),
+               rows: act ? [[t('tip.cost'), costText('material', G.rushCost(a))], [t('research.time'), t('research.seconds', { s: Math.ceil(Math.max(0, act.timeS - act.t)) })]] : [] }; }
     case 'kaserneBuild': return { title: t('kaserne.build'), body: t('tip.kaserne.build'), rows: [[t('tip.cost'), costText('material', G.buildCost('kaserne'))]] };
     case 'res': { const r = G.RES[a], n = G.researchTier(a), next = G.researchNext(a);
       const rows = [[t('tip.level'), `${n}/${r.tiers.length}`]];
+      // Wirkung als Vorher/Nachher (REQ-6.06)
+      if (next) rows.push([t('tip.research.before'), n ? researchParams(r, n).e1 : '–'], [t('tip.research.after'), researchParams(r, n + 1).e1]);
       if (next) rows.push([t('tip.cost'), costText('material', next.cost)], [t('research.time'), t('research.seconds', { s: next.timeS })]);
       return { title: researchName(r, Math.min(n + 1, r.tiers.length)), body: t(r.descKey, researchParams(r, Math.min(n + 1, r.tiers.length))) + ' ' + t('research.branchOf.' + r.branch),
                rows, reason: researchReason(a) }; }

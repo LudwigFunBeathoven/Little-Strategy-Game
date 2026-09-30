@@ -849,11 +849,27 @@ function create(){
     if (S.status !== 'running') return 'notRunning';
     if (!has('universitaet')) return 'noUni';
     if (!researchNext(id)) return 'maxed';
+    if (S.research.locked && S.research.locked.includes(id)) return 'locked';   // nur Simulation: Paarvergleich gesperrt (REQ-6.06)
     if (r.requires && researchTier(r.requires.research) < r.requires.tier) return 'requires';
     if (S.research.active.some(a => a.id === id)) return 'active';
     if (S.research.active.length >= researchSlots()) return 'busy';
     if (S.material < researchCost(id)) return 'material';
     return null;
+  }
+  /* Beschleunigen gegen Material (REQ-6.06): die restliche Zeit einer laufenden Forschung sofort abschließen. Preis je gesparter Sekunde
+     RESEARCH_RUSH.perS, je Stufe über der ersten um RESEARCH_RUSH.tierStep teurer; zugleich eine Material-Senke (REQ-6.07) */
+  function rushCost(id){
+    const a = S.research.active.find(x => x.id === id);
+    if (!a) return null;
+    return Math.ceil(Math.max(0, a.timeS - a.t) * C.RESEARCH_RUSH.perS * (1 + C.RESEARCH_RUSH.tierStep * (a.tier - 1)));
+  }
+  function rushResearch(id){
+    const a = S.research.active.find(x => x.id === id), cost = rushCost(id);
+    if (!a || S.status !== 'running' || !has('universitaet') || S.material < cost) return false;
+    S.material -= cost; a.t = a.timeS;
+    S.stats.rushSpent = (S.stats.rushSpent || 0) + cost;
+    progressResearch(0);
+    return true;
   }
   function startResearch(id){
     if (researchBlock(id)) return false;
@@ -1019,7 +1035,7 @@ function create(){
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, interestRate,
-    chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, unitUnlocked,
+    chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, draftSize, colOffset, lateralOf, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
