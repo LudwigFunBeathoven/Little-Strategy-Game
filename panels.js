@@ -147,6 +147,17 @@ function buildPanels(){
 /* Sprache gewechselt: dynamisch aufgebaute Knöpfe neu beschriften */
 function onLangChange(){ ctxKey = ''; draftKey = ''; chosenKey = ''; previewKey = ''; lastLogKey = ''; }
 
+/* ---------- Nachbarschaft (REQ-6.07 a): Texte für Regel, Vorschau und Raster ---------- */
+const nbFmt = (rule, v) => (v > 0 ? '+' : v < 0 ? '−' : '') + (rule.stat === 'supplyAdj' ? fmtNum(Math.abs(v)) : t('nb.pct', { v: pct(Math.abs(v)) }));
+const nbRuleText = rule => t(rule.nameKey, { v: nbFmt(rule, rule.per), max: fmtNum(rule.max) });
+function nbPreviewText(i, type){
+  const p = G.neighborPreview(i, type), parts = [];
+  if (p.gets) parts.push(p.gets.n > 0 ? t('nb.gets', { rule: nbRuleText(p.gets.rule), n: p.gets.n, total: nbFmt(p.gets.rule, p.gets.value) })
+                                      : t('nb.getsNone', { rule: nbRuleText(p.gets.rule) }));
+  for (const g of p.gives) parts.push(t('nb.gives', { name: t(`bld.${g.type}.name`), slot: g.slot + 1, delta: nbFmt(g.rule, g.delta) }));
+  return parts.join(' · ');
+}
+
 /* ---------- Kontextkopf: ausgewähltes Objekt mit seinen Aktionen ---------- */
 function updatePicks(){
   for (const p of picks){
@@ -154,6 +165,7 @@ function updatePicks(){
     setText(p.nm, p.type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${p.type}.name`));
     setText(p.ex, t('ex.line', { effect: bldEffect(p.type, false), cost: costText('material', cost) }));
     setText(p.w, why || ''); setHidden(p.w, !why);
+    setText(p.nb, nbPreviewText(p.i, p.type));
     setDis(p.b, !!block);
   }
 }
@@ -197,10 +209,11 @@ function renderContext(){
       const d = document.createElement('span'); d.className = 'd'; d.textContent = t(`bld.${type}.desc`);
       const ex = document.createElement('span'); ex.className = 'expl';
       const w = document.createElement('span'); w.className = 'w';
-      b.append(nm, c, d, ex, w);
+      const nb = document.createElement('span'); nb.className = 'nb';
+      b.append(nm, c, d, ex, nb, w);
       b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ ctxKey = ''; requestRender(); } });
       build.appendChild(b);
-      picks.push({ type, i, b, nm, ex, w });
+      picks.push({ type, i, b, nm, ex, w, nb });
     }
     updatePicks();
   }
@@ -497,7 +510,9 @@ function renderPanels(){
   for (let i = 0; i < gridEls.length; i++){
     const g = gridEls[i], sl = S.slots[i];
     setText(g.label, t('grid.cell', { n: i + 1 }));
-    setText(g.expl, sl ? t(`bld.${sl.type}.name`) : t('grid.free'));
+    // Raster: Gebäude mit ihrem aktuellen Nachbarschaftsbonus (REQ-6.07 a)
+    const nbv = sl ? G.neighborValue(i, sl.type) : 0, rule = sl ? G.NEIGHBORS.find(r => r.building === sl.type) : null;
+    setText(g.expl, sl ? t(`bld.${sl.type}.name`) + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') : t('grid.free'));
     g.btn.classList.toggle('built', !!sl);
     g.btn.setAttribute('aria-selected', String(!!sel && sel.kind === 'plot' && sel.i === i));
   }

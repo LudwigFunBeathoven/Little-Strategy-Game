@@ -14,7 +14,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 | I6.4 | Kartenwahl automatisch, Kaserne im Reiter „Armee“ | 6.04, 6.05 | fertig |
 | I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | fertig (REQ-6.08: Zielkonflikt, PO-Entscheidung offen) |
 | I6.6 | Universität | 6.06 | fertig (Paarvergleich teils unter +3 pp, siehe Befund) |
-| I6.7 | Nachbarschaftsboni | 6.07 a | offen |
+| I6.7 | Nachbarschaftsboni | 6.07 a | fertig |
 | I6.8 | Handelskontor mit Zinsen, „Welle vorziehen“ | 6.07 b, c | offen |
 | I6.9 | Abnahmeserie, Bericht, Testbuild | 6.11 | offen |
 
@@ -65,6 +65,8 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- I6.7: `npm test` 134/134 (neu `tests/neighbors.test.mjs`; Fabrik-Ertragstest baut auf nicht benachbarten Plätzen), Browser-Prüfung 194/194
+  (Nachbarschaftsvorschau in Bau-Option und Raster). Der Kartenwahl-Test wartet jetzt auf den Reiterwechsel statt fester 120 ms.
 - I6.6: `npm test` 128/128 (neu: Beschleunigen in `tests/research.test.mjs`; Wirkungstest liest die Werte aus `data/research.js`),
   Browser-Prüfung 191/191. Neue Suite `forschung` (Tempo in drei Spielweisen, Paarvergleich je Forschung).
 - I6.5: `npm test` 127/127 (Schwung-Test entfällt, neu `tests/anlauf.test.mjs`), Tick-Zeit Median 0,10–0,14 ms (Soll ≤ 1 ms). Die Simulation
@@ -166,6 +168,16 @@ Schildträger kann die Simulation nicht messen, weil die Bots weder neu ziehen n
 Differenz um etwa ± 10 pp; Werte zwischen −6 und +6 sind nicht von null zu unterscheiden. Ingenieurwesen, Metallurgie und Maurerkunst wurden
 danach verstärkt (siehe oben); die Abnahmeserie misst erneut.
 
+## Befund REQ-6.07 a: Nachbarschaftsboni
+Regeln (`data/neighbors.js`, je Gebäudetyp genau eine, nur orthogonal): Fabrik neben Fabrik +6 % Ertrag je Nachbar (höchstens 4);
+Schmiede neben Kaserne Einheitenkosten −8 %; Kaserne neben Schmiede Versorgungslimit +1; Universität neben Fabrik Forschungszeit −8 % je
+Nachbar (höchstens 3); Handelskontor neben Fabrik Zinsdeckel +25 % je Nachbar (höchstens 4). Vorschau: Jede Bau-Option eines Platzes nennt,
+was das Gebäude dort erhielte und welchen Nachbarn es etwas gäbe (auch im Tooltip); das Raster zeigt den aktuellen Bonus je Gebäude. Bots wählen
+den Platz nach Nachbarschaftsnutzen, die gierige Heuristik vergleicht diesen Platz per Vorausschau mit dem ersten freien.
+Paarvergleich (`--suite nachbarn --runs 50`, `reports/i6-7-nachbarn.*`, Normal durchschnitt gierig): alle Regeln an 94 %; Wirkung je Regel
+(an gegen einzeln aus) Fabrik −2 pp, Schmiede 0, Kaserne +6, Universität −4, Kontor +2; keine über +25 pp. Die Werte liegen im Rauschen
+(± 10 pp bei 50 Partien). Die Siegquote dieses Felds liegt damit deutlich über v0.6 (64 %); Ursachen und Abnahme in I6.9.
+
 ## Befund REQ-6.08: Schwer, kein Verlust vor Minute 4
 Stellschraube: Anlauf der Grundwelle (`startBase` → `waveBase` bis Minute `rampMin`), dazu Versuche mit späteren Werfern. Screening mit 30–50
 Partien je Feld, beide Strategien (`KF_OVERRIDE`), Werte: früheste Niederlage „passiv“ · Siegquote „gelegentlich“ (gierig / einheiten-zuerst).
@@ -237,3 +249,5 @@ Schwierigkeitsgrad, **Standard aus** (Werte wie v0.6). Entscheidung beim PO, sie
     den Bot gesperrt; „gesperrt“ = die Forschung ist die ganze Partie nicht verfügbar. Gleicher Seed, gierige Heuristik, Normal durchschnitt.
 19. **EP-Anteil der Lehre:** rechnerisch über Hörsaal III gegen den Abschuss-Ertrag eines aktiven Spielers (wie in Iteration 5); gemessen
     bleibt der Anteil nahe null, weil die Bots den Hörsaal selten erforschen.
+20. **Nachbarschaft:** Regeln für Einzelgebäude (Schmiede, Kaserne, Universität, Kontor) wirken global, weil es jedes nur einmal gibt; die
+    Fabrikregel wirkt je Fabrik. Diagonale Plätze zählen nicht (Standard der Anforderung). Der Abriss erstattet wie bisher teilweise.

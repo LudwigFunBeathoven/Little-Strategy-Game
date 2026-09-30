@@ -326,7 +326,8 @@ for (const dsf of [1, 2]){
   const levelUp = n => p.evaluate(n => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + n); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99990 + n, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); }, n);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.selectSection(1); });
-  await levelUp(2); await p.waitForTimeout(120);
+  await levelUp(2);
+  await p.waitForFunction(() => __kf.tab === 'cards', null, { timeout: 3000 }).catch(() => {});
   const st = await p.evaluate(() => ({ pending: !!__kf.G.S.pendingDraft, tab: __kf.tab, locked: document.querySelector('#draftOffer').classList.contains('locked'),
     n: document.querySelectorAll('#draftOffer .card-pick').length, levels: __kf.G.S.pendingLevels, modal: !document.querySelector('#modal').hidden }));
   check(st.pending && st.tab === 'cards' && st.locked && st.n >= 2 && !st.modal, `Kartenwahl: Reiter Karten öffnet sich selbst, Knöpfe gesperrt und blenden ein ${JSON.stringify(st)}`);
@@ -544,6 +545,28 @@ for (const dsf of [1, 2]){
   check(Math.abs(after.m - before.m) < 1e-6 && Math.abs(after.t - before.t) < 1e-6 && after.paused && after.btn,
     `Laden eine Stunde später: Material ${before.m.toFixed(1)} → ${after.m.toFixed(1)}, Zeit unverändert, pausiert mit „Weiter“`);
   check(errs.length === 0, `Online-Prüfung: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
+// REQ-6.07 a: Nachbarschaftsvorschau beim Bauen und im Raster
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto(url);
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('klammerfront.lang', 'de'); localStorage.setItem('klammerfront.skipIntro', '1'); });
+  await p.reload(); await p.waitForTimeout(300);
+  await p.evaluate(() => __kf.startGame('normal')); await p.waitForTimeout(100);
+  await p.evaluate(() => { const G = __kf.G; document.querySelector('#hintBox').hidden = true; G.S.material = 1e5; G.buildAt(4, 'fabrik'); __kf.selectPlot(1); });
+  await p.waitForTimeout(150);
+  const r = await p.evaluate(() => ({ pick: document.querySelector('#ctxBuild [data-tooltip="pick:fabrik:1"] .nb')?.textContent || '',
+    uni: document.querySelector('#ctxBuild [data-tooltip="pick:universitaet:1"] .nb')?.textContent || '' }));
+  check(/Fabrik neben Fabrik/.test(r.pick) && /Platz 5/.test(r.pick) && /Universität neben Fabrik/.test(r.uni),
+    `Nachbarschaftsvorschau: Fabrik auf Platz 2 neben Fabrik auf Platz 5 („${r.pick}“), Universität („${r.uni}“)`);
+  await p.evaluate(() => { __kf.G.buildAt(1, 'fabrik'); __kf.selectTab('build'); }); await p.waitForTimeout(150);
+  const cell = await p.evaluate(() => document.querySelector('#plotGrid [data-tooltip="grid:4"] .expl').textContent);
+  check(/Nachbarschaft/.test(cell), `Raster zeigt den Nachbarschaftsbonus („${cell}“)`);
+  check(errs.length === 0, `Nachbarschaft: keine Fehler${show(errs)}`);
   await ctx.close();
 }
 

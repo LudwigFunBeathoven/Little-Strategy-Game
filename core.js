@@ -10,6 +10,11 @@ const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [
 const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
 const RESEARCH = (typeof KF_RESEARCH !== 'undefined') ? KF_RESEARCH : [];
 const RES = Object.fromEntries(RESEARCH.map(r => [r.id, r]));
+const NEIGHBORS = (typeof KF_NEIGHBORS !== 'undefined') ? KF_NEIGHBORS : [];       // Nachbarschaftsregeln (REQ-6.07 a)
+const NB_RULE = Object.fromEntries(NEIGHBORS.map(r => [r.building, r]));
+/* Orthogonale Nachbarn eines Platzes im Raster (oben, unten, links, rechts) */
+const adjacent = i => { const g = C.GRID_SIZE, r = Math.floor(i / g), c = i % g, out = [];
+  if (r > 0) out.push(i - g); if (r < g - 1) out.push(i + g); if (c > 0) out.push(i - 1); if (c < g - 1) out.push(i + 1); return out; };
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
@@ -119,7 +124,37 @@ function create(){
   const factoryCount = () => countType('fabrik');
   // Nachtschicht (REQ-6.03, ersetzt die frühere Wirkung außerhalb der Partie): Fabriken in der Spätphase stärker
   const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd') * mMul('materialYield') * (phase() === 'late' ? mMul('lateYield') : 1);
-  const matRate      = () => factoryCount() * factoryRate();
+  /* Nachbarschaft (REQ-6.07 a): Zahl der passenden Nachbarn eines Gebäudes auf Platz i (höchstens rule.max) bzw. für einen Typ,
+     der dort stünde (Vorschau); Wert der Regel = per × Zahl */
+  function neighborCount(i, type, slots = S.slots){
+    const rule = NB_RULE[type];
+    if (!rule) return 0;
+    let n = 0; for (const j of adjacent(i)) if (slots[j] && slots[j].type === rule.with) n++;
+    return Math.min(rule.max, n);
+  }
+  const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) : 0; };
+  /* Summe der Regelwerte aller Gebäude eines Typs (Schmiede, Kaserne, Universität, Kontor gibt es je einmal) */
+  const nbTotal = type => S.slots.reduce((a, sl, i) => a + (sl && sl.type === type ? neighborValue(i, type) : 0), 0);
+  /* Vorschau für Platz i und Typ: was das Gebäude dort erhielte und welchen Nachbarn es etwas gäbe */
+  function neighborPreview(i, type){
+    const slots = S.slots.slice(); slots[i] = { type };
+    const gets = NB_RULE[type] ? { rule: NB_RULE[type], n: neighborCount(i, type, slots), value: neighborValue(i, type, slots) } : null;
+    const gives = [];
+    for (const j of adjacent(i)){
+      const sl = S.slots[j]; if (!sl || !NB_RULE[sl.type] || NB_RULE[sl.type].with !== type) continue;
+      const before = neighborValue(j, sl.type), after = neighborValue(j, sl.type, slots);
+      if (after !== before) gives.push({ slot: j, type: sl.type, rule: NB_RULE[sl.type], delta: after - before });
+    }
+    return { gets, gives };
+  }
+  /* Nutzen eines Bauplatzes für einen Typ, ohne Einheit: erhaltene plus gegebene Regelwerte, jeweils in Richtung des Vorteils
+     (negative Regeln wie Einheitenkosten zählen als Gewinn, wenn sie sinken). Für Bots und Sortierung, nicht für Spielregeln. */
+  function neighborGain(i, type){
+    const p = neighborPreview(i, type), sgn = r => Math.sign(r.per);
+    return (p.gets ? p.gets.value * sgn(p.gets.rule) : 0) + p.gives.reduce((a, g) => a + g.delta * sgn(g.rule), 0);
+  }
+  // Fabriken einzeln: jede mit ihrem Nachbarschaftsbonus (Fabrik neben Fabrik)
+  const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' ? 1 + neighborValue(i, 'fabrik') : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
   const qualityMult  = () => Math.pow(1 + C.FX_QUALITAET + mAdd('qualityBonus'), lv('qualitaet'));
@@ -143,7 +178,7 @@ function create(){
   const enemyDmgMult = () => 1 + diffCfg().dmgGrowth * S.t / 60 + postSiege();
   const siegeIn      = () => S.siegeDone ? null : Math.max(0, S.siegeWaveT - S.t);
   const siegeAnnounced = () => !S.siegeDone && S.siegeAnnouncedAt !== null;
-  const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost')));
+  const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost') * (1 + nbTotal('schmiede'))));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
@@ -151,7 +186,7 @@ function create(){
   const xpProgress   = () => ({ level: S.level, cur: S.xpTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
-  const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply')) * mMul('supplyMult')));
+  const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));
   const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
 
   function upCost(id){
@@ -881,7 +916,9 @@ function create(){
   /* Fortschritt nur, solange die Universität steht */
   function progressResearch(dt){
     if (!S.research.active.length || !has('universitaet')) return;
-    for (const a of S.research.active) a.t += dt;
+    // Universität neben Fabriken forscht schneller (Nachbarschaft, REQ-6.07 a): Forschungszeit × (1 + Regelwert)
+    const speed = 1 / Math.max(0.1, 1 + nbTotal('universitaet'));
+    for (const a of S.research.active) a.t += dt * speed;
     const done = S.research.active.filter(a => a.t >= a.timeS);
     if (!done.length) return;
     S.research.active = S.research.active.filter(a => a.t < a.timeS);
@@ -961,7 +998,7 @@ function create(){
       S.kontorT += dt;
       if (S.kontorT >= C.KONTOR.intervalS){
         S.kontorT -= C.KONTOR.intervalS;
-        const cap = Math.max(C.KONTOR.capMin, matRate() * C.KONTOR.capSeconds);
+        const cap = Math.max(C.KONTOR.capMin, matRate() * C.KONTOR.capSeconds) * (1 + nbTotal('kontor'));   // Kontor neben Fabriken: höherer Deckel
         addMaterial(Math.min(cap, S.material * interestRate()));
       }
     }
@@ -1036,7 +1073,7 @@ function create(){
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, interestRate,
     chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
-    phase, xpProgress, draftSize, colOffset, lateralOf, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    phase, xpProgress, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,

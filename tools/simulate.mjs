@@ -8,6 +8,7 @@
 //   --profile aktiv,durchschnitt   nur diese Spielertypen (Suite ziele)
 //   --strategy gierig,einheiten-zuerst   Strategien der Suiten ziele, kurz, ohneSchmiede (Standard: beide, REQ-6.09)
 //   forschung  REQ-6.06: Forschungstempo (drei Spielweisen) und Paarvergleich je Forschung (--runs Paare je Forschung)
+//   nachbarn   REQ-6.07 a: jede Nachbarschaftsregel einzeln aus gegen alle an
 //   kurz       Kurzsimulation nach Anhang A: Normal, Spielertyp durchschnitt, gierige Heuristik (Soll: 0 offen, Siegquote 20–100 %)
 // Die Simulation misst Stärke, nicht Spielspaß. Auffälligkeiten werden berichtet, nicht automatisch wegbalanciert.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -16,10 +17,10 @@ import { writeFileSync } from 'node:fs';
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
-  parentPort.postMessage(workerData.jobs.map(j => Object.assign(playGame(j), { suite: j.suite, variant: j.variant, arm: j.arm, res: j.res })));
+  parentPort.postMessage(workerData.jobs.map(j => Object.assign(playGame(j), { suite: j.suite, variant: j.variant, arm: j.arm, res: j.res, nbOff: j.nbOff })));
 } else {
   const { loadCore } = await import('./load-core.mjs');
-  const { KF_CONFIG: C, KF_DRAFT_OPTIONS: OPTS, KF_RESEARCH: RESEARCH } = loadCore();
+  const { KF_CONFIG: C, KF_DRAFT_OPTIONS: OPTS, KF_RESEARCH: RESEARCH, KF_NEIGHBORS: NEIGHBORS } = loadCore();
   const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
   const RUNS = Number(arg('runs', 20));
   const SUITE = arg('suite', 'alle');
@@ -57,6 +58,10 @@ if (!isMainThread){
       jobs.push({ suite: 'paar', arm: 'ohne', res: res.id, diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', seed, lockResearch: res.id });
     }
   }
+  // REQ-6.07 a: jede Nachbarschaftsregel einzeln ausgeschaltet gegen alle an (gleicher Seed, Normal durchschnitt, gierig)
+  if (SUITE === 'nachbarn')
+    for (const nbOff of [null, ...NEIGHBORS.map(r => r.building)]) for (let r = 0; r < RUNS; r++)
+      jobs.push({ suite: 'nachbarn', nbOff, diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', seed: seedOf(500, r) });
   if (SUITE === 'alle' || SUITE === 'phasen')
     DIFFS.forEach((diff, di) => ['always', 'stopLate', 'never'].forEach((clickPolicy, ci) => {
       for (let r = 0; r < RUNS; r++) jobs.push({ suite: 'phasen', diff, profile: 'aktiv', strategy: 'gierig', clickPolicy, cps: CPS, seed: seedOf(200 + di * 10 + ci, r) });
@@ -320,6 +325,20 @@ if (!isMainThread){
     console.log('');
   }
 
+  const NBR = results.filter(r => r.suite === 'nachbarn');
+  if (NBR.length){
+    console.log('NACHBARSCHAFT – Siegquote mit allen Regeln gegen Regel ausgeschaltet (Normal, durchschnitt, gierig; Soll ≤ +25 pp)\n');
+    const q = R => R.length ? R.filter(r => r.status === 'won').length / R.length : null;
+    const all = NBR.filter(r => !r.nbOff);
+    report.neighbors = { all: q(all) };
+    console.log(`alle Regeln an: ${pct(all.filter(r => r.status === 'won').length, all.length)} · Median Sieg ${mmss(median(all.filter(r => r.status === 'won').map(r => r.t)))}`);
+    for (const rule of NEIGHBORS){
+      const off = NBR.filter(r => r.nbOff === rule.building), d = (q(all) - q(off)) * 100;
+      report.neighbors[rule.building] = { without: q(off), deltaPp: d };
+      console.log(`${pad(rule.building, 14)} ohne ${lpad(pct(off.filter(r => r.status === 'won').length, off.length), 5)}  Wirkung der Regel ${lpad((d >= 0 ? '+' : '') + d.toFixed(0) + ' pp', 7)}${d > 25 ? '  ← über +25' : ''}`);
+    }
+    console.log('');
+  }
   const P = results.filter(r => r.suite === 'phasen');
   if (P.length){
     console.log(`PHASEN – ${CPS} Klicks/s, gierige Heuristik, Spielertyp aktiv\n`);

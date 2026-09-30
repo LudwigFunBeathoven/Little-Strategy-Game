@@ -16,10 +16,13 @@ function KF_BROWSER_BOT(G, profile, hooks){
     if (S.pendingDraft){ pickFirst(); return; }
     if (o.useWall) S.sections.forEach((s, i) => { if (s.hp < G.sectionMax(i) * 0.5) G.repair(i); });
     const free = S.slots.findIndex(x => !x);
+    // Bauplatz mit dem größten Nachbarschaftsnutzen (REQ-6.07 a); bei Gleichstand der erste freie
+    const bestSlot = type => { let best = free, bg = -Infinity;
+      S.slots.forEach((x, i) => { if (x) return; const g = G.neighborGain ? G.neighborGain(i, type) : 0; if (g > bg + 1e-9){ bg = g; best = i; } }); return best; };
     if (free >= 0 && !o.noBuild){
       const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
-      if (type) build(free, type);
-    } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(free, 'fabrik');
+      if (type) build(bestSlot(type), type);
+    } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
     if (!o.noUpgrades){
       for (const id of PRIO) if (C.UPGRADES[id] && (o.useWall || !/^(turm|mauer)/.test(id))) G.buy(id);
       const r = G.RESEARCH.find(x => G.researchBlock(x.id) === null);

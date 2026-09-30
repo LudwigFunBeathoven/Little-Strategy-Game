@@ -1,0 +1,13 @@
+300 Partien auf 4 Kernen …
+fertig in 250 s · 51.1 simulierte Spielstunden · 4.9 s Rechenzeit je Spielstunde
+
+NACHBARSCHAFT – Siegquote mit allen Regeln gegen Regel ausgeschaltet (Normal, durchschnitt, gierig; Soll ≤ +25 pp)
+
+alle Regeln an: 94 % · Median Sieg 9:09
+fabrik         ohne  96 %  Wirkung der Regel   -2 pp
+schmiede       ohne  94 %  Wirkung der Regel   +0 pp
+kaserne        ohne  88 %  Wirkung der Regel   +6 pp
+universitaet   ohne  98 %  Wirkung der Regel   -4 pp
+kontor         ohne  92 %  Wirkung der Regel   +2 pp
+
+FERTIG

@@ -5,7 +5,7 @@ export const STRATEGIES = ['gierig', 'einheiten-zuerst'];
 import { loadCore } from './load-core.mjs';
 import { directionTracker } from './sim-metrics.mjs';
 
-const { KlammerCore, KF_CONFIG: C, KF_BROWSER_BOT } = loadCore();
+const { KlammerCore, KF_CONFIG: C, KF_BROWSER_BOT, KF_NEIGHBORS } = loadCore();
 export const CONFIG = C;
 const DT = C.TICK_S;
 
@@ -104,6 +104,19 @@ export class Bot {
     }
     return best;
   }
+  /* Bauplatz (REQ-6.07 a): Kandidaten sind der erste freie Platz und der Platz mit dem größten Nachbarschaftsnutzen; die gierige
+     Heuristik vergleicht beide per Vorausschau, die Zufallsstrategie nimmt den Nachbarschaftsplatz */
+  chooseSlot(G, first, type){
+    let best = first, bg = -Infinity;
+    G.S.slots.forEach((x, i) => { if (x) return; const g = G.neighborGain(i, type); if (g > bg + 1e-9){ bg = g; best = i; } });
+    if (best === first || !(this.o.strategy === 'gierig' && this.o.lookahead)) return best;
+    const sim = slot => { const F = forkGame(G); F.buildAt(slot, type);
+      const sub = new Bot(Object.assign({}, this.o, { lookahead: false, strategy: 'zufall', seed: 44 }));
+      const h = this.horizonFor(G, this.o.buildHorizon);
+      for (let t = 0; t < h / DT && F.S.status === 'running'; t++) sub.step(F, null);
+      return score(F); };
+    return sim(best) >= sim(first) ? best : first;
+  }
   /* Forschung wählen: höchstens alle SIM_RESEARCH_EVERY_S; die gierige Heuristik vergleicht die günstigsten bezahlbaren Forschungen
      per Vorausschau mit „nichts erforschen“ und startet nur bei Vorteil */
   research(G, stats){
@@ -172,7 +185,8 @@ export class Bot {
       const options = C.BUILDINGS.filter(b => G.buildBlock(free, b) === null && (!o.noBuild || b === 'fabrik') && !(o.forbid || []).includes(b) && (!saveForUni || b === 'universitaet'));
       if (options.length){
         const type = this.chooseBuilding(G, free, options, stats);
-        if (G.buildAt(free, type) && stats) stats.built[type] = (stats.built[type] || 0) + 1;
+        const slot = this.chooseSlot(G, free, type);
+        if (G.buildAt(slot, type) && stats) stats.built[type] = (stats.built[type] || 0) + 1;
       }
     }
     // Abriss: Zufalls-Bot reißt selten ab; gieriger Bot tauscht, sobald ein freigeschaltetes Gebäude fehlt
@@ -231,7 +245,13 @@ export class Bot {
 }
 
 /* Eine vollständige Partie. Liefert Kennzahlen für den Bericht. */
-export function playGame({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch }){
+/* Paarvergleich der Nachbarschaftsregeln (REQ-6.07 a): nbOff = Gebäudetyp, dessen Regel in dieser Partie ausgeschaltet ist */
+export function playGame(job){
+  const rule = job.nbOff ? KF_NEIGHBORS.find(r => r.building === job.nbOff) : null, per = rule ? rule.per : 0;
+  if (rule) rule.per = 0;
+  try { return playGameInner(job); } finally { if (rule) rule.per = per; }
+}
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   const G = newGame(diff, seed);

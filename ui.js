@@ -194,7 +194,8 @@ function tipContent(id){
     case 'scroll': return { title: t('tip.scroll.title'), body: t('tip.scroll.body') };
     case 'pick': {
       const cost = G.buildCost(a), block = G.buildBlock(Number(b), a);
-      return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }),
+      const nbText = nbPreviewText(Number(b), a);
+      return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }) + (nbText ? ' ' + nbText : ''),
                rows: [[t('tip.cost'), costText('material', cost)]], reason: buildReason(block, cost) };
     }
     case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
@@ -240,7 +241,8 @@ function tipContent(id){
     case 'ban': { const d = S.pendingDraft; const id = d && d.options[a];
       return { title: id ? t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }) : t('draft.reroll'), body: t('tip.draft.ban', { n: G.bansLeft() }) }; }
     case 'grid': { const sl = S.slots[a];
-      return { title: t('slot.label', { n: Number(a) + 1 }), body: sl ? t(`bld.${sl.type}.name`) + ' · ' + t(`bld.${sl.type}.desc`) : t('tip.grid.empty') }; }
+      const rule = sl && G.NEIGHBORS.find(r => r.building === sl.type);
+      return { title: t('slot.label', { n: Number(a) + 1 }), body: sl ? t(`bld.${sl.type}.name`) + ' · ' + t(`bld.${sl.type}.desc`) + (rule ? ' ' + t('nb.title') + ': ' + nbRuleText(rule) + '.' : '') : t('tip.grid.empty') }; }
   }
   return { title: id };
 }

@@ -1,0 +1,30 @@
+{
+  "runs": 50,
+  "suite": "nachbarn",
+  "report": {
+    "strategies": {},
+    "neighbors": {
+      "all": 0.94,
+      "fabrik": {
+        "without": 0.96,
+        "deltaPp": -2.0000000000000018
+      },
+      "schmiede": {
+        "without": 0.94,
+        "deltaPp": 0
+      },
+      "kaserne": {
+        "without": 0.88,
+        "deltaPp": 5.999999999999995
+      },
+      "universitaet": {
+        "without": 0.98,
+        "deltaPp": -4.0000000000000036
+      },
+      "kontor": {
+        "without": 0.92,
+        "deltaPp": 1.9999999999999907
+      }
+    }
+  }
+}

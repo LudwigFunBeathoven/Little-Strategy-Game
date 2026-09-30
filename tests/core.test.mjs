@@ -68,7 +68,7 @@ test('Fabriken erzeugen FACTORY_BASE_RATE Material pro Sekunde; keine Fertiger m
   const { G, C } = game();
   assert.ok(!('fertiger' in C.UPGRADES));
   G.S.material = 1e6;
-  G.build('fabrik'); G.build('fabrik');
+  G.buildAt(0, 'fabrik'); G.buildAt(2, 'fabrik');                    // nicht benachbart: ohne Nachbarschaftsbonus (REQ-6.07 a)
   assert.equal(G.matRate(), 2 * C.FACTORY_BASE_RATE);
 });
 
