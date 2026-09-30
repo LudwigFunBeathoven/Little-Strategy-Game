@@ -4,26 +4,25 @@
   "version": "0.6",
   "lang": "de",
   "diff": "normal",
-  "startedAt": "2026-09-30T09:01:57.112Z",
-  "result": "running",
-  "durationS": 300.7,
-  "clicks": 90,
+  "startedAt": "2026-09-30T09:30:17.552Z",
+  "result": "lost",
+  "durationS": 281.1,
+  "clicks": 84,
   "clicksPerMinute": [
     17,
     18,
     18,
     18,
-    18,
-    1
+    13
   ],
   "clicksByPhase": {
-    "early": 39,
-    "mid": 51,
+    "early": 37,
+    "mid": 47,
     "late": 0
   },
   "timeByPhase": {
-    "early": 133.54999999999615,
-    "mid": 167.10000000003797,
+    "early": 124.64999999999506,
+    "mid": 156.30000000003457,
     "late": 0
   },
   "actions": [
@@ -43,17 +42,17 @@
       "arg": "laeufer"
     },
     {
-      "t": 24.5,
+      "t": 24.55,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 27.55,
+      "t": 27.6,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 33.65,
+      "t": 33.7,
       "kind": "spawn",
       "arg": "laeufer"
     },
@@ -88,14 +87,14 @@
       "arg": "laeufer"
     },
     {
-      "t": 74.65,
-      "kind": "chooseDraft",
-      "arg": "doppelschicht"
-    },
-    {
       "t": 82.6,
       "kind": "spawn",
       "arg": "werfer"
+    },
+    {
+      "t": 85.35,
+      "kind": "chooseDraft",
+      "arg": "kriegserfahrung"
     },
     {
       "t": 85.65,
@@ -103,7 +102,7 @@
       "arg": "laeufer"
     },
     {
-      "t": 88.7,
+      "t": 91.75,
       "kind": "spawn",
       "arg": "laeufer"
     },
@@ -111,11 +110,6 @@
       "t": 100.95,
       "kind": "spawn",
       "arg": "werfer"
-    },
-    {
-      "t": 100.95,
-      "kind": "spawn",
-      "arg": "laeufer"
     },
     {
       "t": 104,
@@ -123,14 +117,19 @@
       "arg": "laeufer"
     },
     {
-      "t": 119.25,
-      "kind": "buildAt",
-      "arg": 1
+      "t": 110.1,
+      "kind": "spawn",
+      "arg": "laeufer"
     },
     {
-      "t": 125.4,
+      "t": 122.35,
       "kind": "spawn",
       "arg": "werfer"
+    },
+    {
+      "t": 124.8,
+      "kind": "chooseDraft",
+      "arg": "schwerePressen"
     },
     {
       "t": 125.4,
@@ -143,14 +142,9 @@
       "arg": "laeufer"
     },
     {
-      "t": 133.65,
-      "kind": "chooseDraft",
-      "arg": "schildwall"
-    },
-    {
-      "t": 137.6,
+      "t": 134.55,
       "kind": "buildAt",
-      "arg": 2
+      "arg": 1
     },
     {
       "t": 140.7,
@@ -158,17 +152,22 @@
       "arg": "werfer"
     },
     {
-      "t": 143.75,
+      "t": 140.7,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 143.75,
+      "t": 140.7,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 152.9,
+      "t": 146.8,
+      "kind": "buildAt",
+      "arg": 2
+    },
+    {
+      "t": 155.95,
       "kind": "buildAt",
       "arg": 3
     },
@@ -193,51 +192,51 @@
       "arg": 4
     },
     {
-      "t": 180.4,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 180.4,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 180.4,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 189.6,
-      "kind": "buildAt",
-      "arg": 5
-    },
-    {
-      "t": 194.6,
+      "t": 176.1,
       "kind": "chooseDraft",
       "arg": "schwerePressen"
     },
     {
-      "t": 201.8,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 201.8,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 201.8,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 210.95,
+      "t": 186.5,
+      "kind": "buildAt",
+      "arg": 5
+    },
+    {
+      "t": 201.8,
       "kind": "buildAt",
       "arg": 6
     },
     {
+      "t": 201.8,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 201.8,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 201.8,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
       "t": 220.1,
       "kind": "spawn",
       "arg": "werfer"
@@ -253,7 +252,7 @@
       "arg": "laeufer"
     },
     {
-      "t": 235.4,
+      "t": 226.25,
       "kind": "buildAt",
       "arg": 7
     },
@@ -273,102 +272,77 @@
       "arg": "laeufer"
     },
     {
-      "t": 262.95,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 262.95,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 262.95,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 263.75,
-      "kind": "chooseDraft",
-      "arg": "aushebung"
-    },
-    {
-      "t": 266,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 269.05,
+      "t": 256.8,
       "kind": "buildAt",
       "arg": 8
     },
     {
-      "t": 281.3,
-      "kind": "spawn",
-      "arg": "laeufer"
+      "t": 261.6,
+      "kind": "chooseDraft",
+      "arg": "nachtschicht"
     },
     {
-      "t": 281.3,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 281.3,
+      "t": 262.95,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 281.3,
+      "t": 262.95,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 262.95,
       "kind": "spawn",
       "arg": "laeufer"
     }
   ],
   "drafts": [
     {
-      "t": 74.6,
+      "t": 85.3,
       "level": 1,
-      "chosen": "doppelschicht",
+      "chosen": "kriegserfahrung",
       "offered": [
-        "doppelschicht",
-        "blitzkrieg"
+        "kriegserfahrung",
+        "zinnen"
       ]
     },
     {
-      "t": 133.6,
+      "t": 124.8,
       "level": 2,
-      "chosen": "schildwall",
+      "chosen": "schwerePressen",
       "offered": [
-        "schildwall",
-        "kriegserfahrung"
+        "schwerePressen",
+        "instandhaltung"
       ]
     },
     {
-      "t": 194.6,
+      "t": 176.1,
       "level": 3,
       "chosen": "schwerePressen",
       "offered": [
         "schwerePressen",
-        "gluecksritter"
+        "maurerkolonne"
       ]
     },
     {
-      "t": 263.8,
+      "t": 261.6,
       "level": 4,
-      "chosen": "aushebung",
+      "chosen": "nachtschicht",
       "offered": [
-        "aushebung",
-        "fliessband"
+        "nachtschicht",
+        "instandhaltung"
       ]
     }
   ],
   "research": [],
-  "maxUnits": 9,
-  "maxArmy": 6,
-  "firstWallFallS": null,
+  "maxUnits": 8,
+  "maxArmy": 5,
+  "firstWallFallS": 276.3,
   "wallUse": {
     "repairs": 0,
     "upgrades": 0
   },
-  "kills": 47,
-  "losses": 42
+  "kills": 39,
+  "losses": 38
 }

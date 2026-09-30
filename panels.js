@@ -33,7 +33,7 @@ function selectPlot(i){ sel = { kind: 'plot', i }; demolishArmed = false; ctxKey
 function selectSection(lane){ sel = { kind: 'section', lane }; demolishArmed = false; ctxKey = ''; selectTab('wall'); }
 function clearSelection(){ if (!sel) return; sel = null; demolishArmed = false; ctxKey = ''; requestRender(); }
 /* Zum Bauen eines Gebäudetyps springen: erster freier Platz, auf dem er baubar wäre; die Option wird hervorgehoben und fokussiert */
-let kaserneBuildBtn = null, preselect = null;
+let kaserneBuildBtn = null, waveRushBtn = null, preselect = null;
 function goBuild(type){
   const i = G.S.slots.findIndex((x, k) => !x && !['hidden', 'standing'].includes(G.buildBlock(k, type)));
   preselect = type;
@@ -71,7 +71,7 @@ function bldEffect(type, built){
     case 'schmiede': return t('fx.schmiede', { n: G.S.lvl.qualitaet });
     case 'kaserne': return t('fx.kaserne', { n: built ? G.kaserneLevel() : 1, m: C.KASERNE_SUPPLY_PER_LEVEL * (built ? G.kaserneLevel() : 1) });
     case 'universitaet': return t('fx.universitaet', { n: C.DRAFT_OPTIONS_UNIVERSITY });
-    case 'kontor': return t('fx.kontor', { percent: fmt1(G.interestRate() * 100), s: C.KONTOR.intervalS });
+    case 'kontor': return t('fx.kontor', { amount: C.KONTOR.amount, n: C.KONTOR.perN, s: C.KONTOR.intervalS, cap: G.kontorCap() });
   }
   return '';
 }
@@ -97,6 +97,9 @@ function buildPanels(){
   // Kaserne im Reiter Armee (REQ-6.05): ohne Kaserne führt ein Knopf in den Reiter Bauen, Kaserne vorausgewählt
   kaserneBuildBtn = mkButton('btn-ghost', '', () => goBuild('kaserne'), 'kaserneBuild', '');
   $('kaserneBuild').appendChild(kaserneBuildBtn);
+  // Welle vorziehen (REQ-6.07 c)
+  waveRushBtn = mkButton('btn-ghost', '', () => { if (G.rushWave()) requestRender(); }, 'waveRush', '');
+  $('kaserneBuild').appendChild(waveRushBtn);
   // Kartenwahl (REQ-6.04): gedrückte Maustaste merken; der Reiter öffnet erst nach dem Loslassen
   document.addEventListener('pointerdown', () => { pointerHeld = true; }, true);
   document.addEventListener('pointerup', () => { pointerHeld = false; requestRender(); }, true);
@@ -498,6 +501,11 @@ function renderPanels(){
   setText(kaserneBuildBtn.querySelector('.btn-label'), t('kaserne.build'));
   setText(kaserneBuildBtn.querySelector('.expl'), t('ex.kaserne.build', { cost: costText('material', G.buildCost('kaserne')) }));
   setDis(kaserneBuildBtn, !running);
+  setHidden(waveRushBtn, !kas);
+  setText(waveRushBtn.querySelector('.btn-label'), t('wave.rush'));
+  setText(waveRushBtn.querySelector('.expl'), S.waveRushCd > 0 ? t('ex.wave.rushCd', { s: Math.ceil(S.waveRushCd) })
+    : t('ex.wave.rush', { n: S.queue.length, cost: costText('material', G.waveRushCost()) }));
+  setDis(waveRushBtn, !!G.waveRushBlock());
   // vorausgewählte Bau-Option (Knopf „Kaserne bauen“): hervorheben und fokussieren, sobald sie sichtbar ist
   if (preselect){
     const p = picks.find(q => q.type === preselect);

@@ -85,19 +85,19 @@ test('Maurerkolonne heilt nicht, solange ein Treffer weniger als 5 s zurücklieg
   assert.equal(G.S.sections[MID].hp, 100, 'Tor heilt nie');
 });
 
-test('Ohne Fabrik wird das Handelskontor nie angeboten', () => {
+test('Karte Handelskontor (I6.8: hebt den Zinsdeckel): ohne Kontor nie angeboten', () => {
   for (let seed = 1; seed <= 40; seed++){
     const { G, K } = game('normal', seed);
     G.S.material = 1e6; G.build('universitaet');
     for (let lvl = 1; lvl <= 12; lvl++){
       toLevel(G, K, lvl); levelUp(G);
       const d = G.S.pendingDraft; if (!d) break;
-      if (!G.has('fabrik')) assert.ok(!d.options.includes('handelskontor'), `Seed ${seed}: Handelskontor ohne Fabrik angeboten`);
+      if (!G.has('kontor')) assert.ok(!d.options.includes('handelskontor'), `Seed ${seed}: Karte ohne Kontor angeboten`);
       G.chooseDraft(0);
     }
   }
   const { G } = game();
-  G.S.material = 1e6; G.build('fabrik');
+  G.S.material = 1e6; G.build('kontor');
   assert.ok(G.optionAvailable(G.OPT.handelskontor));
 });
 

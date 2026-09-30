@@ -20,7 +20,7 @@ function KF_BROWSER_BOT(G, profile, hooks){
     const bestSlot = type => { let best = free, bg = -Infinity;
       S.slots.forEach((x, i) => { if (x) return; const g = G.neighborGain ? G.neighborGain(i, type) : 0; if (g > bg + 1e-9){ bg = g; best = i; } }); return best; };
     if (free >= 0 && !o.noBuild){
-      const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
+      const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
     if (!o.noUpgrades){
@@ -29,6 +29,8 @@ function KF_BROWSER_BOT(G, profile, hooks){
       if (r && S.material > G.researchCost(r.id) * 2 && G.startResearch(r.id) && h.researched) h.researched(r.id);
     }
     if (o.noUnits) return;
+    // Welle vorziehen (REQ-6.07 c): halbe Versorgung in der Warteschlange und doppelte Kosten im Bestand
+    if (G.waveRushBlock && !G.waveRushBlock() && S.queue.length * 2 >= G.supplyCap() && S.material >= 2 * G.waveRushCost()) G.rushWave();
     for (let k = 0; k < 4; k++){
       if (G.ownOnField() + S.queue.length >= o.cap || G.supplyFull()) break;
       if (!(mix % 3 === 2 ? G.spawn('werfer') : G.spawn('laeufer'))) break;

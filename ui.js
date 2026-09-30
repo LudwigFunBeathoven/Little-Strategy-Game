@@ -71,7 +71,7 @@ const DESC_PARAMS = {
   presse:     () => ({ n: C.FX_PRESSE }),
   qualitaet:  () => ({ percent: pct(C.FX_QUALITAET) }),
   ausbau:     () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL }),
-  zinseszins:    () => ({ percent: fmt1(C.FX_ZINSESZINS * 100) }),
+  zinseszins:    () => ({ n: C.KONTOR.capPerLevel }),
   mauer:      () => ({ n: C.FX_MAUER_HP }),
   stacheln:   () => ({ n: C.FX_STACHELN_DMG }),
   moertel:    () => ({ n: C.FX_MOERTEL_REGEN }),
@@ -98,7 +98,7 @@ const METRICS = {
   presse:     ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
   qualitaet:  ['tip.m.strength',     () => G.qualityMult() * 100, v => fmt(v) + ' %'],
   ausbau:     ['tip.m.queueMax',     () => G.supplyCap(), v => fmt(v)],
-  zinseszins:    ['tip.m.interest',  () => G.interestRate() * 100, v => fmt1(v) + ' %'],
+  zinseszins:    ['tip.m.interest',  () => G.kontorCap(), v => fmt(v)],
   mauer:      ['tip.m.baseMax',      () => G.sectionMax(C.GATE_LANE), v => fmt(v)],
   stacheln:   ['tip.m.thorns',       () => C.FX_STACHELN_DMG * G.S.lvl.stacheln, v => fmt(v)],
   moertel:    ['tip.m.regen',        () => C.FX_MOERTEL_REGEN * G.S.lvl.moertel, v => fmt1(v)],
@@ -229,6 +229,11 @@ function tipContent(id){
     case 'rush': { const act = S.research.active.find(x => x.id === a);
       return { title: t('research.rush'), body: t('tip.research.rush', { name: act ? researchName(G.RES[a], act.tier) : '' }),
                rows: act ? [[t('tip.cost'), costText('material', G.rushCost(a))], [t('research.time'), t('research.seconds', { s: Math.ceil(Math.max(0, act.timeS - act.t)) })]] : [] }; }
+    case 'waveRush': { const b = G.waveRushBlock();
+      return { title: t('wave.rush'), body: t('tip.wave.rush', { s: C.WAVE_RUSH.cdS }),
+               rows: [[t('tip.cost'), costText('material', G.waveRushCost())], [t('front.supply'), `${S.queue.length}/${G.supplyCap()}`]],
+               reason: b === 'noKaserne' ? t('tip.needsBuilding', { name: t('bld.kaserne.name') }) : b === 'cooldown' ? t('ex.wave.rushCd', { s: Math.ceil(S.waveRushCd) })
+                     : b === 'empty' ? t('tip.wave.rushEmpty') : b === 'material' ? missing('material', G.waveRushCost(), S.material) : null }; }
     case 'kaserneBuild': return { title: t('kaserne.build'), body: t('tip.kaserne.build'), rows: [[t('tip.cost'), costText('material', G.buildCost('kaserne'))]] };
     case 'res': { const r = G.RES[a], n = G.researchTier(a), next = G.researchNext(a);
       const rows = [[t('tip.level'), `${n}/${r.tiers.length}`]];

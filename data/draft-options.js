@@ -35,7 +35,7 @@ const KF_DRAFT_OPTIONS = [
             { effect: [{ grant: 'production', seconds: 90 }],  drawback: [{ stat: 'enemyHp', mul: 1.16 }] },
             { effect: [{ grant: 'production', seconds: 120 }], drawback: [{ stat: 'enemyHp', mul: 1.25 }] }] },
   { id: 'handelskontor', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.handelskontor.name', descKey: 'draft.handelskontor.desc',
-    requires: { building: 'fabrik' }, tiers: [{ effect: [{ unlock: 'kontor' }] }] },
+    requires: { building: 'kontor' }, tiers: [{ effect: [{ stat: 'kontorCap', mul: 1.5 }] }] },   // I6.8: Kontor ist Startgebäude; Karte hebt den Zinsdeckel
   { id: 'grossauftrag', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.grossauftrag.name', descKey: 'draft.grossauftrag.desc',
     synergy: { stat: 'factoryYield', perCard: 0.06 }, tiers: [{ effect: [] }] },
 

@@ -367,6 +367,15 @@ for (const dsf of [1, 2]){
   const k2 = await p.evaluate(() => ({ built: __kf.G.has('kaserne'), btn: !document.querySelector('[data-tooltip="kaserneBuild"]').hidden, status: document.querySelector('#kaserneStatus').textContent,
     upg: !document.querySelector('[data-tooltip="upg:ausbau"]').hidden, audit: __kf.tooltipAudit().length + __kf.explAudit().length }));
   check(k2.built && !k2.btn && /Stufe 1/.test(k2.status) && k2.upg && k2.audit === 0, `Kaserne im Reiter Armee: Stufe und Ausbau sichtbar, Audits grün ${JSON.stringify(k2)}`);
+  // Welle vorziehen (REQ-6.07 c) im Reiter Armee; Zinsen des Handelskontors in der Leiste (REQ-6.07 b)
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; G.S.nextOwnWave = G.S.t + 60; G.spawn('laeufer'); G.spawn('laeufer'); G.buildAt(8, 'kontor'); });
+  await p.waitForTimeout(150);
+  const w0 = await p.evaluate(() => ({ vis: !document.querySelector('[data-tooltip="waveRush"]').hidden, dis: document.querySelector('[data-tooltip="waveRush"]').getAttribute('aria-disabled'),
+    q: __kf.G.S.queue.length, rate: document.querySelector('#rate').textContent }));
+  await p.click('[data-tooltip="waveRush"]'); await p.waitForTimeout(150);
+  const w1 = await p.evaluate(() => ({ q: __kf.G.S.queue.length, cd: __kf.G.S.waveRushCd > 0, dis: document.querySelector('[data-tooltip="waveRush"]').getAttribute('aria-disabled') }));
+  check(w0.vis && w0.dis !== 'true' && w0.q === 2 && w1.q === 0 && w1.cd && w1.dis === 'true', `Welle vorziehen: Warteschlange rückt aus, danach Abklingzeit ${JSON.stringify({ w0, w1 })}`);
+  check(/Zinsen \+\d+\/\d+ in \d+ s/.test(w0.rate), `Leiste zeigt Zinsen und Deckel („${w0.rate}“)`);
   check(errors.length === 0, `Kartenwahl und Kaserne: keine Fehler${show(errors)}`);
   await ctx.close();
 }

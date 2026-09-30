@@ -216,6 +216,18 @@ export class Bot {
         }
       }
     }
+    // Welle vorziehen (REQ-6.07 c): gierig per Vorausschau (höchstens alle SIM_RUSH_EVERY_S), Zufall zufällig
+    if (!o.noUnits && !G.waveRushBlock()){
+      if (o.strategy === 'gierig' && o.lookahead){
+        if (S.t >= (this.rushNext || 0)){
+          this.rushNext = S.t + C.SIM_RUSH_EVERY_S;
+          const sim = rush => { const F = forkGame(G); if (rush) F.rushWave();
+            const sub = new Bot(Object.assign({}, o, { lookahead: false, strategy: 'zufall', seed: 66 }));
+            for (let t = 0; t < o.horizon / DT && F.S.status === 'running'; t++) sub.step(F, null); return score(F); };
+          if (sim(true) > sim(false) + 1 && G.rushWave() && stats) stats.rushes = (stats.rushes || 0) + 1;
+        }
+      } else if (this.rng() < 0.05 && G.rushWave() && stats) stats.rushes = (stats.rushes || 0) + 1;
+    }
     // Forschung (REQ-5.07): gierig per Vorausschau über buildHorizon, Zufall zufällig; passive Profile forschen nicht
     if (!o.noUpgrades) this.research(G, stats);
     // Upgrades
@@ -251,10 +263,11 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch }){
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   const G = newGame(diff, seed);
+  if (noRush) G.rushWave = () => false;                                   // Paarvergleich: ohne „Welle vorziehen“ (REQ-6.07 c)
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {} };
   // Handlungen in den ersten SIM_STYLE_WINDOW_S Sekunden: Anteil der Einheitenkäufe (Merkmal der Strategie für compare-human)
   const acts = { units: 0, other: 0 };
@@ -307,6 +320,6 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
-    researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0,
+    researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
 }

@@ -1,0 +1,8 @@
+240 Partien auf 4 Kernen …
+fertig in 365 s · 52.3 simulierte Spielstunden · 7.0 s Rechenzeit je Spielstunde
+
+WIRTSCHAFT – Handelskontor und „Welle vorziehen“ (durchschnitt; Wirkung = normal gegen ohne; Soll ≤ +25 pp)
+
+gierig            normal  normal 100 % · Kontor    +5 pp · Vorziehen   +10 pp
+gierig            schwer  normal  65 % · Kontor   -13 pp · Vorziehen   +20 pp
+

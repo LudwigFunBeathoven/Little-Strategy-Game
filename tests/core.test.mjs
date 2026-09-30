@@ -26,15 +26,12 @@ test('Erstattung rundet ab', () => {
   assert.equal(G.refundFor(1), 20);
 });
 
-test('Neun Plätze; bei Spielstart 4 Typen wählbar, Handelskontor gesperrt', () => {
+test('Neun Plätze; bei Spielstart alle 5 Typen wählbar (I6.8: Handelskontor ohne Karte)', () => {
   const { G, C } = game();
   G.S.material = 1e6;
   const buildable = C.BUILDINGS.filter(b => G.buildBlock(0, b) === null);
   assert.equal(G.S.slots.length, 9);
-  assert.deepEqual(Array.from(buildable).sort(), ['fabrik', 'kaserne', 'schmiede', 'universitaet']);
-  assert.equal(G.buildBlock(0, 'kontor'), 'locked');
-  G.unlockBuilding('kontor');
-  assert.equal(G.buildBlock(0, 'kontor'), null);
+  assert.deepEqual(Array.from(buildable).sort(), ['fabrik', 'kaserne', 'kontor', 'schmiede', 'universitaet']);
 });
 
 test('Verstärkungsgebäude je einmal, Fabriken mehrfach', () => {
@@ -182,13 +179,40 @@ test('Kein Angebot enthält eine Karte doppelt; nach der höchsten Stufe erschei
   }
 });
 
-test('Handelskontor erst nach Wahl der Karte baubar', () => {
-  const { G } = game();
+test('Handelskontor (REQ-6.07 b): je volle N Material ein fester Betrag, gedeckelt; Ausbau und Karte heben den Deckel', () => {
+  const { G, C } = game();
+  G.S.material = 1e6; G.buildAt(8, 'kontor');                         // Ecke ohne Fabrik daneben
+  const K = C.KONTOR;
+  assert.equal(G.kontorCap(), K.capBase);
+  G.S.material = K.perN * 2 + K.perN / 2;
+  assert.equal(G.kontorNext(), Math.min(K.capBase, 2 * K.amount));
   G.S.material = 1e6;
-  assert.equal(G.buildBlock(0, 'kontor'), 'locked');
-  G.S.pendingDraft = { level: 1, options: ['handelskontor'] }; G.S.pendingLevels = 1;
-  G.chooseDraft(0);
-  assert.equal(G.buildBlock(0, 'kontor'), null);
+  assert.equal(G.kontorNext(), K.capBase, 'gedeckelt');
+  assert.ok(G.buy('zinseszins')); assert.equal(G.kontorCap(), K.capBase + K.capPerLevel);
+  G.S.draft.stacks.handelskontor = 1; G.S.draft.ver++;
+  assert.equal(G.kontorCap(), Math.round((K.capBase + K.capPerLevel) * 1.5));
+  G.S.material = K.perN * 3; G.S.kontorT = K.intervalS - 0.01;
+  const m0 = G.S.material; G.tick(0.05);
+  assert.equal(Math.round(G.S.material - m0 - G.matRate() * 0.05), 3 * K.amount, 'Auszahlung');
+});
+
+test('Welle vorziehen (REQ-6.07 c): sofort ausrücken, Kosten, Abklingzeit, nur mit Kaserne', () => {
+  const { G, C } = game();
+  G.S.material = 1e6; G.S.nextWave = Infinity;
+  G.spawn('laeufer'); G.spawn('laeufer');
+  assert.equal(G.waveRushBlock(), 'noKaserne');
+  G.build('kaserne');
+  const cost = G.waveRushCost(), m0 = G.S.material, next0 = G.S.nextOwnWave;
+  assert.equal(cost, C.WAVE_RUSH.cost + 2 * C.WAVE_RUSH.perUnit);
+  assert.ok(G.rushWave());
+  assert.equal(G.S.queue.length, 0, 'Welle ist ausgerückt');
+  assert.equal(m0 - G.S.material, cost);
+  assert.ok(G.S.units.some(u => u.side === 'p'));
+  assert.ok(Math.abs(G.S.nextOwnWave - (G.S.t + G.ownWaveInterval())) < 1e-9, 'Takt beginnt neu');
+  G.spawn('laeufer');
+  assert.equal(G.waveRushBlock(), 'cooldown');
+  for (let i = 0; i < C.WAVE_RUSH.cdS * 20 + 1 && G.S.queue.length; i++){ G.tick(0.05); if (!G.waveRushBlock()) break; }
+  assert.ok(G.S.queue.length === 0 || G.waveRushBlock() === null, 'nach der Abklingzeit wieder möglich');
 });
 
 test('Kartendaten sind vollständig und deklarativ (tiers ersetzt maxStacks)', () => {

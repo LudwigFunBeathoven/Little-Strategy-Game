@@ -187,7 +187,9 @@ function create(){
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
   const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));
-  const interestRate = () => C.KONTOR.rate + C.FX_ZINSESZINS * lv('zinseszins');
+  /* Handelskontor (REQ-6.07 b): Deckel und nächster Zinsbetrag */
+  const kontorCap = () => Math.round((C.KONTOR.capBase + C.KONTOR.capPerLevel * lv('zinseszins')) * (1 + nbTotal('kontor')) * mMul('kontorCap'));
+  const kontorNext = () => Math.min(kontorCap(), Math.floor(Math.max(0, S.material) / C.KONTOR.perN) * C.KONTOR.amount);
 
   function upCost(id){
     const u = C.UPGRADES[id];
@@ -462,6 +464,25 @@ function create(){
     S.waveNo++;
     S.nextWave += C.WAVE_INTERVAL_S;
     S.nextEnemy = rollEnemyWave();
+  }
+  /* Welle vorziehen (REQ-6.07 c): die Warteschlange rückt sofort als Welle aus; der Wellentakt beginnt neu. Braucht die Kaserne. */
+  const waveRushCost = () => C.WAVE_RUSH.cost + C.WAVE_RUSH.perUnit * S.queue.length;
+  function waveRushBlock(){
+    if (S.status !== 'running') return 'notRunning';
+    if (!has('kaserne')) return 'noKaserne';
+    if ((S.waveRushCd || 0) > 0) return 'cooldown';
+    if (!S.queue.length) return 'empty';
+    if (S.material < waveRushCost()) return 'material';
+    return null;
+  }
+  function rushWave(){
+    if (waveRushBlock()) return false;
+    S.material -= waveRushCost();
+    S.waveRushCd = C.WAVE_RUSH.cdS;
+    S.stats.waveRushes = (S.stats.waveRushes || 0) + 1;
+    launchOwnWave();
+    S.nextOwnWave = S.t + ownWaveInterval();                               // Takt beginnt neu
+    return true;
   }
   const waveIn = () => Math.max(0, S.nextOwnWave - S.t);
   const enemyWaveIn = () => Math.max(0, S.nextWave - S.t);
@@ -987,6 +1008,7 @@ function create(){
     addMaterial(matRate() * dt);
     addMaterial(autoPressCps() * clickPower() * dt);
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
+    if (S.waveRushCd) S.waveRushCd = Math.max(0, S.waveRushCd - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
     // Maurerkolonne: stehende Mauern heilen, wenn sie WALL_REGEN_DELAY_S nicht getroffen wurden; das Tor nie (REQ-18.6)
     const wallRegen = mAdd('wallRegenPct') / 100;
@@ -998,8 +1020,8 @@ function create(){
       S.kontorT += dt;
       if (S.kontorT >= C.KONTOR.intervalS){
         S.kontorT -= C.KONTOR.intervalS;
-        const cap = Math.max(C.KONTOR.capMin, matRate() * C.KONTOR.capSeconds) * (1 + nbTotal('kontor'));   // Kontor neben Fabriken: höherer Deckel
-        addMaterial(Math.min(cap, S.material * interestRate()));
+        const pay = kontorNext();
+        if (pay > 0){ addMaterial(pay); S.stats.interest = (S.stats.interest || 0) + pay; }
       }
     }
     progressResearch(dt);
@@ -1071,7 +1093,7 @@ function create(){
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
-    buildBlock, isBuildable, introShows, refundFor, interestRate,
+    buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,

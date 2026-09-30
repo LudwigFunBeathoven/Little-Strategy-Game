@@ -1,0 +1,41 @@
+{
+  "runs": 50,
+  "suite": "wirtschaft",
+  "report": {
+    "strategies": {},
+    "economy": {
+      "gierig/normal": {
+        "normal": 1,
+        "ohneKontor": 1,
+        "ohneVorziehen": 0.92,
+        "kontorPp": 0,
+        "rushPp": 7.9999999999999964,
+        "unused": 0.059785281696037876
+      },
+      "gierig/schwer": {
+        "normal": 0.94,
+        "ohneKontor": 0.88,
+        "ohneVorziehen": 0.46,
+        "kontorPp": 5.999999999999995,
+        "rushPp": 47.99999999999999,
+        "unused": 0.03069625851132515
+      },
+      "einheiten-zuerst/normal": {
+        "normal": 1,
+        "ohneKontor": 1,
+        "ohneVorziehen": 1,
+        "kontorPp": 0,
+        "rushPp": 0,
+        "unused": null
+      },
+      "einheiten-zuerst/schwer": {
+        "normal": 0.98,
+        "ohneKontor": 1,
+        "ohneVorziehen": 1,
+        "kontorPp": -2.0000000000000018,
+        "rushPp": -2.0000000000000018,
+        "unused": 0.07659183635418318
+      }
+    }
+  }
+}

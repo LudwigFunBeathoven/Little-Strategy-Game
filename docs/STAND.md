@@ -15,7 +15,7 @@ Stand von Iteration 5: `docs/archiv/STAND-iteration-5.md`.
 | I6.5 | „Schwung“ entfernen, Leistungsziel, Schwer-Start | 6.10, 6.08 | fertig (REQ-6.08: Zielkonflikt, PO-Entscheidung offen) |
 | I6.6 | Universität | 6.06 | fertig (Paarvergleich teils unter +3 pp, siehe Befund) |
 | I6.7 | Nachbarschaftsboni | 6.07 a | fertig |
-| I6.8 | Handelskontor mit Zinsen, „Welle vorziehen“ | 6.07 b, c | offen |
+| I6.8 | Handelskontor mit Zinsen, „Welle vorziehen“ | 6.07 b, c | fertig |
 | I6.9 | Abnahmeserie, Bericht, Testbuild | 6.11 | offen |
 
 ## Prüfung je Inkrement
@@ -65,6 +65,8 @@ Einheiten bis zum Limit und verbrauchen so fast alles. Die Beobachtung des PO (n
 widerlegt, aber über diese Kennzahl nicht messbar: Sie misst Verschwendung, nicht Entscheidungsvielfalt. Siehe Auslegung 3.
 
 ## Prüfergebnisse
+- I6.8: `npm test` 135/135 (Kontor-Tests an das neue Verhalten angepasst; neu: Zinsen gedeckelt, Welle vorziehen), Browser-Prüfung 196/196
+  (Welle vorziehen im Reiter Armee, Zinsen in der Leiste). Neue Suite `wirtschaft`.
 - I6.7: `npm test` 134/134 (neu `tests/neighbors.test.mjs`; Fabrik-Ertragstest baut auf nicht benachbarten Plätzen), Browser-Prüfung 194/194
   (Nachbarschaftsvorschau in Bau-Option und Raster). Der Kartenwahl-Test wartet jetzt auf den Reiterwechsel statt fester 120 ms.
 - I6.6: `npm test` 128/128 (neu: Beschleunigen in `tests/research.test.mjs`; Wirkungstest liest die Werte aus `data/research.js`),
@@ -178,6 +180,27 @@ Paarvergleich (`--suite nachbarn --runs 50`, `reports/i6-7-nachbarn.*`, Normal d
 (an gegen einzeln aus) Fabrik −2 pp, Schmiede 0, Kaserne +6, Universität −4, Kontor +2; keine über +25 pp. Die Werte liegen im Rauschen
 (± 10 pp bei 50 Partien). Die Siegquote dieses Felds liegt damit deutlich über v0.6 (64 %); Ursachen und Abnahme in I6.9.
 
+## Befund REQ-6.07 b, c: Handelskontor und „Welle vorziehen“
+**Handelskontor:** zahlt alle 10 s je volle 100 Material im Bestand 4 Material, höchstens bis zum Deckel 20 (+20 je Stufe „Kontor-Ausbau“,
+bisher „Zinseszins“; +25 % je angrenzender Fabrik; Karte Handelskontor ×1,5). Die Leiste zeigt nächsten Zinsbetrag, Deckel und Restzeit.
+**Das Kontor ist jetzt ohne Karte baubar** (sonst wäre „in mindestens 20 % der Partien gebaut“ nicht erreichbar: v0.6 5–11 %). Die Karte
+„Handelskontor“ bekommt dafür eine neue Wirkung: Zinsdeckel +50 % (nur im Angebot, wenn ein Kontor steht). Zur Freigabe durch den PO.
+**Welle vorziehen** (Reiter Armee, Abschnitt Kaserne, braucht die Kaserne): die Warteschlange rückt sofort aus, der Wellentakt beginnt neu;
+Kosten 80 + 12 je Einheit, Abklingzeit 60 s. Die gierige Heuristik entscheidet per Vorausschau (höchstens alle 10 s), „Einheiten zuerst“
+zieht vor, wenn die Warteschlange halb voll ist und das Doppelte der Kosten im Bestand liegt.
+Messung (`--suite wirtschaft`, durchschnitt, gleicher Seed normal gegen ohne; `reports/i6-8-*`):
+
+| | Normal | Schwer |
+|---|---|---|
+| gierig, Wirkung „Welle vorziehen“, erste Werte 40/6/30 s | +8 pp | **+48 pp** |
+| gierig, Wirkung „Welle vorziehen“, 80/12/60 s (übernommen) | +8 pp | +22 pp |
+| gierig, Wirkung „Welle vorziehen“, 120/15/90 s | +10 pp | +20 pp |
+| gierig, Wirkung Handelskontor (80/12/60) | −2 pp | −22 pp |
+| einheiten-zuerst, Wirkung beider (40/6/30) | 0 pp | −2 pp |
+
+Kontor gebaut: in allen Partien beider Strategien (Soll ≥ 20 %). Die negative Kontor-Wirkung auf Schwer (−22 pp, 40 Partien) liegt nahe an
+der Streuung (± 20 pp); plausibel ist, dass der Bot mit Kontor Material hortet statt Einheiten zu kaufen. Ungenutztes Material weiter 4 %.
+
 ## Befund REQ-6.08: Schwer, kein Verlust vor Minute 4
 Stellschraube: Anlauf der Grundwelle (`startBase` → `waveBase` bis Minute `rampMin`), dazu Versuche mit späteren Werfern. Screening mit 30–50
 Partien je Feld, beide Strategien (`KF_OVERRIDE`), Werte: früheste Niederlage „passiv“ · Siegquote „gelegentlich“ (gierig / einheiten-zuerst).
@@ -251,3 +274,7 @@ Schwierigkeitsgrad, **Standard aus** (Werte wie v0.6). Entscheidung beim PO, sie
     bleibt der Anteil nahe null, weil die Bots den Hörsaal selten erforschen.
 20. **Nachbarschaft:** Regeln für Einzelgebäude (Schmiede, Kaserne, Universität, Kontor) wirken global, weil es jedes nur einmal gibt; die
     Fabrikregel wirkt je Fabrik. Diagonale Plätze zählen nicht (Standard der Anforderung). Der Abriss erstattet wie bisher teilweise.
+21. **Handelskontor ohne Karte:** Startgebäude wie Schmiede, Kaserne, Universität (sichtbar ab Stufe 2 mit der Einführung). Karte
+    „Handelskontor“ neu: Zinsdeckel +50 %. Upgrade „Zinseszins“ heißt „Kontor-Ausbau“ und hebt den Deckel statt des Zinssatzes.
+22. **Welle vorziehen** braucht mindestens eine Einheit in der Warteschlange und die Kaserne; Karte Dauerauftrag füllt die Warteschlange
+    danach wie nach jeder Welle neu.

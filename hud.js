@@ -62,7 +62,9 @@ function renderHud(){
   const S = G.S, running = S.status === 'running', E = hudEl;
   setText(E.hudSoldiers, `${fmt(G.ownOnField())}/${fmt(G.supplyCap())}`);
   setText(E.material, fmt(S.material));
-  setText(E.rate, t('hud.perSecond', { n: fmt1(G.matRate() + G.autoPressCps() * G.clickPower()) }));
+  // mit Handelskontor: nächster Zinsbetrag und Deckel (REQ-6.07 b)
+  const rateText = t('hud.perSecond', { n: fmt1(G.matRate() + G.autoPressCps() * G.clickPower()) });
+  setText(E.rate, G.has('kontor') ? t('hud.rateInterest', { rate: rateText, n: fmt(G.kontorNext()), cap: fmt(G.kontorCap()), s: Math.max(0, Math.ceil(C.KONTOR.intervalS - S.kontorT)) }) : rateText);
   const x = G.xpProgress();
   setText(E.xpVal, fmt(S.xp));
   // EP je Sekunde und geschätzte Zeit bis zur nächsten Kartenwahl (REQ-6.06)

@@ -137,8 +137,12 @@ const KF_CONFIG = {
   FACTORY_COST_GROWTH: 1.6,
   BUILDING_COST: { schmiede: 200, kaserne: 150, universitaet: 300, kontor: 250 },   // Verstärkungsgebäude, je einmal baubar
   BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet', 'kontor'],
-  START_BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet'],   // Handelskontor nur per Draft (REQ-02)
-  KONTOR: { intervalS: 10, rate: 0.01, capSeconds: 30, capMin: 20 },   // Zinsen: alle intervalS Sekunden rate × Bestand, höchstens capSeconds Automatik-Ertrag
+  START_BUILDINGS: ['fabrik', 'schmiede', 'kaserne', 'universitaet', 'kontor'],   // I6.8: Handelskontor ohne Karte baubar (REQ-6.07 b)
+  // Handelskontor (REQ-6.07 b): alle intervalS Sekunden je volle perN Material im Bestand amount Material, höchstens bis zum Deckel
+  // capBase + capPerLevel × Stufe „Kontor-Ausbau“; Nachbarschaft und Karte Handelskontor heben den Deckel prozentual
+  KONTOR: { intervalS: 10, perN: 100, amount: 4, capBase: 20, capPerLevel: 20 },
+  // Kaserne: Welle vorziehen (REQ-6.07 c): die nächste eigene Welle rückt sofort aus; Kosten cost + perUnit je Einheit, Abklingzeit cdS
+  WAVE_RUSH: { cost: 80, perUnit: 12, cdS: 60 },   // I6.8: per Simulation, Wirkung auf Schwer (gierig) +22 pp statt +48 pp bei 40/6/30
 
   /* Upgrades. group = Gebäude oder Bereich; cur = Währung; max = Höchststufe; needs = Voraussetzung */
   UPGRADES: {
@@ -167,7 +171,6 @@ const KF_CONFIG = {
   FX_QUALITAET: 0.05,           // Schmiede: Schaden und Lebenspunkte je Qualitätsstufe (I4.8: 0,12 → 0,05, Ausgleich zur höheren Grundstärke)
   KASERNE_SUPPLY_PER_LEVEL: 2,  // Versorgungslimit je Ausbaustufe der Kaserne: 3 → 5 → … → 15
   UNIT_STRENGTH_PER_LEVEL: 0.16,// Grundstärke je Stufe, auch ohne Schmiede (REQ-17.2; I4.8: 0,08 → 0,16, damit Partien ohne Schmiede ≥ 30 % gewinnen)
-  FX_ZINSESZINS: 0.005,         // zusätzlicher Zinssatz je Stufe
   FX_MAUER_HP: 150,             // je Abschnitt
   FX_STACHELN_DMG: 4,
   FX_MOERTEL_REGEN: 1,
@@ -199,6 +202,7 @@ const KF_CONFIG = {
   PERF_TICK_MAX_MS: 1,          // Leistungsziel (REQ-6.10): Median eines Logik-Takts mit 2 × 60 Einheiten in Node höchstens so lange
   SIM_CLICK_RATE: 6,            // Klicks/s des Mess-Bots für die Klickanteile
   SIM_STYLE_WINDOW_S: 300,
+  SIM_RUSH_EVERY_S: 10,         // gierige Heuristik prüft „Welle vorziehen“ höchstens so oft per Vorausschau (REQ-6.07 c)
   SIM_RESEARCH_FORCE_S: 180,    // Paarvergleich der Forschung: Zeitpunkt, zu dem die Forschung in Stufe 1 geschenkt wird (REQ-6.06)      // Anteil der Einheitenkäufe an allen Handlungen in diesem Zeitraum (Strategie-Merkmal, REQ-6.09)
   SIM_SIEGE_LOOKAHEAD_S: 120,   // Bot-Vorausschau reicht bis nach der Belagerungswelle, sobald sie so nah ist (REQ-48)
   SIM_SIEGE_EVAL_S: 40,         // … und so lange über ihr Ausrücken hinaus

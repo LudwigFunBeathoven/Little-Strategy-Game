@@ -9,6 +9,7 @@
 //   --strategy gierig,einheiten-zuerst   Strategien der Suiten ziele, kurz, ohneSchmiede (Standard: beide, REQ-6.09)
 //   forschung  REQ-6.06: Forschungstempo (drei Spielweisen) und Paarvergleich je Forschung (--runs Paare je Forschung)
 //   nachbarn   REQ-6.07 a: jede Nachbarschaftsregel einzeln aus gegen alle an
+//   wirtschaft REQ-6.07 b, c: Handelskontor und „Welle vorziehen“ je Strategie, normal gegen ohne
 //   kurz       Kurzsimulation nach Anhang A: Normal, Spielertyp durchschnitt, gierige Heuristik (Soll: 0 offen, Siegquote 20–100 %)
 // Die Simulation misst Stärke, nicht Spielspaß. Auffälligkeiten werden berichtet, nicht automatisch wegbalanciert.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -59,6 +60,11 @@ if (!isMainThread){
     }
   }
   // REQ-6.07 a: jede Nachbarschaftsregel einzeln ausgeschaltet gegen alle an (gleicher Seed, Normal durchschnitt, gierig)
+  // REQ-6.07 b, c: Wirkung von Handelskontor und „Welle vorziehen“ je Strategie (gleicher Seed: normal, ohne Kontor, ohne Vorziehen)
+  if (SUITE === 'wirtschaft')
+    for (const strategy of ZSTRATS) for (const [arm, extra] of [['normal', {}], ['ohneKontor', { forbid: ['kontor'] }], ['ohneVorziehen', { noRush: true }]])
+      for (const diff of ['normal', 'schwer']) for (let r = 0; r < RUNS; r++)
+        jobs.push(Object.assign({ suite: 'wirtschaft', arm, diff, profile: 'durchschnitt', strategy, seed: seedOf(600 + (diff === 'schwer' ? 1 : 0), r) }, extra));
   if (SUITE === 'nachbarn')
     for (const nbOff of [null, ...NEIGHBORS.map(r => r.building)]) for (let r = 0; r < RUNS; r++)
       jobs.push({ suite: 'nachbarn', nbOff, diff: 'normal', profile: 'durchschnitt', strategy: 'gierig', seed: seedOf(500, r) });
@@ -157,6 +163,16 @@ if (!isMainThread){
       report.researchFirst = median(first); report.researchBy10 = median(by10);
       console.log(`Forschungstempo (Normal, durchschnitt, Median): erste Forschung fertig ${report.researchFirst === Infinity ? 'nie' : mmss(report.researchFirst)} (Soll < 3:00) · fertig bis Minute 10: ${report.researchBy10} (Soll ≥ 5)`);
     }
+    // REQ-6.07 b, c: Handelskontor gebaut und Siegquote mit/ohne, Zinsen, Welle vorziehen (aktiv, durchschnitt, gelegentlich)
+    const kb = known.filter(r => r.built && r.built.kontor), kn = known.filter(r => !(r.built && r.built.kontor));
+    const qk = R => R.length ? R.filter(r => r.status === 'won').length / R.length : null;
+    report.kontorBuilt = known.length ? kb.length / known.length : null;
+    report.kontorDeltaPp = qk(kb) != null && qk(kn) != null ? (qk(kb) - qk(kn)) * 100 : null;
+    report.interestMedian = median(kb.map(r => r.interest || 0));
+    report.waveRushGames = known.length ? known.filter(r => r.waveRushes > 0).length / known.length : null;
+    console.log(`Handelskontor gebaut: ${pct(kb.length, known.length)} der Partien (Soll ≥ 20 %) · Siegquote mit ${pct(kb.filter(r => r.status === 'won').length, kb.length)}, ohne ${pct(kn.filter(r => r.status === 'won').length, kn.length)}` +
+      ` (Differenz ${report.kontorDeltaPp == null ? '–' : (report.kontorDeltaPp >= 0 ? '+' : '') + report.kontorDeltaPp.toFixed(0) + ' pp'}, Soll ≤ +25) · Zinsen je Partie mit Kontor (Median) ${report.interestMedian ?? '–'}` +
+      ` · Welle vorgezogen in ${pct(known.filter(r => r.waveRushes > 0).length, known.length)} der Partien`);
     const sh = Z.filter(r => r.unitShare != null && r.profile !== 'verteidigung' && r.profile !== 'passiv');
     report.unitShare = median(sh.map(r => r.unitShare));
     console.log(`Anteil der Einheitenkäufe an allen Handlungen der ersten ${C.SIM_STYLE_WINDOW_S} s (Median; Merkmal für compare-human): ${report.unitShare == null ? '–' : (100 * report.unitShare).toFixed(0) + ' %'}`);
@@ -325,6 +341,22 @@ if (!isMainThread){
     console.log('');
   }
 
+  const WI = results.filter(r => r.suite === 'wirtschaft');
+  if (WI.length){
+    console.log('WIRTSCHAFT – Handelskontor und „Welle vorziehen“ (durchschnitt; Wirkung = normal gegen ohne; Soll ≤ +25 pp)\n');
+    report.economy = {};
+    const q = R => R.length ? R.filter(r => r.status === 'won').length / R.length : null;
+    for (const st of ZSTRATS) for (const diff of ['normal', 'schwer']){
+      const R = arm => WI.filter(r => r.strategy === st && r.diff === diff && r.arm === arm);
+      const n = R('normal'), k = R('ohneKontor'), v = R('ohneVorziehen');
+      if (!n.length) continue;
+      const dk = (q(n) - q(k)) * 100, dv = (q(n) - q(v)) * 100;
+      report.economy[st + '/' + diff] = { normal: q(n), ohneKontor: q(k), ohneVorziehen: q(v), kontorPp: dk, rushPp: dv, unused: median(n.map(r => r.unused).filter(x => x != null)) };
+      const f = d => (d >= 0 ? '+' : '') + d.toFixed(0) + ' pp' + (d > 25 ? ' ←' : '');
+      console.log(`${pad(st, 17)} ${pad(diff, 7)} normal ${lpad(pct(n.filter(r => r.status === 'won').length, n.length), 5)} · Kontor ${lpad(f(dk), 8)} · Vorziehen ${lpad(f(dv), 8)}`);
+    }
+    console.log('');
+  }
   const NBR = results.filter(r => r.suite === 'nachbarn');
   if (NBR.length){
     console.log('NACHBARSCHAFT – Siegquote mit allen Regeln gegen Regel ausgeschaltet (Normal, durchschnitt, gierig; Soll ≤ +25 pp)\n');
