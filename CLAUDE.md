@@ -118,5 +118,16 @@ Bericht `docs/bericht-iteration-<n>.md` mit: Ergebnis in drei Sätzen, Entscheid
 (zur Bestätigung), Tabelle der Abnahmekriterien mit Ergebnis, Kennzahlen der Serie, Auffälligkeiten (berichtet, nicht
 wegbalanciert), offene Punkte für den PO. Rohdaten der Simulation unter `reports/`.
 
+## Veröffentlichung (Branch `MVP`)
+Der Branch `MVP` ist die öffentlich spielbare Fassung (GitHub Pages, `https://ludwigfunbeathoven.github.io/Little-Strategy-Game/`).
+Er enthält immer genau die neueste Release-Version, nichts dazwischen.
+- Ein Release entsteht nur, wenn der PO eine Iteration nach `main` freigibt. Danach `MVP` per Fast-Forward auf denselben Commit wie `main`
+  setzen (`git push origin origin/main:MVP`) und den Stand mit der Versionsnummer markieren (Tag `v<VERSION>`, z. B. `v0.7`).
+- Nie direkt auf `MVP` committen, nie Zwischenstände oder Arbeitsbranches dorthin schieben. Ein dringender Fehler geht über `main`
+  (Patch-Version, z. B. 0.7.1) und dann wie oben nach `MVP`.
+- Vor dem Release: alle Prüfungen aus „Arbeitsweise in Inkrementen“ grün. Ändert sich `SAVE_VERSION`, verlieren Spieler ihren Spielstand:
+  im Bericht und im CHANGELOG vermerken.
+- Das Sitzungsprotokoll ist öffentlich aus; Spieltests hängen `?debug=1` an die Adresse.
+
 ## Bekannte offene Punkte
 Siehe Abschnitt „Offen“ in `docs/bericht-iteration-6.md`.
