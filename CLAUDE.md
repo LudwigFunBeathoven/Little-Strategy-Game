@@ -123,6 +123,7 @@ Der Branch `MVP` ist die öffentlich spielbare Fassung (GitHub Pages, `https://l
 Er enthält immer genau die neueste Release-Version, nichts dazwischen.
 - Ein Release entsteht nur, wenn der PO eine Iteration nach `main` freigibt. Danach `MVP` per Fast-Forward auf denselben Commit wie `main`
   setzen (`git push origin origin/main:MVP`) und den Stand mit der Versionsnummer markieren (Tag `v<VERSION>`, z. B. `v0.7`).
+  Tags lassen sich aus der Cloud-Umgebung nicht pushen: dann den PO bitten, auf GitHub ein Release mit diesem Tag auf `MVP` anzulegen.
 - Nie direkt auf `MVP` committen, nie Zwischenstände oder Arbeitsbranches dorthin schieben. Ein dringender Fehler geht über `main`
   (Patch-Version, z. B. 0.7.1) und dann wie oben nach `MVP`.
 - Vor dem Release: alle Prüfungen aus „Arbeitsweise in Inkrementen“ grün. Ändert sich `SAVE_VERSION`, verlieren Spieler ihren Spielstand:
