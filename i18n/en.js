@@ -498,4 +498,10 @@ KF_I18N.en = {
   'tip.wave.rush': 'The queue marches out at once as a wave and the wave timer restarts. Then {s} s cooldown.',
   'tip.wave.rushEmpty': 'No units in the queue.',
   'hud.rateInterest': '{rate} · interest +{n}/{cap} in {s} s',
+  /* Tutorial "First steps" (REQ-T.01): one line per step */
+  'tut.fertigen': 'Make material. Click!',
+  'tut.bauen': 'A factory works for you.',
+  'tut.rekrutieren': 'Recruit three runners.',
+  'tut.ausruecken': 'They march out with the next wave.',
+  'tut.sieg': 'Good. Build, arm, hold.',
 };

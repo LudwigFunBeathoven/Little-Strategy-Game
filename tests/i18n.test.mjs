@@ -25,7 +25,7 @@ test('index.html enthält außer dem Spieltitel keinen sichtbaren Text', () => {
 });
 
 test('Oberflächen-Dateien und core.js: keine festen Sätze', () => {
-  for (const f of ['ui.js', 'render.js', 'hud.js', 'panels.js', 'session.js', 'core.js']){
+  for (const f of ['ui.js', 'render.js', 'hud.js', 'panels.js', 'session.js', 'core.js', 'tutorial.js']){
     const code = readFileSync(new URL('../' + f, import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const strings = [...code.matchAll(/'([^'\\\n]*)'|`([^`\\]*)`/g)].map(m => m[1] ?? m[2]);
     const prose = strings.filter(s => /[A-Za-zÄÖÜäöüß]{3,}\s+[A-Za-zÄÖÜäöüß]{3,}/.test(s) && !/[.#\[\]=(){}$]/.test(s) && !/^(opt|slot|btn|diff|chip|link|field|seg)\b/.test(s) && s !== 'use strict' && !/\dpx /.test(s));
@@ -36,5 +36,5 @@ test('Oberflächen-Dateien und core.js: keine festen Sätze', () => {
 test('index.html lädt alle Spieldateien in der richtigen Reihenfolge', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const srcs = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]);
-  assert.deepEqual(srcs, ['config.js', 'i18n/de.js', 'i18n/en.js', 'data/draft-options.js', 'data/research.js', 'data/neighbors.js', 'hints.js', 'core.js', 'ui.js', 'render.js', 'hud.js', 'panels.js', 'session.js']);
+  assert.deepEqual(srcs, ['config.js', 'i18n/de.js', 'i18n/en.js', 'data/draft-options.js', 'data/research.js', 'data/neighbors.js', 'data/tutorial-steps.js', 'hints.js', 'tutorial.js', 'core.js', 'ui.js', 'render.js', 'hud.js', 'panels.js', 'session.js']);
 });

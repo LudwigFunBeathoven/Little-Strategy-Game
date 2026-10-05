@@ -9,7 +9,7 @@ Stand von Iteration 6: `docs/archiv/STAND-iteration-6.md`, Bericht `docs/bericht
 |---|---|---|---|
 | T.0 | Anforderungen ablegen, Basislinie der Simulation sichern | T.06 | fertig |
 | T.1 | Ereignisse und Schonfrist in `core.js` | T.03, T.06 | fertig |
-| T.2 | `tutorial.js`, `data/tutorial-steps.js` | T.01, T.04, T.06 | offen |
+| T.2 | `tutorial.js`, `data/tutorial-steps.js` | T.01, T.04, T.06 | fertig |
 | T.3 | Quartiermeister, Hervorhebung, Start, Überspringen | T.02, T.04 | offen |
 | T.4 | Erstkontakt-Hinweise, Markierung „neu“ | T.05 | offen |
 | T.5 | Messung, Tests, Doku, Abnahme | T.07 | offen |
@@ -30,6 +30,9 @@ node tools/bench-tick.mjs                   # Tick-Zeit mit 2 × 60 Einheiten
   dieselben Werte. `core.js` bietet `on(fn)` für Ereignisse (`materialProduced`, `buildingBuilt`, `unitBought`, `waveDeparted`,
   `enemyWaveDefeated`) und eine Schonfrist: `newGame(…, { hold: { maxS, size } })`, `releaseHold(normalFirstWave)`, `holdActive()`;
   Zustand `S.hold` (im Spielstand, ohne Versionsänderung: fehlt er, gilt `null`). Ohne Zuhörer und ohne `hold` ändert sich nichts.
+- T.2: `npm test` 158/158 (neu `tests/tutorial.test.mjs`: Schritte in Reihenfolge, vertauschte Reihenfolge, Zähler unabhängig vom aktuellen Schritt,
+  Vorführung zählt nicht, Überspringen in jedem Schritt, Fehlklicks, Start/`?tutorial`, Speicher fehlt oder ist kaputt, Speichern und Laden,
+  Texte in beiden Sprachen höchstens 60 Zeichen). `tutorial.js` hat keinen Zugriff auf Seite oder Fenster; Schritte in `data/tutorial-steps.js`.
 
 ## Auslegungen und Abweichungen (zur Bestätigung durch den PO)
 Noch keine.

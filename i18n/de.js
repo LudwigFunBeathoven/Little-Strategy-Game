@@ -498,4 +498,10 @@ KF_I18N.de = {
   'tip.wave.rush': 'Die Warteschlange rückt sofort als Welle aus, der Wellentakt beginnt neu. Danach {s} s Abklingzeit.',
   'tip.wave.rushEmpty': 'Keine Einheiten in der Warteschlange.',
   'hud.rateInterest': '{rate} · Zinsen +{n}/{cap} in {s} s',
+  /* Tutorial „Erste Schritte“ (REQ-T.01): eine Zeile je Schritt */
+  'tut.fertigen': 'Fertige Material. Klick!',
+  'tut.bauen': 'Eine Fabrik fertigt für dich.',
+  'tut.rekrutieren': 'Rekrutiere drei Läufer.',
+  'tut.ausruecken': 'Sie marschieren mit der nächsten Welle.',
+  'tut.sieg': 'Gut. Bauen, rüsten, halten.',
 };
