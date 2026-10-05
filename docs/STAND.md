@@ -40,11 +40,12 @@ node tools/bench-tick.mjs                   # Tick-Zeit mit 2 × 60 Einheiten
 - T.4: Hinweise: einer gleichzeitig, nie im Tutorial (Auslöser prüfen erst danach), schließen nach 8 s oder per Klick, eine Zeile (≤ 90 Zeichen, geprüft in
   `tests/hints.test.mjs`); neu: Mauer, Türme, Schmiede, Kontor (mit Zinsen), Nachbarschaft; gestrichen: Start, erste Welle (Tutorial). Marke „neu“ (`NewMarks` in
   `panels.js`): Reiter, Bau-Optionen, Einheiten; Grundlinie beim Start, „angesehen“ nach 1,5 s, Zustand im Spielstand.
-- T.5: `npm test` 162/162; Browser-Prüfung BROWSER_ANZAHL (neu: Tutorial-Ablauf in beiden Sprachen, vertauschte Reihenfolge, Überspringen in vier Schritten, zweiter Start,
+- T.5: `npm test` 162/162; Browser-Prüfung 276 (neu: Tutorial-Ablauf in beiden Sprachen, vertauschte Reihenfolge, Überspringen in vier Schritten, zweiter Start,
   `?tutorial`, Hinweise, „neu“, Protokoll, Schritt 4 mit Kaserne). Kurzsimulation unverändert (9:09 / 6:13, je 100 %), Tick-Zeit 0,13 ms. Zwei bereits vorhandene,
   zufallsabhängige Prüfungen robust gemacht (Dauerauftrag bei „Welle vorziehen“, dieselbe Karte zweimal bei „Kartenwahl“).
-- Offen/unerklärt: Die Browser-Prüfung „Zweiter Start im selben Browser“ schlug in einzelnen Läufen fehl (Tutorial startete erneut). Die Prüfung meldet jetzt den Zustand des
-  Browser-Speichers vor und nach dem Neuladen; FLAKE_NOTIZ
+- Ursache der zufälligen Fehlschläge der Prüfung „Zweiter Start im selben Browser“ gefunden: Chromium verlor den `localStorage` einer als `file://` geladenen Seite beim
+  Neuladen gelegentlich vollständig (Messung: 1 von 12 Läufen, über HTTP 0 von 40; der Speicher war schon beim Start des neuen Dokuments leer). Das war kein Fehler im Spiel.
+  Die Browser-Prüfung lädt die Seite deshalb jetzt über einen lokalen HTTP-Server (`tests/browser-check.mjs`). Zwei Läufe danach ohne Auffälligkeit.
 
 ## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
 Siehe `docs/bericht-tutorial.md`, Abschnitt 2 (15 Punkte). Wichtigste: (1) die gestaffelte Freischaltung bleibt, nur die Hinweistexte der Einführung entfallen;

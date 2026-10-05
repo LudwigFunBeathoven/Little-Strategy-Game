@@ -76,16 +76,17 @@ sind durch Tests belegt, und Partien ohne Tutorial liefern mit denselben Seeds d
 | `core.js` ohne DOM, keine festen Texte, Zahlen in `config.js`/`data/` | ✔ | `tests/i18n.test.mjs`, Durchsicht |
 
 ## 5. Kennzahlen
-- `npm test`: 162/162. Browser-Prüfung: BROWSER_ANZAHL Prüfungen.
+- `npm test`: 162/162. Browser-Prüfung: 276 Prüfungen.
 - Kurzsimulation (je 20 Partien Normal durchschnitt): gierig 9:09 · 100 %, einheiten-zuerst 6:13 · 100 %, keine offene Partie; identisch zu v0.7.
 - Tutorial-Partie bei direkter Bedienung (Probelauf): fertigen 5,6 s, bauen 9,2 s, Einheiten 13,2 s, Welle 20,0 s, erster Sieg 39,8 s. Die Zeit bis zur Welle richtet sich
   nach dem Wellentakt (alle 20 s); Menschen brauchen mehr, Zieldauer ≤ 2:30 min.
 
 ## 6. Auffälligkeiten (berichtet, nicht geändert)
 1. **Die Zeiten sind Bot-Zeiten.** Wie lange Menschen brauchen, zeigt erst der Spieltest. Der Testleitfaden hat dafür eine Partie ohne jede Hilfe von außen.
-2. **Ein Flackern der Browser-Prüfung „Zweiter Start im selben Browser“** trat in einzelnen Läufen auf (Ursache noch offen; siehe STAND). Die Prüfung meldet dazu den Zustand
-   des Browser-Speichers; sobald sie wieder auftritt, zeigt die Meldung die Ursache. Es gab keinen Hinweis auf einen Fehler im Spiel.
-3. **Zwei bereits vorhandene Prüfungen waren vom Zufall abhängig** und sind robust gemacht: „Welle vorziehen“ (die Karte Dauerauftrag füllte die Warteschlange wieder) und
+2. **Ein Flackern der Browser-Prüfung „Zweiter Start im selben Browser“** trat in einzelnen Läufen auf. Ursache: Chromium verliert den `localStorage` von `file://`-Seiten beim
+   Neuladen gelegentlich vollständig (1 von 12 Läufen; über HTTP 0 von 40). Kein Fehler im Spiel. Die Browser-Prüfung lädt die Seite jetzt über einen lokalen HTTP-Server.
+   Für Spieler heißt das: Wer das Spiel als Datei (`file://`) öffnet, kann in seltenen Fällen seinen Spielstand verlieren; über eine Webadresse (MVP) tritt das nicht auf.
+3. **Zwei bereits vorhandene Prüfungen waren vom Zufall abhängig** und sind robust gemacht: „Welle vorziehen“ (die zufällig gewählte Karte Dauerauftrag füllte die Warteschlange wieder) und
    „Kartenwahl: zurück im vorigen Reiter“ (dieselbe Karte konnte zweimal gewählt werden).
 4. **Der Dialog „Neue Partie“ war bei 720 px Höhe schon vorher höher als das Fenster** (852 px); der Knopf „Spiel starten“ lag teilweise außerhalb. Jetzt scrollt der Dialog,
    der Knopf bleibt unten sichtbar.

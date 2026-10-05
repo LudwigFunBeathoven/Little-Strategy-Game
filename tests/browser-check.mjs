@@ -8,9 +8,23 @@ let chromium;
 try { ({ chromium } = await import('playwright')); }
 catch (e) { console.log('Playwright nicht installiert – Browser-Prüfung übersprungen.'); process.exit(0); }
 
+// Die Seite wird über einen lokalen HTTP-Server geladen, nicht als file://: Chromium verliert den localStorage von file://-Seiten beim Neuladen
+// gelegentlich vollständig (beobachtet: 1 von 12 Läufen; über HTTP 0 von 40), was Prüfungen mit Neuladen zufällig scheitern ließ.
+import http from 'node:http';
+import { readFileSync as readSrc, existsSync as srcExists } from 'node:fs';
+import { extname, join } from 'node:path';
+const root = new URL('../', import.meta.url).pathname;
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json' };
+const server = http.createServer((req, res) => {
+  const f = join(root, decodeURIComponent(req.url.split('?')[0]).replace(/^\/$/, '/index.html'));
+  if (!f.startsWith(root) || !srcExists(f)){ res.writeHead(404); res.end(); return; }
+  res.writeHead(200, { 'content-type': MIME[extname(f)] || 'text/plain' }); res.end(readSrc(f));
+});
+await new Promise(r => server.listen(0, '127.0.0.1', r));
+const base = `http://127.0.0.1:${server.address().port}/`;
 // ?tutorial=0: die bisherigen Abläufe starten über den Startdialog; das Tutorial hat unten eigene Prüfungen (REQ-T.04)
-const url = new URL('../index.html?dev=1&tutorial=0', import.meta.url).href;
-const urlTutorial = new URL('../index.html?dev=1', import.meta.url).href;
+const url = base + 'index.html?dev=1&tutorial=0';
+const urlTutorial = base + 'index.html?dev=1';
 const b = await chromium.launch();
 let failed = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failed++; };
@@ -370,8 +384,8 @@ for (const dsf of [1, 2]){
     upg: !document.querySelector('[data-tooltip="upg:ausbau"]').hidden, audit: __kf.tooltipAudit().length + __kf.explAudit().length }));
   check(k2.built && !k2.btn && /Stufe 1/.test(k2.status) && k2.upg && k2.audit === 0, `Kaserne im Reiter Armee: Stufe und Ausbau sichtbar, Audits grün ${JSON.stringify(k2)}`);
   // Welle vorziehen (REQ-6.07 c) im Reiter Armee; Zinsen des Handelskontors in der Leiste (REQ-6.07 b)
-  // lastOrder = null: eine zufällig gewählte Karte „Dauerauftrag“ füllte die Warteschlange sonst sofort wieder (nicht vom Seed abhängig machen)
-  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; G.S.nextOwnWave = G.S.t + 60; G.S.lastOrder = null; G.spawn('laeufer'); G.spawn('laeufer'); G.buildAt(8, 'kontor'); });
+  // Karte „Dauerauftrag“ (Stat standingOrder) füllte die Warteschlange nach dem Ausrücken sofort wieder; sie ist hier zufällig gewählt worden und wird ausgeschlossen
+  await p.evaluate(() => { const G = __kf.G; for (const [id, o] of Object.entries(G.OPT)) if (o.tiers.some(t => (t.effect || []).some(e => e.stat === 'standingOrder'))) delete G.S.draft.stacks[id]; G.S.draft.ver++; G.S.material = 1e5; G.S.nextOwnWave = G.S.t + 60; G.spawn('laeufer'); G.spawn('laeufer'); G.buildAt(8, 'kontor'); });
   await p.waitForTimeout(150);
   const w0 = await p.evaluate(() => ({ vis: !document.querySelector('[data-tooltip="waveRush"]').hidden, dis: document.querySelector('[data-tooltip="waveRush"]').getAttribute('aria-disabled'),
     q: __kf.G.S.queue.length, rate: document.querySelector('#rate').textContent }));
@@ -667,12 +681,10 @@ for (const lang of ['de', 'en']){
   check(data.completed && !data.skipped && Object.keys(data.stepTimes).length === 5, `[${lang}] Sitzungsdaten: fünf Schrittzeiten ${JSON.stringify(data.stepTimes)}`);
   check(errs.length === 0, `[${lang}] Tutorial: keine Fehler und keine fehlenden Schlüssel${show(errs)}`);
   // Zweite Partie im selben Browser: kein Tutorial; Dialog „Neue Partie“ bietet „Tutorial wiederholen“ an
-  const keyBefore = await p.evaluate(() => ({ tut: localStorage.getItem('klammerfront.tutorial.v1'), lang: localStorage.getItem('klammerfront.lang'), n: localStorage.length, init: sessionStorage.getItem('kfInit') }));
   await p.evaluate(() => sessionStorage.setItem('kfDropSave', '1'));
   await p.reload(); await p.waitForTimeout(300);
   const again = await tutState(p);
-  const keyAfter = await p.evaluate(() => ({ tut: localStorage.getItem('klammerfront.tutorial.v1'), n: localStorage.length, init: sessionStorage.getItem('kfInit') }));
-  check(!again.active && again.modal, `[${lang}] Zweiter Start im selben Browser: kein Tutorial, Startdialog ${JSON.stringify({ again, keyBefore, keyAfter })}`);
+  check(!again.active && again.modal, `[${lang}] Zweiter Start im selben Browser: kein Tutorial, Startdialog ${JSON.stringify(again)}`);
   await p.click('[data-tooltip="tutorialRepeat"]'); await p.waitForTimeout(250);
   const rep = await tutState(p);
   check(rep.active && rep.diff === 'leicht' && !rep.modal, `[${lang}] „Tutorial wiederholen“ startet eine neue Partie mit Tutorial`);
@@ -724,7 +736,7 @@ for (const stepId of ['fertigen', 'bauen', 'rekrutieren', 'ausruecken']){
 {
   const { ctx, p, errs } = await freshTutorialPage();
   await waitText(p);
-  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e4; G.S.level = 2; for (let i = 0; i < 30; i++) G.tick(0.05); for (let i = 0; i < 10; i++) G.doClick();   // 1,5 s vergehen: Klicks der Vorführung zählen im Zeitfenster der Klickgrenze nicht mehr
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e4; G.S.level = 2; __kf.Tutorial.event('materialProduced', { n: 10, source: 'click' }, G.S.t);   // Schritt 1 erledigt (ab Stufe 2 presst eine Automatik mit, Klicks brächten weniger)
     G.buildAt(0, 'fabrik'); G.buildAt(1, 'kaserne'); for (let i = 0; i < 3; i++) G.spawn('laeufer'); __kf.requestRender(); });
   await p.waitForTimeout(300);
   const a = await tutState(p);
@@ -796,4 +808,5 @@ for (const stepId of ['fertigen', 'bauen', 'rekrutieren', 'ausruecken']){
 }
 
 await b.close();
+server.close();
 process.exit(failed ? 1 : 0);
