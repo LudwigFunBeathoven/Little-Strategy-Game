@@ -139,9 +139,9 @@ function buildPanels(){
   $('clickBtn').addEventListener('pointerdown', e => { if (e.button === 0 && e.isPrimary) press(); });
   $('clickBtn').addEventListener('click', e => { if (e.detail === 0) press(); });
   $('hintOk').addEventListener('click', dismissHint);
-  $('camRealm').addEventListener('click', () => { Cam.follow = false; Cam.goTo(0); });
-  $('camFront').addEventListener('click', () => { Cam.follow = false; Cam.goTo(Cam.frontTarget()); });
-  $('camFollow').addEventListener('click', () => { Cam.follow = !Cam.follow; requestRender(); });
+  $('camRealm').addEventListener('click', () => { Cam.follow = false; Cam.touched = true; Cam.goTo(0); });
+  $('camFront').addEventListener('click', () => { Cam.follow = false; Cam.touched = true; Cam.goTo(Cam.frontTarget()); });
+  $('camFollow').addEventListener('click', () => { Cam.follow = !Cam.follow; Cam.touched = true; requestRender(); });
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     for (const [id, spec] of Object.entries(C.UNITS)) if (e.key === spec.key){ G.spawn(id); requestRender(); }

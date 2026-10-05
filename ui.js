@@ -221,6 +221,7 @@ function tipContent(id){
     case 'again': return { title: t('result.again'), body: t('tip.again.body') };
     case 'resetHints': return { title: t('start.resetHints'), body: t('tip.resetHints.body') };
     case 'skipIntro': return { title: t('start.skipIntro'), body: t('tip.skipIntro.body') };
+    case 'tutorialRepeat': return { title: t('start.tutorial'), body: t('tip.tutorial.repeat.body') };
     case 'hintOk': return { title: t('hint.ok'), body: t('tip.hintOk.body') };
     case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a) };
     case 'hud':   return hudTip(a);
@@ -368,7 +369,7 @@ if (DEV) setInterval(() => {
 function save(){
   const S = G.S;
   if (S.status === 'setup') return;
-  storageSet(C.SAVE_KEY, JSON.stringify(Object.assign(G.snapshot(), { units: [], enemyQueue: [] })));
+  storageSet(C.SAVE_KEY, JSON.stringify(Object.assign(G.snapshot(), { units: [], enemyQueue: [], tut: Tutorial.snapshot() })));
 }
 /* Spielstände älterer Versionen (anderer Schlüssel oder andere Versionsnummer) werden nicht übernommen, sondern dem Spieler
    auf dem Startbildschirm gemeldet und erst danach entfernt (Anforderung Iteration 5, Abschnitt 1) */
@@ -392,7 +393,9 @@ function load(){
   try {
     const d = JSON.parse(raw);
     if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]){ discardedSave = true; dropStaleSaves([C.SAVE_KEY]); return false; }
+    const tut = d.tut; delete d.tut;                          // Tutorial-Fortschritt liegt neben dem Spielstand, nicht darin
     G.adopt(d);
+    Tutorial.restore(TUTORIAL_PARAM === '0' ? null : tut);
     // Reines Online-Spiel (REQ-6.03): beim Laden vergeht keine Spielzeit, die Partie beginnt pausiert
     if (G.S.status === 'running') setPaused(true);
     return true;
@@ -407,6 +410,9 @@ function writeRecord(diff, time){
 
 /* ================= Erstkontakt-Hinweise (REQ-20.2/20.3) ================= */
 const Hints = KF_HINTS.create({ get: storageGet, set: storageSet }, C.HINTS_KEY);
+/* Tutorial „Erste Schritte“ (REQ-T.04): Schritte in data/tutorial-steps.js, Anzeige in tutorial-ui.js; ?tutorial=1 erzwingt, ?tutorial=0 unterdrückt */
+const Tutorial = KF_TUTORIAL.create(KF_TUTORIAL_STEPS, { get: storageGet, set: storageSet }, C.TUTORIAL_KEY);
+const TUTORIAL_PARAM = (/[?&]tutorial=([01])\b/.exec(location.search) || [])[1] || null;
 const hintQueue = [];
 function showHint(id){
   if (!Hints.trigger(id)) return;
@@ -490,6 +496,7 @@ function renderStart(){
     'skipIntro', t(skip ? 'ex.skipIntro.on' : 'ex.skipIntro.off'));
   sb.setAttribute('aria-pressed', String(skip));
   hrow.appendChild(sb);
+  hrow.appendChild(mkButton('btn-ghost', t('start.tutorial'), () => startGame(C.TUTORIAL.diff, { tutorial: true }), 'tutorialRepeat', t('ex.tutorial.repeat')));
   hintField.append(hl, hrow);
   body.append(langField, diffField, hintField);
 
@@ -515,9 +522,14 @@ function openResult(){
   b.focus();
 }
 function closeModal(){ Tip.hide(); modalOpen = false; $('modal').hidden = true; last = performance.now(); acc = 0; }
-function startGame(diff){
+/* Neue Partie; opts.tutorial: Tutorial-Partie auf Leicht mit Schonfrist (REQ-T.03, T.04) */
+function startGame(diff, opts = {}){
   discardedSave = false;
-  G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0, { intro: storageGet(C.INTRO_SKIP_KEY) !== '1' });
+  const tut = opts.tutorial === true;
+  TutUI.reset();
+  G.newGame(tut ? C.TUTORIAL.diff : diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
+    { intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize } : undefined });
+  if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else Tutorial.restore(null);
   resultShownFor = null;
   save();
   closeModal();
@@ -550,7 +562,7 @@ function handleWorldClick(clientX, clientY){
 }
 function wireWorldInput(){
   let down = null, dragging = false;
-  const userScroll = x => { Cam.follow = false; Cam.goTo(x); };
+  const userScroll = x => { Cam.follow = false; Cam.touched = true; Cam.goTo(x); };
   cv.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = { x: e.clientX, y: e.clientY, camX: Cam.x }; dragging = false; });
   window.addEventListener('pointermove', e => {
     if (!down) return;
@@ -594,11 +606,10 @@ function render(){
   const S = G.S;
   renderHud();
   renderPanels();
+  renderTutorial();
   Tip.refresh();
   // Gestaffelte Einführung (REQ-47): Systeme erscheinen nacheinander, jedes mit einmaligem Hinweis
   if (S.status === 'running'){
-    showHint('start');
-    if (G.introShows('waves') && (S.waveNo >= 1 || S.ownWaveNo >= 1)) showHint('wave');
     if (G.introShows('buildings') && (S.level >= C.INTRO_BUILDINGS_LEVEL || !S.intro)) showHint('buildings');
     if (S.pendingDraft) showHint('card');
     if (G.has('universitaet')) showHint('research');
@@ -626,6 +637,7 @@ function frame(now){
   uiAcc += dt;
   Cam.update(dt);
   draw(dt, now);
+  tutorialFrame(now);
   syncScrollbar();
   if (uiDirty || uiAcc >= C.UI_REFRESH_S){ uiAcc = 0; render(); }
   requestAnimationFrame(frame);
@@ -646,7 +658,7 @@ function boot(){
   setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
   // Schnittstelle für automatisierte Browser-Tests
-  window.__kf = { G, C, t, save, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw,
+  window.__kf = { G, C, t, save, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, Tutorial, TutUI,
                   selectPlot, selectSection, clearSelection, selectTab, setPaused,
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };
@@ -658,9 +670,12 @@ function boot(){
   buildPanels();
   wireWorldInput();
   Session.init();
+  TutUI.init();
   readColors();
   resize();
-  if (load()){ render(); }
+  // Erste Partie in diesem Browser: sofort im Spiel mit Tutorial, ohne Startdialog (REQ-T.02, T.04); ?tutorial=1 erzwingt eine neue Tutorial-Partie
+  if (TUTORIAL_PARAM !== '1' && load()){ render(); }
+  else if (Tutorial.due(TUTORIAL_PARAM)){ startGame(C.TUTORIAL.diff, { tutorial: true }); }
   else { render(); openStart(false); }
   requestAnimationFrame(frame);
 }

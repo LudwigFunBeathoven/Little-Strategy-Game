@@ -33,7 +33,7 @@ function floatGain(){
 }
 function buildHud(){
   for (const id of ['hudSoldiers', 'material', 'rate', 'xpVal', 'xpRate', 'barLvl', 'lvlProg', 'waveIn', 'enemyWaveIn', 'siegeInfo',
-                    'hudWaves', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn'])
+                    'hudWaves', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn', 'tutSkipBtn'])
     hudEl[id] = $(id);
   for (let i = 0; i < C.LANE_COUNT; i++){ hudEl['hpP' + i] = $('hpP' + i); hudEl['barP' + i] = $('barP' + i); }
   hudEl.draftBtn.addEventListener('click', () => selectTab('cards', true));
@@ -72,10 +72,10 @@ function renderHud(){
   setText(E.xpRate, eta != null && running ? t('hud.xpEta', { n: fmt1(xr), s: clock(eta) }) : t('hud.perSecond', { n: fmt1(xr) }));
   setText(E.lvlProg, t('hud.toLevel', { n: x.level + 1, cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
   setWidth(E.barLvl, 100 * Math.max(0, Math.min(1, x.cur / x.need)));
-  // Wellen erst mit der ersten Welle (REQ-47)
-  setHidden(E.hudWaves, !G.introShows('waves'));
+  // Wellen erst mit der ersten Welle (REQ-47); im Tutorial von Anfang an, der Countdown ist Ziel von Schritt 4 (REQ-T.01)
+  setHidden(E.hudWaves, !(G.introShows('waves') || Tutorial.active()));
   setText(E.waveIn, clock(Math.ceil(G.waveIn())));
-  setText(E.enemyWaveIn, clock(Math.ceil(G.enemyWaveIn())));
+  setText(E.enemyWaveIn, G.holdActive() ? t('hud.held') : clock(Math.ceil(G.enemyWaveIn())));      // Schonfrist: Gegnerwelle wartet (REQ-T.03)
   const siege = G.siegeAnnounced();
   setHidden(E.siegeInfo, !siege);
   if (siege) setText(E.siegeInfo, t('wave.siege', { time: clock(Math.ceil(G.siegeIn())), x: C.SIEGE_STRENGTH }));

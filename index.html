@@ -118,7 +118,7 @@
   /* Modal */
   .modal{position:fixed; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--scrim);}
   .modal[hidden]{display:none;}
-  .card{background:var(--surface); border:1px solid var(--rule-strong); border-radius:8px; padding:24px 26px; width:100%; max-width:460px; display:flex; flex-direction:column; gap:12px; box-shadow:0 12px 40px rgba(0,0,0,.12);}
+  .card{background:var(--surface); border:1px solid var(--rule-strong); border-radius:8px; padding:24px 26px; width:100%; max-width:460px; display:flex; flex-direction:column; gap:12px; box-shadow:0 12px 40px rgba(0,0,0,.12); max-height:calc(100vh - 32px); overflow-y:auto;}
   .card h2{font-family:"Spectral", Georgia, serif; font-size:26px; margin:0; text-wrap:balance;}
   .card p{margin:0; color:var(--ink-soft);}
   .diffs{display:flex; flex-direction:column; gap:8px; margin-top:4px;}
@@ -129,7 +129,7 @@
   .diff span.d{grid-column:1 / -1; font-size:13px; color:var(--ink-soft);}
   #mBody{display:flex; flex-direction:column; gap:14px;}
   #mBody:empty{display:none;}
-  .card-actions{align-items:center; display:flex; justify-content:flex-end; gap:12px;}
+  .card-actions{align-items:center; display:flex; justify-content:flex-end; gap:12px; position:sticky; bottom:-24px; background:var(--surface); padding:10px 0 2px;}   /* bleibt sichtbar, wenn der Dialog scrollt */
 
   footer{font-size:12.5px; color:var(--ink-faint); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
   @media (prefers-reduced-motion: reduce){ .btn-primary, .opt, .bar > i{transition:none;} }
@@ -309,6 +309,16 @@
   .plot-grid button.built{border-style:solid; background:var(--surface);}
   .plot-grid button[aria-selected="true"]{border:2px solid var(--brass); background:var(--brass-soft);}
   .plot-grid .btn-label{font-weight:600; font-size:12px;} .plot-grid .expl{font-size:10px;}
+  /* Tutorial (REQ-T.02): pulsierender Rahmen um das Ziel, Sprechblase; keine Abdunklung, nichts wird gesperrt */
+  .tut-target{outline:3px solid var(--brass); outline-offset:2px; animation:tutpulse var(--tut-pulse, .9s) ease-in-out infinite;}
+  .hud-item.tut-target, .tabs [role="tab"].tut-target{outline-offset:-3px;}
+  @keyframes tutpulse{50%{outline-color:transparent; box-shadow:0 0 0 6px var(--brass-soft);}}
+  @media (prefers-reduced-motion: reduce){ .tut-target{animation:none;} }
+  .tut-bubble{position:fixed; z-index:28; left:0; top:0; max-width:var(--tut-bubble-max, 280px); padding:8px 12px; background:var(--brass); color:var(--brass-ink);
+              border-radius:8px; font-weight:600; font-size:14px; line-height:1.35; pointer-events:none; box-shadow:0 6px 20px rgba(0,0,0,.18);}
+  .tut-bubble[hidden]{display:none;}
+  .tut-bubble::after{content:''; position:absolute; left:var(--tail-x, 50%); width:10px; height:10px; background:var(--brass); transform:translateX(-50%) rotate(45deg);}
+  .tut-bubble.above::after{bottom:-5px;} .tut-bubble.below::after{top:-5px;}
 </style>
 </head>
 <body>
@@ -329,6 +339,7 @@
     <div class="hud-item" data-tooltip="hud:time"><span class="hud-l"><span id="diffLabel"></span></span><b class="num" id="clock">0:00</b><span class="hud-s" id="eraLabel"></span></div>
     <button class="hud-draft" id="draftBtn" type="button" data-tooltip="draftBtn" hidden><span class="btn-label" data-i18n="hud.draft"></span><span class="expl"></span></button>
     <div class="hud-menu">
+      <button class="btn-ghost" id="tutSkipBtn" type="button" data-tooltip="menu:tutorial" hidden><span class="btn-label" data-i18n="menu.tutorial"></span><span class="expl" data-i18n="ex.menu.tutorial"></span></button>
       <button class="btn-ghost" id="pauseBtn" type="button" data-tooltip="menu:pause" aria-pressed="false"><span class="btn-label"></span><span class="expl"></span></button>
       <button class="btn-ghost" id="langBtn" type="button" data-tooltip="menu:lang"><span class="btn-label"></span><span class="expl"></span></button>
       <button class="btn-ghost" id="newBtn" type="button" data-tooltip="new"><span class="btn-label" data-i18n="hdr.newGame"></span><span class="expl"></span></button>
@@ -430,6 +441,8 @@
   </section>
 </div>
 
+<div class="tut-bubble" id="tutBubble" role="status" hidden><span id="tutBubbleText"></span></div>
+
 <div class="hintbox" id="hintBox" role="status" aria-live="polite" hidden>
   <div class="hint-body"><p class="tag" id="hintTitle"></p><p id="hintText"></p></div>
   <button class="btn-ghost" id="hintOk" type="button" data-tooltip="hintOk"><span class="btn-label"></span><span class="expl"></span></button>
@@ -459,6 +472,7 @@
 <script src="render.js"></script>
 <script src="hud.js"></script>
 <script src="panels.js"></script>
+<script src="tutorial-ui.js"></script>
 <script src="session.js"></script>
 </body>
 </html>

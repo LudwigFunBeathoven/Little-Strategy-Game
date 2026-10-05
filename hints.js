@@ -4,7 +4,7 @@
    Texte stehen in den Sprachdateien unter 'hint.<id>'. */
 const KF_HINTS = (() => {
 'use strict';
-const IDS = ['start', 'wave', 'card', 'buildings', 'research', 'demolish', 'siege'];
+const IDS = ['card', 'buildings', 'research', 'demolish', 'siege'];   // Start und erste Welle erklärt das Tutorial (REQ-T.05)
 
 function create(storage, key){
   let seen = load();

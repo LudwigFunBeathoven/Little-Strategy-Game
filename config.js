@@ -2,12 +2,13 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.7',
+  VERSION: '0.8',
   SAVE_KEY: 'klammerfront.save.v7',
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
   HINTS_KEY: 'klammerfront.hints.v1',   // gesehene Erstkontakt-Hinweise (REQ-20.3)
+  TUTORIAL_KEY: 'klammerfront.tutorial.v1',   // Merker: das Tutorial wurde in diesem Browser schon gestartet (REQ-T.04)
   LANGUAGES: ['de', 'en'],
   FALLBACK_LANG: 'en',
 
@@ -80,6 +81,19 @@ const KF_CONFIG = {
     draftLockMs: 400,
     toastMs: 2500,              // kurzer Hinweis über dem Arbeitsbereich (abgeschlossene Forschung, REQ-6.06)           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
     debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
+  },
+
+  /* Tutorial „Erste Schritte“ (REQ-T.01 – T.04): Schritte in data/tutorial-steps.js, Texte in den Sprachdateien */
+  TUTORIAL: {
+    diff: 'leicht',             // die Tutorial-Partie startet immer auf Leicht
+    holdMaxS: 150,              // Schonfrist: die erste Gegnerwelle rückt spätestens nach so vielen Sekunden aus (REQ-T.03)
+    firstWaveSize: 2,           // erste Gegnerwelle der Tutorial-Partie: so viele Läufer; drei eigene Läufer halten sie
+    startDelayMs: 900,          // Pause, bevor die Figur die erste Handlung vorführt
+    demoMs: 1800,               // Dauer einer Vorführung; erst danach erscheint die Zeile
+    farewellMs: 4500,           // so lange steht die Abschiedszeile, dann verschwindet die Figur
+    pulseMs: 900,               // Takt des pulsierenden Rahmens
+    bubbleGapPx: 10,            // Abstand der Sprechblase zum Ziel
+    bubbleMaxPx: 280,
   },
 
   /* Spielwelt und Kamera (REQ-46) */

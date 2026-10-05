@@ -10,7 +10,7 @@ Stand von Iteration 6: `docs/archiv/STAND-iteration-6.md`, Bericht `docs/bericht
 | T.0 | Anforderungen ablegen, Basislinie der Simulation sichern | T.06 | fertig |
 | T.1 | Ereignisse und Schonfrist in `core.js` | T.03, T.06 | fertig |
 | T.2 | `tutorial.js`, `data/tutorial-steps.js` | T.01, T.04, T.06 | fertig |
-| T.3 | Quartiermeister, Hervorhebung, Start, Überspringen | T.02, T.04 | offen |
+| T.3 | Quartiermeister, Hervorhebung, Start, Überspringen | T.02, T.04 | fertig |
 | T.4 | Erstkontakt-Hinweise, Markierung „neu“ | T.05 | offen |
 | T.5 | Messung, Tests, Doku, Abnahme | T.07 | offen |
 
@@ -33,6 +33,10 @@ node tools/bench-tick.mjs                   # Tick-Zeit mit 2 × 60 Einheiten
 - T.2: `npm test` 158/158 (neu `tests/tutorial.test.mjs`: Schritte in Reihenfolge, vertauschte Reihenfolge, Zähler unabhängig vom aktuellen Schritt,
   Vorführung zählt nicht, Überspringen in jedem Schritt, Fehlklicks, Start/`?tutorial`, Speicher fehlt oder ist kaputt, Speichern und Laden,
   Texte in beiden Sprachen höchstens 60 Zeichen). `tutorial.js` hat keinen Zugriff auf Seite oder Fenster; Schritte in `data/tutorial-steps.js`.
+- T.3: `npm test` 158/158, Browser-Prüfung 195/195 (bisherige Abläufe laufen mit `?tutorial=0`; die Prüfung „Hinweis zum Start“ entfällt mit dem
+  Hinweis). Probelauf im Browser: ein direkt bedienender Spieler schließt alle fünf Schritte nach rund 40 s Spielzeit ab (Ziel ≤ 2:30 min).
+  Neu `tutorial-ui.js` (Figur, Rahmen, Sprechblase, Randpfeil, Überspringen, Kamera), Knopf „Tutorial überspringen“ in der Leiste, „Tutorial
+  wiederholen“ im Dialog „Neue Partie“. Der Dialog scrollt jetzt bei niedrigen Fenstern, „Spiel starten“ bleibt unten sichtbar.
 
 ## Auslegungen und Abweichungen (zur Bestätigung durch den PO)
 Noch keine.

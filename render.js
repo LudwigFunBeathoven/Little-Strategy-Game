@@ -34,7 +34,7 @@ const wx        = x => realmR() + (x - PBW) * laneScale();
 
 /* Kamera: Position = linker Rand des Bildes in Weltpixeln */
 const Cam = {
-  x: 0, follow: false,
+  x: 0, follow: false, touched: false,           // touched: der Spieler hat die Kamera selbst bewegt (Tutorial, REQ-T.01)
   max(){ return Math.max(0, worldW() - cw); },
   goTo(x){ this.x = Math.max(0, Math.min(this.max(), x)); },
   /* vorderste eigene Formation etwa bei zwei Dritteln des Bildes */
@@ -266,6 +266,7 @@ function draw(realDt, now){
     }
   }
   drawEdgeMarkers(now);
+  drawTutorial(now);
   ctx.fillStyle = COL['ink-faint'];
   ctx.font = '11px "IBM Plex Mono", monospace';
   ctx.textAlign = 'right'; ctx.fillText(t('lane.enemy'), wx(W - EBW) - 6, ch - 4);

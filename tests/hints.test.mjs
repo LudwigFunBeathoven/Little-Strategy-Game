@@ -27,16 +27,16 @@ test('Jeder Hinweis erscheint pro Browser nur einmal; nach dem Zurücksetzen wie
   for (const id of H.IDS) assert.equal(c.trigger(id), true, `${id} nach dem Zurücksetzen wieder`);
 });
 
-test('Betroffene Systeme: Start, erste Welle, Spezialkarte, Verstärkungsgebäude, Forschung, Abriss, Belagerungswelle', () => {
-  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'card', 'demolish', 'research', 'siege', 'start', 'wave']);
+test('Betroffene Systeme: Spezialkarte, Verstärkungsgebäude, Forschung, Abriss, Belagerungswelle (Start und erste Welle erklärt das Tutorial)', () => {
+  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'card', 'demolish', 'research', 'siege']);
 });
 
 test('Nicht verfügbarer oder kaputter Speicher bricht nichts', () => {
   const H = loadHints();
   const broken = { get(){ throw new Error('blockiert'); }, set(){ throw new Error('blockiert'); } };
   const h = H.create(broken, 'k');
-  assert.equal(h.trigger('wave'), true);
-  assert.equal(h.trigger('wave'), false, 'im Speicher der Seite vermerkt');
+  assert.equal(h.trigger('siege'), true);
+  assert.equal(h.trigger('siege'), false, 'im Speicher der Seite vermerkt');
   const junk = H.create({ get: () => '{kaputt', set(){} }, 'k');
   assert.equal(junk.trigger('card'), true);
 });

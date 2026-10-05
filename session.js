@@ -8,7 +8,7 @@
 // Debug-Modus: ?debug=1, #debug oder im Testbuild fest eingeschaltet (window.KF_DEBUG = true vor den Skripten, REQ-6.11)
 const DEBUG = /[?&]debug=1\b/.test(location.search) || /(^#|[#&])debug\b/.test(location.hash) || window.KF_DEBUG === true;
 const Session = (() => {
-  let P = null, lastSample = -1, lastPhase = null;
+  let P = null, lastSample = -1, lastPhase = null, muted = 0;     // muted: Handlungen des Quartiermeisters zählen nicht als Spielerhandlung
   /* Debug-Protokoll je Einheit (REQ-6.01): Zustand der Gruppe, Lane, Querbewegung, Platz, Bewegungsrichtung je Takt; die letzten
      UI.debugUnitLogS Sekunden. Abruf: __kf.unitLog(id) in der Konsole oder im exportierten Protokoll (unitLog). */
   let unitLog = [];
@@ -52,7 +52,7 @@ const Session = (() => {
       orig[name] = G[name];
       G[name] = (...args) => {
         const ok = orig[name](...args);
-        if (ok && P){
+        if (ok && P && !muted){
           record(name, { arg: args[0] });
           if (name === 'repair') P.wallUse.repairs++;
           if (name === 'buy' && /^(mauer|stacheln|moertel|turm|reichweite|kadenz)/.test(String(args[0]))) P.wallUse.upgrades++;
@@ -64,7 +64,7 @@ const Session = (() => {
     const click = G.doClick;
     G.doClick = () => {
       const ok = click();
-      if (ok && P){
+      if (ok && P && !muted){
         const m = Math.floor(G.S.t / 60);
         while (P.clicksPerMinute.length <= m) P.clicksPerMinute.push(0);
         P.clicksPerMinute[m]++; P.clicks++; P.clicksByPhase[G.phase()]++;
@@ -83,7 +83,7 @@ const Session = (() => {
   }
   function exportJSON(){
     sample();
-    const blob = new Blob([JSON.stringify(Object.assign({}, P, { unitLog }), null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(Object.assign({}, P, { tutorial: Tutorial.data(), unitLog }), null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `klammerfront-protokoll-${P.diff}-${P.startedAt.replace(/[:.]/g, '-')}.json`;
@@ -97,5 +97,7 @@ const Session = (() => {
     b.hidden = false;
     b.addEventListener('click', exportJSON);
   }
-  return { init, get data(){ if (P) sample(); return P; }, reset, unitLog: id => id == null ? unitLog : unitLog.filter(e => e.id === id) };
+  /* Handlungen innerhalb von fn (Vorführung des Quartiermeisters) nicht protokollieren */
+  const silently = fn => { muted++; try { return fn(); } finally { muted--; } };
+  return { init, silently, get data(){ if (P) sample(); return P; }, reset, unitLog: id => id == null ? unitLog : unitLog.filter(e => e.id === id) };
 })();

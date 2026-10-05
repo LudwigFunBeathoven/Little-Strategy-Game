@@ -8,7 +8,9 @@ let chromium;
 try { ({ chromium } = await import('playwright')); }
 catch (e) { console.log('Playwright nicht installiert – Browser-Prüfung übersprungen.'); process.exit(0); }
 
-const url = new URL('../index.html?dev=1', import.meta.url).href;
+// ?tutorial=0: die bisherigen Abläufe starten über den Startdialog; das Tutorial hat unten eigene Prüfungen (REQ-T.04)
+const url = new URL('../index.html?dev=1&tutorial=0', import.meta.url).href;
+const urlTutorial = new URL('../index.html?dev=1', import.meta.url).href;
 const b = await chromium.launch();
 let failed = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failed++; };
@@ -43,7 +45,7 @@ for (const lang of ['de', 'en']){
     G.S.pendingDraft = null; G.S.pendingLevels = 0; });
   await p.waitForTimeout(500);
   await p.evaluate(() => { if (!document.querySelector('#modal').hidden) document.querySelector('#modal').hidden = true; });
-  check(await p.evaluate(() => !document.querySelector('#hintBox').hidden), `[${lang}] Hinweis zur ersten Welle erscheint`);
+  check(await p.evaluate(() => !document.querySelector('#hintBox').hidden), `[${lang}] Erstkontakt-Hinweis erscheint`);
   check((await p.evaluate(() => __kf.tooltipAudit())).length === 0, `[${lang}] Spiel: alle interaktiven Elemente mit Tooltip`);
   const gameExpl = await p.evaluate(() => __kf.explAudit());
   check(gameExpl.length === 0, `[${lang}] Spiel: jeder Knopf mit Erklärzeile${show(gameExpl)}`);
@@ -88,9 +90,9 @@ for (const lang of ['de', 'en']){
   await p.reload(); await p.waitForTimeout(400);
   // Hinweise, die der geladene Spielstand beim Start auslöst (z. B. Kartenwahl), zuerst wegklicken
   await p.evaluate(() => { while (!document.querySelector('#hintBox').hidden) document.querySelector('#hintOk').click(); });
-  const again = await p.evaluate(() => { __kf.showHint('wave'); return document.querySelector('#hintBox').hidden ? null : document.querySelector('#hintText').textContent; });
+  const again = await p.evaluate(() => { __kf.showHint('buildings'); return document.querySelector('#hintBox').hidden ? null : document.querySelector('#hintText').textContent; });
   check(again === null, `[${lang}] gesehener Hinweis erscheint nach Neuladen nicht erneut${again ? ' ' + again : ''}`);
-  const afterReset = await p.evaluate(() => { __kf.Hints.reset(); __kf.showHint('wave'); return !document.querySelector('#hintBox').hidden; });
+  const afterReset = await p.evaluate(() => { __kf.Hints.reset(); __kf.showHint('buildings'); return !document.querySelector('#hintBox').hidden; });
   check(afterReset, `[${lang}] Hinweis erscheint nach dem Zurücksetzen wieder`);
 
   check(warns.length === 0, `[${lang}] keine fehlenden Sprachschlüssel${show(warns)}`);
@@ -591,10 +593,8 @@ for (const dsf of [1, 2]){
   await p.waitForTimeout(150);
   const intro = await p.evaluate(() => { return {
     wave: document.querySelector('#hudWaves').hidden, cards: document.querySelector('#tab-cards').hidden,
-    picks: [...document.querySelectorAll('#ctxBuild .pick')].map(b => b.dataset.tooltip.split(':')[1]),
-    hint: document.querySelector('#hintText').textContent }; });
+    picks: [...document.querySelectorAll('#ctxBuild .pick')].map(b => b.dataset.tooltip.split(':')[1]) }; });
   check(intro.wave && intro.cards && intro.picks.join() === 'fabrik', `Einführung: zu Beginn weder Wellenleiste noch Karten, nur Fabrik baubar ${JSON.stringify(intro.picks)}`);
-  check(intro.hint === await p.evaluate(() => __kf.t('hint.start')), `Einführung: Hinweis zum Start`);
   await p.evaluate(() => { __kf.G.S.level = 2; __kf.selectPlot(4); });
   await p.waitForTimeout(150);
   const later = await p.evaluate(() => ({ cards: document.querySelector('#tab-cards').hidden, picks: document.querySelectorAll('#ctxBuild .pick').length }));
