@@ -8,7 +8,7 @@ Stand von Iteration 6: `docs/archiv/STAND-iteration-6.md`, Bericht `docs/bericht
 | Inkrement | Inhalt | REQ | Status |
 |---|---|---|---|
 | T.0 | Anforderungen ablegen, Basislinie der Simulation sichern | T.06 | fertig |
-| T.1 | Ereignisse und Schonfrist in `core.js` | T.03, T.06 | offen |
+| T.1 | Ereignisse und Schonfrist in `core.js` | T.03, T.06 | fertig |
 | T.2 | `tutorial.js`, `data/tutorial-steps.js` | T.01, T.04, T.06 | offen |
 | T.3 | Quartiermeister, Hervorhebung, Start, Überspringen | T.02, T.04 | offen |
 | T.4 | Erstkontakt-Hinweise, Markierung „neu“ | T.05 | offen |
@@ -25,6 +25,11 @@ node tools/bench-tick.mjs                   # Tick-Zeit mit 2 × 60 Einheiten
 ## Prüfergebnisse
 - T.0: `npm test` 139/139. Neu `tests/unveraendert.test.mjs`: vier Partien (beide Strategien, Leicht bis Schwer, feste Seeds) mit den Werten
   aus v0.7; sie müssen nach jeder Tutorial-Änderung unverändert herauskommen (REQ-T.06).
+
+- T.1: `npm test` 147/147 (neu `tests/hold.test.mjs`), Tick-Zeit Median 0,15 ms mit 120 Einheiten; die vier Partien aus T.0 liefern unverändert
+  dieselben Werte. `core.js` bietet `on(fn)` für Ereignisse (`materialProduced`, `buildingBuilt`, `unitBought`, `waveDeparted`,
+  `enemyWaveDefeated`) und eine Schonfrist: `newGame(…, { hold: { maxS, size } })`, `releaseHold(normalFirstWave)`, `holdActive()`;
+  Zustand `S.hold` (im Spielstand, ohne Versionsänderung: fehlt er, gilt `null`). Ohne Zuhörer und ohne `hold` ändert sich nichts.
 
 ## Auslegungen und Abweichungen (zur Bestätigung durch den PO)
 Noch keine.

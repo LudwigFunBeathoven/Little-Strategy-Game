@@ -57,6 +57,7 @@ function freshState(diff, seed){
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
+    hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
     research: { done: {}, active: [], ver: 0, banned: [], fresh: false },     // Forschungsbaum der Universität (REQ-5.07)
     clickTimes: [],
@@ -74,6 +75,12 @@ function create(){
     S.log.unshift({ t: S.t, key, params: params || {} });
     if (S.log.length > C.LOG_LINES) S.log.length = C.LOG_LINES;
   }
+  /* Ereignisse für Zuhörer außerhalb der Logik (REQ-T.06): materialProduced { n, source }, buildingBuilt { type, slot }, unitBought { type },
+     waveDeparted { side, size }, enemyWaveDefeated { waveNo }. Ohne Zuhörer geschieht nichts; die Logik hängt nie von ihnen ab. */
+  const listeners = [];
+  const emit = (name, data) => { for (const f of listeners) f(name, data); };
+  function on(fn){ listeners.push(fn); return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); }; }
+  let foesPresent = false;                       // für enemyWaveDefeated; nicht im Spielstand
 
   /* ---------- Draft-Modifikatoren (zwischengespeichert, bis sich die Wahl ändert) ---------- */
   let modCache = { ver: -1, key: null, mul: {}, add: {} };
@@ -227,6 +234,7 @@ function create(){
     S.material += n; S.materialTotal += n;
     const p = S.stats.prod[phase()];
     if (source === 'click') p.click += n; else p.auto += n;
+    if (listeners.length) emit('materialProduced', { n, source: source === 'click' ? 'click' : 'auto' });
   }
 
   /* ---------- Aktionen ---------- */
@@ -263,6 +271,7 @@ function create(){
     S.material -= cost;
     S.slots[i] = { type, paid: cost };
     log('log.built', { building: '@bld.' + type + '.name', slot: i + 1 });
+    emit('buildingBuilt', { type, slot: i });
     return true;
   }
   /* Baut in den ersten freien Platz (Kurzform für Bots und Tests) */
@@ -400,6 +409,7 @@ function create(){
     if (S.status !== 'running' || supplyFull() || S.material < cost || !unitUnlocked(type)) return false;
     S.material -= cost;
     S.queue.push({ type });
+    emit('unitBought', { type });
     return true;
   }
 
@@ -441,6 +451,7 @@ function create(){
       S.queue = [];
       S.lastOrder = types;
       S.stats.maxArmy = Math.max(S.stats.maxArmy || 0, S.units.filter(u => u.side === 'p').length);
+      emit('waveDeparted', { side: 'p', size: types.length });
     }
     // Dauerauftrag: Warteschlange mit der zuletzt ausgerückten Zusammensetzung füllen, soweit das Material reicht (REQ-45)
     if (mAdd('standingOrder') > 0 && S.lastOrder) for (const type of S.lastOrder) spawn(type);
@@ -459,7 +470,7 @@ function create(){
       if (siege || (field < diffCfg().maxField && !gateBlocked(q.lane))){ now.push(q); field++; }
       else S.enemyQueue.push({ type: q.type, lane: q.lane, at: S.t });
     }
-    if (now.length) addGroup('e', now, W - EBW);          // gespiegelte Armeelogik für den Gegner (REQ-5.06)
+    if (now.length){ addGroup('e', now, W - EBW); emit('waveDeparted', { side: 'e', size: now.length }); }   // gespiegelte Armeelogik für den Gegner (REQ-5.06)
     if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('log.firstWave'); }
     S.waveNo++;
     S.nextWave += C.WAVE_INTERVAL_S;
@@ -1029,7 +1040,8 @@ function create(){
     const xpPassive = mAdd('xpPassive') * dt;
     if (xpPassive > 0){ S.stats.xpPassive = (S.stats.xpPassive || 0) + xpPassive; gainXp(xpPassive); }
     if (S.t >= S.nextOwnWave) launchOwnWave();
-    if (S.t >= S.nextWave) launchWave();
+    if (S.hold && S.t >= S.hold.maxS) releaseHold();     // Schonfrist läuft spätestens nach maxS aus (REQ-T.03)
+    if (S.t >= S.nextWave && !S.hold) launchWave();
     automation();
     // Ankündigung SIEGE_WARNING_S vor der Belagerungswelle (REQ-19.3)
     if (!S.siegeDone && S.siegeAnnouncedAt === null && S.t >= S.siegeWaveT - C.SIEGE_WARNING_S - 1e-9){ S.siegeAnnouncedAt = S.t; log('log.siegeWarning'); }
@@ -1048,6 +1060,11 @@ function create(){
     updateArmies(dt);
     applyConditionals(dt);
     checkReveals();
+    if (listeners.length){
+      const present = S.enemyQueue.length > 0 || S.units.some(u => u.side === 'e' && u.hp > 0);
+      if (foesPresent && !present) emit('enemyWaveDefeated', { waveNo: S.waveNo });
+      foesPresent = present;
+    }
     if (S.enemyBaseHp <= 0){ S.enemyBaseHp = 0; S.status = 'won';  log('log.won'); }
     else if (gateHp() <= 0){ S.sections[GATE].hp = 0; S.status = 'lost'; log('log.lost'); }
   }
@@ -1066,6 +1083,12 @@ function create(){
     S = freshState(diff, seed);
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
+    // Schonfrist (REQ-T.03): opts.hold = { maxS, size } – die erste Gegnerwelle besteht aus size Läufern und rückt erst nach releaseHold() oder nach maxS aus
+    if (opts.hold){
+      S.hold = { maxS: opts.hold.maxS, size: opts.hold.size };
+      S.nextEnemy = Array.from({ length: opts.hold.size }, () => ({ type: 'laeufer', lane: Math.floor(rnd() * LANES) }));
+    }
+    foesPresent = false;
     FX.shots = []; FX.fx = []; FX.lunge.clear(); targets = new Map();
     log('log.start', { diff: '@diff.' + diff + '.name' });
   }
@@ -1084,11 +1107,22 @@ function create(){
     if (!S.siegeDone) S.siegeWaveT += shift;       // Belagerungswelle bleibt eine reguläre Welle im Takt
     if (!Array.isArray(S.nextEnemy) || !S.nextEnemy.length) S.nextEnemy = rollEnemyWave();
   }
+  /* Schonfrist beenden. Die Gegnerwelle rückt sofort aus, falls sie fällig ist; der Takt bleibt dabei erhalten (wie beim Laden).
+     normalFirstWave = true (Überspringen): die erste Welle hat wieder die Größe des Schwierigkeitsgrades. */
+  function releaseHold(normalFirstWave = false){
+    if (!S.hold) return false;
+    S.hold = null;
+    const shift = Math.max(0, S.t - S.nextWave);
+    S.nextWave += shift;
+    if (!S.siegeDone) S.siegeWaveT += shift;
+    if (normalFirstWave && S.waveNo === 0) S.nextEnemy = rollEnemyWave();
+    return true;
+  }
   const snapshot = () => JSON.parse(JSON.stringify(S));
 
   return {
     get S(){ return S; }, set S(v){ S = v; }, FX,
-    newGame, adopt, snapshot, tick,
+    newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
