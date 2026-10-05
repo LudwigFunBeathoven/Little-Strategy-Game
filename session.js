@@ -99,5 +99,5 @@ const Session = (() => {
   }
   /* Handlungen innerhalb von fn (Vorführung des Quartiermeisters) nicht protokollieren */
   const silently = fn => { muted++; try { return fn(); } finally { muted--; } };
-  return { init, silently, get data(){ if (P) sample(); return P; }, reset, unitLog: id => id == null ? unitLog : unitLog.filter(e => e.id === id) };
+  return { init, silently, get data(){ if (P){ sample(); P.tutorial = Tutorial.data(); } return P; }, reset, unitLog: id => id == null ? unitLog : unitLog.filter(e => e.id === id) };
 })();

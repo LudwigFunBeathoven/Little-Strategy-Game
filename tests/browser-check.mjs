@@ -343,7 +343,7 @@ for (const dsf of [1, 2]){
   check(second.pending && second.tab === 'cards' && second.locked, `Kartenwahl: zweite Wahl folgt direkt, wieder mit Sperre ${JSON.stringify(second)}`);
   await p.waitForTimeout(450);
   await p.click('#draftOffer .card-pick'); await p.waitForTimeout(120);
-  const back = await p.evaluate(() => ({ pending: !!__kf.G.S.pendingDraft, tab: __kf.tab, sel: __kf.sel, chosen: document.querySelectorAll('#chosen .opt-tag').length }));
+  const back = await p.evaluate(() => ({ pending: !!__kf.G.S.pendingDraft, tab: __kf.tab, sel: __kf.sel, chosen: Object.values(__kf.G.S.draft.stacks).reduce((a, n) => a + n, 0) }));   // Summe der Stufen: dieselbe Karte kann zweimal gewählt werden (Zufall)
   check(!back.pending && back.tab === 'wall' && back.sel && back.sel.kind === 'section' && back.sel.lane === 1 && back.chosen === 2,
     `Kartenwahl: nach der letzten Wahl zurück im vorigen Reiter mit voriger Auswahl ${JSON.stringify(back)}`);
   // Gehaltener Klick auf das Klickfeld, währenddessen entsteht eine Kartenwahl: Reiter wechselt erst nach dem Loslassen, der Klick zählt
@@ -370,7 +370,8 @@ for (const dsf of [1, 2]){
     upg: !document.querySelector('[data-tooltip="upg:ausbau"]').hidden, audit: __kf.tooltipAudit().length + __kf.explAudit().length }));
   check(k2.built && !k2.btn && /Stufe 1/.test(k2.status) && k2.upg && k2.audit === 0, `Kaserne im Reiter Armee: Stufe und Ausbau sichtbar, Audits grün ${JSON.stringify(k2)}`);
   // Welle vorziehen (REQ-6.07 c) im Reiter Armee; Zinsen des Handelskontors in der Leiste (REQ-6.07 b)
-  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; G.S.nextOwnWave = G.S.t + 60; G.spawn('laeufer'); G.spawn('laeufer'); G.buildAt(8, 'kontor'); });
+  // lastOrder = null: eine zufällig gewählte Karte „Dauerauftrag“ füllte die Warteschlange sonst sofort wieder (nicht vom Seed abhängig machen)
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; G.S.nextOwnWave = G.S.t + 60; G.S.lastOrder = null; G.spawn('laeufer'); G.spawn('laeufer'); G.buildAt(8, 'kontor'); });
   await p.waitForTimeout(150);
   const w0 = await p.evaluate(() => ({ vis: !document.querySelector('[data-tooltip="waveRush"]').hidden, dis: document.querySelector('[data-tooltip="waveRush"]').getAttribute('aria-disabled'),
     q: __kf.G.S.queue.length, rate: document.querySelector('#rate').textContent }));
@@ -599,6 +600,198 @@ for (const dsf of [1, 2]){
   await p.waitForTimeout(150);
   const later = await p.evaluate(() => ({ cards: document.querySelector('#tab-cards').hidden, picks: document.querySelectorAll('#ctxBuild .pick').length }));
   check(!later.cards && later.picks >= 4, `Einführung: ab Stufe 2 Karten und Verstärkungsgebäude sichtbar`);
+  await ctx.close();
+}
+
+// REQ-T.01 – T.05: Tutorial „Erste Schritte“ und Erstkontakt-Hinweise (frischer Browser je Prüfung, ohne ?tutorial=…)
+async function freshTutorialPage(lang = 'de', query = ''){
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+  const p = await ctx.newPage(), errs = [];
+  p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); if (m.type() === 'warning' && m.text().includes('[i18n]')) errs.push(m.text()); });
+  p.on('pageerror', e => errs.push(e.message));
+  // Der Spielstand wird beim Verlassen der Seite geschrieben; „kfDropSave“ löscht ihn erst nach dem Neuladen (zweiter Start im selben Browser)
+  await ctx.addInitScript(l => { if (!sessionStorage.getItem('kfInit')){ localStorage.clear(); localStorage.setItem('klammerfront.lang', l); sessionStorage.setItem('kfInit', '1'); }
+    if (sessionStorage.getItem('kfDropSave')){ localStorage.removeItem('klammerfront.save.v7'); sessionStorage.removeItem('kfDropSave'); } }, lang);
+  await p.goto(urlTutorial + query); await p.waitForTimeout(300);
+  return { ctx, p, errs };
+}
+const tutState = p => p.evaluate(() => { const v = __kf.Tutorial.view(); return { phase: v.phase, step: v.step && v.step.id, active: __kf.Tutorial.active(),
+  text: document.querySelector('#tutBubble').hidden ? null : document.querySelector('#tutBubbleText').textContent,
+  marked: [...document.querySelectorAll('.tut-target')].map(e => e.id || e.dataset.tooltip || e.className.slice(0, 24)),
+  t: __kf.G.S.t, hold: __kf.G.S.hold, diff: __kf.G.S.diff, modal: !document.querySelector('#modal').hidden, hint: !document.querySelector('#hintBox').hidden }; });
+const waitStep = (p, id) => p.waitForFunction(i => { const v = __kf.Tutorial.view(); return v.step && v.step.id === i; }, id, { timeout: 30000 });
+const waitText = p => p.waitForFunction(() => !document.querySelector('#tutBubble').hidden, null, { timeout: 15000 });
+
+for (const lang of ['de', 'en']){
+  const { ctx, p, errs } = await freshTutorialPage(lang);
+  const s0 = await tutState(p);
+  check(!s0.modal && s0.active && s0.diff === 'leicht' && s0.hold && s0.hold.maxS === 150, `[${lang}] Tutorial: erste Partie startet ohne Dialog, auf Leicht, mit Schonfrist ${JSON.stringify(s0.hold)}`);
+  check(await p.evaluate(() => !document.querySelector('#tutSkipBtn').hidden), `[${lang}] Tutorial: Knopf „Tutorial überspringen“ sichtbar`);
+  check(s0.text === null, `[${lang}] Tutorial: vor der Vorführung noch keine Zeile`);
+  await waitText(p);
+  const s1 = await tutState(p);
+  check(s1.step === 'fertigen' && s1.marked.join() === 'clickBtn' && s1.text === await p.evaluate(() => __kf.t('tut.fertigen')), `[${lang}] Schritt 1: Zeile am Klickfeld, genau ein Ziel ${JSON.stringify(s1.marked)}`);
+  check(await p.evaluate(() => __kf.G.S.material) === 1 && await p.evaluate(() => __kf.Tutorial.progress('fertigen')) === 0, `[${lang}] Schritt 1: die Figur hat einmal gefertigt, der Zähler stieg, zählt aber nicht für den Spieler`);
+  check((await p.evaluate(() => __kf.tooltipAudit())).length === 0 && (await p.evaluate(() => __kf.explAudit())).length === 0, `[${lang}] Tutorial: Tooltips und Erklärzeilen vollständig`);
+  for (let i = 0; i < 10; i++){ await p.click('#clickBtn'); await p.waitForTimeout(100); }
+  await waitStep(p, 'bauen'); await waitText(p);
+  const s2 = await tutState(p);
+  check(s2.marked.length === 1 && s2.marked[0] === 'grid:0' && s2.text === await p.evaluate(() => __kf.t('tut.bauen')), `[${lang}] Schritt 2: freier Bauplatz im Reiter Bauen hervorgehoben ${JSON.stringify(s2.marked)}`);
+  const pr = await p.evaluate(() => { const r = __kf.plotRects[0]; return __kf.worldToScreen(r.x + r.w / 2, r.y + r.h / 2); });
+  await p.mouse.click(pr.x, pr.y); await p.waitForTimeout(250);
+  const s2b = await tutState(p);
+  check(s2b.marked.length === 1 && s2b.marked[0].startsWith('pick:fabrik'), `[${lang}] Schritt 2: nach der Platzwahl die Fabrik-Option ${JSON.stringify(s2b.marked)}`);
+  await p.click('#ctxBuild .pick'); await waitStep(p, 'rekrutieren'); await p.waitForTimeout(200);
+  const s3 = await tutState(p);
+  check(s3.marked.join() === 'tab-army' && await p.evaluate(() => __kf.tab) === 'build', `[${lang}] Schritt 3: erst der Reiterknopf Armee, das Tutorial wechselt den Reiter nicht selbst ${JSON.stringify(s3.marked)}`);
+  await p.waitForTimeout(600); check(await p.evaluate(() => __kf.tab) === 'build', `[${lang}] Schritt 3: Reiter bleibt Bauen, bis der Spieler wechselt`);
+  await p.click('#tab-army'); await p.waitForTimeout(250);
+  const s3b = await tutState(p);
+  check(s3b.marked.length === 1 && s3b.marked[0] === 'unit:laeufer', `[${lang}] Schritt 3: Kaufknopf Läufer ${JSON.stringify(s3b.marked)}`);
+  for (let i = 0; i < 80 && !(await p.evaluate(() => __kf.Tutorial.isDone('rekrutieren'))); i++){ await p.keyboard.press('1'); await p.click('#clickBtn'); await p.waitForTimeout(150); }
+  await waitStep(p, 'ausruecken'); await p.waitForTimeout(250);
+  const s4 = await tutState(p);
+  check(s4.marked.join() === 'hudWaves' && s4.text === await p.evaluate(() => __kf.t('tut.ausruecken')), `[${lang}] Schritt 4: Wellen-Countdown in der Leiste ${JSON.stringify(s4.marked)}`);
+  check(await p.evaluate(() => __kf.G.S.waveNo) === 0 && await p.evaluate(() => __kf.G.holdActive()), `[${lang}] Schonfrist: vor dem Ausrücken keine Gegnerwelle`);
+  await p.waitForFunction(() => __kf.Tutorial.isDone('ausruecken'), null, { timeout: 40000 });
+  const s5 = await tutState(p);
+  check(s5.phase === 'wait' && s5.text === null && s5.marked.length === 0 && await p.evaluate(() => !__kf.G.holdActive() && __kf.G.S.waveNo >= 1 && __kf.Cam.follow), `[${lang}] Schritt 4 erledigt: Schonfrist endet, Welle rückt aus, Kamera folgt, bis zum Sieg keine Zeile`);
+  await p.waitForFunction(() => __kf.Tutorial.view().phase === 'farewell', null, { timeout: 120000 });
+  const s6 = await tutState(p);
+  check(s6.text === await p.evaluate(() => __kf.t('tut.sieg')), `[${lang}] Schritt 5: Abschiedszeile nach dem ersten Sieg`);
+  const total = await p.evaluate(() => __kf.Tutorial.data().stepTimes.sieg);
+  check(total <= 150, `[${lang}] alle fünf Schritte in höchstens 2:30 min Spielzeit (${total} s)`);
+  await p.waitForFunction(() => !__kf.Tutorial.active(), null, { timeout: 15000 }); await p.waitForTimeout(150);
+  check(await p.evaluate(() => document.querySelector('#tutBubble').hidden && document.querySelector('#tutSkipBtn').hidden && document.querySelectorAll('.tut-target').length === 0 && !__kf.Cam.follow), `[${lang}] Ende: Figur, Zeile, Rahmen und Knopf verschwunden, Kamera frei`);
+  const data = await p.evaluate(() => __kf.Tutorial.data());
+  check(data.completed && !data.skipped && Object.keys(data.stepTimes).length === 5, `[${lang}] Sitzungsdaten: fünf Schrittzeiten ${JSON.stringify(data.stepTimes)}`);
+  check(errs.length === 0, `[${lang}] Tutorial: keine Fehler und keine fehlenden Schlüssel${show(errs)}`);
+  // Zweite Partie im selben Browser: kein Tutorial; Dialog „Neue Partie“ bietet „Tutorial wiederholen“ an
+  const keyBefore = await p.evaluate(() => ({ tut: localStorage.getItem('klammerfront.tutorial.v1'), lang: localStorage.getItem('klammerfront.lang'), n: localStorage.length, init: sessionStorage.getItem('kfInit') }));
+  await p.evaluate(() => sessionStorage.setItem('kfDropSave', '1'));
+  await p.reload(); await p.waitForTimeout(300);
+  const again = await tutState(p);
+  const keyAfter = await p.evaluate(() => ({ tut: localStorage.getItem('klammerfront.tutorial.v1'), n: localStorage.length, init: sessionStorage.getItem('kfInit') }));
+  check(!again.active && again.modal, `[${lang}] Zweiter Start im selben Browser: kein Tutorial, Startdialog ${JSON.stringify({ again, keyBefore, keyAfter })}`);
+  await p.click('[data-tooltip="tutorialRepeat"]'); await p.waitForTimeout(250);
+  const rep = await tutState(p);
+  check(rep.active && rep.diff === 'leicht' && !rep.modal, `[${lang}] „Tutorial wiederholen“ startet eine neue Partie mit Tutorial`);
+  await ctx.close();
+}
+
+// Reihenfolge vertauscht: erst bauen, dann fertigen
+{
+  const { ctx, p, errs } = await freshTutorialPage();
+  await waitText(p);
+  await p.evaluate(() => { __kf.selectPlot(0); }); await p.waitForTimeout(200);
+  await p.click('#ctxBuild .pick'); await p.waitForTimeout(250);
+  const a = await tutState(p);
+  check(a.step === 'fertigen' && await p.evaluate(() => __kf.Tutorial.isDone('bauen')), `Reihenfolge vertauscht: Schritt 2 erledigt, Schritt 1 läuft weiter ${a.step}`);
+  for (let i = 0; i < 10; i++){ await p.click('#clickBtn'); await p.waitForTimeout(90); }
+  await p.waitForTimeout(250);
+  check((await tutState(p)).step === 'rekrutieren', 'Reihenfolge vertauscht: nach dem Fertigen geht es mit Schritt 3 weiter');
+  check(errs.length === 0, `Reihenfolge vertauscht: keine Fehlermeldung${show(errs)}`);
+  await ctx.close();
+}
+
+// Überspringen in jedem Schritt; Schonfrist entfällt, erste Gegnerwelle zum normalen Zeitpunkt
+for (const stepId of ['fertigen', 'bauen', 'rekrutieren', 'ausruecken']){
+  const { ctx, p, errs } = await freshTutorialPage();
+  await p.waitForTimeout(200);
+  await p.evaluate(id => { const G = __kf.G, T = __kf.Tutorial;
+    const order = ['fertigen', 'bauen', 'rekrutieren', 'ausruecken'];
+    for (const prev of order.slice(0, order.indexOf(id))){
+      if (prev === 'fertigen') for (let i = 0; i < 10; i++) T.event('materialProduced', { n: 1, source: 'click' }, 1);
+      if (prev === 'bauen') T.event('buildingBuilt', { type: 'fabrik', slot: 0 }, 1);
+      if (prev === 'rekrutieren') for (let i = 0; i < 3; i++) T.event('unitBought', { type: 'laeufer' }, 1);
+    }
+    __kf.requestRender(); }, stepId);
+  await p.waitForTimeout(250);
+  check((await tutState(p)).step === stepId, `Überspringen: Ausgangsschritt ${stepId}`);
+  await p.click('#tutSkipBtn'); await p.waitForTimeout(200);
+  const st = await tutState(p);
+  check(!st.active && !st.hold && st.marked.length === 0 && st.text === null, `Überspringen in Schritt „${stepId}“ beendet das Tutorial und die Schonfrist`);
+  const times = await p.evaluate(() => { const G = __kf.G; G.S.nextWave = 20; const at = [];
+    for (let i = 0; i < 25 * 20 && G.S.waveNo === 0; i++){ G.tick(0.05); } return { t: +G.S.t.toFixed(1), waveNo: G.S.waveNo }; });
+  check(times.waveNo === 1 && times.t >= 19.9 && times.t <= 20.2, `Überspringen in „${stepId}“: erste Gegnerwelle zum normalen Zeitpunkt (${times.t} s)`);
+  const d = await p.evaluate(() => __kf.Tutorial.data());
+  check(d.skipped && d.skippedAt === stepId, `Überspringen in „${stepId}“: Schritt im Protokoll ${d.skippedAt}`);
+  check(errs.length === 0, `Überspringen in „${stepId}“: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
+// Schritt 4 mit Kaserne: der Knopf „Welle vorziehen“ ist das Ziel, die Kamera folgt nicht (REQ-T.01)
+{
+  const { ctx, p, errs } = await freshTutorialPage();
+  await waitText(p);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e4; G.S.level = 2; for (let i = 0; i < 30; i++) G.tick(0.05); for (let i = 0; i < 10; i++) G.doClick();   // 1,5 s vergehen: Klicks der Vorführung zählen im Zeitfenster der Klickgrenze nicht mehr
+    G.buildAt(0, 'fabrik'); G.buildAt(1, 'kaserne'); for (let i = 0; i < 3; i++) G.spawn('laeufer'); __kf.requestRender(); });
+  await p.waitForTimeout(300);
+  const a = await tutState(p);
+  check(a.step === 'ausruecken' && a.marked.join() === 'tab-army', `Schritt 4 mit Kaserne: zuerst der Reiterknopf Armee ${JSON.stringify(a)}`);
+  await p.click('#tab-army'); await p.waitForTimeout(250);
+  const b2 = await tutState(p);
+  check(b2.marked.length === 1 && b2.marked[0] === 'waveRush', `Schritt 4 mit Kaserne: Knopf „Welle vorziehen“ ${JSON.stringify(b2.marked)}`);
+  await p.click('[data-tooltip="waveRush"]'); await p.waitForTimeout(300);
+  check(await p.evaluate(() => __kf.Tutorial.isDone('ausruecken') && !__kf.Cam.follow && !__kf.G.holdActive()), 'Schritt 4 mit Kaserne: erledigt, Schonfrist endet, Kamera bleibt frei');
+  check(errs.length === 0, `Schritt 4 mit Kaserne: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
+// Sitzungsprotokoll (REQ-T.07): Schrittzeiten und Fehlklicks; die Vorführung der Figur zählt nicht als Klick des Spielers
+{
+  const { ctx, p } = await freshTutorialPage('de', '&debug=1');
+  await waitText(p);
+  await p.click('#tab-wall'); await p.click('#tab-army'); await p.click('#tab-build'); await p.waitForTimeout(100);
+  for (let i = 0; i < 10; i++){ await p.click('#clickBtn'); await p.waitForTimeout(90); }
+  await p.waitForTimeout(300);
+  const s = await p.evaluate(() => { const d = __kf.session(); return { clicks: d.clicks, step: d.tutorial.stepTimes.fertigen, miss: d.tutorial.misclicks, btn: !document.querySelector('#sessionBtn').hidden }; });
+  check(s.btn && s.clicks === 10 && s.step > 0 && s.miss.fertigen === 3, `Protokoll: Tutorial-Felder und Klicks ohne Vorführung ${JSON.stringify(s)}`);
+  await ctx.close();
+}
+
+// ?tutorial=0 unterdrückt, ?tutorial=1 erzwingt; Merker im Browser
+{
+  const { ctx, p } = await freshTutorialPage('de', '&tutorial=0');
+  const a = await tutState(p);
+  check(!a.active && a.modal, '?tutorial=0 in frischem Browser: kein Tutorial, Startdialog');
+  await ctx.close();
+  const { ctx: c2, p: p2 } = await freshTutorialPage();
+  await p2.evaluate(() => { __kf.Tutorial.skip(); }); await p2.waitForTimeout(100);
+  await p2.goto(urlTutorial + '&tutorial=1'); await p2.waitForTimeout(300);
+  const f = await tutState(p2);
+  check(f.active && !f.modal && f.diff === 'leicht', '?tutorial=1 erzwingt das Tutorial auch nach gespieltem Tutorial');
+  await c2.close();
+}
+
+// Erstkontakt-Hinweise: nie während des Tutorials, höchstens einer, schließen sich nach der Frist, „neu“-Marken
+{
+  const { ctx, p, errs } = await freshTutorialPage();
+  await p.evaluate(() => { __kf.C.UI.hintAutoMs = 600; __kf.showHint('siege'); __kf.showHint('wall'); }); await p.waitForTimeout(200);
+  check(await p.evaluate(() => document.querySelector('#hintBox').hidden), 'Hinweise erscheinen nicht, solange das Tutorial läuft');
+  await p.click('#tutSkipBtn'); await p.waitForTimeout(250);
+  const first = await p.evaluate(() => ({ visible: !document.querySelector('#hintBox').hidden, text: document.querySelector('#hintText').textContent }));
+  const siegeText = await p.evaluate(() => __kf.t('hint.siege', { x: __kf.C.SIEGE_STRENGTH }));
+  check(first.visible && first.text === siegeText, `Nach dem Tutorial erscheint der erste Hinweis (${first.text})`);
+  const texts = new Set(); const seenAtOnce = [];
+  for (let i = 0; i < 20; i++){ await p.waitForTimeout(100); const v = await p.evaluate(() => ({ vis: !document.querySelector('#hintBox').hidden, text: document.querySelector('#hintText').textContent })); if (v.vis) texts.add(v.text); }
+  check(texts.size === 2, `Hinweise nacheinander, immer nur einer sichtbar (${texts.size} verschiedene)`);
+  await p.waitForTimeout(900);
+  check(await p.evaluate(() => document.querySelector('#hintBox').hidden), 'Hinweise schließen sich nach der Frist von selbst');
+  // „neu“: Stufe 2 schaltet Gebäude und Karten frei; Marken verschwinden nach dem Ansehen
+  await p.evaluate(() => { __kf.C.UI.newSeenMs = 400; __kf.G.S.material = 1e5; __kf.G.S.level = 2; __kf.selectPlot(4); }); await p.waitForTimeout(250);
+  const n1 = await p.evaluate(() => ({ picks: [...document.querySelectorAll('#ctxBuild .pick')].filter(x => !x.querySelector('i.new').hidden).map(x => x.dataset.tooltip.split(':')[1]),
+                                     cards: !document.querySelector('#tab-cards i.new').hidden }));
+  check(n1.picks.includes('schmiede') && n1.picks.includes('kaserne') && !n1.picks.includes('fabrik') && n1.cards, `Neu freigeschaltete Bau-Optionen und Reiter tragen „neu“ ${JSON.stringify(n1)}`);
+  await p.waitForTimeout(700);
+  const n2 = await p.evaluate(() => ({ picks: [...document.querySelectorAll('#ctxBuild .pick i.new')].filter(x => !x.hidden).length }));
+  check(n2.picks === 0, 'Die Marke „neu“ an Bau-Optionen verschwindet, nachdem sie angesehen wurden');
+  await p.click('#tab-cards'); await p.waitForTimeout(700); await p.click('#tab-build'); await p.waitForTimeout(250);
+  check(await p.evaluate(() => document.querySelector('#tab-cards i.new').hidden), 'Die Marke „neu“ am Reiter verschwindet nach dem Ansehen');
+  // Markierungen bleiben nach dem Neuladen erhalten
+  await p.evaluate(() => __kf.save()); await p.reload(); await p.waitForTimeout(300);
+  check(await p.evaluate(() => document.querySelector('#tab-cards i.new').hidden), 'Gesehene Markierungen bleiben im Spielstand');
+  check(errs.length === 0, `Hinweise und Markierungen: keine Fehler${show(errs)}`);
   await ctx.close();
 }
 

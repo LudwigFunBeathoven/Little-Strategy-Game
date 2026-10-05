@@ -6,8 +6,8 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, Stand je Inkrement in `docs/STAND.md`,
-Bericht in `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`, `docs/bericht-iteration-5.md`.
+Stand: v0.8 (Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
+Vorher v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`.
 
 ## Der Nutzer
 Nick ist Product Owner, kein Entwickler. Erkläre Änderungen in Klartext und übersetze Fachbegriffe kurz.
@@ -22,13 +22,16 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `data/draft-options.js` | Spezialkarten mit Stufen (`tiers`), deklarativ. Neue Karten nur hier ergänzen. |
 | `data/research.js` | Forschungsbaum der Universität, deklarativ; Wirkungen über dieselbe Pipeline wie Karten. |
 | `data/neighbors.js` | Nachbarschaftsregeln im 3×3-Raster, je Gebäudetyp eine, nur orthogonal. |
+| `data/tutorial-steps.js` | Schritte des Tutorials, deklarativ (Ereignis, Schwellenwert, Ziel, Vorführung, Text-Schlüssel). |
 | `hints.js` | Erstkontakt-Hinweise; Speicher wird von außen übergeben (testbar ohne Browser). |
+| `tutorial.js` | Schrittlogik des Tutorials ohne Seitenzugriff; hört auf Ereignisse aus `core.js` (`G.on`), Speicher von außen. |
 | `core.js` | Spiellogik ohne Zugriff auf Seite, Fenster oder Speicher. Läuft auch im Simulator. |
 | `ui.js` | Lädt zuerst: gemeinsame Namen (C, G, $, t, fmt), Tooltips, Eingabe, Speichern, Dialoge, Hauptschleife, Start. |
 | `render.js` | Spielwelt: Canvas, Kamera, Zeichnen, `screenToWorld`. |
 | `hud.js` | Ressourcenleiste (oberes Band). |
 | `panels.js` | Arbeitsbereich (unteres Band): Klickfeld, Reiter, Kontextkopf, Kartenwahl, Forschung. |
-| `session.js` | Sitzungsprotokoll für Spieltests (`?debug=1`). |
+| `tutorial-ui.js` | Anzeige des Tutorials: Quartiermeister im Canvas, pulsierender Rahmen, Sprechblase, Randpfeil, Überspringen, Kamera. |
+| `session.js` | Sitzungsprotokoll für Spieltests (`?debug=1`), mit Tutorial-Feldern. |
 | `i18n/de.js`, `i18n/en.js` | Alle sichtbaren Texte. Schlüssel müssen identisch sein. |
 | `tools/simulate.mjs` | Balancing-Simulation mit Bots (Worker-Threads). |
 | `tools/sim-bot.mjs` | Bot-Strategien `zufall`, `gierig` (Vorausschau per Kopie des Spielstands) und `einheiten-zuerst` (aus `browser-bot.js`). |
@@ -96,6 +99,14 @@ Keine globale Neukalibrierung vor Iteration 7.
 - Vorrang der Mitte im Armeemodell (I5.7): Einheiten in der Mitte helfen einer äußeren Lane nur, wo eigene Einheiten schon kämpfen;
   die Lage einer Lane zählt auch Einheiten, die gerade in sie wechseln. Ohne das tauschen zwei Armeen endlos die Lanes (Patt).
 
+## Tutorial (REQ-T.01 – T.07)
+Die erste Partie eines Browsers startet ohne Dialog auf Leicht mit Tutorial (Merker `TUTORIAL_KEY`); `?tutorial=1` erzwingt, `?tutorial=0` unterdrückt.
+`core.js` kennt das Tutorial nicht, nur zwei Dinge: Ereignisse für Zuhörer (`G.on`: `materialProduced`, `buildingBuilt`, `unitBought`, `waveDeparted`,
+`enemyWaveDefeated`) und die Schonfrist (`newGame(…, { hold })`, `releaseHold`, Zustand `S.hold`: erste Gegnerwelle klein und zurückgehalten). Ohne
+Zuhörer und ohne `hold` ändert sich nichts; `tests/unveraendert.test.mjs` hält das mit festen Seeds fest (nicht ohne Grund neu erzeugen).
+Regeln: eine Zeile je Schritt, höchstens 60 Zeichen; Hinweise (`hints.js`) höchstens 90 Zeichen, einer gleichzeitig, nie im Tutorial, schließen nach
+`UI.hintAutoMs`; das Tutorial wechselt nie selbst den Reiter und sperrt nichts. Neue Schritte nur in `data/tutorial-steps.js` (höchstens fünf Dinge).
+
 ## Armee und Kampf (REQ-5.05, REQ-5.06)
 Jede Welle bildet eine Gruppe über alle Lanes (`S.forms`); die älteste Gruppe einer Seite ist die Armee (`main`), spätere sind Nachschub.
 Alle Lanes einer Gruppe teilen die Front `x`. Je Lane vorn Nahkämpfer in Reihen zu höchstens `FORMATION_ROW_MAX`, dahinter Fernkämpfer.
@@ -131,4 +142,4 @@ Er enthält immer genau die neueste Release-Version, nichts dazwischen.
 - Das Sitzungsprotokoll ist öffentlich aus; Spieltests hängen `?debug=1` an die Adresse.
 
 ## Bekannte offene Punkte
-Siehe Abschnitt „Offen“ in `docs/bericht-iteration-6.md`.
+Siehe Abschnitt „Offen“ in `docs/bericht-tutorial.md` und `docs/bericht-iteration-6.md`.

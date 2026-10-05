@@ -11,7 +11,7 @@ const TutUI = (() => {
   let target = null;                  // aktuelles Ziel: { els, world, textKey, anchor }
   let demo = null;                    // laufende Vorführung: { id, kind, t0, clicked }
   let fig = null;                     // Bildschirmrechteck der Figur (für die Sprechblase)
-  let farewellTimer = null, farewellEnd = 0, camByTutorial = false;
+  let farewellTimer = null, farewellEnd = 0, camByTutorial = false, rushShown = false;     // rushShown: Schritt 4 zeigte einen Knopf zum sofortigen Ausschicken
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const hasWorld = () => cv && cw > 0;
@@ -42,7 +42,8 @@ const TutUI = (() => {
       }
       case 'waves': {
         // Knopf zum sofortigen Ausschicken, falls das Spiel einen hat und er jetzt wirkt (z. B. „Welle vorziehen“ mit Kaserne)
-        if (G.has('kaserne') && !G.waveRushBlock()) return activeTab !== 'army' ? own(tabBtn('army')) : own(waveRushBtn);
+        rushShown = G.has('kaserne') && !G.waveRushBlock();
+        if (rushShown) return activeTab !== 'army' ? own(tabBtn('army')) : own(waveRushBtn);
         return own($('hudWaves'));
       }
     }
@@ -171,15 +172,15 @@ const TutUI = (() => {
   function onProgress(done){
     for (const id of done){
       // Schritt „Welle ausschicken“ erledigt: Schonfrist endet, die Gegnerwelle rückt gleichzeitig aus (im selben Takt, REQ-T.03);
-      // die Kamera folgt dem Ausmarsch, sofern der Spieler sie nicht selbst bewegt hat (REQ-T.01)
+      // die Kamera folgt dem Ausmarsch, sofern Schritt 4 den Countdown zeigte und der Spieler die Kamera nicht selbst bewegt hat (REQ-T.01)
       if (id === 'ausruecken'){
         G.releaseHold();
-        if (!Cam.touched && !Cam.follow){ Cam.follow = true; camByTutorial = true; }
+        if (!rushShown && !Cam.touched && !Cam.follow){ Cam.follow = true; camByTutorial = true; }
       }
     }
     requestRender();
   }
-  function releaseCamera(){ if (camByTutorial){ Cam.follow = false; camByTutorial = false; } }
+  function releaseCamera(){ if (camByTutorial && !Cam.touched) Cam.follow = false; camByTutorial = false; }
   /* Ende: nach der Abschiedszeile (completed) oder per Knopf (skipped) */
   function finish(kind){
     clearTimeout(farewellTimer); farewellTimer = null; demo = null;

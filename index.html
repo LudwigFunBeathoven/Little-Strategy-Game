@@ -88,7 +88,7 @@
   .btn-ghost .expl, .seg button .expl{font-size:10.5px;}
   .diff .expl{grid-column:1 / -1;}
   /* Erstkontakt-Hinweis (REQ-20.2): höchstens zwei Zeilen, wegklickbar, über allen Fenstern */
-  .hintbox{position:fixed; z-index:30; left:50%; bottom:18px; transform:translateX(-50%); width:min(560px, calc(100% - 32px));
+  .hintbox{position:fixed; z-index:30; left:50%; bottom:18px; transform:translateX(-50%); width:min(640px, calc(100% - 32px));
            display:flex; gap:14px; align-items:center; justify-content:space-between; padding:12px 14px;
            background:var(--surface); border:1px solid var(--brass); border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.16);}
   .hintbox[hidden]{display:none;}
@@ -314,6 +314,12 @@
   .hud-item.tut-target, .tabs [role="tab"].tut-target{outline-offset:-3px;}
   @keyframes tutpulse{50%{outline-color:transparent; box-shadow:0 0 0 6px var(--brass-soft);}}
   @media (prefers-reduced-motion: reduce){ .tut-target{animation:none;} }
+  /* Markierung „neu“ an frisch freigeschalteten Reitern, Bau-Optionen und Einheiten (REQ-T.05) */
+  i.new{font-style:normal; font-family:"IBM Plex Mono", monospace; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+        background:var(--brass); color:var(--brass-ink); border-radius:3px; padding:0 5px; margin-left:6px; align-self:center; line-height:1.5;}
+  i.new[hidden]{display:none;}
+  .tabs [role="tab"] i.new{position:absolute; top:2px; right:16px; margin:0;}
+  .pick i.new{grid-column:1 / -1; justify-self:start; margin:0;}
   .tut-bubble{position:fixed; z-index:28; left:0; top:0; max-width:var(--tut-bubble-max, 280px); padding:8px 12px; background:var(--brass); color:var(--brass-ink);
               border-radius:8px; font-weight:600; font-size:14px; line-height:1.35; pointer-events:none; box-shadow:0 6px 20px rgba(0,0,0,.18);}
   .tut-bubble[hidden]{display:none;}
@@ -339,7 +345,7 @@
     <div class="hud-item" data-tooltip="hud:time"><span class="hud-l"><span id="diffLabel"></span></span><b class="num" id="clock">0:00</b><span class="hud-s" id="eraLabel"></span></div>
     <button class="hud-draft" id="draftBtn" type="button" data-tooltip="draftBtn" hidden><span class="btn-label" data-i18n="hud.draft"></span><span class="expl"></span></button>
     <div class="hud-menu">
-      <button class="btn-ghost" id="tutSkipBtn" type="button" data-tooltip="menu:tutorial" hidden><span class="btn-label" data-i18n="menu.tutorial"></span><span class="expl" data-i18n="ex.menu.tutorial"></span></button>
+      <button class="btn-ghost" id="tutSkipBtn" type="button" data-tooltip="menu:tutorial" hidden><span class="btn-label" data-i18n="tut.skip"></span><span class="expl" data-i18n="ex.menu.tutorial"></span></button>
       <button class="btn-ghost" id="pauseBtn" type="button" data-tooltip="menu:pause" aria-pressed="false"><span class="btn-label"></span><span class="expl"></span></button>
       <button class="btn-ghost" id="langBtn" type="button" data-tooltip="menu:lang"><span class="btn-label"></span><span class="expl"></span></button>
       <button class="btn-ghost" id="newBtn" type="button" data-tooltip="new"><span class="btn-label" data-i18n="hdr.newGame"></span><span class="expl"></span></button>

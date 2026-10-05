@@ -1,5 +1,17 @@
 # Änderungen
 
+## v0.8 – Tutorial „Erste Schritte“ (Oktober 2026)
+- REQ-T.01/T.02 Tutorial in der ersten Partie: Der Quartiermeister führt Fertigen und Bauen vor, danach erscheint eine Zeile mit pulsierendem
+  Rahmen um das Ziel (Klickfeld, Bauplatz, Läufer-Knopf, Wellen-Countdown). Fünf Schritte: Fertigen, Bauen, Einheiten kaufen, Welle ausschicken,
+  erster Sieg; dann Abschiedszeile „Bauen, rüsten, halten.“ Nichts wird gesperrt, nichts abgedunkelt; Schritte zählen unabhängig von der Reihenfolge.
+- REQ-T.03 Schonfrist: Die erste Gegnerwelle der Tutorial-Partie (zwei Läufer) rückt erst aus, wenn die eigene Welle ausgerückt ist, spätestens nach 150 s.
+- REQ-T.04 Start ohne Dialog auf Leicht, Knopf „Überspringen“ in der Leiste, „Tutorial wiederholen“ im Dialog „Neue Partie“, `?tutorial=1` / `?tutorial=0`.
+- REQ-T.05 Erstkontakt-Hinweise: einer gleichzeitig, nie im Tutorial, schließen sich nach 8 s, eine Zeile; neu für Mauer, Türme, Schmiede, Handelskontor
+  und Nachbarschaft; Hinweise zu Start und erster Welle entfallen (Tutorial). Marke „neu“ an frisch freigeschalteten Reitern, Bau-Optionen und Einheiten.
+- REQ-T.06/T.07 `core.js` meldet Ereignisse (`on`), neue Dateien `tutorial.js`, `tutorial-ui.js`, `data/tutorial-steps.js`; Sitzungsprotokoll mit Schrittzeiten,
+  Überspringen und Fehlklicks, Auswertung in `tools/compare-human.mjs`. Spielstand-Version unverändert (7).
+- Der Dialog „Neue Partie“ scrollt bei niedrigen Fenstern; „Spiel starten“ bleibt sichtbar.
+
 ## v0.7 – Iteration 6 (30.09.2026)
 - REQ-6.01 Formationen pendeln nicht mehr: Mindestverweildauer je Armeezustand, feste Plätze, gebundene Lane-Wahl (Hauptursache: beide Seiten
   tauschten in jedem Takt die Lane), gleitende Querbewegung, Totzone, weich nachgeführte Darstellung; Debug-Protokoll je Einheit.

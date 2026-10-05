@@ -27,8 +27,8 @@ test('Jeder Hinweis erscheint pro Browser nur einmal; nach dem Zurücksetzen wie
   for (const id of H.IDS) assert.equal(c.trigger(id), true, `${id} nach dem Zurücksetzen wieder`);
 });
 
-test('Betroffene Systeme: Spezialkarte, Verstärkungsgebäude, Forschung, Abriss, Belagerungswelle (Start und erste Welle erklärt das Tutorial)', () => {
-  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'card', 'demolish', 'research', 'siege']);
+test('Betroffene Systeme: Karte, Gebäude, Forschung, Abriss, Belagerung, Mauer, Türme, Schmiede, Kontor, Nachbarschaft (Start und erste Welle erklärt das Tutorial)', () => {
+  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'card', 'demolish', 'kontor', 'neighbors', 'research', 'siege', 'smithy', 'tower', 'wall']);
 });
 
 test('Nicht verfügbarer oder kaputter Speicher bricht nichts', () => {
@@ -41,11 +41,11 @@ test('Nicht verfügbarer oder kaputter Speicher bricht nichts', () => {
   assert.equal(junk.trigger('card'), true);
 });
 
-test('Hinweistexte liegen in de und en, höchstens zwei Zeilen', () => {
+test('Hinweistexte liegen in de und en, eine Zeile (höchstens 90 Zeichen)', () => {
   const I = loadI18n();
   for (const id of loadHints().IDS) for (const l of ['de', 'en']){
     const s = I[l]['hint.' + id];
     assert.ok(s, `hint.${id} fehlt in ${l}`);
-    assert.ok(s.length <= 150, `hint.${id} (${l}) zu lang für zwei Zeilen: ${s.length} Zeichen`);
+    assert.ok(s.length <= 90, `hint.${id} (${l}) zu lang für eine Zeile: ${s.length} Zeichen`);
   }
 });

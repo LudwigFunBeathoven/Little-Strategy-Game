@@ -5,12 +5,15 @@ Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fer
 **Spielen:** `index.html` im Browser öffnen. Keine Installation nötig. Sprache (Deutsch/English) und Schwierigkeit werden auf dem Startbildschirm gewählt.
 
 ## Start
-`index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig). Auf dem Startbildschirm Sprache und Schwierigkeit wählen.
+`index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig). In der ersten Partie eines Browsers beginnt sofort das **Tutorial**: Der
+Quartiermeister zeigt Fertigen und Bauen, dann Einheiten kaufen und die erste Welle ausschicken (rund zwei Minuten, jederzeit mit „Überspringen“ beendbar).
+Ab der zweiten Partie erscheint der Startbildschirm mit Sprache und Schwierigkeit; dort startet „Tutorial wiederholen“ eine neue Tutorial-Partie.
+Mit `?tutorial=1` an der Adresse lässt sich das Tutorial erzwingen, mit `?tutorial=0` unterdrücken.
 „Einführung überspringen“ schaltet alle Systeme von Beginn an frei; ohne diese Option erscheinen sie nacheinander.
 Die Partie wird im Browser gespeichert und beim nächsten Öffnen pausiert fortgesetzt („Weiter“ in der Spielwelt). Klammerfront ist ein reines
 Online-Spiel: Solange das Spiel nicht offen ist oder der Tab verdeckt ist, steht die Zeit; eine Partie dauert höchstens etwa 20 Minuten.
 
-## Spielprinzip (v0.7, Iteration 6)
+## Spielprinzip (v0.8)
 - **Oben die Leiste, in der Mitte die Welt, unten der Arbeitsbereich.** Die Leiste zeigt Soldaten, Material, Erfahrungspunkte (EP) mit
   Fortschritt bis zur nächsten Kartenwahl, die nächsten Wellen, die Mauer, den Zustand der Armee, Zeit und Menü (Pause, Sprache, Neue Partie).
 - **Links in der Welt dein Reich, rechts der Gegner.** Das Reich ist ein 3×3-Raster aus Bauplätzen, umschlossen von der Mauer: Mauer oben mit Turm,
@@ -30,7 +33,7 @@ Online-Spiel: Solange das Spiel nicht offen ist oder der Tab verdeckt ist, steht
   darunter passive EP, Neu ziehen und Bann für Karten, Versorgung, Wellentakt und die Einheit Schildträger. Laufende Forschung lässt sich
   gegen Material sofort abschließen.
 - **Belagerungswelle** in Minute 16, eine Minute vorher angekündigt; danach wird der Gegner jede Minute stärker.
-- Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Jedes System erklärt sich beim ersten Auftreten mit einem kurzen Hinweis.
+- Jeder Knopf trägt eine Erklärzeile „Wirkung · Kosten“, Details im Tooltip (1 s Hover). Jedes System erklärt sich beim ersten Auftreten mit einem kurzen Hinweis (eine Zeile, schließt sich nach 8 s); Neues trägt die Marke „neu“.
 
 ## Steuerung
 | Aktion | Maus | Tastatur |
@@ -55,7 +58,7 @@ Ereignisse außerhalb des Bildes zeigt ein Randmarker.
 ## Spieltest
 `index.html?debug=1` zeichnet ein Sitzungsprotokoll auf; der Knopf „Protokoll“ in der Leiste lädt es als JSON herunter.
 `node tools/compare-human.mjs protokoll.json` ordnet die Partie dem nächstliegenden Bot-Profil und einer Strategie zu. Ablauf und Fragen:
-`docs/testleitfaden-iteration-6.md`. Im Debug-Modus liefert `__kf.unitLog(id)` in der Konsole das Protokoll einer Einheit.
+`docs/testleitfaden-iteration-6.md`; für das Tutorial mit Spielern, die das Spiel nicht kennen, `docs/testleitfaden-tutorial.md`. Im Debug-Modus liefert `__kf.unitLog(id)` in der Konsole das Protokoll einer Einheit.
 
 ## Entwicklung
 ```
@@ -69,4 +72,4 @@ node tools/simulate.mjs --runs 50 --suite nachbarn    # Nachbarschaftsregeln ein
 node tools/simulate.mjs --runs 50 --suite wirtschaft  # Handelskontor und „Welle vorziehen“
 KF_SKIP_INTRO=1 node tools/simulate.mjs --suite kurz # Bots ohne gestaffelte Einführung
 ```
-Projektregeln und Zielwerte stehen in `CLAUDE.md`. Anforderungen, Stand und Bericht der Iteration 6 liegen in `docs/`, Rohdaten der Simulation unter `reports/`.
+Projektregeln und Zielwerte stehen in `CLAUDE.md`. Anforderungen, Stand und Bericht des Tutorials (v0.8) und der Iteration 6 liegen in `docs/`, Rohdaten der Simulation unter `reports/`.

@@ -79,6 +79,8 @@ const KF_CONFIG = {
     // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
     homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
     draftLockMs: 400,
+    hintAutoMs: 8000,           // ein Erstkontakt-Hinweis schließt sich nach so langer Zeit von selbst (REQ-T.05)
+    newSeenMs: 1500,            // Markierung „neu“: so lange muss der Inhalt sichtbar sein, bis er als angesehen gilt (REQ-T.05)
     toastMs: 2500,              // kurzer Hinweis über dem Arbeitsbereich (abgeschlossene Forschung, REQ-6.06)           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
     debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
   },

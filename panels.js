@@ -6,6 +6,33 @@
 'use strict';
 
 const TABS = ['build', 'wall', 'army', 'smithy', 'uni', 'cards'];
+/* Markierung „neu“ (REQ-T.05): Reiter, Bau-Optionen und Einheiten, die erst im Lauf der Partie erscheinen, tragen bis zum ersten Ansehen
+   (UI.newSeenMs sichtbar) eine Marke. Was beim Start schon sichtbar ist, gilt als bekannt (Grundlinie). Gesehenes liegt im Spielstand (ui). */
+const NewMarks = (() => {
+  let seen = new Set(), baseline = true, since = new Map(), touched = new Set();
+  const ids = () => [...TABS.filter(tabVisible).map(x => 'tab:' + x),
+                     ...C.BUILDINGS.filter(b => G.isBuildable(b) && (b === 'fabrik' || G.introShows('buildings'))).map(b => 'pick:' + b),
+                     ...Object.keys(C.UNITS).filter(u => G.unitUnlocked(u)).map(u => 'unit:' + u)];
+  return {
+    isNew: id => !baseline && !seen.has(id),
+    /* Der Inhalt ist gerade zu sehen; nach UI.newSeenMs gilt er als angesehen. */
+    view(id){
+      if (baseline || seen.has(id)) return;
+      touched.add(id);
+      const t0 = since.get(id) ?? performance.now(); since.set(id, t0);
+      if (performance.now() - t0 >= C.UI.newSeenMs){ seen.add(id); since.delete(id); }
+    },
+    /* Am Ende eines Bildaufbaus: nicht mehr sichtbare Inhalte beginnen von vorn; Grundlinie der Partie festlegen. */
+    endRender(){
+      for (const id of since.keys()) if (!touched.has(id)) since.delete(id);
+      touched.clear();
+      if (baseline && G.S.status === 'running'){ for (const id of ids()) seen.add(id); baseline = false; }
+    },
+    reset(){ seen = new Set(); baseline = true; since.clear(); touched.clear(); },
+    snapshot: () => baseline ? undefined : { seen: [...seen] },
+    restore(o){ since.clear(); touched.clear(); if (o && Array.isArray(o.seen)){ seen = new Set(o.seen); baseline = false; } else { seen = new Set(); baseline = true; } },
+  };
+})();
 let activeTab = 'build';
 /* Auswahl in der Welt: null | { kind: 'plot', i } | { kind: 'section', lane } */
 let sel = null, ctxKey = '', demolishArmed = false, picks = [];
@@ -83,10 +110,10 @@ function buildPanels(){
     const b = document.createElement('button');
     b.type = 'button'; b.id = 'tab-' + id; b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'panel-' + id);
     b.dataset.tooltip = 'tab:' + id;
-    b.innerHTML = '<span class="btn-label"></span><span class="expl"></span><i class="mark" hidden></i>';
+    b.innerHTML = '<span class="btn-label"></span><span class="expl"></span><i class="mark" hidden></i><i class="new" hidden></i>';
     b.addEventListener('click', () => selectTab(id, true));
     bar.appendChild(b);
-    tabEls[id] = { btn: b, label: b.children[0], expl: b.children[1], mark: b.children[2], panel: $('panel-' + id) };
+    tabEls[id] = { btn: b, label: b.children[0], expl: b.children[1], mark: b.children[2], fresh: b.children[3], panel: $('panel-' + id) };
   }
   bar.addEventListener('keydown', e => {
     const vis = TABS.filter(tabVisible), i = vis.indexOf(activeTab);
@@ -170,6 +197,8 @@ function updatePicks(){
     setText(p.w, why || ''); setHidden(p.w, !why);
     setText(p.nb, nbPreviewText(p.i, p.type));
     setDis(p.b, !!block);
+    setText(p.fresh, t('mark.new')); setHidden(p.fresh, !NewMarks.isNew('pick:' + p.type));
+    NewMarks.view('pick:' + p.type);
   }
 }
 /* Kontextkopf sichtbar im Reiter des Objekts; Bauplätze und ihre Gebäude zeigt er auch im Reiter Bauen,
@@ -213,10 +242,11 @@ function renderContext(){
       const ex = document.createElement('span'); ex.className = 'expl';
       const w = document.createElement('span'); w.className = 'w';
       const nb = document.createElement('span'); nb.className = 'nb';
-      b.append(nm, c, d, ex, nb, w);
+      const fresh = document.createElement('i'); fresh.className = 'new'; fresh.hidden = true;
+      b.append(nm, c, d, ex, nb, w, fresh);
       b.addEventListener('click', () => { if (!isDis(b) && G.buildAt(i, type)){ ctxKey = ''; requestRender(); } });
       build.appendChild(b);
-      picks.push({ type, i, b, nm, ex, w, nb });
+      picks.push({ type, i, b, nm, ex, w, nb, fresh });
     }
     updatePicks();
   }
@@ -261,6 +291,8 @@ function renderOpts(){
     setHidden(el.btn, !G.unitUnlocked(id));
     setHidden(el.kbd, false); setText(el.kbd, spec.key);
     setText(el.label, t(`unit.${id}.name`));
+    setText(el.fresh, t('mark.new')); setHidden(el.fresh, el.btn.hidden || !NewMarks.isNew('unit:' + id));
+    if (activeTab === 'army' && !el.btn.hidden) NewMarks.view('unit:' + id);
     setText(el.expl, explUnit(id));
     setDis(el.btn, !!unitReason(id));
   }
@@ -478,6 +510,10 @@ function renderPanels(){
     setText(el.label, t('tab.' + id));
     setText(el.expl, t('ex.tab.' + id));
     setHidden(el.panel, !on);
+    // „neu“ am Reiter, bis er einmal angesehen wurde
+    setText(el.fresh, t('mark.new'));
+    setHidden(el.fresh, !tabVisible(id) || on || !NewMarks.isNew('tab:' + id));
+    if (on) NewMarks.view('tab:' + id);
   }
   // Markierung: Reiter mit neuem Inhalt (offene Kartenwahl)
   setHidden(tabEls.cards.mark, !(S.pendingDraft && activeTab !== 'cards'));
@@ -540,4 +576,5 @@ function renderPanels(){
   renderResearch();
   renderDraft();
   renderChosen();
+  NewMarks.endRender();
 }

@@ -6,6 +6,9 @@
 // Einheitenlimit linear (je 10 Einheiten 1), Mauernutzung 0,5 bei Abweichung. Die Partie gehört zum Profil mit dem kleinsten Abstand.
 // Strategie (REQ-6.09): Anteil der Einheitenkäufe an allen Handlungen der ersten SIM_STYLE_WINDOW_S Sekunden (Kauf, Bau, Ausbau, Forschung,
 // Reparatur). Die Partie gehört zur Strategie mit dem nächstliegenden Median aus der Simulation (STYLE_REF, Serie I6.0, alle Profile außer passiv).
+// Tutorial (REQ-T.07): Das Protokoll enthält tutorial { stepTimes, skipped, skippedAt, misclicks }. Je Partie werden Schrittzeiten, Überspringen und
+// Fehlklicks (Klicks außerhalb des hervorgehobenen Ziels) ausgegeben, am Ende je Schritt der Median der Dauer und die Summe der Fehlklicks.
+// Lange Schrittzeiten und viele Fehlklicks zeigen, wo Spieler hängen bleiben.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { PROFILES, CONFIG as C } from './sim-bot.mjs';
 
@@ -41,17 +44,45 @@ export function nearestStrategy(f){
   return { strategy: ranked[0].name, ranked };
 }
 
+/* Tutorial: Dauer je Schritt = Abstand zum zuletzt erledigten Schritt (Schritte können in anderer Reihenfolge erledigt werden), Fehlklicks je Schritt */
+export const TUTORIAL_STEPS = ['fertigen', 'bauen', 'rekrutieren', 'ausruecken', 'sieg'];
+export function tutorialFeatures(p){
+  const t = p.tutorial;
+  if (!t || (!Object.keys(t.stepTimes || {}).length && !t.skipped && !t.completed)) return null;
+  let prev = 0; const dur = {};
+  for (const id of TUTORIAL_STEPS){ const x = t.stepTimes[id]; if (x != null){ dur[id] = +Math.max(0, x - prev).toFixed(1); prev = Math.max(prev, x); } }
+  const slowest = Object.entries(dur).sort((a, b) => b[1] - a[1])[0];
+  return { dur, misclicks: t.misclicks || {}, skipped: !!t.skipped, skippedAt: t.skippedAt || null, completed: !!t.completed,
+           slowest: slowest ? slowest[0] : null, totalS: Math.max(0, ...Object.values(t.stepTimes || {})) };
+}
+
 const rows = [];
 for (const file of args){
   const p = JSON.parse(readFileSync(file, 'utf8'));
   if (p.format !== 'klammerfront-session'){ console.log(`${file}: kein Sitzungsprotokoll`); continue; }
   const f = features(p), n = nearest(f), st = nearestStrategy(f);
-  rows.push({ file, diff: p.diff, result: p.result, durationS: p.durationS, ...f, profile: n.profile, strategy: st.strategy,
+  const tut = tutorialFeatures(p);
+  rows.push({ file, diff: p.diff, result: p.result, durationS: p.durationS, ...f, profile: n.profile, strategy: st.strategy, tutorial: tut,
               distances: Object.fromEntries(n.ranked.map(r => [r.name, +r.d.toFixed(3)])) });
   console.log(`${file}\n  ${p.diff}, ${p.result} nach ${Math.floor(p.durationS / 60)}:${String(Math.round(p.durationS % 60)).padStart(2, '0')} · ` +
     `${f.cps.toFixed(2)} Klicks/s · Reaktion ${f.reaction.toFixed(2)} s · bis ${f.cap} Einheiten · Mauer ${f.wall ? 'ja' : 'nein'}\n` +
     `  → nächstes Bot-Profil: ${n.profile} (Abstände: ${n.ranked.map(r => `${r.name} ${r.d.toFixed(2)}`).join(', ')})\n` +
     `  → nächste Strategie: ${st.strategy ?? '–'} (Einheitenkäufe ${f.unitShare == null ? '–' : Math.round(100 * f.unitShare) + ' %'} der Handlungen in den ersten ${C.SIM_STYLE_WINDOW_S} s; ` +
     `Referenz ${Object.entries(STYLE_REF).map(([k, v]) => `${k} ${Math.round(100 * v)} %`).join(', ')})`);
+  if (tut){
+    const mm = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+    console.log('  → Tutorial: ' + (tut.skipped ? `übersprungen in Schritt „${tut.skippedAt}“; ` : tut.completed ? `abgeschlossen nach ${mm(tut.totalS)}; ` : 'nicht beendet; ') +
+      TUTORIAL_STEPS.filter(id => tut.dur[id] != null).map(id => `${id} ${tut.dur[id]} s${tut.misclicks[id] ? ` (${tut.misclicks[id]} Fehlklicks)` : ''}`).join(' · ') + (tut.slowest ? `; längster Schritt: ${tut.slowest}` : ''));
+  }
+}
+// Zusammenfassung über alle Partien mit Tutorial (REQ-T.07)
+const tuts = rows.filter(r => r.tutorial);
+if (tuts.length > 1 || (tuts.length === 1 && rows.length > 1)){
+  const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  console.log(`\nTUTORIAL über ${tuts.length} Partien: übersprungen ${tuts.filter(r => r.tutorial.skipped).length}, abgeschlossen ${tuts.filter(r => r.tutorial.completed).length}`);
+  for (const id of TUTORIAL_STEPS){
+    const d = tuts.map(r => r.tutorial.dur[id]).filter(x => x != null), m = tuts.reduce((s, r) => s + (r.tutorial.misclicks[id] || 0), 0), sk = tuts.filter(r => r.tutorial.skippedAt === id).length;
+    console.log(`  ${id.padEnd(12)} Median ${d.length ? med(d) + ' s' : '–'} · Fehlklicks ${m} · dort übersprungen ${sk}`);
+  }
 }
 if (out) writeFileSync(out, JSON.stringify(rows, null, 2));

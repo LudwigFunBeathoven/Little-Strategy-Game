@@ -369,7 +369,7 @@ if (DEV) setInterval(() => {
 function save(){
   const S = G.S;
   if (S.status === 'setup') return;
-  storageSet(C.SAVE_KEY, JSON.stringify(Object.assign(G.snapshot(), { units: [], enemyQueue: [], tut: Tutorial.snapshot() })));
+  storageSet(C.SAVE_KEY, JSON.stringify(Object.assign(G.snapshot(), { units: [], enemyQueue: [], tut: Tutorial.snapshot(), ui: NewMarks.snapshot() })));
 }
 /* Spielstände älterer Versionen (anderer Schlüssel oder andere Versionsnummer) werden nicht übernommen, sondern dem Spieler
    auf dem Startbildschirm gemeldet und erst danach entfernt (Anforderung Iteration 5, Abschnitt 1) */
@@ -393,8 +393,9 @@ function load(){
   try {
     const d = JSON.parse(raw);
     if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]){ discardedSave = true; dropStaleSaves([C.SAVE_KEY]); return false; }
-    const tut = d.tut; delete d.tut;                          // Tutorial-Fortschritt liegt neben dem Spielstand, nicht darin
+    const tut = d.tut, ui = d.ui; delete d.tut; delete d.ui;     // Tutorial-Fortschritt und Anzeigezustand liegen neben dem Spielstand, nicht darin
     G.adopt(d);
+    NewMarks.restore(ui);
     Tutorial.restore(TUTORIAL_PARAM === '0' ? null : tut);
     // Reines Online-Spiel (REQ-6.03): beim Laden vergeht keine Spielzeit, die Partie beginnt pausiert
     if (G.S.status === 'running') setPaused(true);
@@ -413,22 +414,26 @@ const Hints = KF_HINTS.create({ get: storageGet, set: storageSet }, C.HINTS_KEY)
 /* Tutorial „Erste Schritte“ (REQ-T.04): Schritte in data/tutorial-steps.js, Anzeige in tutorial-ui.js; ?tutorial=1 erzwingt, ?tutorial=0 unterdrückt */
 const Tutorial = KF_TUTORIAL.create(KF_TUTORIAL_STEPS, { get: storageGet, set: storageSet }, C.TUTORIAL_KEY);
 const TUTORIAL_PARAM = (/[?&]tutorial=([01])\b/.exec(location.search) || [])[1] || null;
+/* Regeln (REQ-T.05): höchstens ein Hinweis gleichzeitig, nie während des Tutorials, eine Zeile, schließt sich nach UI.hintAutoMs oder per Klick,
+   je Browser nur einmal (Hints). Auslöser prüft render() erst nach dem Tutorial: Was dann noch zutrifft, wird nachgeholt. */
 const hintQueue = [];
+let hintShown = null, hintTimer = null;
 function showHint(id){
   if (!Hints.trigger(id)) return;
   hintQueue.push(id);
   renderHint();
 }
 function renderHint(){
-  const box = $('hintBox'), id = hintQueue[0];
-  box.hidden = !id;
-  if (!id) return;
-  $('hintTitle').textContent = t('hint.title');
-  $('hintText').textContent = t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() });
-  $('hintOk').querySelector('.btn-label').textContent = t('hint.ok');
-  $('hintOk').querySelector('.expl').textContent = t('ex.hintOk');
+  const box = $('hintBox'), id = Tutorial.active() ? null : hintQueue[0];
+  setHidden(box, !id);
+  if (!id){ clearTimeout(hintTimer); hintShown = null; return; }
+  setText($('hintTitle'), t('hint.title'));
+  setText($('hintText'), t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() }));
+  setText($('hintOk').querySelector('.btn-label'), t('hint.ok'));
+  setText($('hintOk').querySelector('.expl'), t('ex.hintOk'));
+  if (hintShown !== id){ hintShown = id; clearTimeout(hintTimer); hintTimer = setTimeout(dismissHint, C.UI.hintAutoMs); }
 }
-function dismissHint(){ hintQueue.shift(); renderHint(); }
+function dismissHint(){ clearTimeout(hintTimer); hintShown = null; hintQueue.shift(); renderHint(); }
 
 /* ================= Startbildschirm und Ergebnis ================= */
 let modalOpen = false, resultShownFor = null;
@@ -526,7 +531,7 @@ function closeModal(){ Tip.hide(); modalOpen = false; $('modal').hidden = true; 
 function startGame(diff, opts = {}){
   discardedSave = false;
   const tut = opts.tutorial === true;
-  TutUI.reset();
+  TutUI.reset(); NewMarks.reset();
   G.newGame(tut ? C.TUTORIAL.diff : diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
     { intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize } : undefined });
   if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else Tutorial.restore(null);
@@ -541,11 +546,11 @@ const optEls = {};
 function makeOpt(parent, cls, tip, onClick){
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'opt ' + (cls || ''); b.dataset.tooltip = tip;
-  b.innerHTML = '<span class="opt-name"><kbd hidden></kbd><span></span><em hidden></em></span><span class="expl"></span>';
+  b.innerHTML = '<span class="opt-name"><kbd hidden></kbd><span></span><em hidden></em><i class="new" hidden></i></span><span class="expl"></span>';
   b.addEventListener('click', () => { if (!isDis(b)){ onClick(); requestRender(); } });
   parent.appendChild(b);
   const nm = b.children[0];
-  return { btn: b, name: nm, kbd: nm.children[0], label: nm.children[1], tag: nm.children[2], expl: b.children[1] };
+  return { btn: b, name: nm, kbd: nm.children[0], label: nm.children[1], tag: nm.children[2], fresh: nm.children[3], expl: b.children[1] };
 }
 const GROUP_BOX = { fertigung: 'optsFertigung', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm_0: 'optsTurm0', turm_2: 'optsTurm2' };
 
@@ -608,13 +613,19 @@ function render(){
   renderPanels();
   renderTutorial();
   Tip.refresh();
-  // Gestaffelte Einführung (REQ-47): Systeme erscheinen nacheinander, jedes mit einmaligem Hinweis
-  if (S.status === 'running'){
+  // Erstkontakt-Hinweise: im Moment, in dem ein Inhalt erstmals verfügbar wird (REQ-20.2, REQ-T.05); nicht während des Tutorials
+  if (S.status === 'running' && !Tutorial.active()){
     if (G.introShows('buildings') && (S.level >= C.INTRO_BUILDINGS_LEVEL || !S.intro)) showHint('buildings');
     if (S.pendingDraft) showHint('card');
     if (G.has('universitaet')) showHint('research');
+    if (G.has('schmiede')) showHint('smithy');
+    if (G.has('kontor')) showHint('kontor');
+    if (S.revealed.mauer || S.revealed.repair_0 || S.revealed.repair_1 || S.revealed.repair_2) showHint('wall');
+    if (S.revealed.turm_0 || S.revealed.turm_2) showHint('tower');
+    if (S.slots.some((sl, i) => sl && G.neighborValue(i, sl.type) !== 0)) showHint('neighbors');
     if (G.siegeAnnounced()) showHint('siege');
   }
+  renderHint();
   if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t && !modalOpen){
     resultShownFor = S.t;
     save();
