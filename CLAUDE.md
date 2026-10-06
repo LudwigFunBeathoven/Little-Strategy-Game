@@ -100,11 +100,14 @@ Keine globale Neukalibrierung vor Iteration 7.
   die Lage einer Lane zählt auch Einheiten, die gerade in sie wechseln. Ohne das tauschen zwei Armeen endlos die Lanes (Patt).
 
 ## Tutorial (REQ-T.01 – T.07)
-Die erste Partie eines Browsers startet ohne Dialog auf Leicht mit Tutorial (Merker `TUTORIAL_KEY`); `?tutorial=1` erzwingt, `?tutorial=0` unterdrückt.
+Vor jeder neuen Partie erscheint der Startbildschirm (Sprache, Schwierigkeitsgrad, Schalter Tutorial; erste Partie: Leicht „empfohlen“ und Tutorial an, Merker `TUTORIAL_KEY`,
+`DIFFICULTY_KEY`). `startGame` wird nur vom Dialog und von den URL-Parametern `?lang=` / `?difficulty=easy|normal|hard` aufgerufen (`tests/start.test.mjs`); `?tutorial=1|0` schaltet
+das Tutorial. Das Tutorial läuft auf jedem Grad. Ablauf: Begrüßung (2 Blasen), Klicken, Fabrik, Armee, Welle, Kampf (ohne Blase), Karte, Abschied (2 Blasen), Abgang.
 `core.js` kennt das Tutorial nicht, nur zwei Dinge: Ereignisse für Zuhörer (`G.on`: `materialProduced`, `buildingBuilt`, `unitBought`, `waveDeparted`,
-`enemyWaveDefeated`) und die Schonfrist (`newGame(…, { hold })`, `releaseHold`, Zustand `S.hold`: erste Gegnerwelle klein und zurückgehalten). Ohne
+`enemyWaveDefeated`, `cardChosen`, `xpBounty`) und die Schonfrist (`newGame(…, { hold: { maxS, size, bounty } })`, `releaseHold`, Zustand `S.hold`: erste Gegnerwelle klein und
+zurückgehalten; `S.firstBounty`: Kriegsbeute, nach der ersten besiegten Welle reichen die EP für die erste Kartenwahl). Ohne
 Zuhörer und ohne `hold` ändert sich nichts; `tests/unveraendert.test.mjs` hält das mit festen Seeds fest (nicht ohne Grund neu erzeugen).
-Regeln: eine Zeile je Schritt, höchstens 60 Zeichen; Hinweise (`hints.js`) höchstens 90 Zeichen, einer gleichzeitig, nie im Tutorial, schließen nach
+Regeln: je Schritt Erzählung (höchstens etwa 90 Zeichen) und Auftrag (höchstens etwa 30); Begrüßung und Abschied je zwei Blasen; Texte je Pacing-Modus überschreibbar (Schlüssel mit Suffix, `PACING_MODE`); Hinweise (`hints.js`) höchstens 90 Zeichen, einer gleichzeitig, nie im Tutorial, schließen nach
 `UI.hintAutoMs`; das Tutorial wechselt nie selbst den Reiter und sperrt nichts. Neue Schritte nur in `data/tutorial-steps.js` (höchstens fünf Dinge).
 
 ## Armee und Kampf (REQ-5.05, REQ-5.06)

@@ -2,6 +2,8 @@
 
 Stand: 05.10.2026 · Branch `tutorial` (von `main`, v0.7) · Status: **wartet auf Freigabe nach `main`**
 Grundlage: `docs/anforderungen-tutorial.md` · Stand je Inkrement: `docs/STAND.md` · Testleitfaden: `docs/testleitfaden-tutorial.md`
+**Teil 2 (`docs/bericht-tutorial-2.md`) löst Teile dieses Berichts ab:** Startbildschirm vor jeder Partie (statt Start ohne Dialog auf Leicht), fünf Schritte mit
+Kartenwahl als Abschluss (statt „Erster Sieg“), Begrüßung und Abschied. Die Auslegungen und Zahlen unten beschreiben den Stand von Teil 1.
 
 ## Ergebnis in drei Sätzen
 Das Tutorial ist umgesetzt: Die erste Partie eines Browsers startet ohne Dialog auf Leicht, der Quartiermeister führt Fertigen und Bauen vor, danach

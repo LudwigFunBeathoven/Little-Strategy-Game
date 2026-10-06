@@ -4,9 +4,9 @@
   "version": "0.8",
   "lang": "de",
   "diff": "normal",
-  "startedAt": "2026-10-05T16:20:12.752Z",
+  "startedAt": "2026-10-06T07:38:12.311Z",
   "result": "lost",
-  "durationS": 290.1,
+  "durationS": 289.6,
   "clicks": 86,
   "clicksPerMinute": [
     17,
@@ -21,8 +21,8 @@
     "late": 0
   },
   "timeByPhase": {
-    "early": 143.69999999999845,
-    "mid": 146.25000000003322,
+    "early": 145.04999999999876,
+    "mid": 144.50000000003283,
     "late": 0
   },
   "actions": [
@@ -42,17 +42,17 @@
       "arg": "laeufer"
     },
     {
-      "t": 24.55,
+      "t": 24.5,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 27.6,
+      "t": 27.55,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 33.7,
+      "t": 33.65,
       "kind": "spawn",
       "arg": "laeufer"
     },
@@ -87,6 +87,11 @@
       "arg": "laeufer"
     },
     {
+      "t": 73.7,
+      "kind": "chooseDraft",
+      "arg": "nachtschicht"
+    },
+    {
       "t": 82.6,
       "kind": "spawn",
       "arg": "werfer"
@@ -95,11 +100,6 @@
       "t": 85.65,
       "kind": "spawn",
       "arg": "laeufer"
-    },
-    {
-      "t": 86.65,
-      "kind": "chooseDraft",
-      "arg": "nachtschicht"
     },
     {
       "t": 91.75,
@@ -137,209 +137,204 @@
       "arg": "laeufer"
     },
     {
-      "t": 140.7,
+      "t": 140.65,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 143.75,
+      "t": 143.7,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 143.85,
+      "t": 145.15,
       "kind": "chooseDraft",
-      "arg": "schwerePressen"
+      "arg": "nachtschicht"
     },
     {
-      "t": 146.8,
+      "t": 146.75,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 152.9,
+      "t": 155.9,
       "kind": "buildAt",
       "arg": 1
     },
     {
-      "t": 162.1,
+      "t": 162.05,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 162.05,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 162.05,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 171.2,
       "kind": "buildAt",
       "arg": 2
     },
     {
-      "t": 165.15,
+      "t": 180.35,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 165.15,
+      "t": 180.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 165.15,
+      "t": 180.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 174.3,
+      "t": 187.95,
+      "kind": "chooseDraft",
+      "arg": "notreserve"
+    },
+    {
+      "t": 189.55,
       "kind": "buildAt",
       "arg": 3
     },
     {
-      "t": 180.4,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 180.4,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 180.4,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 189.6,
+      "t": 201.8,
       "kind": "buildAt",
       "arg": 4
     },
     {
-      "t": 201.8,
+      "t": 204.85,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 204.85,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 204.85,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 220.1,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 220.1,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 220.1,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 229.25,
       "kind": "buildAt",
       "arg": 5
     },
     {
-      "t": 202.95,
-      "kind": "chooseDraft",
-      "arg": "kriegstrommeln"
-    },
-    {
-      "t": 204.85,
+      "t": 241.5,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 204.85,
+      "t": 241.5,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 204.85,
+      "t": 241.5,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 220.1,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 220.1,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 220.1,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 226.25,
+      "t": 256.75,
       "kind": "buildAt",
       "arg": 6
     },
     {
-      "t": 241.55,
+      "t": 262.9,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 241.55,
+      "t": 262.9,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 241.55,
+      "t": 262.9,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 253.75,
-      "kind": "buildAt",
-      "arg": 7
-    },
-    {
-      "t": 262.95,
+      "t": 281.25,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 262.95,
+      "t": 281.25,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 262.95,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 281.3,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 281.3,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 281.3,
+      "t": 281.25,
       "kind": "spawn",
       "arg": "laeufer"
     }
   ],
   "drafts": [
     {
-      "t": 86.6,
+      "t": 73.7,
       "level": 1,
       "chosen": "nachtschicht",
       "offered": [
         "nachtschicht",
-        "taktiker"
+        "selbstlaeufer"
       ]
     },
     {
-      "t": 143.8,
+      "t": 145.1,
       "level": 2,
-      "chosen": "schwerePressen",
+      "chosen": "nachtschicht",
       "offered": [
-        "schwerePressen",
-        "kriegstrommeln"
+        "nachtschicht",
+        "schildwall"
       ]
     },
     {
-      "t": 203,
+      "t": 188,
       "level": 3,
-      "chosen": "kriegstrommeln",
+      "chosen": "notreserve",
       "offered": [
-        "kriegstrommeln",
+        "notreserve",
         "bessereFabriken"
       ]
     }
   ],
   "research": [],
-  "maxUnits": 6,
-  "maxArmy": 4,
-  "firstWallFallS": 284.3,
+  "maxUnits": 7,
+  "maxArmy": 5,
+  "firstWallFallS": 278.2,
   "wallUse": {
     "repairs": 0,
     "upgrades": 0
   },
-  "kills": 40,
+  "kills": 38,
   "losses": 41,
   "tutorial": {
     "stepTimes": {},
@@ -347,6 +342,8 @@
     "skippedAt": null,
     "completed": false,
     "misclicks": {},
-    "progress": {}
+    "progress": {},
+    "greetingMs": null,
+    "bubbleClicks": 0
   }
 }

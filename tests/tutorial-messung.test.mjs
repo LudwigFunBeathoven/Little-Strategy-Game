@@ -18,19 +18,20 @@ function run(files){
 }
 
 test('Auswertung nennt Schrittzeiten, Fehlklicks und den längsten Schritt', () => {
-  const p = Object.assign({}, base, { tutorial: { stepTimes: { fertigen: 6, bauen: 14, rekrutieren: 40, ausruecken: 60, sieg: 85 }, skipped: false, skippedAt: null, completed: true,
-    misclicks: { rekrutieren: 7, bauen: 1 }, progress: {} } });
+  const p = Object.assign({}, base, { tutorial: { stepTimes: { fertigen: 6, bauen: 14, rekrutieren: 40, ausruecken: 60, schlacht: 85, karte: 85 }, skipped: false, skippedAt: null, completed: true,
+    misclicks: { rekrutieren: 7, bauen: 1 }, progress: {}, greetingMs: 7800, bubbleClicks: 3 } });
   const { text, rows } = run([p]);
   assert.match(text, /Tutorial: abgeschlossen nach 1:25/);
   assert.match(text, /rekrutieren 26 s \(7 Fehlklicks\)/);
   assert.match(text, /längster Schritt: rekrutieren/);
   assert.equal(rows[0].tutorial.slowest, 'rekrutieren');
-  assert.equal(rows[0].tutorial.dur.sieg, 25);
+  assert.equal(rows[0].tutorial.dur.schlacht, 25);
+  assert.match(text, /Begrüßung 7\.8 s, 3 Klicks auf Sprechblasen/);
 });
 
 test('Auswertung: Überspringen mit Schritt, Zusammenfassung über mehrere Partien', () => {
   const a = Object.assign({}, base, { tutorial: { stepTimes: { fertigen: 5 }, skipped: true, skippedAt: 'bauen', completed: false, misclicks: { bauen: 3 }, progress: {} } });
-  const b = Object.assign({}, base, { tutorial: { stepTimes: { fertigen: 8, bauen: 20, rekrutieren: 30, ausruecken: 50, sieg: 70 }, skipped: false, skippedAt: null, completed: true, misclicks: {}, progress: {} } });
+  const b = Object.assign({}, base, { tutorial: { stepTimes: { fertigen: 8, bauen: 20, rekrutieren: 30, ausruecken: 50, schlacht: 70, karte: 70 }, skipped: false, skippedAt: null, completed: true, misclicks: {}, progress: {} } });
   const { text, rows } = run([a, b]);
   assert.match(text, /übersprungen in Schritt „bauen“/);
   assert.match(text, /TUTORIAL über 2 Partien: übersprungen 1, abgeschlossen 1/);

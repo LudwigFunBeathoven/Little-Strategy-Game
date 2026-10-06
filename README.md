@@ -5,10 +5,10 @@ Ein Browser-Spiel zwischen *Universal Paperclips* und *Age of War*: Material fer
 **Spielen:** `index.html` im Browser öffnen. Keine Installation nötig. Sprache (Deutsch/English) und Schwierigkeit werden auf dem Startbildschirm gewählt.
 
 ## Start
-`index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig). In der ersten Partie eines Browsers beginnt sofort das **Tutorial**: Der
-Quartiermeister zeigt Fertigen und Bauen, dann Einheiten kaufen und die erste Welle ausschicken (rund zwei Minuten, jederzeit mit „Überspringen“ beendbar).
-Ab der zweiten Partie erscheint der Startbildschirm mit Sprache und Schwierigkeit; dort startet „Tutorial wiederholen“ eine neue Tutorial-Partie.
-Mit `?tutorial=1` an der Adresse lässt sich das Tutorial erzwingen, mit `?tutorial=0` unterdrücken.
+`index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig). Vor jeder Partie erscheint der **Startbildschirm** mit Sprache, Schwierigkeitsgrad und dem Schalter „Tutorial“ (in der ersten Partie eines Browsers an, Leicht ist als
+Einstieg empfohlen). Im Tutorial begrüßt der Quartiermeister den Feldherrn und führt durch Fertigen, Fabrik, Armee, Welle und die erste Kartenwahl (unter drei Minuten,
+jederzeit mit „Überspringen“ beendbar; auf jedem Schwierigkeitsgrad). Für Tests überspringen `?lang=de|en` und `?difficulty=easy|normal|hard` den Startbildschirm;
+`?tutorial=1` bzw. `?tutorial=0` schaltet das Tutorial an oder aus.
 „Einführung überspringen“ schaltet alle Systeme von Beginn an frei; ohne diese Option erscheinen sie nacheinander.
 Die Partie wird im Browser gespeichert und beim nächsten Öffnen pausiert fortgesetzt („Weiter“ in der Spielwelt). Klammerfront ist ein reines
 Online-Spiel: Solange das Spiel nicht offen ist oder der Tab verdeckt ist, steht die Zeit; eine Partie dauert höchstens etwa 20 Minuten.

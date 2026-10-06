@@ -1,6 +1,17 @@
 # Änderungen
 
 ## v0.8 – Tutorial „Erste Schritte“ (Oktober 2026)
+Teil 2 (06.10.2026, Anforderungen `docs/anforderungen-tutorial-2.md`):
+- REQ-T2.01 Startbildschirm vor jeder Partie: Sprache, Schwierigkeitsgrad (Leicht „empfohlen für den Einstieg“ in der ersten Partie), Schalter Tutorial (erste Partie an,
+  danach aus), „Partie beginnen“. Das Tutorial läuft auf jedem Grad. Neu `?lang=` und `?difficulty=easy|normal|hard` (überspringen den Dialog für Tests). Behebt: Teil 1 ließ
+  die erste Partie ohne Dialog immer auf Leicht starten.
+- REQ-T2.02/T2.03 Erzählung: Begrüßung (zwei Sprechblasen, Horden aus dem Osten), jeder Schritt mit Erzählung und Auftrag; Blasen ohne Auftrag zeigen ein Klick-Symbol.
+- REQ-T2.04/T2.05 Kartenwahl als fünfter Schritt: Nach der ersten besiegten Welle hebt die Kriegsbeute die EP auf die Schwelle der ersten Kartenwahl (schwebende Zahl);
+  danach Abschied mit zwei Sprechblasen, die Figur geht durch das Tor zurück.
+- REQ-T2.06/T2.07 Figur ×1,2, weicht ausrückenden Einheiten aus; Sprechblasen blenden sanft ein, Auftrag fett abgesetzt.
+- Sitzungsprotokoll: Sprache, Stufe, Dauer der Begrüßung, Klicks auf Sprechblasen. Hinweis „Karte“ entfällt (Erzählung ersetzt ihn).
+
+Teil 1:
 - REQ-T.01/T.02 Tutorial in der ersten Partie: Der Quartiermeister führt Fertigen und Bauen vor, danach erscheint eine Zeile mit pulsierendem
   Rahmen um das Ziel (Klickfeld, Bauplatz, Läufer-Knopf, Wellen-Countdown). Fünf Schritte: Fertigen, Bauen, Einheiten kaufen, Welle ausschicken,
   erster Sieg; dann Abschiedszeile „Bauen, rüsten, halten.“ Nichts wird gesperrt, nichts abgedunkelt; Schritte zählen unabhängig von der Reihenfolge.

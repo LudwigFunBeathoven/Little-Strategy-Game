@@ -19,10 +19,10 @@ Stand von Iteration 6: `docs/archiv/STAND-iteration-6.md`, Bericht `docs/bericht
 | Inkrement | Inhalt | REQ | Status |
 |---|---|---|---|
 | T2.0 | Anforderungen ablegen, Ursache Startdialog | T2.01 | fertig |
-| T2.1 | Startbildschirm mit Sprache, Grad, Tutorial-Schalter | T2.01 | offen |
-| T2.2 | Kern: Kriegsbeute, Ereignis Kartenwahl | T2.04 | offen |
-| T2.3 | Erzählung, Begrüßung, Kartenschritt, Abschied, Blasen, Figur | T2.02 – T2.07 | offen |
-| T2.4 | Tests, Protokoll, Doku, Testbuild | alle | offen |
+| T2.1 | Startbildschirm mit Sprache, Grad, Tutorial-Schalter | T2.01 | fertig |
+| T2.2 | Kern: Kriegsbeute, Ereignis Kartenwahl | T2.04 | fertig |
+| T2.3 | Erzählung, Begrüßung, Kartenschritt, Abschied, Blasen, Figur | T2.02 – T2.07 | fertig |
+| T2.4 | Tests, Protokoll, Doku, Testbuild | alle | fertig |
 
 **Ursache REQ-T2.01 (Startdialog fehlte):** Commit `d2359a0` (T.3) ließ den Start in `boot()` bei fälligem Tutorial direkt `startGame(C.TUTORIAL.diff, { tutorial: true })`
 aufrufen und überging damit `openStart()`; Sprache und Schwierigkeit waren in der ersten Partie nicht wählbar, die Partie lief immer auf Leicht. Das war eine Folge der
@@ -61,7 +61,17 @@ node tools/bench-tick.mjs                   # Tick-Zeit mit 2 × 60 Einheiten
 - Ursache der zufälligen Fehlschläge der Prüfung „Zweiter Start im selben Browser“ gefunden: Chromium verlor den `localStorage` einer als `file://` geladenen Seite beim
   Neuladen gelegentlich vollständig (Messung: 1 von 12 Läufen, über HTTP 0 von 40; der Speicher war schon beim Start des neuen Dokuments leer). Das war kein Fehler im Spiel.
   Die Browser-Prüfung lädt die Seite deshalb jetzt über einen lokalen HTTP-Server (`tests/browser-check.mjs`). Zwei Läufe danach ohne Auffälligkeit.
+- T2.1 – T2.4: `npm test` 175/175 (neu: Kriegsbeute und Ereignis „Karte gewählt“ in `tests/hold.test.mjs`, Schrittlogik mit Begrüßung, Kartenschritt und Abschied in
+  `tests/tutorial.test.mjs`, Regressionstest „keine Partie ohne Startbildschirm“ in `tests/start.test.mjs`), Browser-Prüfung 315 (Startbildschirm, Voreinstellungen,
+  Englisch und Schwer, Sprachwechsel im Tutorial, URL-Parameter, Durchlauf in beiden Sprachen mit Begrüßung, vier erzählten Schritten, Kriegsbeute, Kartenwahl,
+  Abschied, Abgang, Protokoll, Bildschirmfoto bei 1280×720). Kurzsimulation unverändert (9:09 / 6:13, je 100 %), Tick-Zeit 0,13 ms; die vier Golden-Partien unverändert.
+  Probelauf mit direkter Bedienung: Kartenwahl nach rund 38 s Spielzeit, Tutorial nach rund 42 s zu Ende (Ziel unter 3:00 min).
+- Zufallsabhängig: Die Browser-Prüfung „Kaserne bauen aus dem Reiter Armee“ schlug in einem von vier Läufen fehl (der Lauf brach danach ab). In der Einzelausführung
+  8 von 8 Läufen ohne Fehler; die Prüfung meldet jetzt gezogene Karten und Plätze, um die Ursache beim nächsten Auftreten zu finden.
 
-## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
+## Auslegungen und Abweichungen Teil 2 (zur Zustimmung durch den PO)
+Siehe `docs/bericht-tutorial-2.md`, Abschnitt 2.
+
+## Auslegungen und Abweichungen Teil 1 (zur Zustimmung durch den PO)
 Siehe `docs/bericht-tutorial.md`, Abschnitt 2 (15 Punkte). Wichtigste: (1) die gestaffelte Freischaltung bleibt, nur die Hinweistexte der Einführung entfallen;
 (2) `exp/kartenpfad` und `exp/zeitalter` gibt es im Repository nicht; (3) „Menü“ ist der Dialog „Neue Partie“; (4) Version 0.8, Spielstand-Version unverändert.

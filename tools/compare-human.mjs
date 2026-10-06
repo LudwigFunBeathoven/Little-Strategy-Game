@@ -7,7 +7,8 @@
 // Strategie (REQ-6.09): Anteil der Einheitenkäufe an allen Handlungen der ersten SIM_STYLE_WINDOW_S Sekunden (Kauf, Bau, Ausbau, Forschung,
 // Reparatur). Die Partie gehört zur Strategie mit dem nächstliegenden Median aus der Simulation (STYLE_REF, Serie I6.0, alle Profile außer passiv).
 // Tutorial (REQ-T.07): Das Protokoll enthält tutorial { stepTimes, skipped, skippedAt, misclicks }. Je Partie werden Schrittzeiten, Überspringen und
-// Fehlklicks (Klicks außerhalb des hervorgehobenen Ziels) ausgegeben, am Ende je Schritt der Median der Dauer und die Summe der Fehlklicks.
+// Fehlklicks (Klicks außerhalb des hervorgehobenen Ziels), Dauer der Begrüßung und Klicks auf Sprechblasen ausgegeben, am Ende je Schritt der Median
+// der Dauer und die Summe der Fehlklicks.
 // Lange Schrittzeiten und viele Fehlklicks zeigen, wo Spieler hängen bleiben.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { PROFILES, CONFIG as C } from './sim-bot.mjs';
@@ -45,14 +46,14 @@ export function nearestStrategy(f){
 }
 
 /* Tutorial: Dauer je Schritt = Abstand zum zuletzt erledigten Schritt (Schritte können in anderer Reihenfolge erledigt werden), Fehlklicks je Schritt */
-export const TUTORIAL_STEPS = ['fertigen', 'bauen', 'rekrutieren', 'ausruecken', 'sieg'];
+export const TUTORIAL_STEPS = ['fertigen', 'bauen', 'rekrutieren', 'ausruecken', 'schlacht', 'karte'];
 export function tutorialFeatures(p){
   const t = p.tutorial;
   if (!t || (!Object.keys(t.stepTimes || {}).length && !t.skipped && !t.completed)) return null;
   let prev = 0; const dur = {};
   for (const id of TUTORIAL_STEPS){ const x = t.stepTimes[id]; if (x != null){ dur[id] = +Math.max(0, x - prev).toFixed(1); prev = Math.max(prev, x); } }
   const slowest = Object.entries(dur).sort((a, b) => b[1] - a[1])[0];
-  return { dur, misclicks: t.misclicks || {}, skipped: !!t.skipped, skippedAt: t.skippedAt || null, completed: !!t.completed,
+  return { dur, misclicks: t.misclicks || {}, skipped: !!t.skipped, skippedAt: t.skippedAt || null, completed: !!t.completed, greetingMs: t.greetingMs ?? null, bubbleClicks: t.bubbleClicks ?? 0, lang: p.lang || null,
            slowest: slowest ? slowest[0] : null, totalS: Math.max(0, ...Object.values(t.stepTimes || {})) };
 }
 
@@ -72,7 +73,8 @@ for (const file of args){
   if (tut){
     const mm = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
     console.log('  → Tutorial: ' + (tut.skipped ? `übersprungen in Schritt „${tut.skippedAt}“; ` : tut.completed ? `abgeschlossen nach ${mm(tut.totalS)}; ` : 'nicht beendet; ') +
-      TUTORIAL_STEPS.filter(id => tut.dur[id] != null).map(id => `${id} ${tut.dur[id]} s${tut.misclicks[id] ? ` (${tut.misclicks[id]} Fehlklicks)` : ''}`).join(' · ') + (tut.slowest ? `; längster Schritt: ${tut.slowest}` : ''));
+      TUTORIAL_STEPS.filter(id => tut.dur[id] != null).map(id => `${id} ${tut.dur[id]} s${tut.misclicks[id] ? ` (${tut.misclicks[id]} Fehlklicks)` : ''}`).join(' · ') + (tut.slowest ? `; längster Schritt: ${tut.slowest}` : '') +
+      `; Begrüßung ${tut.greetingMs == null ? '–' : (tut.greetingMs / 1000).toFixed(1) + ' s'}, ${tut.bubbleClicks} Klicks auf Sprechblasen${tut.lang ? ', Sprache ' + tut.lang : ''}`);
   }
 }
 // Zusammenfassung über alle Partien mit Tutorial (REQ-T.07)
