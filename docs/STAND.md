@@ -1,4 +1,4 @@
-# Klammerfront – Stand Tutorial „Erste Schritte“ (v0.8)
+# Klammerfront – Stand Tutorial „Erste Schritte“ (v0.8), Teil 1 und Teil 2
 
 Grundlage: `docs/anforderungen-tutorial.md`. Branch: `tutorial` (von `main`, Commit `2211210`, v0.7).
 Stand von Iteration 6: `docs/archiv/STAND-iteration-6.md`, Bericht `docs/bericht-iteration-6.md`.
@@ -13,6 +13,21 @@ Stand von Iteration 6: `docs/archiv/STAND-iteration-6.md`, Bericht `docs/bericht
 | T.3 | Quartiermeister, Hervorhebung, Start, Überspringen | T.02, T.04 | fertig |
 | T.4 | Erstkontakt-Hinweise, Markierung „neu“ | T.05 | fertig |
 | T.5 | Messung, Tests, Doku, Abnahme | T.07 | fertig |
+
+**Teil 2** (`docs/anforderungen-tutorial-2.md`: Erzählung, Kartenabschluss, Startauswahl), Branch `tutorial` weiter:
+
+| Inkrement | Inhalt | REQ | Status |
+|---|---|---|---|
+| T2.0 | Anforderungen ablegen, Ursache Startdialog | T2.01 | fertig |
+| T2.1 | Startbildschirm mit Sprache, Grad, Tutorial-Schalter | T2.01 | offen |
+| T2.2 | Kern: Kriegsbeute, Ereignis Kartenwahl | T2.04 | offen |
+| T2.3 | Erzählung, Begrüßung, Kartenschritt, Abschied, Blasen, Figur | T2.02 – T2.07 | offen |
+| T2.4 | Tests, Protokoll, Doku, Testbuild | alle | offen |
+
+**Ursache REQ-T2.01 (Startdialog fehlte):** Commit `d2359a0` (T.3) ließ den Start in `boot()` bei fälligem Tutorial direkt `startGame(C.TUTORIAL.diff, { tutorial: true })`
+aufrufen und überging damit `openStart()`; Sprache und Schwierigkeit waren in der ersten Partie nicht wählbar, die Partie lief immer auf Leicht. Das war eine Folge der
+Vorgabe in REQ-T.02/T.03 („ohne Startseite“, „immer auf Leicht“), die Teil 2 korrigiert. Die Tests blieben grün, weil sie diesen Pfad gerade erwarteten
+(`tests/browser-check.mjs`: „erste Partie startet ohne Dialog“).
 
 ## Prüfung je Inkrement
 ```
