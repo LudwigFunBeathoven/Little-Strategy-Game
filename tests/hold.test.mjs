@@ -107,3 +107,66 @@ test('Ohne Schonfrist ist nichts verändert: keine Sperre, normale erste Welle',
   run(G, 21);
   assert.equal(G.S.waveNo, 1);
 });
+
+/* ---------- Kriegsbeute (REQ-T2.04) ---------- */
+const BOUNTY = { maxS: 150, size: 2, bounty: true };
+function fight(G){        // drei Läufer, Schonfrist enden lassen, bis die Welle besiegt ist
+  const ev = []; G.on((name, d) => ev.push([name, d]));
+  G.S.material = 1e4;
+  for (let i = 0; i < 3; i++) G.spawn('laeufer');
+  run(G, Math.ceil(G.waveIn()) + 1);
+  G.releaseHold();
+  for (let i = 0; i < 120 * 20 && !ev.some(e => e[0] === 'enemyWaveDefeated'); i++) G.tick(0.05);
+  return ev;
+}
+
+test('Kriegsbeute: ist die erste Welle besiegt, reichen die EP für die erste Kartenwahl, die Wahl öffnet sich', () => {
+  const { G } = game('leicht', 5, { intro: true, hold: BOUNTY });
+  assert.equal(G.S.firstBounty, true);
+  const ev = fight(G);
+  const names = ev.map(e => e[0]);
+  assert.ok(names.includes('xpBounty') && names.includes('enemyWaveDefeated'));
+  assert.ok(names.indexOf('xpBounty') < names.indexOf('enemyWaveDefeated'), 'Beute vor der Meldung „besiegt“');
+  assert.ok(G.S.xpTotal >= G.xpNeed(1), 'EP mindestens auf der Schwelle');
+  assert.ok(G.S.level >= 1 && G.S.pendingDraft, 'die erste Kartenwahl steht an');
+  assert.equal(G.S.firstBounty, false, 'nur für diese Welle');
+  assert.ok(plain(ev.find(e => e[0] === 'xpBounty')[1]).n > 0);
+});
+
+test('Kriegsbeute: liegt der EP-Stand schon über der Schwelle, ändert sich nichts', () => {
+  const { G } = game('leicht', 5, { intro: true, hold: BOUNTY });
+  G.S.xpTotal = G.xpNeed(1) + 3; G.S.xp = G.S.xpTotal; G.S.level = 1; G.S.pendingLevels = 0;
+  const ev = fight(G);
+  assert.ok(!ev.some(e => e[0] === 'xpBounty'), 'keine Beute');
+  assert.equal(G.S.stats.xpBounty, undefined);
+  assert.equal(G.S.firstBounty, false);
+});
+
+test('Kriegsbeute entfällt beim Überspringen sofort; ohne Schonfrist gibt es sie nie', () => {
+  const { G } = game('leicht', 5, { intro: true, hold: BOUNTY });
+  run(G, 3);
+  G.releaseHold(true);
+  assert.equal(G.S.firstBounty, false);
+  const ev = [];
+  const { G: P } = game('leicht', 5, { intro: true });
+  assert.equal(P.S.firstBounty, false);
+  P.on(n => ev.push(n)); P.S.material = 1e4; for (let i = 0; i < 3; i++) P.spawn('laeufer');
+  for (let i = 0; i < 120 * 20 && !ev.includes('enemyWaveDefeated'); i++) P.tick(0.05);
+  assert.ok(!ev.includes('xpBounty') && P.S.stats.xpBounty === undefined);
+});
+
+test('Fällt die erste Welle nicht, läuft das Spiel weiter; die Beute kommt erst mit einer besiegten Welle', () => {
+  const { G } = game('leicht', 5, { intro: true, hold: BOUNTY });
+  run(G, 160);                       // keine Soldaten: die Schonfrist endet nach 150 s, die Welle rückt aus
+  assert.equal(G.S.firstBounty, true, 'noch nicht besiegt');
+  assert.equal(G.S.status, 'running');
+});
+
+test('Ereignis „Karte gewählt“', () => {
+  const { G } = game('leicht', 5, { intro: true, hold: BOUNTY });
+  const ev = []; G.on((n, d) => ev.push([n, plain(d)]));
+  fight(G);
+  assert.ok(G.chooseDraft(0));
+  const c = ev.find(e => e[0] === 'cardChosen');
+  assert.ok(c && typeof c[1].id === 'string');
+});

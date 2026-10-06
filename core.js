@@ -58,6 +58,7 @@ function freshState(diff, seed){
     turretCd: {}, enemyTurretCd: 0,
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
+    firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
     research: { done: {}, active: [], ver: 0, banned: [], fresh: false },     // Forschungsbaum der Universität (REQ-5.07)
     clickTimes: [],
@@ -975,6 +976,7 @@ function create(){
     S.pendingDraft = null;
     S.pendingLevels--;
     if (S.pendingLevels > 0) offerDraft();
+    emit('cardChosen', { id: o.id });
     return true;
   }
   /* Automatisierungskarten (REQ-45): kaufen und reparieren selbst, sobald genug Material da ist */
@@ -1060,9 +1062,17 @@ function create(){
     updateArmies(dt);
     applyConditionals(dt);
     checkReveals();
-    if (listeners.length){
+    if (listeners.length || S.firstBounty){
       const present = S.enemyQueue.length > 0 || S.units.some(u => u.side === 'e' && u.hp > 0);
-      if (foesPresent && !present) emit('enemyWaveDefeated', { waveNo: S.waveNo });
+      if (foesPresent && !present){
+        // Kriegsbeute: die erste besiegte Welle hebt die EP mindestens auf die Schwelle der nächsten Kartenwahl; liegt der Stand darüber, geschieht nichts
+        if (S.firstBounty){
+          S.firstBounty = false;
+          const gap = xpNeed(1) - S.xpTotal;                 // Schwelle der ersten Kartenwahl
+          if (gap > 0){ S.stats.xpBounty = gap; gainXp(gap); emit('xpBounty', { n: gap }); }
+        }
+        emit('enemyWaveDefeated', { waveNo: S.waveNo });
+      }
       foesPresent = present;
     }
     if (S.enemyBaseHp <= 0){ S.enemyBaseHp = 0; S.status = 'won';  log('log.won'); }
@@ -1083,9 +1093,11 @@ function create(){
     S = freshState(diff, seed);
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
-    // Schonfrist (REQ-T.03): opts.hold = { maxS, size } – die erste Gegnerwelle besteht aus size Läufern und rückt erst nach releaseHold() oder nach maxS aus
+    // Schonfrist (REQ-T.03): opts.hold = { maxS, size, bounty } – die erste Gegnerwelle besteht aus size Läufern und rückt erst nach releaseHold() oder nach maxS aus;
+    // bounty: Kriegsbeute nach der ersten besiegten Welle (REQ-T2.04)
     if (opts.hold){
       S.hold = { maxS: opts.hold.maxS, size: opts.hold.size };
+      S.firstBounty = opts.hold.bounty === true;
       S.nextEnemy = Array.from({ length: opts.hold.size }, () => ({ type: 'laeufer', lane: Math.floor(rnd() * LANES) }));
     }
     foesPresent = false;
@@ -1108,8 +1120,9 @@ function create(){
     if (!Array.isArray(S.nextEnemy) || !S.nextEnemy.length) S.nextEnemy = rollEnemyWave();
   }
   /* Schonfrist beenden. Die Gegnerwelle rückt sofort aus, falls sie fällig ist; der Takt bleibt dabei erhalten (wie beim Laden).
-     normalFirstWave = true (Überspringen): die erste Welle hat wieder die Größe des Schwierigkeitsgrades. */
+     normalFirstWave = true (Überspringen): die erste Welle hat wieder die Größe des Schwierigkeitsgrades, die Kriegsbeute entfällt. */
   function releaseHold(normalFirstWave = false){
+    if (normalFirstWave) S.firstBounty = false;
     if (!S.hold) return false;
     S.hold = null;
     const shift = Math.max(0, S.t - S.nextWave);
