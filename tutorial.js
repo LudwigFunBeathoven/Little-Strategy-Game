@@ -5,8 +5,10 @@
 const KF_TUTORIAL = (() => {
 'use strict';
 
-function create(steps, storage, key){
-  const fresh = () => ({ active: false, done: {}, doneAt: {}, progress: {}, demoShown: {}, misses: {}, skippedAt: null, ended: null });
+function create(steps, storage, key, scripts = {}){
+  const greeting = scripts.greeting || [], farewell = scripts.farewell || [];
+  const fresh = () => ({ active: false, done: {}, doneAt: {}, progress: {}, demoShown: {}, misses: {}, skippedAt: null, ended: null,
+                         greet: 0, bye: 0, greetingMs: null, bubbleClicks: 0 });
   let st = fresh(), muted = 0;
   const subs = [];
   const notify = (type, id) => { for (const f of subs) f(type, id); };
@@ -29,19 +31,32 @@ function create(steps, storage, key){
         st.progress[s.id] = (st.progress[s.id] || 0) + (s.sum ? Number(data[s.sum]) || 0 : 1);
         if (st.progress[s.id] >= s.need){ st.done[s.id] = true; st.doneAt[s.id] = +Number(t).toFixed(2); finished.push(s.id); }
       }
+      // Klickt der Spieler schon auf „Fertigen“ oder erledigt er einen Schritt, endet die Begrüßung (REQ-T2.02)
+      if (st.greet < greeting.length && (finished.length || (name === 'materialProduced' && data && data.source === 'click'))) st.greet = greeting.length;
       for (const id of finished) notify('done', id);
       return finished;
     },
     /* Vorführung der Figur: ihre Handlungen zählen nicht als Fortschritt des Spielers. */
     silently(fn){ muted++; try { return fn(); } finally { muted--; } },
-    /* Ansicht für die Oberfläche: aus (off), Schritt (step) oder Abschied (farewell, alle Schritte erledigt). */
+    /* Ansicht für die Oberfläche: aus (off), Begrüßung (greet), Schritt (step), Kampf ohne Sprechblase (wait), Abschied (farewell, alle Schritte
+       erledigt) oder Abgang der Figur (leaving). */
     view(){
       if (!st.active) return { phase: 'off' };
+      if (st.greet < greeting.length) return { phase: 'greet', index: st.greet, textKey: greeting[st.greet] };
       const s = currentStep();
-      if (s && !s.farewell) return { phase: 'step', step: s, index: steps.indexOf(s) };
-      if (s) return { phase: 'wait', step: s, index: steps.indexOf(s) };       // Abschiedsschritt: Ziel noch offen, keine Zeile
-      return { phase: 'farewell', step: steps.find(x => x.farewell) || steps[steps.length - 1] };
+      if (s && s.silent) return { phase: 'wait', step: s, index: steps.indexOf(s) };
+      if (s) return { phase: 'step', step: s, index: steps.indexOf(s) };
+      if (st.bye < farewell.length) return { phase: 'farewell', index: st.bye, textKey: farewell[st.bye] };
+      return { phase: 'leaving' };
     },
+    /* Sprechblasen ohne Auftrag: nächste zeigen (Klick oder Ablauf der Zeit) bzw. die Begrüßung beenden */
+    advanceGreeting(){ if (st.greet < greeting.length) st.greet++; },
+    endGreeting(){ st.greet = greeting.length; },
+    advanceFarewell(){ if (st.bye < farewell.length) st.bye++; },
+    noteBubbleClick(){ st.bubbleClicks++; },
+    noteGreeting(ms){ if (st.greetingMs === null) st.greetingMs = Math.round(ms); },
+    /* Eine Partie ohne Tutorial hat begonnen: ab jetzt gilt es nicht mehr als erste Partie dieses Browsers (REQ-T2.01) */
+    markPlayed(){ if (!load(key)) store(key, 'declined'); },
     active: () => st.active,
     isDone: id => !!st.done[id],
     progress: id => st.progress[id] || 0,
@@ -56,7 +71,7 @@ function create(steps, storage, key){
     skip(){
       if (!st.active) return false;
       const s = currentStep();
-      st.skippedAt = s ? s.id : 'farewell';
+      st.skippedAt = st.greet < greeting.length ? 'begruessung' : s ? s.id : 'abschied';
       return this.end('skipped');
     },
     /* Ende nach der Abschiedszeile bzw. Überspringen. */
@@ -84,7 +99,7 @@ function create(steps, storage, key){
     },
     /* Kennzahlen für das Sitzungsprotokoll (REQ-T.07) */
     data: () => ({ stepTimes: Object.assign({}, st.doneAt), skipped: st.ended === 'skipped', skippedAt: st.skippedAt, completed: st.ended === 'completed',
-                   misclicks: Object.assign({}, st.misses), progress: Object.assign({}, st.progress) }),
+                   misclicks: Object.assign({}, st.misses), progress: Object.assign({}, st.progress), greetingMs: st.greetingMs, bubbleClicks: st.bubbleClicks }),
     on(fn){ subs.push(fn); },
   };
 }

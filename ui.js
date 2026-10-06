@@ -7,11 +7,17 @@
 const C = KF_CONFIG;
 const G = KlammerCore.create();
 const $ = id => document.getElementById(id);
+/* URL-Parameter für Tests (REQ-T2.01): ?lang=de|en und ?difficulty=easy|normal|hard überspringen den Startbildschirm; ?tutorial=1|0 schaltet das Tutorial */
+const URL_PARAMS = new URLSearchParams(location.search);
+const DIFF_ALIAS = { easy: 'leicht', normal: 'normal', hard: 'schwer', leicht: 'leicht', schwer: 'schwer' };
+const LANG_PARAM = KF_CONFIG.LANGUAGES.includes(URL_PARAMS.get('lang')) ? URL_PARAMS.get('lang') : null;
+const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
 
 /* ================= Sprache ================= */
 function storageGet(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
 function storageSet(k, v){ try { localStorage.setItem(k, v); } catch (e) { /* Speicher nicht verfügbar */ } }
 function defaultLang(){
+  if (LANG_PARAM) return LANG_PARAM;
   const saved = storageGet(C.LANG_KEY);
   if (C.LANGUAGES.includes(saved)) return saved;
   return (navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en';
@@ -221,7 +227,7 @@ function tipContent(id){
     case 'again': return { title: t('result.again'), body: t('tip.again.body') };
     case 'resetHints': return { title: t('start.resetHints'), body: t('tip.resetHints.body') };
     case 'skipIntro': return { title: t('start.skipIntro'), body: t('tip.skipIntro.body') };
-    case 'tutorialRepeat': return { title: t('start.tutorial'), body: t('tip.tutorial.repeat.body') };
+    case 'tutorialSwitch': return { title: t('start.tutorial'), body: t('tip.tutorial.switch.body') };
     case 'hintOk': return { title: t('hint.ok'), body: t('tip.hintOk.body') };
     case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a) };
     case 'hud':   return hudTip(a);
@@ -412,7 +418,7 @@ function writeRecord(diff, time){
 /* ================= Erstkontakt-Hinweise (REQ-20.2/20.3) ================= */
 const Hints = KF_HINTS.create({ get: storageGet, set: storageSet }, C.HINTS_KEY);
 /* Tutorial „Erste Schritte“ (REQ-T.04): Schritte in data/tutorial-steps.js, Anzeige in tutorial-ui.js; ?tutorial=1 erzwingt, ?tutorial=0 unterdrückt */
-const Tutorial = KF_TUTORIAL.create(KF_TUTORIAL_STEPS, { get: storageGet, set: storageSet }, C.TUTORIAL_KEY);
+const Tutorial = KF_TUTORIAL.create(KF_TUTORIAL_STEPS, { get: storageGet, set: storageSet }, C.TUTORIAL_KEY, { greeting: KF_TUTORIAL_GREETING, farewell: KF_TUTORIAL_FAREWELL });
 const TUTORIAL_PARAM = (/[?&]tutorial=([01])\b/.exec(location.search) || [])[1] || null;
 /* Regeln (REQ-T.05): höchstens ein Hinweis gleichzeitig, nie während des Tutorials, eine Zeile, schließt sich nach UI.hintAutoMs oder per Klick,
    je Browser nur einmal (Hints). Auslöser prüft render() erst nach dem Tutorial: Was dann noch zutrifft, wird nachgeholt. */
@@ -437,7 +443,13 @@ function dismissHint(){ clearTimeout(hintTimer); hintShown = null; hintQueue.shi
 
 /* ================= Startbildschirm und Ergebnis ================= */
 let modalOpen = false, resultShownFor = null;
-let pickDiff = C.DEFAULT_DIFFICULTY, canCancel = false;
+let pickDiff = C.DEFAULT_DIFFICULTY, pickTutorial = false, canCancel = false;
+/* Voreinstellung des Startbildschirms (REQ-T2.01): erste Partie dieses Browsers → Leicht und Tutorial an; danach die zuletzt gewählte Stufe, Tutorial aus */
+const isFirstGame = () => Tutorial.due(null);
+function preferredDifficulty(){
+  const saved = storageGet(C.DIFFICULTY_KEY);
+  return isFirstGame() ? 'leicht' : C.DIFFICULTY[saved] ? saved : C.DEFAULT_DIFFICULTY;
+}
 /* Knopf mit Beschriftung und Erklärzeile darunter (REQ-20.1) */
 function mkButton(cls, text, onClick, tip, expl){
   const b = document.createElement('button');
@@ -451,7 +463,8 @@ function mkButton(cls, text, onClick, tip, expl){
 }
 function openStart(cancelable){
   modalOpen = true; canCancel = cancelable;
-  if (G.S.status !== 'setup') pickDiff = G.S.diff;
+  pickDiff = preferredDifficulty();
+  pickTutorial = Tutorial.due(TUTORIAL_PARAM);
   renderStart();
   $('modal').hidden = false;
   $('mBody').querySelector('button').focus();
@@ -460,12 +473,12 @@ function renderStart(){
   const rec = readRecords();
   $('mEyebrow').textContent = t('start.eyebrow');
   $('mTitle').textContent = t('start.title');
-  $('mText').textContent = (discardedSave ? t('start.oldSave') + ' ' : '') + (canCancel ? t('start.discard') : t('start.note'));
+  $('mText').textContent = ((discardedSave ? t('start.oldSave') + ' ' : '') + (canCancel ? t('start.discard') : '')).trim();
   const body = $('mBody'); body.innerHTML = '';
 
   const langField = document.createElement('div'); langField.className = 'field';
   const ll = document.createElement('span'); ll.className = 'field-label'; ll.textContent = t('start.language');
-  const seg = document.createElement('div'); seg.className = 'seg';
+  const seg = document.createElement('div'); seg.className = 'seg seg-lang';
   for (const l of C.LANGUAGES){
     const b = mkButton('', t('lang.' + l), () => { setLang(l); renderStart(); render(); }, 'lang:' + l, t('ex.lang.' + l));
     b.setAttribute('aria-pressed', String(l === lang));
@@ -481,16 +494,21 @@ function renderStart(){
     b.type = 'button'; b.className = 'diff'; b.dataset.tooltip = 'diff:' + key;
     b.setAttribute('aria-pressed', String(key === pickDiff));
     const nm = document.createElement('b'); nm.textContent = t(`diff.${key}.name`);
+    if (key === 'leicht' && isFirstGame()){ const rcm = document.createElement('span'); rcm.className = 'rec-tag'; rcm.textContent = t('start.recommended'); nm.appendChild(rcm); }
     const rc = document.createElement('span'); rc.className = 'rec'; rc.textContent = rec[key] ? t('start.record', { time: clock(rec[key]) }) : '';
-    const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(`diff.${key}.desc`);
     const d = C.DIFFICULTY[key];
     const ex = document.createElement('span'); ex.className = 'expl';
     ex.textContent = t('ex.diff', { hp: fmt(d.enemyBaseHp), size: fmt1(d.waveBase), growth: fmt1(d.waveGrowth) });
-    b.append(nm, rc, ds, ex);
+    b.append(nm, rc, ex);       // kurz und ohne Erklärtexte (REQ-T2.01); die Beschreibung steht im Tooltip
     b.addEventListener('click', () => { pickDiff = key; renderStart(); });
     diffs.appendChild(b);
   }
   diffField.append(dl, diffs);
+  // Tutorial: Schalter, in der ersten Partie an, danach aus; gilt auf jedem Schwierigkeitsgrad (REQ-T2.01)
+  const tutField = document.createElement('div'); tutField.className = 'field';
+  const tb = mkButton('btn-ghost', t('start.tutorial'), () => { pickTutorial = !pickTutorial; renderStart(); }, 'tutorialSwitch', t(pickTutorial ? 'ex.tutorial.on' : 'ex.tutorial.off'));
+  tb.setAttribute('aria-pressed', String(pickTutorial));
+  const trow = document.createElement('div'); trow.className = 'seg'; trow.appendChild(tb); tutField.appendChild(trow);
   const hintField = document.createElement('div'); hintField.className = 'field';
   const hl = document.createElement('span'); hl.className = 'field-label'; hl.textContent = t('start.hints');
   const hb = mkButton('btn-ghost', t('start.resetHints'), () => { Hints.reset(); hb.querySelector('.expl').textContent = t('ex.resetHints.done'); }, 'resetHints', t('ex.resetHints'));
@@ -501,13 +519,12 @@ function renderStart(){
     'skipIntro', t(skip ? 'ex.skipIntro.on' : 'ex.skipIntro.off'));
   sb.setAttribute('aria-pressed', String(skip));
   hrow.appendChild(sb);
-  hrow.appendChild(mkButton('btn-ghost', t('start.tutorial'), () => startGame(C.TUTORIAL.diff, { tutorial: true }), 'tutorialRepeat', t('ex.tutorial.repeat')));
   hintField.append(hl, hrow);
-  body.append(langField, diffField, hintField);
+  body.append(langField, diffField, tutField, hintField);
 
   const act = $('mActions'); act.innerHTML = '';
   if (canCancel) act.appendChild(mkButton('btn-ghost', t('start.back'), closeModal, 'back', t('ex.back')));
-  act.appendChild(mkButton('btn-primary', t('start.go'), () => startGame(pickDiff), 'start', t('ex.start', { diff: t(`diff.${pickDiff}.name`) })));
+  act.appendChild(mkButton('btn-primary', t('start.go'), () => startGame(pickDiff, { tutorial: pickTutorial }), 'start', t('ex.start', { diff: t(`diff.${pickDiff}.name`) })));
 }
 function openResult(){
   modalOpen = true;
@@ -527,14 +544,16 @@ function openResult(){
   b.focus();
 }
 function closeModal(){ Tip.hide(); modalOpen = false; $('modal').hidden = true; last = performance.now(); acc = 0; }
-/* Neue Partie; opts.tutorial: Tutorial-Partie auf Leicht mit Schonfrist (REQ-T.03, T.04) */
+/* Neue Partie auf der gewählten Stufe; opts.tutorial: mit Tutorial, Schonfrist und Kriegsbeute (REQ-T.03, T.04, T2.04), auf jedem Grad. Beginnt nur
+   nach dem Startbildschirm oder mit den URL-Parametern lang/difficulty (REQ-T2.01). */
 function startGame(diff, opts = {}){
   discardedSave = false;
   const tut = opts.tutorial === true;
+  storageSet(C.DIFFICULTY_KEY, diff);
   TutUI.reset(); NewMarks.reset();
-  G.newGame(tut ? C.TUTORIAL.diff : diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
-    { intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize } : undefined });
-  if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else Tutorial.restore(null);
+  G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
+    { intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
+  if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
   resultShownFor = null;
   save();
   closeModal();
@@ -616,7 +635,6 @@ function render(){
   // Erstkontakt-Hinweise: im Moment, in dem ein Inhalt erstmals verfügbar wird (REQ-20.2, REQ-T.05); nicht während des Tutorials
   if (S.status === 'running' && !Tutorial.active()){
     if (G.introShows('buildings') && (S.level >= C.INTRO_BUILDINGS_LEVEL || !S.intro)) showHint('buildings');
-    if (S.pendingDraft) showHint('card');
     if (G.has('universitaet')) showHint('research');
     if (G.has('schmiede')) showHint('smithy');
     if (G.has('kontor')) showHint('kontor');
@@ -684,9 +702,10 @@ function boot(){
   TutUI.init();
   readColors();
   resize();
-  // Erste Partie in diesem Browser: sofort im Spiel mit Tutorial, ohne Startdialog (REQ-T.02, T.04); ?tutorial=1 erzwingt eine neue Tutorial-Partie
-  if (TUTORIAL_PARAM !== '1' && load()){ render(); }
-  else if (Tutorial.due(TUTORIAL_PARAM)){ startGame(C.TUTORIAL.diff, { tutorial: true }); }
+  // Eine neue Partie beginnt immer nach dem Startbildschirm (REQ-T2.01); nur ?lang= oder ?difficulty= überspringen ihn (Tests). Ein Spielstand wird fortgesetzt.
+  const skipStart = !!(LANG_PARAM || DIFF_PARAM);
+  if (!(skipStart && TUTORIAL_PARAM === '1') && load()){ render(); }
+  else if (skipStart){ startGame(DIFF_PARAM || preferredDifficulty(), { tutorial: Tutorial.due(TUTORIAL_PARAM) }); }
   else { render(); openStart(false); }
   requestAnimationFrame(frame);
 }

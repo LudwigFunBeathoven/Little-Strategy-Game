@@ -27,8 +27,8 @@ test('Jeder Hinweis erscheint pro Browser nur einmal; nach dem Zurücksetzen wie
   for (const id of H.IDS) assert.equal(c.trigger(id), true, `${id} nach dem Zurücksetzen wieder`);
 });
 
-test('Betroffene Systeme: Karte, Gebäude, Forschung, Abriss, Belagerung, Mauer, Türme, Schmiede, Kontor, Nachbarschaft (Start und erste Welle erklärt das Tutorial)', () => {
-  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'card', 'demolish', 'kontor', 'neighbors', 'research', 'siege', 'smithy', 'tower', 'wall']);
+test('Betroffene Systeme: Gebäude, Forschung, Abriss, Belagerung, Mauer, Türme, Schmiede, Kontor, Nachbarschaft (Start und erste Welle erklärt das Tutorial)', () => {
+  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'demolish', 'kontor', 'neighbors', 'research', 'siege', 'smithy', 'tower', 'wall']);
 });
 
 test('Nicht verfügbarer oder kaputter Speicher bricht nichts', () => {
@@ -38,7 +38,7 @@ test('Nicht verfügbarer oder kaputter Speicher bricht nichts', () => {
   assert.equal(h.trigger('siege'), true);
   assert.equal(h.trigger('siege'), false, 'im Speicher der Seite vermerkt');
   const junk = H.create({ get: () => '{kaputt', set(){} }, 'k');
-  assert.equal(junk.trigger('card'), true);
+  assert.equal(junk.trigger('wall'), true);
 });
 
 test('Hinweistexte liegen in de und en, eine Zeile (höchstens 90 Zeichen)', () => {

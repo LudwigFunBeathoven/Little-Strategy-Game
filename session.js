@@ -44,7 +44,7 @@ const Session = (() => {
     P.maxUnits = Math.max(P.maxUnits, G.ownOnField() + S.queue.length);
     P.maxArmy = Math.max(P.maxArmy, S.stats.maxArmy || 0);
     if (P.firstWallFallS === null && S.sections.some((s, i) => i !== C.GATE_LANE && s.hp <= 0)) P.firstWallFallS = +S.t.toFixed(1);
-    P.durationS = +S.t.toFixed(1); P.result = S.status; P.kills = S.kills; P.losses = S.losses; P.diff = S.diff;
+    P.durationS = +S.t.toFixed(1); P.result = S.status; P.kills = S.kills; P.losses = S.losses; P.diff = S.diff; P.lang = lang;
   }
   function wrap(){
     const orig = {};

@@ -1,27 +1,31 @@
-/* Klammerfront – Tutorial „Erste Schritte“, Anzeige (REQ-T.02, T.04): Quartiermeister in der Spielwelt, pulsierender Rahmen um das Ziel,
-   Sprechblase, Randpfeil, Knopf „Überspringen“. Die Schrittlogik steht in tutorial.js (ohne Seitenzugriff), die Schritte in
+/* Klammerfront – Tutorial „Erste Schritte“, Anzeige (REQ-T.02, T.04, T2.02 – T2.07): Quartiermeister in der Spielwelt, pulsierender Rahmen um das Ziel,
+   Sprechblase mit Erzählung und Auftrag, Randpfeil, Knopf „Überspringen“. Die Schrittlogik steht in tutorial.js (ohne Seitenzugriff), die Schritte in
    data/tutorial-steps.js. Hier wird nichts gesperrt und nichts abgedunkelt; das Tutorial wechselt nie selbst den Reiter (REQ-5.03).
    Lädt nach panels.js. Gezeichnet wird mit den vorhandenen Canvas- und CSS-Mitteln, ohne eigene Grafikdateien. */
 'use strict';
 
 const TutUI = (() => {
   const T = C.TUTORIAL;
-  const bubble = $('tutBubble'), bubbleText = $('tutBubbleText');
+  const bubble = $('tutBubble'), narrEl = $('tutBubbleNarr'), taskEl = $('tutBubbleTask'), moreEl = $('tutBubbleMore');
   let marked = [];                    // Elemente mit Rahmen
-  let target = null;                  // aktuelles Ziel: { els, world, textKey, anchor }
+  let target = null;                  // aktuelles Ziel: { els, world, narrKey, taskKey, anchor, clickable }
   let demo = null;                    // laufende Vorführung: { id, kind, t0, clicked }
   let fig = null;                     // Bildschirmrechteck der Figur (für die Sprechblase)
-  let farewellTimer = null, farewellEnd = 0, camByTutorial = false, rushShown = false;     // rushShown: Schritt 4 zeigte einen Knopf zum sofortigen Ausschicken
+  let camByTutorial = false, rushShown = false;     // rushShown: Schritt 4 zeigte einen Knopf zum sofortigen Ausschicken
+  let bubbleKey = '', shownAt = 0, prevPhase = 'off', greetStart = 0, leaveStart = 0, dodge = 0, lastDraw = 0;
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const hasWorld = () => cv && cw > 0;
+  /* Text je Pacing-Modus überschreibbar (REQ-T2.05): Schlüssel mit Modus-Suffix, sonst der Standard */
+  const tx = key => { const m = C.PACING_MODE; return m && KF_I18N[lang] && KF_I18N[lang][key + '.' + m] !== undefined ? t(key + '.' + m) : t(key); };
 
   /* ---------- Ziel des aktuellen Schritts, aus dem Zustand der Oberfläche abgeleitet ---------- */
   const tabBtn = id => tabEls[id].btn;
   function resolve(view){
-    if (view.phase === 'farewell') return { els: [], world: null, textKey: view.step.textKey, anchor: 'figure' };
+    // Begrüßung und Abschied: Sprechblasen ohne Auftrag an der Figur, ein Klick zeigt die nächste (REQ-T2.02, T2.05)
+    if (view.phase === 'greet' || view.phase === 'farewell') return { els: [], world: null, narrKey: view.textKey, taskKey: null, anchor: 'figure', clickable: true };
     if (view.phase !== 'step') return null;
-    const S = G.S, step = view.step, own = el => ({ els: [el], world: null, textKey: step.textKey, anchor: el });
+    const S = G.S, step = view.step, own = el => ({ els: [el], world: null, narrKey: step.narrKey, taskKey: step.taskKey, anchor: el, clickable: false });
     switch (step.target){
       case 'click': return own($('clickBtn'));
       case 'plot': {
@@ -32,12 +36,12 @@ const TutUI = (() => {
         }
         const i = S.slots.findIndex(x => !x);
         if (i < 0) return null;
-        return { els: activeTab === 'build' ? [gridEls[i].btn] : [], world: i, textKey: step.textKey, anchor: 'figure' };
+        return { els: activeTab === 'build' ? [gridEls[i].btn] : [], world: i, narrKey: step.narrKey, taskKey: step.taskKey, anchor: 'figure', clickable: false };
       }
       case 'units': {
         if (activeTab !== 'army') return own(tabBtn('army'));
-        // fehlt das Material, zeigt der Quartiermeister zuerst auf das Klickfeld
-        if (S.material < G.unitCost('laeufer') && !G.supplyFull()) return Object.assign(own($('clickBtn')), { textKey: TUT_STEPS_FIRST_TEXT() });
+        // fehlt das Material, zeigt der Quartiermeister zuerst auf das Klickfeld (nur der Auftrag, Erzählung wird nie nachgeholt)
+        if (S.material < G.unitCost('laeufer') && !G.supplyFull()) return Object.assign(own($('clickBtn')), { narrKey: null, taskKey: Tutorial.steps[0].taskKey });
         return own(optEls.unit_laeufer.btn);
       }
       case 'waves': {
@@ -46,19 +50,32 @@ const TutUI = (() => {
         if (rushShown) return activeTab !== 'army' ? own(tabBtn('army')) : own(waveRushBtn);
         return own($('hudWaves'));
       }
+      case 'cards': {
+        // erste Kartenwahl: Sprechblase am Reiter „Karten“, der sich selbst öffnet; sie liegt über dem Reiter und verdeckt keine Karte
+        if (!S.pendingDraft || !tabVisible('cards')) return null;
+        return own(tabBtn('cards'));
+      }
     }
     return null;
   }
-  const TUT_STEPS_FIRST_TEXT = () => Tutorial.steps[0].textKey;
 
   /* ---------- Vorführung (Schritt 1 und 2): erst die Handlung, dann die Zeile ---------- */
   function maybeStartDemo(view){
     if (demo || view.phase !== 'step' || !view.step.demo || Tutorial.demoShown(view.step.id)) return;
+    if (Tutorial.progress(view.step.id) > 0){ Tutorial.markDemoShown(view.step.id); return; }       // der Spieler war schneller: keine Vorführung
     if (paused || modalOpen || G.S.status !== 'running' || G.S.pendingDraft || !hasWorld()) return;
     demo = { id: view.step.id, kind: view.step.demo, t0: performance.now() + (G.S.t < 2 ? T.startDelayMs : 200), clicked: false };
   }
   function endDemo(){ if (!demo) return; Tutorial.markDemoShown(demo.id); demo = null; requestRender(); }
-  /* Je Bild: Zeitablauf der Vorführung und Lage der Sprechblase */
+  /* Sprechblase ohne Auftrag: nächste zeigen bzw. Begrüßung beenden (Klick oder Ablauf der Zeit) */
+  function advanceBubble(byClick){
+    const v = Tutorial.view();
+    if (v.phase !== 'greet' && v.phase !== 'farewell') return;
+    if (byClick) Tutorial.noteBubbleClick();
+    if (v.phase === 'greet') Tutorial.advanceGreeting(); else Tutorial.advanceFarewell();
+    requestRender();
+  }
+  /* Je Bild: Zeitablauf der Vorführung, Auto-Weiter der Sprechblasen, Abgang der Figur, Lage der Sprechblase */
   function frame(now){
     if (demo){
       if (Tutorial.isDone(demo.id)) endDemo();
@@ -71,6 +88,12 @@ const TutUI = (() => {
         if (p >= 1) endDemo();
       }
     }
+    const v = Tutorial.view();
+    if ((v.phase === 'greet' || v.phase === 'farewell') && !paused && !modalOpen && bubbleKey && now - shownAt >= T.greetMs) advanceBubble(false);
+    if (v.phase === 'leaving'){
+      if (!leaveStart) leaveStart = now;
+      if (now - leaveStart >= T.leaveMs) finish('completed');
+    }
     placeBubble();
   }
 
@@ -81,26 +104,44 @@ const TutUI = (() => {
     marked = els.slice();
   }
   function render(){
-    const view = Tutorial.view(), skip = $('tutSkipBtn');
+    const view = Tutorial.view(), skip = $('tutSkipBtn'), now = performance.now();
     setHidden(skip, !Tutorial.active());
-    document.documentElement.style.setProperty('--tut-pulse', T.pulseMs + 'ms');
-    document.documentElement.style.setProperty('--tut-bubble-max', T.bubbleMaxPx + 'px');
-    if (view.phase === 'off'){ target = null; demo = null; setMarked([]); bubble.hidden = true; return; }
+    const root = document.documentElement.style;
+    root.setProperty('--tut-pulse', T.pulseMs + 'ms'); root.setProperty('--tut-bubble-max', T.bubbleMaxPx + 'px'); root.setProperty('--tut-fade', T.fadeMs + 'ms');
+    // Dauer der Begrüßung für das Sitzungsprotokoll (REQ-T2.02)
+    if (view.phase === 'greet' && !greetStart) greetStart = now;
+    if (prevPhase === 'greet' && view.phase !== 'greet' && greetStart){ Tutorial.noteGreeting(now - greetStart); greetStart = 0; }
+    // Abschied: Der Quartiermeister steht vor dem Tor; die Kamera geht dafür einmal zum Reich zurück (nicht mehr folgen)
+    if (view.phase === 'farewell' && prevPhase !== 'farewell'){ Cam.follow = false; Cam.goTo(0); camByTutorial = false; }
+    prevPhase = view.phase;
+    if (view.phase === 'off'){ target = null; demo = null; bubbleKey = ''; leaveStart = 0; greetStart = 0; setMarked([]); bubble.hidden = true; return; }
     maybeStartDemo(view);
-    if (view.phase === 'farewell' && !farewellTimer){
-      farewellEnd = performance.now() + T.farewellMs;
-      farewellTimer = setTimeout(() => { farewellTimer = null; finish('completed'); }, T.farewellMs);
-    }
     target = demo ? null : resolve(view);                           // während der Vorführung noch kein Rahmen und keine Zeile
     setMarked(target ? target.els.filter(el => el.offsetParent !== null) : []);
     const show = !!target && !modalOpen;
-    if (show) setText(bubbleText, t(target.textKey));
+    if (show){
+      const key = view.phase + ':' + (view.index ?? '') + ':' + (view.step ? view.step.id : '') + ':' + target.narrKey + ':' + target.taskKey + ':' + lang;
+      setText(narrEl, target.narrKey ? tx(target.narrKey) : ''); setHidden(narrEl, !target.narrKey);
+      setText(taskEl, target.taskKey ? tx(target.taskKey) : ''); setHidden(taskEl, !target.taskKey);
+      setHidden(moreEl, !target.clickable);
+      bubble.classList.toggle('clickable', target.clickable);
+      if (target.clickable) bubble.setAttribute('title', t('tut.more')); else bubble.removeAttribute('title');
+      if (key !== bubbleKey){                                       // neue Sprechblase: sanft einblenden (REQ-T2.07), Anzeigezeit beginnt
+        bubbleKey = key; shownAt = now;
+        bubble.style.animation = 'none'; void bubble.offsetWidth; bubble.style.animation = '';
+      }
+    } else bubbleKey = '';
     setHidden(bubble, !show);
     bubble.setAttribute('aria-label', t('tut.name'));
   }
   function anchorRect(){
     if (!target) return null;
-    if (target.anchor === 'figure') return fig;
+    if (target.anchor === 'figure'){
+      // liegt die Figur außerhalb des Bildes (Kamera verschoben), zeigt die Sprechblase an den linken Rand der Welt
+      const wr = $('world').getBoundingClientRect();
+      if (!fig || fig.right < wr.left || fig.left > wr.right) return { left: wr.left + 30, right: wr.left + 50, top: wr.top + 10, bottom: wr.top + 40, width: 20, height: 30 };
+      return fig;
+    }
     const el = target.anchor;
     if (!el || el.offsetParent === null) return null;
     return el.getBoundingClientRect();
@@ -124,9 +165,24 @@ const TutUI = (() => {
   function draw(now){
     const view = Tutorial.view();
     if (view.phase === 'off'){ fig = null; return; }
-    const s = Math.max(0.8, Math.min(1.4, laneH() / 90)), fx = realmR() + 30 * s, bob = reduceMotion ? 0 : Math.sin(now / 420) * 1.6 * s;
-    const fy = laneMid(GATE) - laneH() * 0.36 + bob;
-    const fade = view.phase === 'farewell' ? clamp((farewellEnd - now) / 700, 0, 1) : 1;
+    const dt = lastDraw ? Math.min(0.1, (now - lastDraw) / 1000) : 0; lastDraw = now;
+    const s = clamp(laneH() / 90, 0.8, 1.4) * T.guideScale, bob = reduceMotion ? 0 : Math.sin(now / 420) * 1.6 * s;
+    let fx = realmR() + 30 * s, fy = laneMid(GATE) - laneH() * 0.36 + bob, fade = 1;
+    // Weicht seitlich aus, wenn eine eigene Einheit beim Ausrücken in ihre Nähe kommt (REQ-T2.06)
+    let near = false;
+    for (const u of G.S.units){
+      if (u.side !== 'p') continue;
+      const p = shown.get(u.id); if (!p) continue;
+      if (Math.abs(p.x - fx) < 24 * s && Math.abs(p.y - fy) < 32 * s){ near = true; break; }
+    }
+    dodge = clamp(dodge + (near ? 1 : -1) * dt * 5, 0, 1);
+    fy -= dodge * laneH() * 0.5;
+    // Abgang: zurück durch das Tor, dabei verblassen (REQ-T2.05)
+    let leaveP = 0;
+    if (view.phase === 'leaving'){
+      leaveP = leaveStart ? clamp((now - leaveStart) / T.leaveMs, 0, 1) : 0;
+      fx += (realmR() - 8 * s - fx) * leaveP; fy += (laneMid(GATE) - fy) * leaveP; fade = 1 - leaveP;
+    }
     const dp = demo ? (now - demo.t0) / T.demoMs : -1;                    // < 0: noch nicht begonnen, 0 … 1: läuft
     ctx.save();
     ctx.globalAlpha = 0.92 * fade;
@@ -147,7 +203,7 @@ const TutUI = (() => {
       ctx.globalAlpha = (1 - q) * fade; ctx.beginPath(); ctx.arc(fx + 12 * s, fy - 1 * s, (4 + q * 14) * s, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 0.92 * fade;
     }
     ctx.restore();
-    fig = (() => { const p = worldToScreen(fx, fy - 26 * s), q = worldToScreen(fx, fy + 8 * s); return { left: p.x - 9, right: p.x + 9, top: p.y, bottom: q.y, width: 18, height: q.y - p.y }; })();
+    fig = (() => { const p = worldToScreen(fx, fy - 26 * s), q = worldToScreen(fx, fy + 8 * s); return { left: p.x - 9 * s, right: p.x + 9 * s, top: p.y, bottom: q.y, width: 18 * s, height: q.y - p.y }; })();
     // Ziel in der Welt: pulsierender Rahmen um den Bauplatz, Zeigelinie während der Vorführung, Randpfeil außerhalb des Bildes
     const tw = target ? target.world : (demo && demo.kind === 'plot' ? G.S.slots.findIndex(x => !x) : null);
     if (tw !== null && tw >= 0 && plotRects[tw]){
@@ -177,23 +233,24 @@ const TutUI = (() => {
         G.releaseHold();
         if (!rushShown && !Cam.touched && !Cam.follow){ Cam.follow = true; camByTutorial = true; }
       }
+      if (id === 'schlacht') releaseCamera();                       // der Kampf ist entschieden
     }
     requestRender();
   }
   function releaseCamera(){ if (camByTutorial && !Cam.touched) Cam.follow = false; camByTutorial = false; }
-  /* Ende: nach der Abschiedszeile (completed) oder per Knopf (skipped) */
+  /* Ende: nach dem Abgang der Figur (completed) oder per Knopf (skipped, beendet auch Schonfrist und Kriegsbeute) */
   function finish(kind){
-    clearTimeout(farewellTimer); farewellTimer = null; demo = null;
+    demo = null; leaveStart = 0; greetStart = 0;
     if (kind === 'skipped'){ Tutorial.skip(); G.releaseHold(true); } else Tutorial.end(kind);
     releaseCamera();
     requestRender();
   }
   function skip(){ if (Tutorial.active()) finish('skipped'); }
-  /* Fehlklick: Zeigerdruck außerhalb des hervorgehobenen Ziels zählt für das Sitzungsprotokoll (REQ-T.07) */
+  /* Fehlklick: Zeigerdruck außerhalb des hervorgehobenen Ziels zählt für das Sitzungsprotokoll (REQ-T.07); nur bei Schritten mit Auftrag */
   function onPointer(e){
-    if (!Tutorial.active() || e.button !== 0 || modalOpen || !target || demo) return;
+    if (!Tutorial.active() || e.button !== 0 || modalOpen || !target || target.clickable || demo) return;
     const el = e.target instanceof Element ? e.target : null;
-    if (!el || el.closest('#tutSkipBtn') || el.closest('.modal')) return;
+    if (!el || el.closest('#tutSkipBtn') || el.closest('.modal') || el.closest('#tutBubble')) return;
     if (target.els.some(x => x.contains(el))) return;
     if (target.world !== null && target.world !== undefined && el === cv){
       const p = screenToWorld(e.clientX, e.clientY), r = plotRects[target.world];
@@ -202,12 +259,16 @@ const TutUI = (() => {
     Tutorial.misclick();
   }
   function init(){
-    G.on((name, data) => { const done = Tutorial.event(name, data, G.S.t); if (done.length) onProgress(done); });
+    G.on((name, data) => {
+      const done = Tutorial.event(name, data, G.S.t); if (done.length) onProgress(done);
+      if (name === 'xpBounty') floatNow('xp', data.n);              // Kriegsbeute als schwebende Zahl (REQ-T2.04)
+    });
     $('tutSkipBtn').addEventListener('click', skip);
+    bubble.addEventListener('click', () => { if (target && target.clickable) advanceBubble(true); });
     document.addEventListener('pointerdown', onPointer, true);
   }
   /* Neue Partie: nicht übernommene Zustände der Anzeige zurücksetzen */
-  function reset(){ clearTimeout(farewellTimer); farewellTimer = null; demo = null; target = null; setMarked([]); releaseCamera(); Cam.touched = false; }
+  function reset(){ demo = null; target = null; bubbleKey = ''; leaveStart = 0; greetStart = 0; dodge = 0; prevPhase = 'off'; setMarked([]); releaseCamera(); Cam.touched = false; }
   return { init, render, draw, frame, skip, reset, get target(){ return target; }, get demo(){ return demo; } };
 })();
 const renderTutorial = TutUI.render, drawTutorial = TutUI.draw, tutorialFrame = TutUI.frame;

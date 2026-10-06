@@ -26,10 +26,19 @@ function floatGain(){
   if (reduceMotion || S.status !== 'running') return;
   for (const [el, v] of [[hudEl.material, dm], [hudEl.xpVal, dx]]){
     if (v < 1) continue;
-    const f = document.createElement('span'); f.className = 'float'; f.classList.add('num'); f.textContent = '+' + fmt(v);
-    el.parentElement.appendChild(f);
-    setTimeout(() => f.remove(), C.UI.floatMs);
+    spawnFloat(el, v);
   }
+}
+function spawnFloat(el, v){
+  const f = document.createElement('span'); f.className = 'float'; f.classList.add('num'); f.textContent = '+' + fmt(v);
+  el.parentElement.appendChild(f);
+  setTimeout(() => f.remove(), C.UI.floatMs);
+}
+/* Schwebende Zahl sofort, z. B. für die Kriegsbeute (REQ-T2.04); der nächste Takt der Leiste zählt sie nicht noch einmal */
+function floatNow(which, v){
+  if (reduceMotion || v < 1) return;
+  spawnFloat(which === 'xp' ? hudEl.xpVal : hudEl.material, v);
+  if (which === 'xp') floatLast.xp += v; else floatLast.mat += v;
 }
 function buildHud(){
   for (const id of ['hudSoldiers', 'material', 'rate', 'xpVal', 'xpRate', 'barLvl', 'lvlProg', 'waveIn', 'enemyWaveIn', 'siegeInfo',

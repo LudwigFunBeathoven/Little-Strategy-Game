@@ -8,7 +8,9 @@ const KF_CONFIG = {
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
   HINTS_KEY: 'klammerfront.hints.v1',   // gesehene Erstkontakt-Hinweise (REQ-20.3)
-  TUTORIAL_KEY: 'klammerfront.tutorial.v1',   // Merker: das Tutorial wurde in diesem Browser schon gestartet (REQ-T.04)
+  TUTORIAL_KEY: 'klammerfront.tutorial.v1',   // Merker „erste Partie“: fehlt er, ist es die erste Partie dieses Browsers (REQ-T.04, T2.01)
+  DIFFICULTY_KEY: 'klammerfront.difficulty',  // zuletzt gewählter Schwierigkeitsgrad (REQ-T2.01)
+  PACING_MODE: '',                            // Pacing-Modus für überschreibbare Tutorial-Texte (REQ-T2.05); leer = Standard
   LANGUAGES: ['de', 'en'],
   FALLBACK_LANG: 'en',
 
@@ -87,9 +89,12 @@ const KF_CONFIG = {
 
   /* Tutorial „Erste Schritte“ (REQ-T.01 – T.04): Schritte in data/tutorial-steps.js, Texte in den Sprachdateien */
   TUTORIAL: {
-    diff: 'leicht',             // die Tutorial-Partie startet immer auf Leicht
     holdMaxS: 150,              // Schonfrist: die erste Gegnerwelle rückt spätestens nach so vielen Sekunden aus (REQ-T.03)
-    firstWaveSize: 2,           // erste Gegnerwelle der Tutorial-Partie: so viele Läufer; drei eigene Läufer halten sie
+    firstWaveSize: 2,           // erste Gegnerwelle der Tutorial-Partie: so viele Läufer; drei eigene Läufer halten sie (auf jedem Schwierigkeitsgrad)
+    greetMs: 4000,              // jede Sprechblase ohne Auftrag (Begrüßung, Abschied) bleibt mindestens so lange stehen; ein Klick zeigt sofort die nächste (REQ-T2.02)
+    leaveMs: 1800,              // Abgang der Figur durch das Tor nach dem Abschied (REQ-T2.05)
+    fadeMs: 180,                // Einblenden einer Sprechblase (REQ-T2.07, höchstens 200 ms)
+    guideScale: 1.2,            // Darstellungsgröße der Figur gegenüber dem Grundmaß (REQ-T2.06)
     startDelayMs: 900,          // Pause, bevor die Figur die erste Handlung vorführt
     demoMs: 1800,               // Dauer einer Vorführung; erst danach erscheint die Zeile
     farewellMs: 4500,           // so lange steht die Abschiedszeile, dann verschwindet die Figur

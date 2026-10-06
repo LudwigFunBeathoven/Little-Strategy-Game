@@ -125,10 +125,13 @@
   .diff{display:grid; grid-template-columns:1fr auto; gap:2px 12px; text-align:left; padding:12px 14px; border:1px solid var(--rule-strong); border-radius:6px; background:var(--surface); cursor:pointer;}
   .diff:hover{border-color:var(--brass); background:var(--brass-soft);}
   .diff b{font-size:16px;}
+  .diff b .rec-tag{font-weight:400; font-size:12px; color:var(--brass); margin-left:8px;}
   .diff .rec{font-family:"IBM Plex Mono", monospace; font-size:12px; color:var(--ink-faint); align-self:center;}
   .diff span.d{grid-column:1 / -1; font-size:13px; color:var(--ink-soft);}
   #mBody{display:flex; flex-direction:column; gap:14px;}
   #mBody:empty{display:none;}
+  #mText:empty{display:none;}
+  .seg-lang button{flex:1 1 0; min-width:0;}
   .card-actions{align-items:center; display:flex; justify-content:flex-end; gap:12px; position:sticky; bottom:-24px; background:var(--surface); padding:10px 0 2px;}   /* bleibt sichtbar, wenn der Dialog scrollt */
 
   footer{font-size:12.5px; color:var(--ink-faint); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
@@ -323,6 +326,16 @@
   .tut-bubble{position:fixed; z-index:28; left:0; top:0; max-width:var(--tut-bubble-max, 280px); padding:8px 12px; background:var(--brass); color:var(--brass-ink);
               border-radius:8px; font-weight:600; font-size:14px; line-height:1.35; pointer-events:none; box-shadow:0 6px 20px rgba(0,0,0,.18);}
   .tut-bubble[hidden]{display:none;}
+  .tut-bubble{display:flex; flex-direction:column; gap:4px; animation:tutfade var(--tut-fade, 180ms) ease-out;}
+  .tut-bubble .tb-narr{font-weight:400;}
+  .tut-bubble .tb-task{font-weight:700; border-top:1px solid rgba(251,251,248,.4); padding-top:4px;}
+  .tut-bubble .tb-narr[hidden], .tut-bubble .tb-task[hidden], .tut-bubble .tb-more[hidden]{display:none;}
+  .tut-bubble .tb-task:only-child, .tut-bubble .tb-narr[hidden] + .tb-task{border-top:none; padding-top:0;}
+  .tut-bubble .tb-more{font-style:normal; align-self:flex-end; line-height:1; font-size:12px; opacity:.85;}
+  .tut-bubble .tb-more::after{content:'\25B8';}
+  .tut-bubble.clickable{pointer-events:auto; cursor:pointer;}
+  @keyframes tutfade{from{opacity:0;} to{opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ .tut-bubble{animation:none;} }
   .tut-bubble::after{content:''; position:absolute; left:var(--tail-x, 50%); width:10px; height:10px; background:var(--brass); transform:translateX(-50%) rotate(45deg);}
   .tut-bubble.above::after{bottom:-5px;} .tut-bubble.below::after{top:-5px;}
 </style>
@@ -447,7 +460,7 @@
   </section>
 </div>
 
-<div class="tut-bubble" id="tutBubble" role="status" hidden><span id="tutBubbleText"></span></div>
+<div class="tut-bubble" id="tutBubble" role="status" hidden><span class="tb-narr" id="tutBubbleNarr"></span><b class="tb-task" id="tutBubbleTask"></b><i class="tb-more" id="tutBubbleMore" hidden></i></div>
 
 <div class="hintbox" id="hintBox" role="status" aria-live="polite" hidden>
   <div class="hint-body"><p class="tag" id="hintTitle"></p><p id="hintText"></p></div>
