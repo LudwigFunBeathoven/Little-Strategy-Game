@@ -1,6 +1,6 @@
 # Klammerfront – Bericht Tutorial „Erste Schritte“ (v0.8)
 
-Stand: 05.10.2026 · Branch `tutorial` (von `main`, v0.7) · Status: **wartet auf Freigabe nach `main`**
+Stand: 05.10.2026 · Branch `tutorial` (von `main`, v0.7) · Status: **vom PO freigegeben, nach `main` und `MVP` übernommen (06.10.2026)**
 Grundlage: `docs/anforderungen-tutorial.md` · Stand je Inkrement: `docs/STAND.md` · Testleitfaden: `docs/testleitfaden-tutorial.md`
 **Teil 2 (`docs/bericht-tutorial-2.md`) löst Teile dieses Berichts ab:** Startbildschirm vor jeder Partie (statt Start ohne Dialog auf Leicht), fünf Schritte mit
 Kartenwahl als Abschluss (statt „Erster Sieg“), Begrüßung und Abschied. Die Auslegungen und Zahlen unten beschreiben den Stand von Teil 1.

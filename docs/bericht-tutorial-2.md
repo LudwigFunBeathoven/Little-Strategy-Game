@@ -1,6 +1,6 @@
 # Klammerfront – Bericht Tutorial Teil 2: Erzählung, Kartenabschluss, Startauswahl (v0.8)
 
-Stand: 06.10.2026 · Branch `tutorial` · Status: **wartet auf Freigabe nach `main`**
+Stand: 06.10.2026 · Branch `tutorial` · Status: **vom PO freigegeben, nach `main` und `MVP` übernommen (06.10.2026)**
 Grundlage: `docs/anforderungen-tutorial-2.md` · Stand je Inkrement: `docs/STAND.md` · Testleitfaden: `docs/testleitfaden-tutorial.md`
 
 ## Ergebnis in drei Sätzen
