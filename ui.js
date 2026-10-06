@@ -403,8 +403,8 @@ function load(){
     G.adopt(d);
     NewMarks.restore(ui);
     Tutorial.restore(TUTORIAL_PARAM === '0' ? null : tut);
-    // Reines Online-Spiel (REQ-6.03): beim Laden vergeht keine Spielzeit, die Partie beginnt pausiert
-    if (G.S.status === 'running') setPaused(true);
+    // Reines Online-Spiel (REQ-6.03): beim Laden vergeht keine Spielzeit, die Partie beginnt pausiert; im Tutorial läuft sie von selbst weiter (kein „Weiter“-Klick)
+    if (G.S.status === 'running' && !Tutorial.active()) setPaused(true);
     return true;
   } catch (e) { return false; }
 }
@@ -675,8 +675,9 @@ function frame(now){
 /* ================= Start, sobald render.js, hud.js und panels.js geladen sind ================= */
 function boot(){
   document.addEventListener('visibilitychange', () => {
-    // Tab verdeckt: speichern und pausieren; beim Zurückkehren steht „Weiter“ in der Spielwelt (REQ-6.03)
-    if (document.hidden){ save(); if (G.S.status === 'running') setPaused(true); }
+    // Tab verdeckt: speichern und pausieren; beim Zurückkehren steht „Weiter“ in der Spielwelt (REQ-6.03). Im Tutorial nicht: Ein verdeckter Tab
+    // zeichnet ohnehin nicht (höchstens MAX_FRAME_S Nachholzeit), und das Tutorial soll nie durch eine Pause unterbrochen werden.
+    if (document.hidden){ save(); if (G.S.status === 'running' && !Tutorial.active()) setPaused(true); }
     else { last = performance.now(); acc = 0; requestRender(); }
   });
   window.addEventListener('pagehide', save);

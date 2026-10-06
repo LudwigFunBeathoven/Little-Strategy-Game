@@ -69,6 +69,9 @@ node tools/bench-tick.mjs                   # Tick-Zeit mit 2 × 60 Einheiten
 - Zufallsabhängig: Die Browser-Prüfung „Kaserne bauen aus dem Reiter Armee“ schlug in einem von vier Läufen fehl (der Lauf brach danach ab). In der Einzelausführung
   8 von 8 Läufen ohne Fehler; die Prüfung meldet jetzt gezogene Karten und Plätze, um die Ursache beim nächsten Auftreten zu finden.
 
+- Korrektur Pause im Tutorial (Rückmeldung PO): `ui.js` pausiert bei verdecktem Tab und beim Laden nicht mehr, solange das Tutorial läuft (Browser-Prüfung 319). Offen bleibt die
+  Kartenwahl, die das Spiel regelgemäß anhält (REQ-6.04 / v0.5).
+
 ## Auslegungen und Abweichungen Teil 2 (zur Zustimmung durch den PO)
 Siehe `docs/bericht-tutorial-2.md`, Abschnitt 2.
 

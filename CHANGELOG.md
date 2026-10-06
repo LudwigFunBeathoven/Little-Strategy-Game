@@ -1,6 +1,7 @@
 # Änderungen
 
 ## v0.8 – Tutorial „Erste Schritte“ (Oktober 2026)
+Korrektur nach Spieltest: Im Tutorial pausiert weder ein verdeckter Tab noch das Neuladen die Partie (kein „Weiter“-Klick); im freien Spiel gilt REQ-6.03 unverändert.
 Teil 2 (06.10.2026, Anforderungen `docs/anforderungen-tutorial-2.md`):
 - REQ-T2.01 Startbildschirm vor jeder Partie: Sprache, Schwierigkeitsgrad (Leicht „empfohlen für den Einstieg“ in der ersten Partie), Schalter Tutorial (erste Partie an,
   danach aus), „Partie beginnen“. Das Tutorial läuft auf jedem Grad. Neu `?lang=` und `?difficulty=easy|normal|hard` (überspringen den Dialog für Tests). Behebt: Teil 1 ließ

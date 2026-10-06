@@ -855,6 +855,24 @@ for (const stepId of ['begruessung', 'fertigen', 'bauen', 'rekrutieren', 'ausrue
   await ctx.close();
 }
 
+// Keine Pause im Tutorial: verdeckter Tab und Neuladen pausieren das Tutorial nicht, ein freies Spiel schon (REQ-6.03)
+{
+  const { ctx, p } = await freshTutorialPage();
+  const hide = hidden => p.evaluate(h => { Object.defineProperty(document, 'hidden', { get: () => h, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); }, hidden);
+  await hide(true); await hide(false); await p.waitForTimeout(200);
+  const a = await p.evaluate(() => ({ paused: __kf.paused, resume: !document.querySelector('#resumeBtn').hidden }));
+  check(!a.paused && !a.resume, `Tutorial: verdeckter Tab pausiert das Spiel nicht, kein „Weiter“ ${JSON.stringify(a)}`);
+  const t0 = await p.evaluate(() => __kf.G.S.t); await p.waitForTimeout(500);
+  check(await p.evaluate(t => __kf.G.S.t > t, t0), 'Tutorial: die Zeit läuft nach dem Tabwechsel weiter');
+  await p.evaluate(() => __kf.save()); await p.reload(); await p.waitForTimeout(400);
+  const r = await p.evaluate(() => ({ paused: __kf.paused, active: __kf.Tutorial.active(), resume: !document.querySelector('#resumeBtn').hidden }));
+  check(r.active && !r.paused && !r.resume, `Tutorial: nach dem Neuladen läuft die Partie ohne „Weiter“ ${JSON.stringify(r)}`);
+  await p.click('#tutSkipBtn'); await p.waitForTimeout(150);
+  await hide(true); await hide(false); await p.waitForTimeout(150);
+  check(await p.evaluate(() => __kf.paused && !document.querySelector('#resumeBtn').hidden), 'Freies Spiel: verdeckter Tab pausiert weiterhin (REQ-6.03)');
+  await ctx.close();
+}
+
 // Sitzungsprotokoll (REQ-T.07, T2.): Schrittzeiten, Fehlklicks, Begrüßung, Klicks auf Blasen, Sprache und Stufe; Vorführung zählt nicht als Klick
 {
   const { ctx, p } = await freshTutorialPage('de', '&difficulty=easy&debug=1');
