@@ -1067,7 +1067,7 @@ for (const lang of ['de', 'en']){
   check(s6.stage && s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task'), `[${lang}] Tutorial/karten: erste Kartenwahl auf der Bühne mit Erzählung und Auftrag ${JSON.stringify([s6.stage, s6.tab])}`);
   check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Tutorial/karten: Sprechblase sitzt über der Bühne und verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 5000 });
-  await p.click('.kcard >> nth=0'); await p.waitForTimeout(400);
+  await p.click('.kcard >> nth=0'); await p.waitForTimeout(1100);
   const f1 = await tutState(p);
   check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1.karten'), `[${lang}] Tutorial/karten: Abschied 1 im Modus karten „${f1.narr}“`);
   check(errs.length === 0, `[${lang}] Tutorial/karten: keine Fehler${show(errs)}`);
