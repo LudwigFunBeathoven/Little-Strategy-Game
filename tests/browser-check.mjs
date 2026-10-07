@@ -662,11 +662,11 @@ const endGreeting = async p => { await p.evaluate(() => { __kf.Tutorial.endGreet
   await p.click('.card .btn-primary'); await p.waitForTimeout(600);
   const g = await tutState(p);
   check(g.status === 'running' && g.diff === 'schwer' && g.lang === 'en' && g.phase === 'greet' && g.narr === await tx(p, 'tut.greet1'), `Englisch und Schwer: Partie läuft, Tutorial erscheint auf Englisch ${JSON.stringify(g)}`);
-  check(g.narr === 'Welcome, commander. I am your quartermaster.' && g.hold && g.hold.size === 2, 'Tutorial auf Schwer: Schonfrist mit kleiner erster Welle gilt unabhängig vom Grad');
+  check(g.narr === 'Welcome, governor. I am your quartermaster.' && g.hold && g.hold.size === 2, 'Tutorial auf Schwer: Schonfrist mit kleiner erster Welle gilt unabhängig vom Grad');
   // Sprachwechsel während des Tutorials: die Sprechblase wechselt ohne Neuladen
   await p.click('#langBtn'); await p.waitForTimeout(250);
   const de = await tutState(p);
-  check(de.lang === 'de' && de.narr === 'Willkommen, Feldherr. Ich bin dein Quartiermeister.', `Sprachwechsel im Tutorial: Sprechblase sofort in der neuen Sprache (${de.narr})`);
+  check(de.lang === 'de' && de.narr === 'Willkommen, Statthalter. Ich bin dein Quartiermeister.', `Sprachwechsel im Tutorial: Sprechblase sofort in der neuen Sprache (${de.narr})`);
   await p.click('#langBtn'); await p.waitForTimeout(100);
   // Überspringen: nach dem Tutorial gelten die Schwer-Werte
   await p.click('#tutSkipBtn'); await p.waitForTimeout(250);

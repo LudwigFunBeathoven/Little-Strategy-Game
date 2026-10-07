@@ -29,15 +29,15 @@ function floatGain(){
     spawnFloat(el, v);
   }
 }
-function spawnFloat(el, v){
-  const f = document.createElement('span'); f.className = 'float'; f.classList.add('num'); f.textContent = '+' + fmt(v);
+function spawnFloat(el, v, text){
+  const f = document.createElement('span'); f.className = 'float'; f.classList.add('num'); f.textContent = text || '+' + fmt(v);
   el.parentElement.appendChild(f);
   setTimeout(() => f.remove(), C.UI.floatMs);
 }
 /* Schwebende Zahl sofort, z. B. für die Kriegsbeute (REQ-T2.04); der nächste Takt der Leiste zählt sie nicht noch einmal */
-function floatNow(which, v){
+function floatNow(which, v, text){
   if (reduceMotion || v < 1) return;
-  spawnFloat(which === 'xp' ? hudEl.xpVal : hudEl.material, v);
+  spawnFloat(which === 'xp' ? hudEl.xpVal : hudEl.material, v, text);
   if (which === 'xp') floatLast.xp += v; else floatLast.mat += v;
 }
 function buildHud(){
