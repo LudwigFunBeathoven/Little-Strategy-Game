@@ -1,0 +1,245 @@
+{
+ "runs": 50,
+ "felder": [
+  {
+   "diff": "leicht",
+   "profile": "aktiv",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "leicht",
+   "profile": "aktiv",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 5.6,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "leicht",
+   "profile": "durchschnitt",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6.8,
+   "offen": 0,
+   "wahlen": 4
+  },
+  {
+   "diff": "leicht",
+   "profile": "durchschnitt",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6.2,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "leicht",
+   "profile": "gelegentlich",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 7.8,
+   "offen": 0,
+   "wahlen": 4
+  },
+  {
+   "diff": "leicht",
+   "profile": "gelegentlich",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 7.5,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "leicht",
+   "profile": "passiv",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 8,
+   "medianSiegMin": 9.9,
+   "offen": 0,
+   "wahlen": 6
+  },
+  {
+   "diff": "leicht",
+   "profile": "passiv",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 4,
+   "medianSiegMin": 12.6,
+   "offen": 0,
+   "wahlen": 6
+  },
+  {
+   "diff": "normal",
+   "profile": "aktiv",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6.1,
+   "offen": 0,
+   "wahlen": 4
+  },
+  {
+   "diff": "normal",
+   "profile": "aktiv",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 5.5,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "normal",
+   "profile": "durchschnitt",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6.9,
+   "offen": 0,
+   "wahlen": 4
+  },
+  {
+   "diff": "normal",
+   "profile": "durchschnitt",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6.2,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "normal",
+   "profile": "gelegentlich",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 7.9,
+   "offen": 0,
+   "wahlen": 4
+  },
+  {
+   "diff": "normal",
+   "profile": "gelegentlich",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 7.7,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "normal",
+   "profile": "passiv",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 0,
+   "medianSiegMin": null,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "normal",
+   "profile": "passiv",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 0,
+   "medianSiegMin": null,
+   "offen": 0,
+   "wahlen": 3
+  },
+  {
+   "diff": "schwer",
+   "profile": "aktiv",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6.4,
+   "offen": 0,
+   "wahlen": 6
+  },
+  {
+   "diff": "schwer",
+   "profile": "aktiv",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 6,
+   "offen": 0,
+   "wahlen": 6
+  },
+  {
+   "diff": "schwer",
+   "profile": "durchschnitt",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 100,
+   "medianSiegMin": 7.5,
+   "offen": 0,
+   "wahlen": 6
+  },
+  {
+   "diff": "schwer",
+   "profile": "durchschnitt",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 98,
+   "medianSiegMin": 7,
+   "offen": 0,
+   "wahlen": 6
+  },
+  {
+   "diff": "schwer",
+   "profile": "gelegentlich",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 10,
+   "medianSiegMin": 9.5,
+   "offen": 0,
+   "wahlen": 2
+  },
+  {
+   "diff": "schwer",
+   "profile": "gelegentlich",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 8,
+   "medianSiegMin": 9.2,
+   "offen": 0,
+   "wahlen": 1
+  },
+  {
+   "diff": "schwer",
+   "profile": "passiv",
+   "strategy": "gierig",
+   "n": 50,
+   "siegquote": 0,
+   "medianSiegMin": null,
+   "offen": 0,
+   "wahlen": 0
+  },
+  {
+   "diff": "schwer",
+   "profile": "passiv",
+   "strategy": "einheiten-zuerst",
+   "n": 50,
+   "siegquote": 0,
+   "medianSiegMin": null,
+   "offen": 0,
+   "wahlen": 1
+  }
+ ]
+}
