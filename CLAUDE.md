@@ -6,7 +6,7 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.8 (Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
+Stand: v0.8.1 (MVP-Veröffentlichung: `docs/anforderungen-mvp-release.md`, `docs/bericht-mvp-release.md`; Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
 Vorher v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`.
 
 ## Der Nutzer
@@ -38,6 +38,8 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `tools/sim-metrics.mjs` | Kennzahlen je Takt (Richtungswechsel). |
 | `tools/compare-human.mjs` | Ordnet Sitzungsprotokolle von Menschen dem nächstliegenden Bot-Profil zu. |
 | `tools/browser-bot.js` | Bot „Einheiten zuerst“: Durchlauftest, Protokollprüfung und zweite Simulationsstrategie (REQ-6.09). |
+| `tools/sprachliste.mjs` | Wortliste des Sprach-Audits (`tests/sprache.test.mjs`, Schlüssel mit Präfix `tut.`). |
+| `tools/vergleichsbasis.mjs` | Vergleichsbasis der Simulation: Siegquote, Dauer, Kartenwahlen je Feld (50 Partien, beide Strategien). |
 | `tools/bench-tick.mjs` | Tick-Zeit mit 2 × 60 Einheiten. |
 | `tests/` | `npm test` (Node-eigener Test-Runner), optional `npm run test:browser` (braucht Playwright). |
 | `docs/STAND.md` | Stand je Inkrement, Prüfergebnisse, Abweichungen und Auslegungen. |
