@@ -11,19 +11,44 @@ Grundlage: `docs/anforderungen-kartenpfad.md`. Branch von `main` (Commit `9b3ccb
 | Iteration 6 auf `main`? | ja (v0.7, später v0.8 mit Tutorial) |
 | Tutorial Teil 1 und 2 umgesetzt? | ja; die Texte aus KP.08 ersetzen die Entwürfe (KP.1, fertig) |
 | `docs/branch-konzepte-pacing.md` vorhanden? | **nein**; das Dokument liegt nicht im Repository. Der Unterbau (§4.1) wird nach den Angaben in `anforderungen-kartenpfad.md` ausgelegt |
-| Gemeinsamer Unterbau (Freischaltlogik, Einheitenersatz, `PACING_MODUS`)? | **nein**; Schalter und Freischaltlogik entstehen mit KP.3 – KP.5 |
+| Gemeinsamer Unterbau (Freischaltlogik, Einheitenersatz, `PACING_MODUS`)? | **nein, daher nachgezogen**: zuerst auf `main` (Commit `5c2f57b`, Standardmodus unverändert, Golden-Test grün), danach `exp/kartenpfad` darauf neu aufgesetzt. Beschreibung und Basislinie unten |
 
 ## Inkremente
 
 | Inkrement | Inhalt | REQ | Status |
 |---|---|---|---|
+| KP.0 | Voraussetzungen, Unterbau auf `main`, Basislinie | KP.01 | fertig |
 | KP.1 | Tutorial-Sprache, Glossar, Sprach-Audit | KP.08 | fertig |
 | KP.2 | Kartenbühne | KP.03 | fertig (Familien-Band und „Pfadkarte“-Hinweise folgen mit KP.3) |
-| KP.0, KP.3 | Unterbau, Kartenfamilien, Startzustand | KP.01, 02, 06 | offen |
+| KP.3 | Kartenfamilien, Startzustand, Meilenstein-Platz | KP.01, 02, 06 | offen |
 | KP.4 | Universität als Forschungsstätte | KP.04 | offen |
 | KP.5 | Upgrades, Einheitenersatz | KP.05 | offen |
 | KP.6 | Wagnis, Exklusivpfade, Mindesttempo | KP.06, 07 | offen |
 | KP.7 | Bots, Simulation, Bericht, Testbuild | KP.09 | offen |
+
+## Pacing-Unterbau (KP.0, Vorarbeit für den Branch „Kartenpfad“)
+
+Gemeinsamer Unterbau auf `main`, Standardmodus unverändert (Golden-Test `tests/unveraendert.test.mjs` grün, `tests/pacing.test.mjs` neu).
+
+- Schalter `PACING_MODUS` (`config.js`, vorher `PACING_MODE`), im Spielstand `S.pacing`; `newGame(…, { pacing })` überschreibt ihn. Ohne Eintrag in `C.PACING` (Standard) ist nichts gesperrt.
+- Freischaltlogik: `C.PACING[modus].gesperrt` (Schlüssel `bau:<gebäude>`, `einheit:<typ>`, `forschung:<id>`), geöffnet mit `unlockKey` (`S.unlocks`); wirkt auf `isBuildable`, `unitUnlocked`, `researchBlock` (Grund `closed`).
+- Upgrade-Stufen: `C.PACING[modus].stufen` bindet den Kauf ab Stufe n an eine Quelle (Karte oder Forschung); `stageSource(id)`, `canBuy` prüft sie.
+- Einheitenersatz: `replaceUnit(von, nach)` wertet Warteschlange und Einheiten auf dem Feld auf (nichts wird gelöscht, Lebenspunkte im selben Verhältnis); `spawn` erzeugt danach den Ersatztyp.
+- Kein Spielstandformat geändert (neue Felder fehlen in älteren Ständen und fallen auf den Standard zurück), daher keine neue `SAVE_VERSION`.
+- Der Spezifikation fehlte `docs/branch-konzepte-pacing.md` (§4.1); der Unterbau folgt den Angaben in `docs/anforderungen-kartenpfad.md` (Branch `exp/kartenpfad`).
+
+Basislinie der Kartenwahlen im Standardmodus (Normal, 20 Partien je Zeile, `tools/baseline-wahlen.mjs`): Wahlen je Partie (Median) und erste Wahl:
+
+| Strategie | Profil | Wahlen | erste Wahl | Dauer bis Sieg | Siegquote |
+|---|---|---|---|---|---|
+| gierig | aktiv | 4 | 76 s | 6,5 min | 100 % |
+| gierig | durchschnitt | 7 | 85 s | 10,2 min | 95 % |
+| gierig | gelegentlich | 7 | 86 s | 13,5 min | 55 % |
+| einheiten-zuerst | aktiv | 3 | 76 s | 5,4 min | 100 % |
+| einheiten-zuerst | durchschnitt | 3 | 76 s | 6,1 min | 100 % |
+| einheiten-zuerst | gelegentlich | 3 | 77 s | 7,3 min | 100 % |
+
+Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad aus Karte und anschließender Forschung (zwei Schritte) braucht mehr Wahlen, als die Partie bietet; das gehört in den Bericht (Risiko „Zweistufiger Weg zur Einheit“, `anforderungen-kartenpfad.md` Abschnitt 5).
 
 ## KP.1
 
