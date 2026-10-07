@@ -8,7 +8,7 @@
 // Debug-Modus: ?debug=1, #debug oder im Testbuild fest eingeschaltet (window.KF_DEBUG = true vor den Skripten, REQ-6.11)
 const DEBUG = /[?&]debug=1\b/.test(location.search) || /(^#|[#&])debug\b/.test(location.hash) || window.KF_DEBUG === true;
 const Session = (() => {
-  let P = null, lastSample = -1, lastPhase = null, muted = 0;     // muted: Handlungen des Quartiermeisters zählen nicht als Spielerhandlung
+  let P = null, lastSample = -1, lastPhase = null, muted = 0, draftActs = { rerolled: 0, banned: 0 };     // muted: Handlungen des Quartiermeisters zählen nicht als Spielerhandlung
   /* Debug-Protokoll je Einheit (REQ-6.01): Zustand der Gruppe, Lane, Querbewegung, Platz, Bewegungsrichtung je Takt; die letzten
      UI.debugUnitLogS Sekunden. Abruf: __kf.unitLog(id) in der Konsole oder im exportierten Protokoll (unitLog). */
   let unitLog = [];
@@ -29,9 +29,10 @@ const Session = (() => {
   const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption'];
   function reset(){
     const S = G.S;
-    P = { format: 'klammerfront-session', formatVersion: 1, version: C.VERSION, lang, diff: S.diff, startedAt: new Date().toISOString(),
+    P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
           actions: [], drafts: [], research: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
+    draftActs = { rerolled: 0, banned: 0 };
     lastSample = S.t; lastPhase = G.phase();
   }
   const record = (kind, extra) => { P.actions.push(Object.assign({ t: +G.S.t.toFixed(2), kind }, extra || {})); };
@@ -56,6 +57,8 @@ const Session = (() => {
           record(name, { arg: args[0] });
           if (name === 'repair') P.wallUse.repairs++;
           if (name === 'buy' && /^(mauer|stacheln|moertel|turm|reichweite|kadenz)/.test(String(args[0]))) P.wallUse.upgrades++;
+          if (name === 'rerollDraft') draftActs.rerolled++;
+          if (name === 'banOption') draftActs.banned++;
           if (name === 'startResearch') P.research.push({ t: +G.S.t.toFixed(1), id: args[0], tier: G.researchTier(args[0]) + 1 });
         }
         return ok;
@@ -75,7 +78,8 @@ const Session = (() => {
     G.chooseDraft = i => {
       const d = G.S.pendingDraft, id = d && d.options[i];
       const ok = choose(i);
-      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, chosen: id, offered: d.options.slice() }); record('chooseDraft', { arg: id }); }
+      // Format 2 (REQ-R.04): gewählte Karte mit Alternativen, Bedenkzeit (ms seit dem ersten Zeigen der Wahl), Neu ziehen und Bannen
+      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, chosen: id, offered: d.options.slice(), thinkMs: draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
       return ok;
     };
     const tick = G.tick;
