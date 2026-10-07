@@ -1,5 +1,17 @@
 # Änderungen
 
+## v0.9-kartenpfad – Branch `exp/kartenpfad` (Experiment, Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad.md`, Bericht `docs/bericht-kartenpfad.md`, Testleitfaden `docs/testleitfaden-kartenpfad.md`.
+**Spielstand-Version 8 (vorher 7): ältere Spielstände werden mit Hinweis verworfen.**
+- KP.0 Pacing-Unterbau (auch auf `main`, Standardmodus unverändert): Schalter `PACING_MODUS`, Freischaltlogik, Upgrade-Stufen mit Quelle, Einheitenersatz.
+- KP.08 Tutorial-Sprache: Statthalter statt Feldherr, Wellen statt Horden, Einheiten statt Soldaten, Erfahrung statt Kriegsbeute, „aufstellen“, „bestanden“; Sprach-Audit mit Wortliste (`tools/sprachliste.mjs`, `tests/sprache.test.mjs`).
+- KP.03 Kartenbühne: Wahl in der Bildmitte (Schleier, Fächer, Aufdecken, Tasten 1–9, „Später“, Stapel mit Füllstand); Reiter „Karten“ wird Sammlung mit Pfadübersicht. Spielzeit bei offener Wahl: Pause (wie bisher).
+- KP.01/02/06 Modus `karten`: Start mit Fabrik und Läufer; vier Kartenfamilien (Bonus, Bau, Technologie, Wagnis); Meilenstein-Platz, Bonuskarte je Angebot, Rückstandsgewicht mit harter Grenze, Mindesttempo (180 s).
+- KP.04/05 Universität als Forschungsstätte der Technologiekarten; Upgrade-Stufen mit genau einer Quelle; neue Einheiten (Reiter, Schwertkämpfer, Bogenschütze, Armbrustschütze, Katapult) als Datensätze; Einheitenersatz durch Forschung.
+- KP.07 Wagnis-Karten (Glaskanonen, Volle Auslastung) und Exklusivpaar Fortgeschrittene Taktiken / Ballistik.
+- KP.09 Simulation `tools/sim-karten.mjs`, Protokollformat 2 (Karte, Alternativen, Bedenkzeit, Neu ziehen, Bannen, Freischaltungen, Forschungen).
+- `?pacing=standard` zeigt das Verhalten von `main` (Karten im Reiter, nichts gesperrt).
+
 ## v0.8 – Tutorial „Erste Schritte“ (Oktober 2026)
 Korrektur nach Spieltest: Im Tutorial pausiert weder ein verdeckter Tab noch das Neuladen die Partie (kein „Weiter“-Klick); im freien Spiel gilt REQ-6.03 unverändert.
 Teil 2 (06.10.2026, Anforderungen `docs/anforderungen-tutorial-2.md`):

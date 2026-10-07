@@ -6,7 +6,8 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.8 (Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
+Branch `exp/kartenpfad` (Experiment, nicht auf `main`/`MVP`): v0.9-kartenpfad, Karten steuern das Pacing (Abschnitt „Kartenpfad“ unten, `docs/anforderungen-kartenpfad.md`, `docs/STAND.md`).
+Stand von `main`: v0.8 (Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
 Vorher v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`.
 
 ## Der Nutzer
@@ -21,6 +22,8 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `config.js` | **Alle** Zahlenwerte (Balancing, Regeln, Tooltip-Zeiten, Schwierigkeitsgrade). |
 | `data/draft-options.js` | Spezialkarten mit Stufen (`tiers`), deklarativ. Neue Karten nur hier ergänzen. |
 | `data/research.js` | Forschungsbaum der Universität, deklarativ; Wirkungen über dieselbe Pipeline wie Karten. |
+| `data/kartenpfad.js` | Branch Kartenpfad: Pfadkarten (Bau, Technologie, Wagnis) und ihre Forschungen, deklarativ; daraus leitet `core.js` Sperren und Upgrade-Stufen ab. |
+| `stage.js` | Branch Kartenpfad: Kartenbühne in der Bildmitte und Stapel (`Stage`). |
 | `data/neighbors.js` | Nachbarschaftsregeln im 3×3-Raster, je Gebäudetyp eine, nur orthogonal. |
 | `data/tutorial-steps.js` | Schritte des Tutorials, deklarativ (Ereignis, Schwellenwert, Ziel, Vorführung, Text-Schlüssel). |
 | `hints.js` | Erstkontakt-Hinweise; Speicher wird von außen übergeben (testbar ohne Browser). |
@@ -38,6 +41,8 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `tools/sim-metrics.mjs` | Kennzahlen je Takt (Richtungswechsel). |
 | `tools/compare-human.mjs` | Ordnet Sitzungsprotokolle von Menschen dem nächstliegenden Bot-Profil zu. |
 | `tools/browser-bot.js` | Bot „Einheiten zuerst“: Durchlauftest, Protokollprüfung und zweite Simulationsstrategie (REQ-6.09). |
+| `tools/sim-karten.mjs` | Kurzsimulation des Branches Kartenpfad (Pfad-Varianten, Profile, Paarvergleich je Pfadkarte). |
+| `tools/sprachliste.mjs` | Wortliste des Sprach-Audits (`tests/sprache.test.mjs`). |
 | `tools/bench-tick.mjs` | Tick-Zeit mit 2 × 60 Einheiten. |
 | `tests/` | `npm test` (Node-eigener Test-Runner), optional `npm run test:browser` (braucht Playwright). |
 | `docs/STAND.md` | Stand je Inkrement, Prüfergebnisse, Abweichungen und Auslegungen. |
@@ -146,3 +151,13 @@ Er enthält immer genau die neueste Release-Version, nichts dazwischen.
 
 ## Bekannte offene Punkte
 Siehe Abschnitt „Offen“ in `docs/bericht-tutorial.md` und `docs/bericht-iteration-6.md`.
+
+## Kartenpfad (Branch `exp/kartenpfad`, REQ-KP.01 – KP.09)
+- Schalter `PACING_MODUS` (`config.js`; auf dem Branch `karten`, auf `main` `standard`), im Spielstand `S.pacing`; `?pacing=standard|karten`. Im Modus `standard` ist nichts gesperrt und das Ergebnis der Simulation mit gleichem Seed identisch zu `main`
+  (`tests/unveraendert.test.mjs`). `tools/load-core.mjs` lädt im Standardmodus, außer `KF_PACING=karten`.
+- Freischaltlogik in `core.js`: Schlüssel `bau:<gebäude>`, `einheit:<typ>`, `forschung:<id>` (`isOpen`, `unlockKey`), Upgrade-Stufen mit Quelle (`stageSource`), Einheitenersatz (`replaceUnit`, `ownType`). Die Quelle steht nur an der Karte oder Forschung
+  (`schaltetFrei` in `data/kartenpfad.js`); es gibt keine zweite Liste. Neue Pfadkarten und Forschungen nur dort ergänzen (Texte `kp.card.*`, `kp.res.*`).
+- Angebot im Modus karten: `drawOptionsKarten` (Meilenstein-Platz, mindestens eine Bonuskarte, höchstens eine Wagnis-Karte, Rückstandsgewicht, harte Grenze `KARTEN.maxWarten`), Mindesttempo `KARTEN.maxAbstand`. Zahlen in `config.js` (`KARTEN`).
+- Kartenbühne (`stage.js`): `UI.kartenbuehne` (`null` = nach Modus), URL `?buehne=1|0`; `KARTENBUEHNE.zeit` (`pause` Standard). Sprach-Audit: Schlüssel mit Präfix `tut.` und `kp.` dürfen die Wörter aus `tools/sprachliste.mjs` nicht enthalten.
+- Bots wählen Pfadkarten und Pfadforschung (`KF_BROWSER_BOT.pfadPick`, `pfadResearch`); `node tools/sim-karten.mjs --runs 50 --suite varianten|profile|paar` (Rohdaten unter `reports/kartenpfad-*`). Im Modus karten gibt der Simulations-Bot bei vollem Raster kein Material
+  mehr zurück (im Standardmodus bleibt das ursprüngliche Verhalten für die Vergleichswerte; siehe Bericht).
