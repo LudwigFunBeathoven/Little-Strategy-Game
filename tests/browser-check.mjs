@@ -1062,6 +1062,7 @@ for (const lang of ['de', 'en']){
   await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id !== 'fertigen', null, { timeout: 20000 });
   await p.evaluate(() => { const G = __kf.G; G.rushWave && G.rushWave(); G.releaseHold && G.releaseHold(false); for (let i = 0; i < 20 * 150 && !(__kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte'); i++){ G.S.material = Math.max(G.S.material, 100); G.spawn('laeufer'); G.tick(0.05); } });
   await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 30000 });
+  await p.waitForTimeout(500);                                  // Blase setzt sich nach dem Austeilen an ihren Platz
   const s6 = await p.evaluate(() => { const bb = document.querySelector('#tutBubble').getBoundingClientRect(), cr = document.querySelector('#stageCards').getBoundingClientRect();
     return { stage: !document.querySelector('#stage').hidden, tab: __kf.tab, narr: document.querySelector('#tutBubbleNarr').textContent, task: document.querySelector('#tutBubbleTask').textContent, bubbleBottom: bb.bottom, cardsTop: cr.top }; });
   check(s6.stage && s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task'), `[${lang}] Tutorial/karten: erste Kartenwahl auf der Bühne mit Erzählung und Auftrag ${JSON.stringify([s6.stage, s6.tab])}`);
