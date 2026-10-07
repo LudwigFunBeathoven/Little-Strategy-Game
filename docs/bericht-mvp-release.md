@@ -80,3 +80,8 @@ Version 0.8.1 (`config.js`, `package.json`), `CHANGELOG.md` für Tester geschrie
 3. **Schriften:** Soll das Spiel die Plex-Schriften mitliefern (Dateien einbetten), damit das Aussehen wieder dem früheren entspricht? Das wäre eine eigene Änderung.
 4. **Iteration 7:** Kalibrierung gegen den korrigierten Bot und gegen Daten aus Spieltests (Abschnitt R.03).
 5. **Tag `v0.8.1`:** Aus der Cloud-Umgebung nicht pushbar; bitte als Release auf `MVP` anlegen.
+
+## Nachtrag zur Veröffentlichung
+- `MVP` zeigt auf `d03c57e` (gleich `main` zum Zeitpunkt des Release); Version 0.8.1.
+- **Öffentlicher Link nicht geprüft:** Aus der Cloud-Umgebung ist `ludwigfunbeathoven.github.io` gesperrt (die Netzwerkrichtlinie verweigert die Verbindung). Der Akzeptanztest „Link im frischen Browserprofil“ ist deshalb **offen**. Ersatz: Die Browser-Prüfung lädt dieselben Dateien über einen lokalen Server in ein frisches Profil (Startbildschirm → Tutorial → freies Spiel, keine Fehler, keine externen Abrufe, Abschnitt „Öffentliche Fassung“). Bitte den Link einmal in einem privaten Fenster öffnen; GitHub Pages braucht nach dem Push einige Minuten.
+- Der Tag `v0.8.1` lässt sich von hier nicht setzen (siehe Offen, Punkt 5).
