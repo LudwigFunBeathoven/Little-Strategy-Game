@@ -25,7 +25,7 @@ function KF_BROWSER_BOT(G, profile, hooks){
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
     if (!o.noUpgrades){
       for (const id of PRIO) if (C.UPGRADES[id] && (o.useWall || !/^(turm|mauer)/.test(id))) G.buy(id);
-      const r = G.RESEARCH.find(x => G.researchBlock(x.id) === null);
+      const pr = KF_BROWSER_BOT.pfadResearch(G), r = pr ? G.RES[pr] : G.RESEARCH.find(x => G.researchBlock(x.id) === null);
       if (r && S.material > G.researchCost(r.id) * 2 && G.startResearch(r.id) && h.researched) h.researched(r.id);
     }
     if (o.noUnits) return;
@@ -53,9 +53,15 @@ function KF_BROWSER_BOT(G, profile, hooks){
 /* Pfadkarten (REQ-KP.09): Im Modus 'karten' wählt der Bot aus dem Angebot die Karte, die in seiner Pfadreihenfolge am weitesten vorn steht;
    steht keine darin, gilt die bisherige Regel der Strategie (null). Drei Pfad-Varianten messen die Strategievielfalt. */
 KF_BROWSER_BOT.PFAD_ORDER = {
-  militaer: ['echtesMilitaer', 'fortgeschritteneTaktiken', 'gelehrte', 'metallverarbeitung', 'eiserneKlingen', 'pfadFestungsbau', 'befestigungskunde', 'handel'],
-  wissen:   ['gelehrte', 'metallverarbeitung', 'eiserneKlingen', 'echtesMilitaer', 'fortgeschritteneTaktiken', 'pfadFestungsbau', 'befestigungskunde', 'handel'],
-  festung:  ['pfadFestungsbau', 'gelehrte', 'befestigungskunde', 'echtesMilitaer', 'metallverarbeitung', 'fortgeschritteneTaktiken', 'eiserneKlingen', 'handel'],
+  militaer: ['echtesMilitaer', 'gelehrte', 'fortgeschritteneTaktiken', 'metallverarbeitung', 'eiserneKlingen'],
+  wissen:   ['gelehrte', 'metallverarbeitung', 'eiserneKlingen', 'echtesMilitaer', 'fortgeschritteneTaktiken'],
+  festung:  ['pfadFestungsbau', 'gelehrte', 'befestigungskunde', 'echtesMilitaer', 'metallverarbeitung'],
+};
+/* Pfadforschung: die Bots erforschen, was ihre Karten geöffnet haben, vor der Grundforschung (REQ-KP.09) */
+KF_BROWSER_BOT.PFAD_RESEARCH = ['r_eisenwaffen', 'r_reiter', 'r_schild', 'r_mauerausbau3', 'r_turmausbau'];
+KF_BROWSER_BOT.pfadResearch = function(G){
+  if (G.pacing() !== 'karten') return null;
+  return KF_BROWSER_BOT.PFAD_RESEARCH.find(id => G.RES[id] && G.researchBlock(id) === null) || null;
 };
 KF_BROWSER_BOT.pfadPick = function(G, offer, variant){
   if (G.pacing() !== 'karten') return null;

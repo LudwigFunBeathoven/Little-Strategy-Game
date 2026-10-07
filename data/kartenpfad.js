@@ -14,13 +14,13 @@
 const KF_PFAD = {
   karten: [
     /* ---------- Bau: schaltet Gebäude oder Ausbaustufen sofort frei ---------- */
-    { id: 'echtesMilitaer', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
+    { id: 'echtesMilitaer', familie: 'bau', rarity: 'common', gewicht: 30, abWahl: 1, benoetigt: [],
       schaltetFrei: ['bau:kaserne', 'einheit:werfer'],
       nameKey: 'kp.card.echtesMilitaer.name', descKey: 'kp.card.echtesMilitaer.desc', tiers: [{ effect: [{ stat: 'supply', add: 2 }] }] },
     { id: 'pfadFestungsbau', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
       schaltetFrei: ['stufe:turm_0:1', 'stufe:turm_2:1', 'stufe:mauer:1', 'stufe:stacheln:1', 'stufe:moertel:1'],
       nameKey: 'kp.card.festungsbau.name', descKey: 'kp.card.festungsbau.desc', tiers: [{ effect: [] }] },
-    { id: 'metallverarbeitung', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 2, benoetigt: [],
+    { id: 'metallverarbeitung', familie: 'bau', rarity: 'common', gewicht: 20, abWahl: 2, benoetigt: [],
       schaltetFrei: ['bau:schmiede'],
       nameKey: 'kp.card.metallverarbeitung.name', descKey: 'kp.card.metallverarbeitung.desc', tiers: [{ effect: [] }] },
     { id: 'gelehrte', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 2, benoetigt: [],

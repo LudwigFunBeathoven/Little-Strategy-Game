@@ -6,6 +6,7 @@ const Stage = (() => {
   const K = C.KARTENBUEHNE;
   const flag = URL_PARAMS.get('buehne');
   const enabled = () => flag === '1' ? true : flag === '0' ? false : C.UI.kartenbuehne !== null && C.UI.kartenbuehne !== undefined ? !!C.UI.kartenbuehne : G.S.pacing === 'karten';
+  let lvlKey = null, lvlOpenedAt = 0;                                     // erstes Öffnen der Bühne je Wahl: Bedenkzeit für das Sitzungsprotokoll
   let key = '', openedAt = -Infinity, folded = false, focusI = 0, lockMs = C.UI.draftLockMs, hover = -1, built = false, wasVisible = false;
   const el = {};
   const ids = ['stage', 'stageHead', 'stageCards', 'stageDetail', 'stageTools', 'stageReroll', 'stageLater', 'stageBans', 'deckBtn', 'deckFill', 'deckCount', 'deckExpl'];
@@ -119,6 +120,7 @@ const Stage = (() => {
     }
     if (!active || !d){ key = ''; folded = false; setHidden(el.stage, true); return; }
     const k = d.level + ':' + d.options.join() + ':' + (d.rerolled || 0) + ':' + G.bansLeft() + ':' + lang;
+    if (d.level !== lvlKey){ lvlKey = d.level; lvlOpenedAt = performance.now(); }
     if (k !== key){
       if (pointerHeld && !key) return;                                    // Maustaste gedrückt: erst nach dem Loslassen öffnen (kein verlorener Klick)
       const fresh = !key || key.split(':')[0] !== k.split(':')[0] || key.split(':')[1] !== k.split(':')[1];
@@ -170,5 +172,6 @@ const Stage = (() => {
     window.addEventListener('resize', () => { if (built) layout(); });
     layout();
   }
-  return { init, render, on, visible, reopen, fold, locked, get folded(){ return folded; }, get el(){ return el; } };
+  const thinkMs = () => on() && lvlKey !== null ? Math.round(performance.now() - lvlOpenedAt) : null;
+  return { init, render, on, thinkMs, visible, reopen, fold, locked, get folded(){ return folded; }, get el(){ return el; } };
 })();

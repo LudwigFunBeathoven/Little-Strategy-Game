@@ -156,7 +156,7 @@ function create(){
   const isOpen = key => !isGated(key) || !!S.unlocks[key];
   function unlockKey(key){
     if (isOpen(key)) return false;
-    S.unlocks[key] = true; S.pacingVer++;
+    S.unlocks[key] = S.t || 0.001; S.pacingVer++;                      // Zeitpunkt der Freischaltung (Sitzungsprotokoll)
     return true;
   }
   /* Quelle erfüllt: Karte gewählt oder Forschung abgeschlossen */
@@ -276,7 +276,14 @@ function create(){
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const freeLevels   = () => (S.pfad && S.pfad.free) || 0;       // Stufen aus dem Mindesttempo: sie verschieben die EP-Schwellen nicht (REQ-KP.06)
-  const xpNeed       = n => xpForLevel(n - freeLevels()) * mMul('xpNeed');
+  /* Modus karten: eigene EP-Stufen (KARTEN.xpFaktor, xpWachstum), damit der Pfad genug Wahlen je Partie bietet; Standard unverändert */
+  function xpSum(n){
+    if (S.pacing !== 'karten' || (C.KARTEN.xpFaktor === 1 && !C.KARTEN.xpWachstum)) return xpForLevel(n);
+    const g = C.KARTEN.xpWachstum || C.XP_GROWTH;
+    let s = 0; for (let k = 1; k <= n; k++) s += C.XP_BASE * C.KARTEN.xpFaktor * Math.pow(g, k - 1);
+    return s;
+  }
+  const xpNeed       = n => xpSum(n - freeLevels()) * mMul('xpNeed');
   const xpProgress   = () => ({ level: S.level, cur: S.xpTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
@@ -986,7 +993,7 @@ function create(){
     while (i < list.length - 1 && r >= w(list[i])){ r -= w(list[i]); i++; }
     return list[i];
   };
-  const weightKarten = o => o.pfad ? o.pfad.gewicht * (1 + C.KARTEN.rueckstandPlus * pfadWait(o)) : cardWeight(o);
+  const weightKarten = o => o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) * (1 + C.KARTEN.rueckstandPlus * pfadWait(o)) : cardWeight(o);
   function drawOptionsKarten(k, keep){
     const pool = ALL_OPTIONS.filter(o => optionAvailable(o) && !(keep && keep.includes(o.id)));
     const pf = pool.filter(isPathFamily), bonus = pool.filter(o => !o.pfad);

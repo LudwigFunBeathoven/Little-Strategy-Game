@@ -1088,6 +1088,10 @@ for (const lang of ['de', 'en']){
   check(u2.run.includes('Mauerausbau III') && u2.run.includes('1:00') && !u2.txt.includes('Öffnet mit'), `Universität/karten: laufende Forschung mit Restzeit, zweite Forschung geöffnet ${JSON.stringify([u2.run.slice(0, 40), u2.dis])}`);
   const a = await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }));
   check(a.t === 0 && a.e === 0 && errs.length === 0, `Universität/karten: Tooltips, Erklärzeilen, keine Fehler${show(errs)}`);
+  // Sammlung mit Pfadübersicht: Status je Pfadkarte und Forschung
+  await p.evaluate(() => __kf.selectTab('cards')); await p.waitForTimeout(250);
+  const pl = await p.evaluate(() => [...document.querySelectorAll('#pathList li')].map(li => li.textContent));
+  check(pl.length === 18 && pl.some(x => x.includes('Befestigungskunde') && x.includes('gewählt')) && pl.some(x => x.includes('Mauerausbau III') && x.includes('läuft')) && pl.some(x => x.includes('Ballistik') && x.includes('gesperrt')) && pl.some(x => x.includes('Gelehrte') && x.includes('verfügbar')), `Sammlung/karten: Pfadübersicht mit Status (${pl.length} Einträge) ${JSON.stringify(pl.slice(0, 4))}`);
   // Standardmodus: keine Pfadforschung
   const ctx2 = await b.newContext({ viewport: { width: 1280, height: 720 } }), p2 = await ctx2.newPage();
   await p2.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p2.waitForTimeout(300);

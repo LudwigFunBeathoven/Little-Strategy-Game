@@ -605,4 +605,11 @@ KF_I18N.de = {
   'unit.katapult.name': 'Katapult',
   'draft.rarity.wagnis': 'Wagnis',
   'log.freeChoice': 'Stufe {n}: Die nächste Kartenwahl ist fällig.',
+  'kp.path.head': 'Pfade',
+  'kp.path.status.chosen': 'gewählt',
+  'kp.path.status.available': 'verfügbar',
+  'kp.path.status.locked': 'gesperrt',
+  'kp.path.status.excluded': 'ausgeschlossen',
+  'kp.path.status.done': 'erforscht',
+  'kp.path.status.running': 'läuft',
 };

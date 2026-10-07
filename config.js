@@ -18,6 +18,9 @@ const KF_CONFIG = {
   /* Kartenpfad (REQ-KP.02, KP.06): Angebot im Modus 'karten'; Startwerte, per Simulation zu kalibrieren */
   KARTEN: {
     rueckstandPlus: 0.5,        // Gewichtszuschlag je Wahl, in der eine ziehbare Bau-Karte nicht im Angebot erschien (Faktor auf das Grundgewicht)
+    xpFaktor: 0.85,             // Modus karten: EP-Stufen × xpFaktor (1 = wie Standard); Simulation KP.7: 0,85 gibt die erste Wahl nach rund 75 s
+    xpWachstum: 1.4,            // Modus karten: Wachstum der EP-Stufen (null = XP_GROWTH 1,55); kleiner heißt mehr Wahlen je Partie
+    gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
     maxAbstand: 180,            // Mindesttempo: steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06)
     maxWarten: 3,               // eine ziehbare Bau-Karte erscheint spätestens in der n-ten Wahl nach ihrer Freigabe (harte Grenze)
   },

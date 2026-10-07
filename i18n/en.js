@@ -605,4 +605,11 @@ KF_I18N.en = {
   'unit.katapult.name': 'Catapult',
   'draft.rarity.wagnis': 'Gamble',
   'log.freeChoice': 'Level {n}: the next card choice is due.',
+  'kp.path.head': 'Paths',
+  'kp.path.status.chosen': 'chosen',
+  'kp.path.status.available': 'available',
+  'kp.path.status.locked': 'locked',
+  'kp.path.status.excluded': 'excluded',
+  'kp.path.status.done': 'researched',
+  'kp.path.status.running': 'running',
 };

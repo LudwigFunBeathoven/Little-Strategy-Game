@@ -352,15 +352,38 @@ function optLimit(o){
   const n = G.cardTaken(o.id) + 1;
   return t('draft.tierOf', { n: ROMAN[n], max: ROMAN[o.tiers.length] });
 }
+/* Pfadübersicht (REQ-KP.03, Soll): Pfadkarten und Forschungen mit Status – gesperrt, verfügbar, gewählt, ausgeschlossen bzw. erforscht, läuft */
+function pathStatus(){
+  const out = [];
+  for (const o of G.ALL_OPTIONS){
+    if (!o.pfad) continue;
+    const taken = G.cardTaken(o.id) > 0, st = taken ? 'chosen' : G.cardExcluded(o.id) ? 'excluded' : G.optionAvailable(o) ? 'available' : 'locked';
+    out.push({ kind: 'card', id: o.id, family: o.family, st });
+    for (const rid of o.pfad.oeffnetForschung || []){
+      const r = G.RES[rid]; if (!r) continue;
+      const rst = G.researchTier(rid) > 0 ? 'done' : G.S.research.active.some(a => a.id === rid) ? 'running' : st === 'excluded' ? 'excluded' : G.isOpen('forschung:' + rid) ? 'available' : 'locked';
+      out.push({ kind: 'res', id: rid, family: o.family, st: rst });
+    }
+  }
+  return out;
+}
 let chosenKey = '', draftKey = '';
 function renderChosen(){
-  const st = G.S.draft.stacks, key = lang + JSON.stringify(st) + JSON.stringify(G.S.research.banned) + Stage.on();
+  const ps = Stage.on() ? pathStatus() : [];
+  const st = G.S.draft.stacks, key = lang + JSON.stringify(st) + JSON.stringify(G.S.research.banned) + Stage.on() + ps.map(x => x.id + x.st).join();
   if (key === chosenKey) return;
   // Sammlung (Kartenbühne): Hinweis und gebannte Karten; gewählt wird auf der Bühne (REQ-KP.03)
   const coll = Stage.on(), banned = G.S.research.banned || [];
-  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll);
+  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll); setHidden($('pathHead'), !coll); setHidden($('pathList'), !coll);
   if (coll){
     setText($('collHint'), t('kp.collection.hint'));
+    const pl = $('pathList'); pl.innerHTML = '';
+    for (const x of ps){
+      const li = document.createElement('li'); li.className = [x.st, x.kind === 'res' ? 'sub-i' : '', 'fam-' + x.family].join(' ');
+      const nm = document.createElement('span'); nm.textContent = x.kind === 'card' ? t(G.OPT[x.id].nameKey) : t(G.RES[x.id].nameKey);
+      const sp = document.createElement('span'); sp.className = 'st'; sp.textContent = t('kp.path.status.' + x.st);
+      li.append(nm, sp); pl.appendChild(li);
+    }
     const bl = $('bannedList'); bl.innerHTML = '';
     if (!banned.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('kp.collection.noneBanned'); bl.appendChild(e); }
     for (const id of banned){

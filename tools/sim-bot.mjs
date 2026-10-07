@@ -122,6 +122,8 @@ export class Bot {
   research(G, stats){
     const S = G.S;
     if (!G.has('universitaet') || S.research.active.length >= G.researchSlots()) return;
+    const pr = KF_BROWSER_BOT.pfadResearch(G);                            // Pfadforschung vor allem anderen (REQ-KP.09)
+    if (pr){ if (G.startResearch(pr) && stats) stats.researched[pr] = (stats.researched[pr] || 0) + 1; return; }
     if (this.o.uniFirst){                                                  // Messung REQ-6.06: günstigste bezahlbare Forschung sofort
       const r = G.RESEARCH.filter(x => G.researchBlock(x.id) === null).sort((a, b) => G.researchCost(a.id) - G.researchCost(b.id))[0];
       if (r && G.startResearch(r.id) && stats) stats.researched[r.id] = (stats.researched[r.id] || 0) + 1;
@@ -193,7 +195,7 @@ export class Bot {
     }
     // Abriss: Zufalls-Bot reißt selten ab; gieriger Bot tauscht, sobald ein freigeschaltetes Gebäude fehlt
     if (!o.noBuild && free < 0){
-      const missingUnlocked = C.BUILDINGS.filter(b => S.unlocked[b] && !G.has(b));
+      const missingUnlocked = C.BUILDINGS.filter(b => (S.pacing === 'karten' ? b !== 'fabrik' && G.isBuildable(b) : S.unlocked[b]) && !G.has(b));   // Modus karten: freigeschaltet über Karten (REQ-KP.01)
       if (o.strategy === 'zufall' && this.rng() < 0.01){
         const i = Math.floor(this.rng() * S.slots.length);
         if (G.demolish(i) && stats) stats.demolished++;
@@ -251,7 +253,8 @@ export class Bot {
         if (Number.isFinite(c)) econTarget = c / 0.7;
       }
     }
-    const reserve = threat ? 0 : econTarget * 0.7;
+    // Modus karten: sind alle Plätze belegt, gibt es nichts mehr, wofür Material zurückgelegt werden müsste (der Standardmodus behält sein Verhalten für die Vergleichswerte)
+    const reserve = threat ? 0 : (S.pacing === 'karten' && !Number.isFinite(econTarget) ? 0 : econTarget * 0.7);
     while (!o.noUnits && G.factoryCount() > 0 && S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
       const q = S.queue.length; trySpawn(1); if (S.queue.length === q) break;
     }
@@ -265,7 +268,7 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad }){
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
@@ -274,9 +277,14 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {} };
   // Handlungen in den ersten SIM_STYLE_WINDOW_S Sekunden: Anteil der Einheitenkäufe (Merkmal der Strategie für compare-human)
   const acts = { units: 0, other: 0 };
-  for (const name of ['spawn', 'buildAt', 'buy', 'startResearch', 'repair']){
+  const picks = [], builtAt = {};                                            // Kartenpfad (REQ-KP.09): gewählte Karten mit Zeit, erste Bauzeit je Gebäude
+  for (const name of ['spawn', 'buildAt', 'buy', 'startResearch', 'repair', 'chooseDraft']){
     const f = G[name];
-    G[name] = (...a) => { const ok = f(...a); if (ok && G.S.t <= C.SIM_STYLE_WINDOW_S){ if (name === 'spawn') acts.units++; else acts.other++; } return ok; };
+    G[name] = (...a) => {
+      const pickId = name === 'chooseDraft' && G.S.pendingDraft ? G.S.pendingDraft.options[a[0]] : null;
+      const ok = f(...a);
+      if (ok && pickId) picks.push({ t: G.S.t, id: pickId });
+      if (ok && name === 'buildAt' && builtAt[a[1]] === undefined) builtAt[a[1]] = G.S.t; if (ok && name !== 'chooseDraft' && G.S.t <= C.SIM_STYLE_WINDOW_S){ if (name === 'spawn') acts.units++; else acts.other++; } return ok; };
   }
   let bot;
   if (strategy === 'einheiten-zuerst'){
@@ -301,6 +309,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
   const steps = maxMin * 60 / DT;
   // Paarvergleich (REQ-6.06): Forschung gesperrt bzw. zum Zeitpunkt forceResearch.at in Stufe 1 geschenkt
   if (lockResearch || forceResearch) G.S.research.locked = [lockResearch || forceResearch.id];
+  if (banCards) for (const id of banCards) G.S.research.banned.push(id);                     // Paarvergleich (REQ-KP.09): Karte gesperrt
   for (let i = 0; i < steps && G.S.status === 'running'; i++){
     if (forceResearch && G.S.t >= forceResearch.at && !G.S.research.done[forceResearch.id]){
       G.S.research.done[forceResearch.id] = 1; G.S.research.ver++;
@@ -324,6 +333,6 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
-    researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
+    picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
 }
