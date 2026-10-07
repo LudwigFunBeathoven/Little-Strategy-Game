@@ -16,10 +16,14 @@ const OPT = Object.fromEntries(ALL_OPTIONS.map(o => [o.id, o]));
 const PACING_DERIVED = (() => {
   if (!PFAD) return null;
   const gesperrt = new Set(), stufen = {}, quellen = {};
+  /* Ein Schlüssel hat eine Quelle (Karte oder Forschung); öffnen ihn zwei, die sich gegenseitig ausschließen (Exklusivpfade), steht die Liste aller dort */
   const add = (key, quelle) => {
-    quellen[key] = quelle;
+    const old = quellen[key];
+    quellen[key] = old === undefined ? quelle : [].concat(old, quelle);
     const m = /^stufe:(\w+):(\d+)$/.exec(key);
-    if (m) (stufen[m[1]] = stufen[m[1]] || []).push({ ab: Number(m[2]), quelle }); else gesperrt.add(key);
+    if (!m){ gesperrt.add(key); return; }
+    const list = (stufen[m[1]] = stufen[m[1]] || []), e = list.find(x => x.ab === Number(m[2]));
+    if (e) e.quelle = quellen[key]; else list.push({ ab: Number(m[2]), quelle: quellen[key] });
   };
   for (const k of PFAD.karten){
     for (const key of k.schaltetFrei || []) add(key, k.id);
@@ -79,7 +83,7 @@ function freshState(diff, seed){
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
-    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, wait: {}, seen: {} },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, wait: {}, seen: {}, free: 0, lastPickT: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
@@ -156,7 +160,7 @@ function create(){
     return true;
   }
   /* Quelle erfüllt: Karte gewählt oder Forschung abgeschlossen */
-  const sourceMet = q => (S.draft.stacks[q] || 0) > 0 || (S.research.done[q] || 0) > 0;
+  const sourceMet = q => Array.isArray(q) ? q.some(sourceMet) : (S.draft.stacks[q] || 0) > 0 || (S.research.done[q] || 0) > 0;
   /* Quelle, die für den nächsten Kauf des Upgrades fehlt (null = frei) */
   function stageSource(id){
     const c = pacingCfg(), list = c && c.stufen && c.stufen[id];
@@ -168,11 +172,21 @@ function create(){
   }
   /* Sprachschlüssel für den Namen eines Inhalts: 'bau:kaserne' → bld.kaserne.name, 'einheit:werfer' → unit.werfer.name */
   const keyNameKey = key => { const [kind, id] = key.split(':'); return kind === 'bau' ? `bld.${id}.name` : kind === 'einheit' ? `unit.${id}.name` : kind === 'forschung' && RES[id] ? RES[id].nameKey : key; };
+  /* Ausgeschlossen: eine Exklusivkarte wurde gewählt (REQ-KP.07); Forschungen und Einheiten, die nur die ausgeschlossene Karte öffnet, sind unerreichbar */
+  const cardExcluded = id => { const o = OPT[id]; return !!(o && o.pfad && (o.pfad.exklusivMit || []).some(x => cardTaken(x) > 0)); };
+  function sourceReachable(q){
+    if (Array.isArray(q)) return q.some(sourceReachable);
+    if (sourceMet(q)) return true;
+    if (OPT[q]) return !cardExcluded(q);
+    const card = PFAD_OPTIONS.find(o => (o.pfad.oeffnetForschung || []).includes(q));
+    return !card || !cardExcluded(card.id);
+  }
   const ownType = type => S.replace[type] || type;
   /* Werte einer Einheit nach Typ und Seite (ohne Zufall); makeUnit und der Einheitenersatz nutzen dieselbe Rechnung */
   function unitStats(side, type){
     const spec = C.UNITS[type], p = side === 'p';
-    const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (isThrower(type) ? mMul('werferHp') : 1) : enemyHpMult());
+    let hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (isThrower(type) ? mMul('werferHp') : 1) : enemyHpMult());
+    if (p && isRangedType(type) && mAdd('rangedHpOne') > 0) hp = 1;                                   // Wagnis „Glaskanonen“: Fernkämpfer haben 1 Lebenspunkt
     return { speed: spec.speed, range: unitRange(side, type), ranged: isRangedType(type), hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()), cdMax: spec.cd * (p ? cdMultP() : 1) };
   }
   /* Einheitenersatz: ab jetzt entsteht to statt from; Einheiten in der Warteschlange und auf dem Feld werden aufgewertet, nichts wird gelöscht
@@ -261,7 +275,8 @@ function create(){
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
-  const xpNeed       = n => xpForLevel(n) * mMul('xpNeed');
+  const freeLevels   = () => (S.pfad && S.pfad.free) || 0;       // Stufen aus dem Mindesttempo: sie verschieben die EP-Schwellen nicht (REQ-KP.06)
+  const xpNeed       = n => xpForLevel(n - freeLevels()) * mMul('xpNeed');
   const xpProgress   = () => ({ level: S.level, cur: S.xpTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
@@ -1101,7 +1116,7 @@ function create(){
       for (const key of o.pfad.schaltetFrei || []) if (!key.startsWith('stufe:') && unlockKey(key)) log('log.unlockedKey', { what: '@' + keyNameKey(key) });
       for (const r of o.pfad.oeffnetForschung || []) if (unlockKey('forschung:' + r)) S.research.fresh = true;
     }
-    S.pfad.choices++;
+    S.pfad.choices++; S.pfad.lastPickT = S.t;
     for (const e of cardTier(o.id, S.draft.stacks[o.id]).effect || []){
       if (e.unlock){ unlockBuilding(e.unlock); log('log.unlocked', { building: '@bld.' + e.unlock + '.name' }); }
       if (e.grant === 'production') addMaterial(Math.max(matRate(), C.GRANT_MIN_RATE) * e.seconds);
@@ -1158,6 +1173,12 @@ function create(){
     }
     S.t += dt;
     S.stats.prod[phase()].time += dt;
+    // Mindesttempo (REQ-KP.06): nach maxAbstand Sekunden ohne Wahl wird die nächste fällig; die EP-Schwellen der folgenden Wahlen bleiben unverändert
+    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels === 0 && S.t - S.pfad.lastPickT >= C.KARTEN.maxAbstand){
+      S.level++; S.pfad.free++; S.pendingLevels++; S.stats.freeChoices = (S.stats.freeChoices || 0) + 1;
+      log('log.freeChoice', { n: S.level });
+      offerDraft();
+    }
     addMaterial(matRate() * dt);
     addMaterial(autoPressCps() * clickPower() * dt);
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
@@ -1283,7 +1304,7 @@ function create(){
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
-    canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
+    cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,

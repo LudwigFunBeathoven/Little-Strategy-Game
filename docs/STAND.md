@@ -23,7 +23,7 @@ Grundlage: `docs/anforderungen-kartenpfad.md`. Branch von `main` (Commit `9b3ccb
 | KP.3 | Kartenfamilien, Startzustand, Meilenstein-Platz | KP.01, 02, 06 | fertig (nur Bau-Karten; Technologie mit KP.4, Wagnis mit KP.6) |
 | KP.4 | Universität als Forschungsstätte | KP.04 | fertig (Forschungen Mauerausbau III und Turmausbau; Reiter, Schildträger, Eisenwaffen mit KP.5) |
 | KP.5 | Upgrades, Einheitenersatz | KP.05 | offen |
-| KP.6 | Wagnis, Exklusivpfade, Mindesttempo | KP.06, 07 | offen |
+| KP.6 | Wagnis, Exklusivpfade, Mindesttempo | KP.06, 07 | fertig |
 | KP.7 | Bots, Simulation, Bericht, Testbuild | KP.09 | offen |
 
 ## Pacing-Unterbau (KP.0, Vorarbeit für den Branch „Kartenpfad“)
@@ -110,6 +110,13 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 
 (Die Quellen stehen nur in `data/kartenpfad.js` bei den Karten und Forschungen als `schaltetFrei`.)
 
+## KP.6
+
+- Wagnis-Karten (eigene Seltenheit „Wagnis“, gestrichelter Rand, ab Wahl 5, brauchen Echtes Militär; höchstens eine je Angebot): Glaskanonen (Fernkampfschaden ×2, Fernkämpfer haben 1 Lebenspunkt, Stat `rangedHpOne`) und Volle Auslastung (Versorgung ×2, Materialertrag −50 %). Wirkung dauerhaft; das Gegenspiel (Gegner mit Fernkämpfern und Türmen) ist die vorhandene Spiellogik.
+- Exklusivpaar: Fortgeschrittene Taktiken (Nahkampf: Reiter, Schildträger) und Ballistik (Fernkampf: Armbrustschütze, Katapult als Datensätze) schließen sich aus (`exklusivMit`); die andere Karte erscheint nie wieder, ihre Forschungsgruppe in der Universität und ihre gesperrten Einheiten verschwinden. Die Detailzeile der Karte nennt den Ausschluss.
+- Mindesttempo: nach `KARTEN.maxAbstand` (180 s Spielzeit) ohne Wahl wird die nächste fällig (`S.pfad.free`, `log.freeChoice`). Die EP-Schwelle der folgenden Wahl bleibt unverändert (`xpNeed` rechnet die freien Stufen heraus). Im Standardmodus gibt es kein Mindesttempo.
+- Kaserne-Ausbau 2 hat zwei Quellen, die sich gegenseitig ausschließen (Forschung Reiter oder Forschung Armbrustschütze); je Partie bleibt es genau eine (Auslegung 17).
+
 ## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
 
 1. Das Dokument `branch-konzepte-pacing.md` fehlt; der Unterbau folgt allein den Angaben im Anforderungsdokument.
@@ -128,3 +135,5 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 14. Forschungsplatz: „ein Ausbau öffnet einen zweiten“ ist die bestehende Forschung „Zweiter Platz“; einen eigenen Ausbau der Universität gibt es nicht.
 15. Die Gebäude-Ausbaustufen sind den vorhandenen Upgrades zugeordnet (Tabelle bei KP.5). „Stufe 2“ der Kaserne (Ausbau) und die Schmiede-Stufen ab 4 liegen hinter Forschungen; das hält die Versorgung und die Schmiede lange klein (Risiko, in der Simulation prüfen, Bericht).
 16. Kontor-Zinseszins und Presse bleiben frei: Das Kontor selbst ist über „Handel“ gesperrt, und die Tabelle in KP.05 nennt für beide keine Quelle.
+17. Beide Linien des Exklusivpaars öffnen den Ausbau der Kaserne (Stufe 2): Forschung Reiter oder Forschung Armbrustschütze. Mit einer einzigen Quelle (Reiter, wie in der Tabelle KP.05) fehlte der Fernkampflinie dauerhaft Versorgung; ein Paarvergleich innerhalb von 15 pp wäre nicht erreichbar. Je Partie bleibt die Quelle eindeutig, weil die Linien sich ausschließen.
+18. Wagnis-Karten sind gewöhnliche Karten mit eigener Familie; ihr Ziehgewicht kommt aus `gewicht` (Startwert 4 gegenüber 10 bei Pfadkarten), nicht aus den Seltenheitsgewichten der Bonuskarten.

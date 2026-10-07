@@ -137,6 +137,7 @@ function explUnit(id){
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
 /* Wer einen gesperrten Inhalt öffnet: Karte oder Forschung (REQ-KP.01); id = Karten- oder Forschungs-Id */
 function sourceLabel(id){
+  if (Array.isArray(id)) return id.map(sourceLabel).filter(Boolean).join(' / ');
   if (G.OPT[id]) return t('kp.lock.card', { name: t(G.OPT[id].nameKey) });
   if (G.RES[id]) return t('kp.lock.research', { name: t(G.RES[id].nameKey) });
   return null;

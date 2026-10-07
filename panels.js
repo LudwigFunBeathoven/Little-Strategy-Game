@@ -304,7 +304,7 @@ function renderOpts(){
   for (const id in C.UNITS){
     if (C.UNITS[id].replacement) continue;                                     // Ersatzeinheiten haben keinen eigenen Knopf (REQ-KP.05)
     const spec = C.UNITS[id], el = optEls['unit_' + id];
-    setHidden(el.btn, !G.unitUnlocked(id) && !(S.pacing === 'karten' && G.unitSource(id)));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
+    setHidden(el.btn, !G.unitUnlocked(id) && !(S.pacing === 'karten' && G.unitSource(id) && G.sourceReachable(G.unitSource(id))));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
     setHidden(el.kbd, false); setText(el.kbd, spec.key);
     setText(el.label, t(`unit.${G.ownType(id)}.name`));
     const open = G.unitUnlocked(id);                                          // gesperrt sichtbar: keine Marke „neu“, erst nach der Freischaltung
@@ -484,7 +484,7 @@ function renderResearch(){
   const S = G.S;
   const inMode = r => G.researchBlock(r.id) !== 'notInMode';
   setHidden($('resPfad'), S.pacing !== 'karten');
-  for (const g of Object.values(resGroupsAll)) setHidden(g.g, S.pacing !== 'karten' || !G.RESEARCH.some(r => resEls[r.id] && resEls[r.id].group === g));
+  for (const [cid, g] of Object.entries(resGroupsAll)) setHidden(g.g, S.pacing !== 'karten' || G.cardExcluded(cid));
   for (const r of G.RESEARCH){
     const el = resEls[r.id], n = G.researchTier(r.id), next = G.researchNext(r.id);
     setHidden(el.btn, !inMode(r));

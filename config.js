@@ -18,6 +18,7 @@ const KF_CONFIG = {
   /* Kartenpfad (REQ-KP.02, KP.06): Angebot im Modus 'karten'; Startwerte, per Simulation zu kalibrieren */
   KARTEN: {
     rueckstandPlus: 0.5,        // Gewichtszuschlag je Wahl, in der eine ziehbare Bau-Karte nicht im Angebot erschien (Faktor auf das Grundgewicht)
+    maxAbstand: 180,            // Mindesttempo: steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06)
     maxWarten: 3,               // eine ziehbare Bau-Karte erscheint spätestens in der n-ten Wahl nach ihrer Freigabe (harte Grenze)
   },
   LANGUAGES: ['de', 'en'],
@@ -175,6 +176,8 @@ const KF_CONFIG = {
        replacement: entsteht nur als Ersatz für base (Einheitenersatz, kein eigener Knopf); Werte und Kosten sind Startwerte. Versorgung: jede Einheit zählt 1. */
     reiter:          { key: '4', cost: 28, hp: 40, dmg: 7, cd: 0.7, range: 14,  bounty: 12, speed: 52, farbton: 'brass' },
     schwertkaempfer: { cost: 16, hp: 42, dmg: 7, cd: 0.8, range: 14,  bounty: 10, speed: 34, replacement: true, base: 'laeufer', farbton: 'brass' },
+    armbrust:        { key: '5', cost: 44, hp: 24, dmg: 12, cd: 1.8, range: 140, bounty: 20, speed: 34, farbton: 'rust' },
+    katapult:        { key: '6', cost: 70, hp: 40, dmg: 22, cd: 3.0, range: 170, bounty: 28, speed: 24, farbton: 'rust' },
     bogenschuetze:   { cost: 36, hp: 22, dmg: 9, cd: 1.2, range: 120, bounty: 17, speed: 34, replacement: true, base: 'werfer',  farbton: 'brass' },
   },
 
