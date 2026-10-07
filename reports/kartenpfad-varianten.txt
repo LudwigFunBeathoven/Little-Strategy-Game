@@ -1,0 +1,26 @@
+fertig in 963 s, 300 Partien
+
+PFAD-VARIANTEN (normal, durchschnitt, 50 Partien je Feld)
+
+Strategie        | Variante | Siege  | offen | Median Sieg | P90 Sieg | Kaserne ≤6:00 | Schmiede ≤8:00 | Wahlen | 1. Wahl | Tech→Forschung fertig
+gierig           | militaer |  100 % |   0 % |        5:54 |     6:28 |         100 % |           74 % |      3 |    1:25 | 1:15 (2)
+gierig           | wissen   |   96 % |   0 % |        5:53 |     6:48 |          96 % |           88 % |      3 |    1:25 | 1:16 (3)
+gierig           | festung  |  100 % |   0 % |        5:54 |     6:25 |         100 % |           10 % |      3 |    1:25 | 0:58 (7)
+einheiten-zuerst | militaer |   98 % |   0 % |        5:39 |     6:14 |          94 % |            0 % |      3 |    1:15 | 1:08 (4)
+einheiten-zuerst | wissen   |   96 % |   0 % |        5:39 |     7:06 |          84 % |           10 % |      3 |    1:15 | 1:21 (3)
+einheiten-zuerst | festung  |  100 % |   0 % |        5:39 |     6:14 |         100 % |            0 % |      3 |    1:15 | 1:11 (1)
+  Spreizung der Siegquoten (gierig): 4 pp (Soll ≤ 15 pp)
+  Spreizung der Siegquoten (einheiten-zuerst): 4 pp (Soll ≤ 15 pp)
+
+WAHLBREITE – Pfadkarten (Anteil der Angebote, in denen die Karte gewählt wurde; Soll 5–60 %)
+  echtesMilitaer               316 Angebote,  94 %
+  pfadFestungsbau              317 Angebote,  38 %
+  metallverarbeitung           326 Angebote,  63 %
+  gelehrte                     300 Angebote, 100 %
+  handel                        32 Angebote,  28 %
+  fortgeschritteneTaktiken      24 Angebote,  79 %
+  ballistik                     12 Angebote,   0 %
+  eiserneKlingen                11 Angebote, 100 %
+  befestigungskunde             11 Angebote,  64 %
+  Bonuskarten: 20 unter 5 %, 0 über 60 % (von 39)
+

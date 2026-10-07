@@ -1,0 +1,392 @@
+{
+ "runs": 50,
+ "diff": "normal",
+ "varianten": [
+  {
+   "strategy": "gierig",
+   "variante": "militaer",
+   "n": 50,
+   "siegquote": 100,
+   "patt": 0,
+   "medianSiegS": 353.65000000004613,
+   "q90SiegS": 387.95000000005393,
+   "kaserne6": 100,
+   "schmiede8": 74,
+   "wahlen": 3,
+   "freieWahlen": 0,
+   "ersteWahlS": 84.84999999999732,
+   "techBisForschungS": 74.84999999998715,
+   "techForschungen": 2
+  },
+  {
+   "strategy": "gierig",
+   "variante": "wissen",
+   "n": 50,
+   "siegquote": 96,
+   "patt": 0,
+   "medianSiegS": 353.30000000004605,
+   "q90SiegS": 407.5000000000584,
+   "kaserne6": 96,
+   "schmiede8": 88,
+   "wahlen": 3,
+   "freieWahlen": 0,
+   "ersteWahlS": 84.84999999999732,
+   "techBisForschungS": 76.19999999997304,
+   "techForschungen": 3
+  },
+  {
+   "strategy": "gierig",
+   "variante": "festung",
+   "n": 50,
+   "siegquote": 100,
+   "patt": 0,
+   "medianSiegS": 354.3500000000463,
+   "q90SiegS": 384.8000000000532,
+   "kaserne6": 100,
+   "schmiede8": 10,
+   "wahlen": 3,
+   "freieWahlen": 0,
+   "ersteWahlS": 84.84999999999732,
+   "techBisForschungS": 58.14999999998557,
+   "techForschungen": 7
+  },
+  {
+   "strategy": "einheiten-zuerst",
+   "variante": "militaer",
+   "n": 50,
+   "siegquote": 98,
+   "patt": 0,
+   "medianSiegS": 338.9500000000428,
+   "q90SiegS": 374.40000000005085,
+   "kaserne6": 94,
+   "schmiede8": 0,
+   "wahlen": 3,
+   "freieWahlen": 0,
+   "ersteWahlS": 74.54999999999791,
+   "techBisForschungS": 68.09999999998584,
+   "techForschungen": 4
+  },
+  {
+   "strategy": "einheiten-zuerst",
+   "variante": "wissen",
+   "n": 50,
+   "siegquote": 96,
+   "patt": 0,
+   "medianSiegS": 339.0000000000428,
+   "q90SiegS": 425.6500000000625,
+   "kaserne6": 84,
+   "schmiede8": 10,
+   "wahlen": 3,
+   "freieWahlen": 0,
+   "ersteWahlS": 74.54999999999791,
+   "techBisForschungS": 81.1999999999544,
+   "techForschungen": 3
+  },
+  {
+   "strategy": "einheiten-zuerst",
+   "variante": "festung",
+   "n": 50,
+   "siegquote": 100,
+   "patt": 0,
+   "medianSiegS": 339.0000000000428,
+   "q90SiegS": 374.40000000005085,
+   "kaserne6": 100,
+   "schmiede8": 0,
+   "wahlen": 3,
+   "freieWahlen": 0,
+   "ersteWahlS": 74.54999999999791,
+   "techBisForschungS": 71.199999999976,
+   "techForschungen": 1
+  }
+ ],
+ "wahlbreite": [
+  {
+   "id": "echtesMilitaer",
+   "angebote": 316,
+   "gewaehlt": 297,
+   "rate": 94
+  },
+  {
+   "id": "pfadFestungsbau",
+   "angebote": 317,
+   "gewaehlt": 121,
+   "rate": 38.2
+  },
+  {
+   "id": "metallverarbeitung",
+   "angebote": 326,
+   "gewaehlt": 206,
+   "rate": 63.2
+  },
+  {
+   "id": "gelehrte",
+   "angebote": 300,
+   "gewaehlt": 300,
+   "rate": 100
+  },
+  {
+   "id": "handel",
+   "angebote": 32,
+   "gewaehlt": 9,
+   "rate": 28.1
+  },
+  {
+   "id": "fortgeschritteneTaktiken",
+   "angebote": 24,
+   "gewaehlt": 19,
+   "rate": 79.2
+  },
+  {
+   "id": "ballistik",
+   "angebote": 12,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "eiserneKlingen",
+   "angebote": 11,
+   "gewaehlt": 11,
+   "rate": 100
+  },
+  {
+   "id": "befestigungskunde",
+   "angebote": 11,
+   "gewaehlt": 7,
+   "rate": 63.6
+  },
+  {
+   "id": "instandhaltung",
+   "angebote": 45,
+   "gewaehlt": 4,
+   "rate": 8.9
+  },
+  {
+   "id": "langeWurfarme",
+   "angebote": 29,
+   "gewaehlt": 2,
+   "rate": 6.9
+  },
+  {
+   "id": "bessereFabriken",
+   "angebote": 56,
+   "gewaehlt": 3,
+   "rate": 5.4
+  },
+  {
+   "id": "rationalisierung",
+   "angebote": 11,
+   "gewaehlt": 1,
+   "rate": 9.1
+  },
+  {
+   "id": "maurerkolonne",
+   "angebote": 50,
+   "gewaehlt": 1,
+   "rate": 2
+  },
+  {
+   "id": "drill",
+   "angebote": 47,
+   "gewaehlt": 3,
+   "rate": 6.4
+  },
+  {
+   "id": "aushebung",
+   "angebote": 46,
+   "gewaehlt": 3,
+   "rate": 6.5
+  },
+  {
+   "id": "kriegserfahrung",
+   "angebote": 58,
+   "gewaehlt": 4,
+   "rate": 6.9
+  },
+  {
+   "id": "kriegstrommeln",
+   "angebote": 51,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "dauerauftrag",
+   "angebote": 17,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "notreserve",
+   "angebote": 19,
+   "gewaehlt": 3,
+   "rate": 15.8
+  },
+  {
+   "id": "serienbau",
+   "angebote": 56,
+   "gewaehlt": 2,
+   "rate": 3.6
+  },
+  {
+   "id": "fliessband",
+   "angebote": 76,
+   "gewaehlt": 4,
+   "rate": 5.3
+  },
+  {
+   "id": "doppelschicht",
+   "angebote": 53,
+   "gewaehlt": 1,
+   "rate": 1.9
+  },
+  {
+   "id": "schwerePressen",
+   "angebote": 59,
+   "gewaehlt": 10,
+   "rate": 16.9
+  },
+  {
+   "id": "nachtschicht",
+   "angebote": 54,
+   "gewaehlt": 1,
+   "rate": 1.9
+  },
+  {
+   "id": "schildwall",
+   "angebote": 47,
+   "gewaehlt": 1,
+   "rate": 2.1
+  },
+  {
+   "id": "taktiker",
+   "angebote": 21,
+   "gewaehlt": 3,
+   "rate": 14.3
+  },
+  {
+   "id": "vorposten",
+   "angebote": 43,
+   "gewaehlt": 3,
+   "rate": 7
+  },
+  {
+   "id": "kriegsanleihe",
+   "angebote": 20,
+   "gewaehlt": 2,
+   "rate": 10
+  },
+  {
+   "id": "gluecksritter",
+   "angebote": 10,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "belagerungsgeraet",
+   "angebote": 76,
+   "gewaehlt": 8,
+   "rate": 10.5
+  },
+  {
+   "id": "zinnen",
+   "angebote": 52,
+   "gewaehlt": 1,
+   "rate": 1.9
+  },
+  {
+   "id": "veteranen",
+   "angebote": 7,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "sappeure",
+   "angebote": 14,
+   "gewaehlt": 3,
+   "rate": 21.4
+  },
+  {
+   "id": "weitschuss",
+   "angebote": 24,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "grossauftrag",
+   "angebote": 16,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "grosseArmee",
+   "angebote": 2,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "bauleitung",
+   "angebote": 31,
+   "gewaehlt": 4,
+   "rate": 12.9
+  },
+  {
+   "id": "bastion",
+   "angebote": 12,
+   "gewaehlt": 2,
+   "rate": 16.7
+  },
+  {
+   "id": "allesAufDieMitte",
+   "angebote": 4,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "blitzkrieg",
+   "angebote": 7,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "turmkanoniere",
+   "angebote": 10,
+   "gewaehlt": 1,
+   "rate": 10
+  },
+  {
+   "id": "soeldnerheer",
+   "angebote": 13,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "festungsbau",
+   "angebote": 11,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "werkmeister",
+   "angebote": 4,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "selbstlaeufer",
+   "angebote": 20,
+   "gewaehlt": 2,
+   "rate": 10
+  },
+  {
+   "id": "scharfschuetzen",
+   "angebote": 4,
+   "gewaehlt": 0,
+   "rate": 0
+  },
+  {
+   "id": "zeugmeister",
+   "angebote": 5,
+   "gewaehlt": 0,
+   "rate": 0
+  }
+ ]
+}
