@@ -102,3 +102,13 @@ Basislinie der Kartenwahlen im Standardmodus (Normal, 20 Partien je Zeile, `tool
 | einheiten-zuerst | gelegentlich | 3 | 77 s | 7,3 min | 100 % |
 
 Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad aus Karte und anschließender Forschung (zwei Schritte) braucht mehr Wahlen, als die Partie bietet; das gehört in den Bericht (Risiko „Zweistufiger Weg zur Einheit“, `anforderungen-kartenpfad.md` Abschnitt 5).
+
+## MVP-Veröffentlichung (`docs/anforderungen-mvp-release.md`)
+
+### R.0 Voraussetzungen (REQ-R.01), Befund vom 07.10.2026
+| Frage | Befund |
+|---|---|
+| Tutorial Teil 1 und 2 auf `main`? | ja (v0.8, Berichte `docs/bericht-tutorial.md`, `docs/bericht-tutorial-2.md`) |
+| Unterbau auf `main` (`5c2f57b`), Modus `standard` voreingestellt? | ja: `PACING_MODUS: 'standard'`, `C.PACING` ist leer |
+| Anderer Modus auf `main` erreichbar? | Nein im öffentlichen Build: Es gibt keinen URL-Parameter für den Modus (`?pacing=` existiert nur im Branch). `newGame(…, { pacing })` ruft nur der Testcode auf. Ein Modus ohne Eintrag in `C.PACING` sperrt nichts, auch wenn jemand in der Konsole `PACING_MODUS` ändert. Der Unterbau ist damit ohne Wirkung. `KF_OVERRIDE` gilt nur in Node-Werkzeugen. |
+| Sichtbarkeit und Pages-Quelle | Das Repository ist **öffentlich** (Sichtbarkeit `public`, `has_pages: true`). Die Quelle von GitHub Pages ließ sich aus dieser Umgebung nicht lesen (die Schnittstelle ist gesperrt). `CLAUDE.md` beschreibt als öffentliche Fassung den Branch `MVP` (Fast-Forward von `main`); das Anforderungsdokument nennt `main`. Beides führt zum selben Stand, solange `MVP` auf `main` zeigt. Offen: PO bestätigt in den Repository-Einstellungen (Pages) die Quelle. **Hinweis:** Auch der Branch `exp/kartenpfad` ist als Code öffentlich sichtbar, solange das Repository öffentlich ist; nicht veröffentlicht ist nur eine spielbare Seite. |
