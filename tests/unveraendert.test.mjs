@@ -1,5 +1,5 @@
 // Tests Tutorial, REQ-T.06: Partien ohne Tutorial bleiben durch die Tutorial-Änderung unverändert.
-// Die Werte stammen aus Version 0.7 (Commit 2211210, vor dem Tutorial); gleicher Seed muss dasselbe Ergebnis liefern.
+// Die Werte wurden mit REQ-R.03 (Bot-Korrektur bei vollem Raster) neu erzeugt (vorher Version 0.7, Commit 2211210); gleicher Seed muss dasselbe Ergebnis liefern.
 // Ändert jemand absichtlich Regeln oder Balancing, müssen diese Werte bewusst neu erzeugt werden (Skript im Test unten).
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,18 +12,17 @@ const GOLDEN = [
   "profile": "aktiv",
   "strategy": "gierig",
   "status": "won",
-  "t": 368.75,
-  "level": 4,
+  "t": 359.55,
+  "level": 3,
   "maxArmy": 30,
-  "waves": 12,
+  "waves": 16,
   "wavesFull": 11,
   "cards": [
    "fliessband",
    "schwerePressen",
-   "doppelschicht",
-   "belagerungsgeraet"
+   "werkmeister"
   ],
-  "unitShare": 0.6207,
+  "unitShare": 0.6413,
   "built": {
    "fabrik": 5,
    "kaserne": 1,
@@ -38,24 +37,24 @@ const GOLDEN = [
   "profile": "durchschnitt",
   "strategy": "gierig",
   "status": "won",
-  "t": 500.05,
-  "level": 6,
-  "maxArmy": 32,
-  "waves": 16,
-  "wavesFull": 10,
+  "t": 382.7,
+  "level": 4,
+  "maxArmy": 22,
+  "waves": 19,
+  "wavesFull": 7,
   "cards": [
    "bessereFabriken",
    "kriegsanleihe",
-   "aushebung",
-   "schwerePressen",
-   "weitschuss"
+   "doppelschicht",
+   "grossauftrag"
   ],
-  "unitShare": 0.6,
+  "unitShare": 0.6444,
   "built": {
-   "fabrik": 6,
-   "kontor": 1,
+   "fabrik": 5,
    "kaserne": 1,
-   "schmiede": 1
+   "schmiede": 1,
+   "kontor": 1,
+   "universitaet": 1
   }
  },
  {

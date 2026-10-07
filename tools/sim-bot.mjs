@@ -249,7 +249,8 @@ export class Bot {
         if (Number.isFinite(c)) econTarget = c / 0.7;
       }
     }
-    const reserve = threat ? 0 : econTarget * 0.7;
+    // Ist kein Bauplatz mehr frei (econTarget unendlich), gibt es nichts, wofür Material zurückzulegen wäre (REQ-R.03; vorher blieb es liegen)
+    const reserve = threat || !Number.isFinite(econTarget) ? 0 : econTarget * 0.7;
     while (!o.noUnits && G.factoryCount() > 0 && S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
       const q = S.queue.length; trySpawn(1); if (S.queue.length === q) break;
     }
