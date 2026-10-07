@@ -57,19 +57,29 @@ export function tutorialFeatures(p){
            slowest: slowest ? slowest[0] : null, totalS: Math.max(0, ...Object.values(t.stepTimes || {})) };
 }
 
+/* Kartenwahlen (REQ-R.04, Protokollformat 2): Zahl, Bedenkzeit, Neu ziehen, Bannen; ältere Protokolle (Format 1, ohne diese Felder) liefern null */
+export function draftFeatures(p){
+  const d = p.drafts;
+  if (!Array.isArray(d) || !d.length || d[0].thinkMs === undefined) return null;
+  const think = d.map(x => x.thinkMs).filter(x => x != null);
+  return { n: d.length, thinkMedianMs: median(think), rerolls: d.reduce((a, x) => a + (x.rerolled || 0), 0), bans: d.reduce((a, x) => a + (x.banned || 0), 0),
+           chosen: d.map(x => x.chosen) };
+}
+
 const rows = [];
 for (const file of args){
   const p = JSON.parse(readFileSync(file, 'utf8'));
   if (p.format !== 'klammerfront-session'){ console.log(`${file}: kein Sitzungsprotokoll`); continue; }
   const f = features(p), n = nearest(f), st = nearestStrategy(f);
-  const tut = tutorialFeatures(p);
-  rows.push({ file, diff: p.diff, result: p.result, durationS: p.durationS, ...f, profile: n.profile, strategy: st.strategy, tutorial: tut,
+  const tut = tutorialFeatures(p), dr = draftFeatures(p);
+  rows.push({ file, drafts: dr, diff: p.diff, result: p.result, durationS: p.durationS, ...f, profile: n.profile, strategy: st.strategy, tutorial: tut,
               distances: Object.fromEntries(n.ranked.map(r => [r.name, +r.d.toFixed(3)])) });
   console.log(`${file}\n  ${p.diff}, ${p.result} nach ${Math.floor(p.durationS / 60)}:${String(Math.round(p.durationS % 60)).padStart(2, '0')} · ` +
     `${f.cps.toFixed(2)} Klicks/s · Reaktion ${f.reaction.toFixed(2)} s · bis ${f.cap} Einheiten · Mauer ${f.wall ? 'ja' : 'nein'}\n` +
     `  → nächstes Bot-Profil: ${n.profile} (Abstände: ${n.ranked.map(r => `${r.name} ${r.d.toFixed(2)}`).join(', ')})\n` +
     `  → nächste Strategie: ${st.strategy ?? '–'} (Einheitenkäufe ${f.unitShare == null ? '–' : Math.round(100 * f.unitShare) + ' %'} der Handlungen in den ersten ${C.SIM_STYLE_WINDOW_S} s; ` +
     `Referenz ${Object.entries(STYLE_REF).map(([k, v]) => `${k} ${Math.round(100 * v)} %`).join(', ')})`);
+  if (dr) console.log(`  → Kartenwahlen: ${dr.n}, Bedenkzeit Median ${dr.thinkMedianMs == null ? '–' : (dr.thinkMedianMs / 1000).toFixed(1) + ' s'}, Neu ziehen ${dr.rerolls}, Bannen ${dr.bans}; gewählt: ${dr.chosen.join(', ')}`);
   if (tut){
     const mm = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
     console.log('  → Tutorial: ' + (tut.skipped ? `übersprungen in Schritt „${tut.skippedAt}“; ` : tut.completed ? `abgeschlossen nach ${mm(tut.totalS)}; ` : 'nicht beendet; ') +

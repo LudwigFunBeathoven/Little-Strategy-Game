@@ -51,3 +51,15 @@ test('session.js und tutorial.js liefern die Felder für das Protokoll', () => {
   const tut = readFileSync(new URL('../tutorial.js', import.meta.url), 'utf8');
   for (const field of ['stepTimes', 'skipped', 'skippedAt', 'misclicks']) assert.ok(tut.includes(field), field);
 });
+
+/* ---------- Protokollformat 2: Kartenwahlen (REQ-R.04) ---------- */
+test('Auswertung liest Kartenwahlen aus Format 2; ältere Protokolle bleiben lesbar', () => {
+  const neu = Object.assign({}, base, { formatVersion: 2, drafts: [
+    { t: 70, level: 1, chosen: 'weitschuss', offered: ['weitschuss', 'zinnen'], thinkMs: 4200, rerolled: 0, banned: 0 },
+    { t: 140, level: 2, chosen: 'drill', offered: ['drill', 'bessereFabriken', 'serienbau'], thinkMs: 9800, rerolled: 1, banned: 1 }] });
+  const alt = Object.assign({}, base, { formatVersion: 1, drafts: [{ t: 70, level: 1, chosen: 'weitschuss', offered: ['weitschuss', 'zinnen'] }] });
+  const { text, rows } = run([neu, alt]);
+  assert.match(text, /Kartenwahlen: 2, Bedenkzeit Median 9\.8 s, Neu ziehen 1, Bannen 1; gewählt: weitschuss, drill/);
+  assert.equal(rows[0].drafts.n, 2); assert.equal(rows[0].drafts.rerolls, 1);
+  assert.equal(rows[1].drafts, null, 'Format 1 hat keine Bedenkzeit: kein Fehler, keine Zeile');
+});
