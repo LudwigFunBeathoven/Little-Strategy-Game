@@ -1062,7 +1062,12 @@ function create(){
   }
 
   function tick(dt){
-    if (S.status !== 'running' || S.pendingDraft) return;   // Draft pausiert das Spiel
+    if (S.status !== 'running') return;
+    if (S.pendingDraft){                                    // offene Kartenwahl: pausiert das Spiel (Standard), läuft langsam oder weiter (KARTENBUEHNE.zeit)
+      const z = C.KARTENBUEHNE.zeit, f = z === 'lauf' ? 1 : z === 'langsam' ? C.KARTENBUEHNE.langsamFaktor : 0;
+      if (!f) return;
+      dt *= f;
+    }
     S.t += dt;
     S.stats.prod[phase()].time += dt;
     addMaterial(matRate() * dt);

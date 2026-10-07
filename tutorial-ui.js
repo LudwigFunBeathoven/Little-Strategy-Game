@@ -52,6 +52,11 @@ const TutUI = (() => {
       }
       case 'cards': {
         // erste Kartenwahl: Sprechblase am Reiter „Karten“, der sich selbst öffnet; sie liegt über dem Reiter und verdeckt keine Karte
+        if (Stage.on()){                                            // Kartenbühne: die Sprechblase sitzt über der Bühne und verdeckt keine Karte (REQ-KP.03)
+          if (!S.pendingDraft) return null;
+          if (Stage.folded) return own($('deckBtn'));
+          return { els: [], world: null, narrKey: step.narrKey, taskKey: step.taskKey, anchor: $('stageHead'), clickable: false };
+        }
         if (!S.pendingDraft || !tabVisible('cards')) return null;
         return own(tabBtn('cards'));
       }

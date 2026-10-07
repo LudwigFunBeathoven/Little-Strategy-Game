@@ -74,6 +74,7 @@ function goBuild(type){
 let pointerHeld = false, draftAuto = null, draftShownKey = '', draftOpenedAt = -Infinity;
 function draftLocked(){ return performance.now() - draftOpenedAt < C.UI.draftLockMs; }
 function autoDraft(){
+  if (Stage.on()) return;                                              // die Kartenbühne öffnet sich selbst und wechselt keinen Reiter (REQ-KP.03)
   const S = G.S, d = S.status === 'running' ? S.pendingDraft : null;
   if (d){
     const key = d.level + ':' + d.options.join();
@@ -171,6 +172,7 @@ function buildPanels(){
   $('camFollow').addEventListener('click', () => { Cam.follow = !Cam.follow; Cam.touched = true; requestRender(); });
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    if (Stage.visible()) return;                                   // Ziffern gehören der Kartenbühne
     for (const [id, spec] of Object.entries(C.UNITS)) if (e.key === spec.key){ G.spawn(id); requestRender(); }
   });
 }
@@ -337,8 +339,21 @@ function optLimit(o){
 }
 let chosenKey = '', draftKey = '';
 function renderChosen(){
-  const st = G.S.draft.stacks, key = lang + JSON.stringify(st);
+  const st = G.S.draft.stacks, key = lang + JSON.stringify(st) + JSON.stringify(G.S.research.banned) + Stage.on();
   if (key === chosenKey) return;
+  // Sammlung (Kartenbühne): Hinweis und gebannte Karten; gewählt wird auf der Bühne (REQ-KP.03)
+  const coll = Stage.on(), banned = G.S.research.banned || [];
+  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll);
+  if (coll){
+    setText($('collHint'), t('kp.collection.hint'));
+    const bl = $('bannedList'); bl.innerHTML = '';
+    if (!banned.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('kp.collection.noneBanned'); bl.appendChild(e); }
+    for (const id of banned){
+      const o = G.OPT[id]; if (!o) continue;
+      const tag = document.createElement('span'); tag.className = 'opt-tag ' + cardClass(o); tag.dataset.tooltip = 'chosen:' + id;
+      const b = document.createElement('b'); b.textContent = t(o.nameKey); tag.appendChild(b); bl.appendChild(tag);
+    }
+  }
   chosenKey = key;
   const box = $('chosen'); box.innerHTML = '';
   const ids = Object.keys(st).filter(id => st[id] > 0);
@@ -516,7 +531,7 @@ function renderPanels(){
     if (on) NewMarks.view('tab:' + id);
   }
   // Markierung: Reiter mit neuem Inhalt (offene Kartenwahl)
-  setHidden(tabEls.cards.mark, !(S.pendingDraft && activeTab !== 'cards'));
+  setHidden(tabEls.cards.mark, !(S.pendingDraft && activeTab !== 'cards' && !Stage.on()));
   setHidden(tabEls.uni.mark, !(S.research.fresh && activeTab !== 'uni'));
 
   // Klickfeld

@@ -662,11 +662,11 @@ const endGreeting = async p => { await p.evaluate(() => { __kf.Tutorial.endGreet
   await p.click('.card .btn-primary'); await p.waitForTimeout(600);
   const g = await tutState(p);
   check(g.status === 'running' && g.diff === 'schwer' && g.lang === 'en' && g.phase === 'greet' && g.narr === await tx(p, 'tut.greet1'), `Englisch und Schwer: Partie läuft, Tutorial erscheint auf Englisch ${JSON.stringify(g)}`);
-  check(g.narr === 'Welcome, commander. I am your quartermaster.' && g.hold && g.hold.size === 2, 'Tutorial auf Schwer: Schonfrist mit kleiner erster Welle gilt unabhängig vom Grad');
+  check(g.narr === 'Welcome, governor. I am your quartermaster.' && g.hold && g.hold.size === 2, 'Tutorial auf Schwer: Schonfrist mit kleiner erster Welle gilt unabhängig vom Grad');
   // Sprachwechsel während des Tutorials: die Sprechblase wechselt ohne Neuladen
   await p.click('#langBtn'); await p.waitForTimeout(250);
   const de = await tutState(p);
-  check(de.lang === 'de' && de.narr === 'Willkommen, Feldherr. Ich bin dein Quartiermeister.', `Sprachwechsel im Tutorial: Sprechblase sofort in der neuen Sprache (${de.narr})`);
+  check(de.lang === 'de' && de.narr === 'Willkommen, Statthalter. Ich bin dein Quartiermeister.', `Sprachwechsel im Tutorial: Sprechblase sofort in der neuen Sprache (${de.narr})`);
   await p.click('#langBtn'); await p.waitForTimeout(100);
   // Überspringen: nach dem Tutorial gelten die Schwer-Werte
   await p.click('#tutSkipBtn'); await p.waitForTimeout(250);
@@ -927,6 +927,84 @@ for (const stepId of ['begruessung', 'fertigen', 'bauen', 'rekrutieren', 'ausrue
   await p.evaluate(() => __kf.save()); await p.reload(); await p.waitForTimeout(300);
   check(await p.evaluate(() => document.querySelector('#tab-cards i.new').hidden), 'Gesehene Markierungen bleiben im Spielstand');
   check(errs.length === 0, `Hinweise und Markierungen: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
+/* ---------- Kartenbühne (REQ-KP.03) ---------- */
+for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
+  const ctx = await b.newContext({ viewport: { width: vw, height: vh } });
+  const p = await ctx.newPage();
+  const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
+  await p.goto(base + 'index.html?dev=1&tutorial=0&buehne=1&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  const lv = n => p.evaluate(n => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + n); G.S.xp = G.S.xpTotal;
+    G.S.units.push({ id: 99990 + n, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); }, n);
+  const st = () => p.evaluate(() => { const g = id => document.getElementById(id), r = g('stageCards').getBoundingClientRect(), cs = [...g('stageCards').children];
+    return { vis: !g('stage').hidden, pending: !!__kf.G.S.pendingDraft, levels: __kf.G.S.pendingLevels, tab: __kf.tab, n: cs.length,
+      cx: (r.left + r.width / 2) / innerWidth, cy: (r.top + r.height / 2) / innerHeight, locked: g('stageCards').classList.contains('locked'),
+      inView: cs.every(c => { const q = c.getBoundingClientRect(); return q.left >= 0 && q.right <= innerWidth && q.top >= 0 && q.bottom <= innerHeight; }),
+      w: cs[0] ? cs[0].offsetWidth : 0, deck: !g('deckBtn').hidden, oldBox: !g('draftBox').offsetParent === false }; });
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.selectTab ? 0 : 0; });
+  check(await p.evaluate(() => !document.getElementById('deckBtn').hidden), `[${vw}] Kartenbühne: Stapel ist vor der ersten Wahl sichtbar`);
+  const tab0 = await p.evaluate(() => __kf.tab);
+  await lv(2); await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 }).catch(() => {});
+  const s1 = await st();
+  check(s1.vis && s1.pending && s1.n >= 2 && Math.abs(s1.cx - 0.5) <= 0.05 && Math.abs(s1.cy - 0.5) <= 0.05, `[${vw}] Kartenbühne: Bühne offen, Kartenreihe in der Bildmitte ${JSON.stringify(s1)}`);
+  check(s1.inView && s1.w >= 160 && s1.w <= 260 && s1.w >= Math.min(260, vw * 0.14) - 1, `[${vw}] Kartenbühne: alle Karten sichtbar, Breite im Rahmen (${s1.w}px)`);
+  check(s1.tab === tab0 && s1.locked, `[${vw}] Kartenbühne: Reiter unverändert, Karten in der Eingabesperre gesperrt`);
+  const audit = await p.evaluate(() => ({ tip: __kf.tooltipAudit(), expl: __kf.explAudit() }));
+  check(audit.tip.length === 0 && audit.expl.length === 0, `[${vw}] Kartenbühne: Tooltip und Erklärzeile an jedem Element${show([...audit.tip, ...audit.expl])}`);
+  // Klick in der Sperre wählt nichts
+  await p.evaluate(() => { document.querySelector('.kcard').click(); });
+  check((await st()).pending && (await st()).levels === 2, `[${vw}] Kartenbühne: Klick innerhalb der Eingabesperre wählt keine Karte`);
+  // Spielzeit steht still, solange die Bühne offen ist (zeit = pause)
+  const before = await p.evaluate(() => ({ t: __kf.G.S.t, m: __kf.G.S.material, u: JSON.stringify(__kf.G.S.units.map(u => u.x)) }));
+  await p.waitForTimeout(500);
+  const after = await p.evaluate(() => ({ t: __kf.G.S.t, m: __kf.G.S.material, u: JSON.stringify(__kf.G.S.units.map(u => u.x)) }));
+  check(JSON.stringify(before) === JSON.stringify(after), `[${vw}] Kartenbühne: Spielstand ändert sich bei offener Bühne nicht`);
+  // nach der Sperre wählt ein Klick, und die Bühne zeigt die zweite Wahl
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
+  await p.click('.kcard >> nth=0'); await p.waitForTimeout(80);
+  const s2 = await st();
+  check(s2.pending && s2.levels === 1 && s2.vis && s2.tab === tab0, `[${vw}] Kartenbühne: zwei Wahlen nacheinander, die zweite öffnet sich ${JSON.stringify(s2)}`);
+  // Tastatur: Ziffer wählt
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
+  await p.keyboard.press('2'); await p.waitForTimeout(80);
+  const s3 = await st();
+  check(!s3.pending && !s3.vis && s3.tab === tab0, `[${vw}] Kartenbühne: Taste 2 wählt, die Bühne schließt, derselbe Reiter ${JSON.stringify(s3)}`);
+  check(await p.evaluate(() => Object.values(__kf.G.S.draft.stacks).reduce((a, c) => a + c, 0) === 2), `[${vw}] Kartenbühne: beide Karten gewählt`);
+  // Später: Bühne klappt ein, Wahl bleibt offen, Stapel pulsiert, Klick öffnet
+  await lv(1); await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
+  await p.click('#stageLater'); await p.waitForTimeout(80);
+  const f1 = await p.evaluate(() => ({ hidden: document.getElementById('stage').hidden, pending: !!__kf.G.S.pendingDraft, pulse: document.getElementById('deckBtn').classList.contains('pulse') }));
+  check(f1.hidden && f1.pending && f1.pulse, `[${vw}] Kartenbühne: „Später“ klappt ein, Wahl bleibt offen, Stapel pulsiert ${JSON.stringify(f1)}`);
+  await p.click('#deckBtn'); await p.waitForTimeout(80);
+  check((await st()).vis, `[${vw}] Kartenbühne: Klick auf den Stapel öffnet die Bühne wieder`);
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
+  await p.keyboard.press('1'); await p.waitForTimeout(80);
+  // Sammlung im Reiter Karten: keine Wahl dort
+  await p.click('#tab-cards'); await p.waitForTimeout(150);
+  check(await p.evaluate(() => document.getElementById('draftBox').offsetParent === null && !document.getElementById('collHint').hidden), `[${vw}] Kartenbühne: Reiter Karten ist nur Sammlung`);
+  // Maustaste gedrückt: Bühne öffnet erst nach dem Loslassen
+  const box = await (await p.$('#clickBtn')).boundingBox();
+  await p.mouse.move(box.x + 10, box.y + 10); await p.mouse.down(); await lv(1); await p.waitForTimeout(250);
+  const h1 = await st();
+  await p.mouse.up(); await p.waitForTimeout(250);
+  const h2 = await st();
+  check(h1.pending && !h1.vis && h2.vis, `[${vw}] Kartenbühne: bei gedrückter Maustaste öffnet sie erst nach dem Loslassen ${JSON.stringify([h1.vis, h2.vis])}`);
+  check(errs.length === 0, `[${vw}] Kartenbühne: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+// Kartenbühne aus (Standardmodus): die Wahl bleibt im Reiter Karten
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  await p.goto(base + 'index.html?dev=1&tutorial=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + 1); G.S.xp = G.S.xpTotal;
+    G.S.units.push({ id: 99991, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
+  await p.waitForFunction(() => __kf.tab === 'cards', null, { timeout: 3000 }).catch(() => {});
+  const o = await p.evaluate(() => ({ tab: __kf.tab, stage: document.getElementById('stage').hidden, deck: document.getElementById('deckBtn').hidden, box: !document.getElementById('draftBox').hidden }));
+  check(o.tab === 'cards' && o.stage && o.deck && o.box, `Kartenbühne aus: Wahl im Reiter Karten wie in v0.8 ${JSON.stringify(o)}`);
   await ctx.close();
 }
 

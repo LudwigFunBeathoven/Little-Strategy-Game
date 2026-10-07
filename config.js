@@ -85,10 +85,26 @@ const KF_CONFIG = {
     // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
     homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
     draftLockMs: 400,
+    kartenbuehne: null,         // Kartenbühne in der Bildmitte (REQ-KP.03): null = nach Pacing-Modus (an bei 'karten'), true/false erzwingt; URL ?buehne=1|0
     hintAutoMs: 8000,           // ein Erstkontakt-Hinweis schließt sich nach so langer Zeit von selbst (REQ-T.05)
     newSeenMs: 1500,            // Markierung „neu“: so lange muss der Inhalt sichtbar sein, bis er als angesehen gilt (REQ-T.05)
     toastMs: 2500,              // kurzer Hinweis über dem Arbeitsbereich (abgeschlossene Forschung, REQ-6.06)           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
     debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
+  },
+
+  /* Kartenbühne (REQ-KP.03) */
+  KARTENBUEHNE: {
+    zeit: 'pause',              // Spielzeit bei offener Bühne: 'pause' (wie v0.6), 'langsam' (Faktor langsamFaktor) oder 'lauf'
+    langsamFaktor: 0.2,
+    abdunkelung: 0.45,          // Deckkraft des Schleiers über der Spielwelt
+    kartenBreitePct: 16,        // Kartenbreite in Prozent der Fensterbreite (14–18), begrenzt durch:
+    kartenMinPx: 160, kartenMaxPx: 260,
+    zweiZeilenBisPx: 900,       // unter dieser Fensterbreite liegt die Reihe in zwei Zeilen
+    aufdeckMs: 110,             // eine Karte deckt so lange auf (höchstens 120)
+    aufdeckAbstandMs: 110,      // Abstand zwischen zwei Karten (insgesamt höchstens 600 ms)
+    faecherGrad: 6,             // äußerste Karten stehen um so viele Grad schief
+    hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
+    symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0' },
   },
 
   /* Tutorial „Erste Schritte“ (REQ-T.01 – T.04): Schritte in data/tutorial-steps.js, Texte in den Sprachdateien */

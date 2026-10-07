@@ -45,7 +45,7 @@ function buildHud(){
                     'hudWaves', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn', 'tutSkipBtn'])
     hudEl[id] = $(id);
   for (let i = 0; i < C.LANE_COUNT; i++){ hudEl['hpP' + i] = $('hpP' + i); hudEl['barP' + i] = $('barP' + i); }
-  hudEl.draftBtn.addEventListener('click', () => selectTab('cards', true));
+  hudEl.draftBtn.addEventListener('click', () => { if (Stage.on()) Stage.reopen(); else selectTab('cards', true); });
   hudEl.pauseBtn.addEventListener('click', () => setPaused(!paused));
   hudEl.resumeBtn = $('resumeBtn');
   hudEl.resumeBtn.addEventListener('click', () => setPaused(false));
@@ -99,7 +99,7 @@ function renderHud(){
   setText(E.diffLabel, S.status === 'setup' ? '' : t(`diff.${S.diff}.name`));
   // Offene Kartenwahl: auffälliger Hinweis, öffnet den Reiter Karten; kein automatischer Wechsel (REQ-5.03)
   setHidden(E.draftBtn, !(running && S.pendingDraft));
-  if (S.pendingDraft) setText(E.draftBtn.querySelector('.expl'), t('ex.hud.draft', { n: S.pendingLevels }));
+  if (S.pendingDraft) setText(E.draftBtn.querySelector('.expl'), t(Stage.on() ? 'ex.kp.hud.draft' : 'ex.hud.draft', { n: S.pendingLevels }));
   E.pauseBtn.setAttribute('aria-pressed', String(paused));
   setText(E.pauseBtn.querySelector('.btn-label'), t(paused ? 'menu.resume' : 'menu.pause'));
   setText(E.pauseBtn.querySelector('.expl'), t(paused ? 'ex.menu.resume' : 'ex.menu.pause'));

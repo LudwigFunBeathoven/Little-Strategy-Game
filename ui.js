@@ -232,6 +232,8 @@ function tipContent(id){
     case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a) };
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
+    case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
+    case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
     case 'rush': { const act = S.research.active.find(x => x.id === a);
       return { title: t('research.rush'), body: t('tip.research.rush', { name: act ? researchName(G.RES[a], act.tier) : '' }),
@@ -430,7 +432,7 @@ function showHint(id){
   renderHint();
 }
 function renderHint(){
-  const box = $('hintBox'), id = Tutorial.active() ? null : hintQueue[0];
+  const box = $('hintBox'), id = Tutorial.active() || Stage.visible() ? null : hintQueue[0];
   setHidden(box, !id);
   if (!id){ clearTimeout(hintTimer); hintShown = null; return; }
   setText($('hintTitle'), t('hint.title'));
@@ -604,7 +606,7 @@ function wireWorldInput(){
     userScroll(Cam.x + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY));
   }, { passive: false });
   document.addEventListener('keydown', e => {
-    if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.target === $('worldScroll')) return;
+    if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.target === $('worldScroll') || Stage.visible()) return;
     if (e.key === 'Escape'){ clearSelection(); return; }
     if (e.target instanceof Element && e.target.closest('[role="tablist"], [role="grid"]')) return;   // Pfeiltasten gehören dort dem Widget
     const k = e.key.toLowerCase();
@@ -630,6 +632,7 @@ function render(){
   const S = G.S;
   renderHud();
   renderPanels();
+  Stage.render();
   renderTutorial();
   Tip.refresh();
   // Erstkontakt-Hinweise: im Moment, in dem ein Inhalt erstmals verfügbar wird (REQ-20.2, REQ-T.05); nicht während des Tutorials
@@ -698,6 +701,7 @@ function boot(){
   layoutBands();
   buildHud();
   buildPanels();
+  Stage.init();
   wireWorldInput();
   Session.init();
   TutUI.init();
