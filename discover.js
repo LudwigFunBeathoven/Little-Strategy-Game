@@ -52,10 +52,11 @@ const Disc = (() => {
     el.classList.add('disc-in');
     setTimeout(() => el.classList.remove('disc-in'), E.einblendenMs + 40);
     const key = el.dataset.tooltip || (el.id ? 'id:' + el.id : '');
-    if (!key || !armed || found.has(key)) return;
+    if (!key) return;
+    noteVisible(key);
+    if (!armed || found.has(key)) return;
     const name = nameOf(el); if (!name) return;
     names.set(key, name); found.set(key, kindOf(key));
-    noteVisible(key);
   }
   const noteVisible = key => { if (typeof Session !== 'undefined' && Session.noteVisible) Session.noteVisible(key, G.S.t); };
   const CTRL = 'button, [role="tab"], .hud-item, .barracks, .res-group, .res-tree > div, .opt, .pick';

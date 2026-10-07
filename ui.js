@@ -13,6 +13,10 @@ const DIFF_ALIAS = { easy: 'leicht', normal: 'normal', hard: 'schwer', leicht: '
 const LANG_PARAM = KF_CONFIG.LANGUAGES.includes(URL_PARAMS.get('lang')) ? URL_PARAMS.get('lang') : null;
 const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
 /* ?pacing=standard|karten wählt den Pacing-Modus (REQ-KP.01); sonst gilt PACING_MODUS aus config.js */
+/* Schalter für Spieltests per Adresse (REQ-K2.07): ?zeit=pause|langsam|lauf (Spielzeit bei offener Wahl), ?vorschau=keine|naechste */
+{ const z = URL_PARAMS.get('zeit'), v = URL_PARAMS.get('vorschau');
+  if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z;
+  if (['keine', 'naechste'].includes(v)) C.ENTDECKEN.vorschau = v; }
 const PACING_PARAM = ['standard', 'karten'].includes(URL_PARAMS.get('pacing')) ? URL_PARAMS.get('pacing') : null;
 
 /* ================= Sprache ================= */
@@ -255,6 +259,7 @@ function tipContent(id){
     case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a) };
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
+    case 'prev': return { title: t('kp.vorschau'), body: t('tip.kp.vorschau') };
     case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
     case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };

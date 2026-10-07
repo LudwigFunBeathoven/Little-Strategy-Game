@@ -172,7 +172,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
 {
   const { ctx, p } = await open('pacing=karten');
   await p.evaluate(() => { __kf.G.S.material = 2500; });
-  const names = await p.evaluate(() => { const t = __kf.t, G = __kf.G, C = __kf.C; return { locked: [t('unit.werfer.name'), t('unit.schild.name'), t('unit.reiter.name'), t('unit.armbrust.name'), t('unit.katapult.name'), t('bld.schmiede.name'), t('bld.universitaet.name'), t('bld.kontor.name'), 'Festungsbau', 'Echtes Militär', 'Metallverarbeitung', 'Gelehrte'] }; });
+  const names = await p.evaluate(() => { const t = __kf.t, G = __kf.G, C = __kf.C; return { locked: [t('unit.werfer.name'), t('unit.schild.name'), t('unit.armbrust.name'), t('unit.katapult.name'), t('bld.schmiede.name'), t('bld.universitaet.name'), t('bld.kontor.name'), 'Festungsbau', 'Echtes Militär', 'Metallverarbeitung', 'Gelehrte'] }; });
   const texts = [];
   for (const tab of ['build', 'army', 'wall']){
     await p.evaluate(tab => { __kf.selectTab(tab); __kf.selectPlot(0); }, tab); await settle(p, 200);

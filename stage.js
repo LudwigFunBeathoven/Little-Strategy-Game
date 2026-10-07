@@ -8,7 +8,9 @@ const Stage = (() => {
   const enabled = () => flag === '1' ? true : flag === '0' ? false : C.UI.kartenbuehne !== null && C.UI.kartenbuehne !== undefined ? !!C.UI.kartenbuehne : G.S.pacing === 'karten';
   let lvlKey = null, lvlOpenedAt = 0;                                     // erstes Öffnen der Bühne je Wahl: Bedenkzeit für das Sitzungsprotokoll
   let key = '', openedAt = -Infinity, folded = false, focusI = 0, lockMs = C.UI.draftLockMs, hover = -1, built = false, wasVisible = false;
-  let leaving = false, chain = false, dealing = false, flyEls = [];                      // Abräumen läuft; auf eine Wahl folgt gleich die nächste; fliegende Kopien der Karten
+  let leaving = false, chain = false, dealing = false, flyEls = [];
+  let hoverMs = [], hoverAt = -1, hoverI = -1;                          // Zeit unter dem Zeiger je Karte (Protokoll, REQ-K2.08)
+  const hoverStop = () => { if (hoverI >= 0 && hoverAt >= 0) hoverMs[hoverI] = (hoverMs[hoverI] || 0) + performance.now() - hoverAt; hoverI = -1; hoverAt = -1; };                      // Abräumen läuft; auf eine Wahl folgt gleich die nächste; fliegende Kopien der Karten
   const el = {};
   const ids = ['stage', 'stageFly', 'stageHead', 'stageCards', 'stageDetail', 'stageTools', 'stageReroll', 'stageLater', 'stageBans', 'cardSym', 'deckFill', 'deckCount', 'deckExpl'];
   const reveal = () => window.matchMedia && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -60,6 +62,7 @@ const Stage = (() => {
   function build(d){
     const list = el.stageCards; list.innerHTML = '';
     const n = d.options.length;
+    if (!hoverMs.length || hoverMs.length !== n) hoverMs = new Array(n).fill(0);
     d.options.forEach((id, i) => {
       const o = G.OPT[id], tier = G.cardTaken(id) + 1;
       const b = document.createElement('button');
@@ -86,8 +89,8 @@ const Stage = (() => {
       const back = document.createElement('span'); back.className = 'kc-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = '\u25C6';
       b.append(face, back);
       b.addEventListener('click', () => choose(i));
-      b.addEventListener('pointerenter', () => { hover = i; detail(); });
-      b.addEventListener('pointerleave', () => { if (hover === i) hover = -1; detail(); });
+      b.addEventListener('pointerenter', () => { hover = i; hoverStop(); hoverI = i; hoverAt = performance.now(); detail(); });
+      b.addEventListener('pointerleave', () => { if (hover === i) hover = -1; hoverStop(); detail(); });
       b.addEventListener('focus', () => { focusI = i; detail(); });
       list.appendChild(b);
     });
@@ -254,6 +257,8 @@ const Stage = (() => {
     window.addEventListener('resize', () => { if (built) layout(); });
     layout();
   }
+  /* Zeit unter dem Zeiger je Karte seit dem Öffnen dieser Wahl; danach zurückgesetzt */
+  function takeHover(){ hoverStop(); const h = hoverMs.map(x => Math.round(x)); hoverMs = []; return h; }
   const thinkMs = () => on() && lvlKey !== null ? Math.round(performance.now() - lvlOpenedAt) : null;
-  return { init, render, on, thinkMs, visible, reopen, fold, locked, get dealing(){ return dealing; }, get leaving(){ return leaving; }, effectTarget, get folded(){ return folded; }, get el(){ return el; } };
+  return { init, render, on, thinkMs, takeHover, visible, reopen, fold, locked, get dealing(){ return dealing; }, get leaving(){ return leaving; }, effectTarget, get folded(){ return folded; }, get el(){ return el; } };
 })();

@@ -8,7 +8,7 @@
 // Debug-Modus: ?debug=1, #debug oder im Testbuild fest eingeschaltet (window.KF_DEBUG = true vor den Skripten, REQ-6.11)
 const DEBUG = /[?&]debug=1\b/.test(location.search) || /(^#|[#&])debug\b/.test(location.hash) || window.KF_DEBUG === true;
 const Session = (() => {
-  let P = null, lastSample = -1, lastPhase = null, muted = 0, draftActs = { rerolled: 0, banned: 0 }, doneSeen = 0, unlockSeen = new Set();     // muted: Handlungen des Quartiermeisters zählen nicht als Spielerhandlung
+  let P = null, lastSample = -1, lastPhase = null, muted = 0, draftActs = { rerolled: 0, banned: 0 }, doneSeen = 0, unlockSeen = new Set(), visibleAt = new Map(), discoveredAt = new Map();     // muted: Handlungen des Quartiermeisters zählen nicht als Spielerhandlung
   /* Debug-Protokoll je Einheit (REQ-6.01): Zustand der Gruppe, Lane, Querbewegung, Platz, Bewegungsrichtung je Takt; die letzten
      UI.debugUnitLogS Sekunden. Abruf: __kf.unitLog(id) in der Konsole oder im exportierten Protokoll (unitLog). */
   let unitLog = [];
@@ -31,7 +31,9 @@ const Session = (() => {
     const S = G.S;
     P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, stage: Stage.on(), startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
+          switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit }, visible: [], discovered: {},
           actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
+    visibleAt = new Map(); discoveredAt = new Map();
     lastSample = S.t; lastPhase = G.phase(); draftActs = { rerolled: 0, banned: 0 }; doneSeen = 0; unlockSeen = new Set();
   }
   const record = (kind, extra) => { P.actions.push(Object.assign({ t: +G.S.t.toFixed(2), kind }, extra || {})); };
@@ -82,7 +84,7 @@ const Session = (() => {
       const d = G.S.pendingDraft, id = d && d.options[i];
       const ok = choose(i);
       // Kartenpfad (REQ-KP.09): gewählte Karte mit Alternativen, Bedenkzeit (ms seit dem ersten Öffnen der Bühne dieser Wahl), Neu ziehen und Bannen
-      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, chosen: id, offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
+      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, chosen: id, offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, hover: Stage.on() ? Stage.takeHover() : null, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
       return ok;
     };
     const tick = G.tick;
@@ -90,7 +92,8 @@ const Session = (() => {
   }
   function exportJSON(){
     sample();
-    const blob = new Blob([JSON.stringify(Object.assign({}, P, { tutorial: Tutorial.data(), unitLog }), null, 2)], { type: 'application/json' });
+    const entdeckung = P.visible.map(v => ({ key: v.key, visibleS: v.t, discoveredS: P.discovered[v.key] === undefined ? null : P.discovered[v.key], discoveryS: P.discovered[v.key] === undefined ? null : +(Math.max(0, P.discovered[v.key] - v.t)).toFixed(1) }));
+    const blob = new Blob([JSON.stringify(Object.assign({}, P, { entdeckung, tutorial: Tutorial.data(), unitLog }), null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `klammerfront-protokoll-${P.diff}-${P.startedAt.replace(/[:.]/g, '-')}.json`;
@@ -99,12 +102,19 @@ const Session = (() => {
   }
   function init(){
     if (!DEBUG) return;
-    wrap(); reset();
+    wrap(); reset(); watchSeen();
     const b = $('sessionBtn');
     b.hidden = false;
     b.addEventListener('click', exportJSON);
   }
+  /* Entdeckungszeit (REQ-K2.08): Sichtbarwerden eines Elements (Disc) und erste Ansicht oder Benutzung (Zeiger, Fokus, Klick; Reiter öffnen) */
+  function noteVisible(key, t){ if (P && !visibleAt.has(key)){ visibleAt.set(key, +Number(t).toFixed(1)); P.visible.push({ key, t: +Number(t).toFixed(1) }); } }
+  function noteSeen(key){ if (P && key && !discoveredAt.has(key)){ discoveredAt.set(key, +G.S.t.toFixed(1)); P.discovered[key] = +G.S.t.toFixed(1); } }
+  const keyOf = e => { const x = e && e.closest ? e.closest('[data-tooltip]') : null; return x ? x.dataset.tooltip : null; };
+  function watchSeen(){
+    for (const ev of ['pointerover', 'focusin', 'click']) document.addEventListener(ev, e => noteSeen(keyOf(e.target)), true);
+  }
   /* Handlungen innerhalb von fn (Vorführung des Quartiermeisters) nicht protokollieren */
   const silently = fn => { muted++; try { return fn(); } finally { muted--; } };
-  return { init, silently, get data(){ if (P){ sample(); P.tutorial = Tutorial.data(); } return P; }, reset, unitLog: id => id == null ? unitLog : unitLog.filter(e => e.id === id) };
+  return { init, silently, noteVisible, noteSeen, get data(){ if (P){ sample(); P.tutorial = Tutorial.data(); } return P; }, reset, unitLog: id => id == null ? unitLog : unitLog.filter(e => e.id === id) };
 })();

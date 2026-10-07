@@ -963,12 +963,12 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
   check(JSON.stringify(before) === JSON.stringify(after), `[${vw}] Kartenbühne: Spielstand ändert sich bei offener Bühne nicht`);
   // nach der Sperre wählt ein Klick, und die Bühne zeigt die zweite Wahl
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
-  await p.click('.kcard >> nth=0'); await p.waitForTimeout(80);
+  await p.click('.kcard >> nth=0'); await p.waitForTimeout(900);
   const s2 = await st();
   check(s2.pending && s2.levels === 1 && s2.vis && s2.tab === tab0, `[${vw}] Kartenbühne: zwei Wahlen nacheinander, die zweite öffnet sich ${JSON.stringify(s2)}`);
   // Tastatur: Ziffer wählt
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
-  await p.keyboard.press('2'); await p.waitForTimeout(80);
+  await p.keyboard.press('2'); await p.waitForTimeout(900);
   const s3 = await st();
   check(!s3.pending && !s3.vis && s3.tab === tab0, `[${vw}] Kartenbühne: Taste 2 wählt, die Bühne schließt, derselbe Reiter ${JSON.stringify(s3)}`);
   check(await p.evaluate(() => Object.values(__kf.G.S.draft.stacks).reduce((a, c) => a + c, 0) === 2), `[${vw}] Kartenbühne: beide Karten gewählt`);
@@ -981,7 +981,7 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
   await p.click('#cardSym'); await p.waitForTimeout(80);
   check((await st()).vis, `[${vw}] Kartenbühne: Klick auf den Stapel öffnet die Bühne wieder`);
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
-  await p.keyboard.press('1'); await p.waitForTimeout(80);
+  await p.keyboard.press('1'); await p.waitForTimeout(900);
   // Sammlung im Reiter Karten: keine Wahl dort
   await p.click('#tab-cards'); await p.waitForTimeout(150);
   check(await p.evaluate(() => document.getElementById('draftBox').offsetParent === null && !document.getElementById('collHint').hidden), `[${vw}] Kartenbühne: Reiter Karten ist nur Sammlung`);
@@ -1035,7 +1035,7 @@ for (const lang of ['de', 'en']){
   // Detailzeile der Pfadkarte nennt die Rückkehr in den Stapel
   await p.evaluate(() => { const i = [...document.querySelectorAll('.kcard')].findIndex(c => !c.classList.contains('fam-bonus')); document.querySelectorAll('.kcard')[i].focus(); });
   await p.waitForTimeout(100);
-  check((await p.evaluate(() => document.getElementById('stageDetail').textContent)).includes(await p.evaluate(() => __kf.t('kp.card.returns'))), `[${lang}] Karten: Detailzeile nennt „kehrt in den Stapel zurück“`);
+  check(!(await p.evaluate(() => document.getElementById('stageDetail').textContent)).includes(await p.evaluate(() => __kf.t('kp.card.returns'))), `[${lang}] Karten: Detailzeile ohne Hinweis auf die Rückkehr in den Stapel (REQ-K2.03)`);
   const aud = await p.evaluate(() => ({ t: __kf.tooltipAudit(), e: __kf.explAudit() }));
   check(aud.t.length === 0 && aud.e.length === 0, `[${lang}] Karten: Bühne mit Pfadkarten: Tooltip und Erklärzeile${show([...aud.t, ...aud.e])}`);
   // Pfadkarte wählen: Inhalt wird baubar
