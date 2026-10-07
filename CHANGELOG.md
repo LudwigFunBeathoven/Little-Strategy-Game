@@ -1,5 +1,15 @@
 # Änderungen
 
+## v0.8.1 – MVP zum Teilen (07.10.2026)
+Anforderungen: `docs/anforderungen-mvp-release.md`, Bericht `docs/bericht-mvp-release.md`. Spielwerte und Spielstand-Version (7) unverändert; ein vorhandener Spielstand bleibt erhalten.
+Für Tester:
+- **Ruhigere Sprache im Tutorial.** Du wirst als „Statthalter“ angesprochen, der Quartiermeister erklärt in sachlichem Ton: aus „Horden“ werden „Wellen“, aus „Soldaten“ „Einheiten“, aus „Kriegsbeute“ „Erfahrung“; Einheiten werden „aufgestellt“, die erste Welle ist „bestanden“. Deutsch und Englisch.
+- **Keine Verbindung ins Netz mehr außer dem Spiel selbst.** Die Schriften kommen aus dem System statt von Google Fonts; das Aussehen kann auf manchen Geräten leicht abweichen.
+- **Spieltests:** Mit `?debug=1` erfasst das Protokoll je Kartenwahl die gewählte Karte, die Alternativen, die Bedenkzeit sowie Neu ziehen und Bannen (Protokollformat 2; ältere Protokolle bleiben lesbar). Ohne `?debug=1` gibt es keinen Protokollknopf und keine Testschnittstelle.
+Für Entwickler:
+- Sprach-Audit (`tools/sprachliste.mjs`, `tests/sprache.test.mjs`): Tutorial-Texte dürfen keine Wörter der Liste enthalten.
+- Der Simulations-Bot hielt bei vollem Raster Material zurück und kaufte keine Einheiten; behoben (`tests/bot-raster.test.mjs`). Golden-Test und Vergleichsbasis neu (`tools/vergleichsbasis.mjs`, `reports/vergleichsbasis-*`): Partien des Bots sind im Mittel kürzer; die Spielregeln haben sich nicht geändert.
+
 ## v0.8 – Tutorial „Erste Schritte“ (Oktober 2026)
 Korrektur nach Spieltest: Im Tutorial pausiert weder ein verdeckter Tab noch das Neuladen die Partie (kein „Weiter“-Klick); im freien Spiel gilt REQ-6.03 unverändert.
 Teil 2 (06.10.2026, Anforderungen `docs/anforderungen-tutorial-2.md`):

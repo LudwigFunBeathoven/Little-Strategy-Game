@@ -952,6 +952,27 @@ for (const stepId of ['begruessung', 'fertigen', 'bauen', 'rekrutieren', 'ausrue
   await ctx.close();
 }
 
+/* ---------- Prüfliste vor dem Teilen (REQ-R.05): öffentliche Fassung ohne Parameter ---------- */
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage(); const external = [], issues = [];
+  p.on('request', r => { if (!r.url().startsWith(base) && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) external.push(r.url()); });
+  p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') issues.push(m.text()); }); p.on('pageerror', e => issues.push(e.message));
+  await p.goto(base + 'index.html'); await p.waitForTimeout(600);
+  const start = await p.evaluate(() => ({ modal: !document.querySelector('#modal').hidden, lang: !!document.querySelector('[data-tooltip="lang:de"]'), diffs: document.querySelectorAll('[data-tooltip^="diff:"]').length,
+    tut: !!document.querySelector('[data-tooltip="tutorialSwitch"], [data-tooltip="tutorial"]') || !!document.querySelector('.card [aria-pressed]'), kf: typeof window.__kf, sessionBtnHidden: document.querySelector('#sessionBtn').hidden }));
+  check(start.modal && start.lang && start.diffs === 3, `Öffentliche Fassung: Startbildschirm bei leerem Speicher (Sprache, drei Schwierigkeitsgrade) ${JSON.stringify(start)}`);
+  check(start.kf === 'undefined' && start.sessionBtnHidden, 'Öffentliche Fassung: keine Testschnittstelle, Protokollknopf verborgen (nur mit ?debug=1)');
+  await p.click('.card .btn-primary'); await p.waitForTimeout(2500);
+  check(await p.evaluate(() => !!document.querySelector('#tutBubble') && !document.querySelector('#tutBubble').hidden), 'Öffentliche Fassung: Partie startet mit Tutorial in der ersten Partie');
+  check(external.length === 0, `Öffentliche Fassung: keine externen Abrufe${show(external)}`);
+  check(issues.length === 0, `Öffentliche Fassung: keine Konsolenfehler oder Warnungen${show(issues)}`);
+  const pm = await p.evaluate(() => { try { return new URL(location.href).searchParams.get('pacing'); } catch (e) { return null; } });
+  await p.goto(base + 'index.html?pacing=karten&dev=1'); await p.waitForTimeout(500);
+  check(await p.evaluate(() => { const G = __kf.G; return !G.S.pacing || G.S.pacing === 'standard'; }) && pm === null, 'Öffentliche Fassung: ein Modus außer standard ist per Adresse nicht erreichbar (?pacing= wirkungslos)');
+  await ctx.close();
+}
+
 await b.close();
 server.close();
 process.exit(failed ? 1 : 0);
