@@ -1119,6 +1119,51 @@ for (const lang of ['de', 'en']){
   await ctx.close();
 }
 
+/* ---------- Sitzungsprotokoll Format 2: Kartenwahlen (REQ-R.04) ---------- */
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto(base + 'index.html?debug=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  const lv = n => p.evaluate(n => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + n); G.S.xp = G.S.xpTotal;
+    G.S.units.push({ id: 99900 + n + G.S.level, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); }, n);
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; });
+  for (let i = 0; i < 2; i++){
+    await lv(1);
+    await p.waitForFunction(() => __kf.tab === 'cards' && !document.querySelector('#draftOffer').classList.contains('locked') && document.querySelectorAll('#draftOffer .card-pick').length >= 2, null, { timeout: 5000 });
+    await p.waitForTimeout(250);
+    await p.click('#draftOffer .card-pick >> nth=0'); await p.waitForTimeout(150);
+  }
+  const d = await p.evaluate(() => { const s = __kf.session(); return { fv: s.formatVersion, drafts: s.drafts }; });
+  const ok = d.fv === 2 && d.drafts.length >= 2 && d.drafts.every(x => typeof x.chosen === 'string' && Array.isArray(x.offered) && x.offered.length >= 2 && x.offered.includes(x.chosen)
+    && typeof x.thinkMs === 'number' && x.thinkMs >= 400 && x.rerolled === 0 && x.banned === 0 && typeof x.level === 'number' && typeof x.t === 'number');
+  check(ok, `Protokoll Format 2: ${d.drafts.length} Kartenwahlen mit Karte, Alternativen, Bedenkzeit, Neu ziehen und Bannen ${JSON.stringify(d.drafts[0])}`);
+  check(errs.length === 0, `Protokoll: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
+/* ---------- Prüfliste vor dem Teilen (REQ-R.05): öffentliche Fassung ohne Parameter ---------- */
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage(); const external = [], issues = [];
+  p.on('request', r => { if (!r.url().startsWith(base) && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) external.push(r.url()); });
+  p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') issues.push(m.text()); }); p.on('pageerror', e => issues.push(e.message));
+  await p.goto(base + 'index.html'); await p.waitForTimeout(600);
+  const start = await p.evaluate(() => ({ modal: !document.querySelector('#modal').hidden, lang: !!document.querySelector('[data-tooltip="lang:de"]'), diffs: document.querySelectorAll('[data-tooltip^="diff:"]').length,
+    tut: !!document.querySelector('[data-tooltip="tutorialSwitch"], [data-tooltip="tutorial"]') || !!document.querySelector('.card [aria-pressed]'), kf: typeof window.__kf, sessionBtnHidden: document.querySelector('#sessionBtn').hidden }));
+  check(start.modal && start.lang && start.diffs === 3, `Öffentliche Fassung: Startbildschirm bei leerem Speicher (Sprache, drei Schwierigkeitsgrade) ${JSON.stringify(start)}`);
+  check(start.kf === 'undefined' && start.sessionBtnHidden, 'Öffentliche Fassung: keine Testschnittstelle, Protokollknopf verborgen (nur mit ?debug=1)');
+  await p.click('.card .btn-primary'); await p.waitForTimeout(2500);
+  check(await p.evaluate(() => !!document.querySelector('#tutBubble') && !document.querySelector('#tutBubble').hidden), 'Öffentliche Fassung: Partie startet mit Tutorial in der ersten Partie');
+  check(external.length === 0, `Öffentliche Fassung: keine externen Abrufe${show(external)}`);
+  check(issues.length === 0, `Öffentliche Fassung: keine Konsolenfehler oder Warnungen${show(issues)}`);
+  // Im Branch Kartenpfad ist der Modus per ?pacing= wählbar (auf main nicht: dort ist ein anderer Modus als standard nicht erreichbar, REQ-R.01)
+  const ctx2 = await b.newContext({ viewport: { width: 1280, height: 720 } }), p2 = await ctx2.newPage();
+  await p2.goto(base + 'index.html?pacing=standard&dev=1&lang=de&difficulty=easy&tutorial=0'); await p2.waitForTimeout(500);
+  check(await p2.evaluate(() => { const G = __kf.G; return !G.S.pacing || G.S.pacing === 'standard'; }), 'Branch: ?pacing=standard schaltet auf das Verhalten von main');
+  await ctx2.close();
+  await ctx.close();
+}
+
 await b.close();
 server.close();
 process.exit(failed ? 1 : 0);

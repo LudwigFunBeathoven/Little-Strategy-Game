@@ -253,8 +253,8 @@ export class Bot {
         if (Number.isFinite(c)) econTarget = c / 0.7;
       }
     }
-    // Modus karten: sind alle Plätze belegt, gibt es nichts mehr, wofür Material zurückgelegt werden müsste (der Standardmodus behält sein Verhalten für die Vergleichswerte)
-    const reserve = threat ? 0 : (S.pacing === 'karten' && !Number.isFinite(econTarget) ? 0 : econTarget * 0.7);
+    // Ist kein Bauplatz mehr frei (econTarget unendlich), gibt es nichts, wofür Material zurückzulegen wäre (REQ-R.03; vorher blieb es liegen)
+    const reserve = threat || !Number.isFinite(econTarget) ? 0 : econTarget * 0.7;
     while (!o.noUnits && G.factoryCount() > 0 && S.material - reserve >= G.unitCost('laeufer') && own + S.queue.length < o.cap && !G.supplyFull()){
       const q = S.queue.length; trySpawn(1); if (S.queue.length === q) break;
     }

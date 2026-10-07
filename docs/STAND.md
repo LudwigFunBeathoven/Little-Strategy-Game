@@ -1,30 +1,83 @@
-# Klammerfront – Stand Branch „Kartenpfad“ (`exp/kartenpfad`)
+# Klammerfront – Stand Tutorial „Erste Schritte“ (v0.8), Teil 1 und Teil 2
 
-Grundlage: `docs/anforderungen-kartenpfad.md`. Branch von `main` (Commit `9b3ccbe`, v0.8). Stand Tutorial: `docs/archiv/STAND-tutorial.md`.
+Grundlage: `docs/anforderungen-tutorial.md`. Branch: `tutorial` (von `main`, Commit `2211210`, v0.7).
+Stand von Iteration 6: `docs/archiv/STAND-iteration-6.md`, Bericht `docs/bericht-iteration-6.md`.
 
-**Starten:** `index.html` im Browser öffnen. Spieltest-Modus: `?debug=1`.
-
-## Voraussetzungen (KP.0)
-
-| Frage | Befund |
-|---|---|
-| Iteration 6 auf `main`? | ja (v0.7, später v0.8 mit Tutorial) |
-| Tutorial Teil 1 und 2 umgesetzt? | ja; die Texte aus KP.08 ersetzen die Entwürfe (KP.1, fertig) |
-| `docs/branch-konzepte-pacing.md` vorhanden? | **nein**; das Dokument liegt nicht im Repository. Der Unterbau (§4.1) wird nach den Angaben in `anforderungen-kartenpfad.md` ausgelegt |
-| Gemeinsamer Unterbau (Freischaltlogik, Einheitenersatz, `PACING_MODUS`)? | **nein, daher nachgezogen**: zuerst auf `main` (Commit `5c2f57b`, Standardmodus unverändert, Golden-Test grün), danach `exp/kartenpfad` darauf neu aufgesetzt. Beschreibung und Basislinie unten |
-
-## Inkremente
+**Starten:** `index.html` im Browser öffnen. Tutorial erzwingen: `?tutorial=1`, unterdrücken: `?tutorial=0`. Spieltest-Modus: `?debug=1`.
 
 | Inkrement | Inhalt | REQ | Status |
 |---|---|---|---|
-| KP.0 | Voraussetzungen, Unterbau auf `main`, Basislinie | KP.01 | fertig |
-| KP.1 | Tutorial-Sprache, Glossar, Sprach-Audit | KP.08 | fertig |
-| KP.2 | Kartenbühne | KP.03 | fertig (Familien-Band und „Pfadkarte“-Hinweise folgen mit KP.3) |
-| KP.3 | Kartenfamilien, Startzustand, Meilenstein-Platz | KP.01, 02, 06 | fertig (nur Bau-Karten; Technologie mit KP.4, Wagnis mit KP.6) |
-| KP.4 | Universität als Forschungsstätte | KP.04 | fertig (Forschungen Mauerausbau III und Turmausbau; Reiter, Schildträger, Eisenwaffen mit KP.5) |
-| KP.5 | Upgrades, Einheitenersatz | KP.05 | offen |
-| KP.6 | Wagnis, Exklusivpfade, Mindesttempo | KP.06, 07 | fertig |
-| KP.7 | Bots, Simulation, Bericht, Testbuild | KP.09 | offen |
+| T.0 | Anforderungen ablegen, Basislinie der Simulation sichern | T.06 | fertig |
+| T.1 | Ereignisse und Schonfrist in `core.js` | T.03, T.06 | fertig |
+| T.2 | `tutorial.js`, `data/tutorial-steps.js` | T.01, T.04, T.06 | fertig |
+| T.3 | Quartiermeister, Hervorhebung, Start, Überspringen | T.02, T.04 | fertig |
+| T.4 | Erstkontakt-Hinweise, Markierung „neu“ | T.05 | fertig |
+| T.5 | Messung, Tests, Doku, Abnahme | T.07 | fertig |
+
+**Teil 2** (`docs/anforderungen-tutorial-2.md`: Erzählung, Kartenabschluss, Startauswahl), Branch `tutorial` weiter:
+
+| Inkrement | Inhalt | REQ | Status |
+|---|---|---|---|
+| T2.0 | Anforderungen ablegen, Ursache Startdialog | T2.01 | fertig |
+| T2.1 | Startbildschirm mit Sprache, Grad, Tutorial-Schalter | T2.01 | fertig |
+| T2.2 | Kern: Kriegsbeute, Ereignis Kartenwahl | T2.04 | fertig |
+| T2.3 | Erzählung, Begrüßung, Kartenschritt, Abschied, Blasen, Figur | T2.02 – T2.07 | fertig |
+| T2.4 | Tests, Protokoll, Doku, Testbuild | alle | fertig |
+
+**Ursache REQ-T2.01 (Startdialog fehlte):** Commit `d2359a0` (T.3) ließ den Start in `boot()` bei fälligem Tutorial direkt `startGame(C.TUTORIAL.diff, { tutorial: true })`
+aufrufen und überging damit `openStart()`; Sprache und Schwierigkeit waren in der ersten Partie nicht wählbar, die Partie lief immer auf Leicht. Das war eine Folge der
+Vorgabe in REQ-T.02/T.03 („ohne Startseite“, „immer auf Leicht“), die Teil 2 korrigiert. Die Tests blieben grün, weil sie diesen Pfad gerade erwarteten
+(`tests/browser-check.mjs`: „erste Partie startet ohne Dialog“).
+
+## Prüfung je Inkrement
+```
+npm test
+npm run test:browser
+node tools/simulate.mjs --suite kurz        # beide Strategien, je 20 Partien Normal durchschnitt
+node tools/bench-tick.mjs                   # Tick-Zeit mit 2 × 60 Einheiten
+```
+
+## Prüfergebnisse
+- T.0: `npm test` 139/139. Neu `tests/unveraendert.test.mjs`: vier Partien (beide Strategien, Leicht bis Schwer, feste Seeds) mit den Werten
+  aus v0.7; sie müssen nach jeder Tutorial-Änderung unverändert herauskommen (REQ-T.06).
+
+- T.1: `npm test` 147/147 (neu `tests/hold.test.mjs`), Tick-Zeit Median 0,15 ms mit 120 Einheiten; die vier Partien aus T.0 liefern unverändert
+  dieselben Werte. `core.js` bietet `on(fn)` für Ereignisse (`materialProduced`, `buildingBuilt`, `unitBought`, `waveDeparted`,
+  `enemyWaveDefeated`) und eine Schonfrist: `newGame(…, { hold: { maxS, size } })`, `releaseHold(normalFirstWave)`, `holdActive()`;
+  Zustand `S.hold` (im Spielstand, ohne Versionsänderung: fehlt er, gilt `null`). Ohne Zuhörer und ohne `hold` ändert sich nichts.
+- T.2: `npm test` 158/158 (neu `tests/tutorial.test.mjs`: Schritte in Reihenfolge, vertauschte Reihenfolge, Zähler unabhängig vom aktuellen Schritt,
+  Vorführung zählt nicht, Überspringen in jedem Schritt, Fehlklicks, Start/`?tutorial`, Speicher fehlt oder ist kaputt, Speichern und Laden,
+  Texte in beiden Sprachen höchstens 60 Zeichen). `tutorial.js` hat keinen Zugriff auf Seite oder Fenster; Schritte in `data/tutorial-steps.js`.
+- T.3: `npm test` 158/158, Browser-Prüfung 195/195 (bisherige Abläufe laufen mit `?tutorial=0`; die Prüfung „Hinweis zum Start“ entfällt mit dem
+  Hinweis). Probelauf im Browser: ein direkt bedienender Spieler schließt alle fünf Schritte nach rund 40 s Spielzeit ab (Ziel ≤ 2:30 min).
+  Neu `tutorial-ui.js` (Figur, Rahmen, Sprechblase, Randpfeil, Überspringen, Kamera), Knopf „Tutorial überspringen“ in der Leiste, „Tutorial
+  wiederholen“ im Dialog „Neue Partie“. Der Dialog scrollt jetzt bei niedrigen Fenstern, „Spiel starten“ bleibt unten sichtbar.
+- T.4: Hinweise: einer gleichzeitig, nie im Tutorial (Auslöser prüfen erst danach), schließen nach 8 s oder per Klick, eine Zeile (≤ 90 Zeichen, geprüft in
+  `tests/hints.test.mjs`); neu: Mauer, Türme, Schmiede, Kontor (mit Zinsen), Nachbarschaft; gestrichen: Start, erste Welle (Tutorial). Marke „neu“ (`NewMarks` in
+  `panels.js`): Reiter, Bau-Optionen, Einheiten; Grundlinie beim Start, „angesehen“ nach 1,5 s, Zustand im Spielstand.
+- T.5: `npm test` 162/162; Browser-Prüfung 276 (neu: Tutorial-Ablauf in beiden Sprachen, vertauschte Reihenfolge, Überspringen in vier Schritten, zweiter Start,
+  `?tutorial`, Hinweise, „neu“, Protokoll, Schritt 4 mit Kaserne). Kurzsimulation unverändert (9:09 / 6:13, je 100 %), Tick-Zeit 0,13 ms. Zwei bereits vorhandene,
+  zufallsabhängige Prüfungen robust gemacht (Dauerauftrag bei „Welle vorziehen“, dieselbe Karte zweimal bei „Kartenwahl“).
+- Ursache der zufälligen Fehlschläge der Prüfung „Zweiter Start im selben Browser“ gefunden: Chromium verlor den `localStorage` einer als `file://` geladenen Seite beim
+  Neuladen gelegentlich vollständig (Messung: 1 von 12 Läufen, über HTTP 0 von 40; der Speicher war schon beim Start des neuen Dokuments leer). Das war kein Fehler im Spiel.
+  Die Browser-Prüfung lädt die Seite deshalb jetzt über einen lokalen HTTP-Server (`tests/browser-check.mjs`). Zwei Läufe danach ohne Auffälligkeit.
+- T2.1 – T2.4: `npm test` 175/175 (neu: Kriegsbeute und Ereignis „Karte gewählt“ in `tests/hold.test.mjs`, Schrittlogik mit Begrüßung, Kartenschritt und Abschied in
+  `tests/tutorial.test.mjs`, Regressionstest „keine Partie ohne Startbildschirm“ in `tests/start.test.mjs`), Browser-Prüfung 315 (Startbildschirm, Voreinstellungen,
+  Englisch und Schwer, Sprachwechsel im Tutorial, URL-Parameter, Durchlauf in beiden Sprachen mit Begrüßung, vier erzählten Schritten, Kriegsbeute, Kartenwahl,
+  Abschied, Abgang, Protokoll, Bildschirmfoto bei 1280×720). Kurzsimulation unverändert (9:09 / 6:13, je 100 %), Tick-Zeit 0,13 ms; die vier Golden-Partien unverändert.
+  Probelauf mit direkter Bedienung: Kartenwahl nach rund 38 s Spielzeit, Tutorial nach rund 42 s zu Ende (Ziel unter 3:00 min).
+- Zufallsabhängig: Die Browser-Prüfung „Kaserne bauen aus dem Reiter Armee“ schlug in einem von vier Läufen fehl (der Lauf brach danach ab). In der Einzelausführung
+  8 von 8 Läufen ohne Fehler; die Prüfung meldet jetzt gezogene Karten und Plätze, um die Ursache beim nächsten Auftreten zu finden.
+
+- Korrektur Pause im Tutorial (Rückmeldung PO): `ui.js` pausiert bei verdecktem Tab und beim Laden nicht mehr, solange das Tutorial läuft (Browser-Prüfung 319). Offen bleibt die
+  Kartenwahl, die das Spiel regelgemäß anhält (REQ-6.04 / v0.5).
+
+## Auslegungen und Abweichungen Teil 2 (zur Zustimmung durch den PO)
+Siehe `docs/bericht-tutorial-2.md`, Abschnitt 2.
+
+## Auslegungen und Abweichungen Teil 1 (zur Zustimmung durch den PO)
+Siehe `docs/bericht-tutorial.md`, Abschnitt 2 (15 Punkte). Wichtigste: (1) die gestaffelte Freischaltung bleibt, nur die Hinweistexte der Einführung entfallen;
+(2) `exp/kartenpfad` und `exp/zeitalter` gibt es im Repository nicht; (3) „Menü“ ist der Dialog „Neue Partie“; (4) Version 0.8, Spielstand-Version unverändert.
 
 ## Pacing-Unterbau (KP.0, Vorarbeit für den Branch „Kartenpfad“)
 
@@ -50,100 +103,19 @@ Basislinie der Kartenwahlen im Standardmodus (Normal, 20 Partien je Zeile, `tool
 
 Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad aus Karte und anschließender Forschung (zwei Schritte) braucht mehr Wahlen, als die Partie bietet; das gehört in den Bericht (Risiko „Zweistufiger Weg zur Einheit“, `anforderungen-kartenpfad.md` Abschnitt 5).
 
-## KP.1
+## MVP-Veröffentlichung (`docs/anforderungen-mvp-release.md`)
 
-- Ersatztexte und Glossar nach KP.08 in `i18n/de.js`, `i18n/en.js`; `tut.bye1.karten` gilt im Modus `karten` (Konfigurationswert `PACING_MODUS`, vorher `PACING_MODE`).
-- Schwebende Zahl der ersten Erfahrung: „+{n} Erfahrung“ (`tut.xpBounty`).
-- Sprach-Audit: `tests/sprache.test.mjs`, Wortliste `tools/sprachliste.mjs`. Geprüft werden alle Schlüssel mit Präfix `tut.` und `kp.`.
-- Der Spielstand und die Simulation ändern sich nicht (Texte ohne Logik).
+### R.0 Voraussetzungen (REQ-R.01), Befund vom 07.10.2026
+| Frage | Befund |
+|---|---|
+| Tutorial Teil 1 und 2 auf `main`? | ja (v0.8, Berichte `docs/bericht-tutorial.md`, `docs/bericht-tutorial-2.md`) |
+| Unterbau auf `main` (`5c2f57b`), Modus `standard` voreingestellt? | ja: `PACING_MODUS: 'standard'`, `C.PACING` ist leer |
+| Anderer Modus auf `main` erreichbar? | Nein im öffentlichen Build: Es gibt keinen URL-Parameter für den Modus (`?pacing=` existiert nur im Branch). `newGame(…, { pacing })` ruft nur der Testcode auf. Ein Modus ohne Eintrag in `C.PACING` sperrt nichts, auch wenn jemand in der Konsole `PACING_MODUS` ändert. Der Unterbau ist damit ohne Wirkung. `KF_OVERRIDE` gilt nur in Node-Werkzeugen. |
+| Sichtbarkeit und Pages-Quelle | Das Repository ist **öffentlich** (Sichtbarkeit `public`, `has_pages: true`). Die Quelle von GitHub Pages ließ sich aus dieser Umgebung nicht lesen (die Schnittstelle ist gesperrt). `CLAUDE.md` beschreibt als öffentliche Fassung den Branch `MVP` (Fast-Forward von `main`); das Anforderungsdokument nennt `main`. Beides führt zum selben Stand, solange `MVP` auf `main` zeigt. Offen: PO bestätigt in den Repository-Einstellungen (Pages) die Quelle. **Hinweis:** Auch der Branch `exp/kartenpfad` ist als Code öffentlich sichtbar, solange das Repository öffentlich ist; nicht veröffentlicht ist nur eine spielbare Seite. |
 
-## KP.2
-
-- `stage.js`: Kartenbühne (Schleier, Kartenreihe genau in der Bildmitte, Detailzeile, „Neu ziehen“, „Bannen“, „Später“) und Stapel (Füllstand = Fortschritt zur nächsten Wahl, Zahl der gewählten Karten).
-  Schalter: `UI.kartenbuehne` (`null` = an im Modus `karten`, aus im Modus `standard`), URL `?buehne=1|0`. Im Standardmodus bleibt alles wie in v0.8.
-- Zahlen in `config.js` (`KARTENBUEHNE`): Breite 16 % (160–260 px), Aufdecken 110 ms je Karte im Abstand von 110 ms, Fächer ±6°, Heben 8 %, Schleier 45 %, Zeit `pause`.
-- **Spielzeit:** v0.6/v0.8 hielten die Zeit an, solange eine Wahl offen war (`core.js`, `tick`). Das bleibt der Standard (`KARTENBUEHNE.zeit = 'pause'`); `langsam` (Faktor 0,2) und `lauf` sind Schalterwerte im Kern und per Test belegt, aber nicht in der Oberfläche einstellbar.
-- Eingabesperre: mindestens `UI.draftLockMs` (400 ms), bei vielen Karten bis zum Ende des Aufdeckens. Neu ziehen und Bannen sperren erneut. Ist eine Maustaste gedrückt, öffnet die Bühne erst nach dem Loslassen.
-- Tasten `1`–`9` wählen, Pfeile bewegen den Fokus, `Enter` wählt die fokussierte Karte. Ziffern und Pfeile gehören bei offener Bühne nicht mehr den Einheiten und der Kamera.
-- Reiter „Karten“: Sammlung (gewählte, gebannte Karten); gewählt wird nur auf der Bühne. Die Bühne wechselt keinen Reiter.
-- Hinweise (Erstkontakt) erscheinen nicht bei offener Bühne. Die Sprechblase der ersten Kartenwahl sitzt über der Bühnenüberschrift.
-- Tests: `tests/stage.test.mjs` (Spielzeit), `tests/browser-check.mjs` (Abschnitt „Kartenbühne“, 1280×720 und 1920×1080).
-
-## KP.3
-
-- `data/kartenpfad.js` (`KF_PFAD`): Pfadkarten deklarativ (Felder nach REQ-KP.01). Fünf Bau-Karten: Echtes Militär, Festungsbau, Metallverarbeitung, Gelehrte, Handel. Aus den Datensätzen leitet `core.js` die Sperren (`gesperrt`) und Upgrade-Stufen mit Quelle (`stufen`) ab; es gibt keine zweite Liste.
-- Modus: `PACING_MODUS` steht auf diesem Branch auf `karten`; `?pacing=standard` schaltet auf das Verhalten von `main` zurück. Simulation und Tests laufen im Standardmodus (`tools/load-core.mjs`), im Modus karten mit `KF_PACING=karten`.
-- Startzustand karten: Fabrik und Läufer frei; gesperrt sind Kaserne, Schmiede, Universität, Kontor, Werfer sowie die Stufen Türme, Mauer (Verstärkung, Stachelwall, Mörtelkolonne). Die Presse bleibt frei. Gesperrtes bleibt sichtbar, ausgegraut, mit „Freischaltung: Karte …“ (Bauen, Armee, Mauer & Türme).
-- Angebot (`drawOptionsKarten`): ein Platz für eine Pfadkarte (Meilenstein-Platz), mindestens eine Bonuskarte, höchstens eine Wagnis-Karte, Reihenfolge gemischt. Technologiekarten brauchen die gebaute Universität. Neu ziehen und Bannen nutzen dieselbe Ziehung; Pfadkarten (Bau, Technologie) lassen sich nicht bannen.
-- Rückstandsgewicht: `KARTEN.rueckstandPlus` je Wahl ohne Erscheinen; harte Grenze `KARTEN.maxWarten` (3): Eine Bau-Karte, die seit ihrer Freigabe noch nie angeboten wurde, rückt spätestens in der dritten Wahl ein. Bei mehreren wartenden Karten gilt eine Warteschlange (Wartezeit plus Rang), sonst ließe sich die Grenze bei einem Pfadplatz nicht halten.
-- `SAVE_VERSION` 8, `SAVE_KEY` `klammerfront.save.v8`: ältere Spielstände werden mit dem vorhandenen Hinweis des Startbildschirms verworfen.
-- Tests: `tests/kartenpfad.test.mjs` (Startzustand, Freischaltung, Graphtest, 1.000 Angebote, Rückkehr in den Stapel, harte Grenze), `tests/browser-check.mjs` (gesperrte Inhalte, Pfadkarten auf der Bühne, Tutorial im Modus karten).
-- Bots: die Strategien wählen Pfadkarten nach einer Reihenfolge (`KF_BROWSER_BOT.pfadPick`); ohne Pfadkarte im Angebot gilt die bisherige Regel.
-
-## KP.4
-
-- Technologiekarte `befestigungskunde` (ab Wahl 4; braucht Festungsbau und die gebaute Universität) öffnet die Forschungen `r_mauerausbau3` und `r_turmausbau` (je 60 s, 300 Material; Startwerte). Die Forschungen stehen in `KF_PFAD.forschungen` (Schema wie `data/research.js`, dazu `schaltetFrei`, `ersetzt`) und laufen über dieselbe Pipeline (`startResearch`, `progressResearch`).
-- Ergebnis einer Pfadforschung: Schlüssel öffnen, Einheiten ersetzen; Upgrade-Stufen öffnen sich über `sourceMet` (Karte gewählt oder Forschung abgeschlossen), ohne zweite Buchführung.
-- Pfadforschung gilt nur im Modus karten (`researchBlock` meldet sonst `notInMode`, die Oberfläche blendet sie aus).
-- Forschungsplätze: ein Platz, der zweite über die vorhandene Forschung „Zweiter Platz“ (Auslegung von „ein Ausbau öffnet einen zweiten“); eine laufende Forschung lässt sich nicht abbrechen; Beschleunigen gegen Material wie in v0.8. Abriss der Universität: Abgeschlossenes bleibt wirksam, Laufendes pausiert (Test).
-- Reiter „Universität“: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“, Fortschrittsbalken und Restzeit je laufender Forschung, Hinweis bei Abschluss (Toast und Marke am Reiter) wie bisher.
-- Tests: `tests/kartenpfad.test.mjs` (Karte öffnet Forschung, Zeit, Plätze, Abriss), `tests/browser-check.mjs` (Universität im Modus karten).
-
-## KP.5
-
-- Neue Technologiekarten: Fortgeschrittene Taktiken (ab Wahl 3, braucht Echtes Militär und Universität; öffnet Reiter und Schildträger), Eiserne Klingen (ab Wahl 4, braucht Metallverarbeitung und Universität; öffnet Eisenwaffen).
-- Neue Einheiten als Datensätze in `C.UNITS` (Werte, Kosten, Farbton): Reiter (schnell), Schwertkämpfer (Ersatz für Läufer), Bogenschütze (Ersatz für Werfer). Schildträger bleibt, gesperrt bis zur Pfadforschung `r_schild` (die alte Forschung `r_schildtraeger` entfällt im Modus karten). Neue Einheiten haben kein neues Verhalten, nur Werte und einen Farbpunkt (`farbton`); Versorgung: jede Einheit zählt 1.
-- Einheitenersatz (Forschung Eisenwaffen): Läufer → Schwertkämpfer, Werfer → Bogenschütze. Warteschlange und Einheiten auf dem Feld werden beim Abschluss aufgewertet (Lebenspunkte im selben Verhältnis), nichts wird gelöscht; Ersatzeinheiten erben die Werfer-Karten.
-- Reiter „Armee“: Reiter und Schildträger sind sichtbar und gesperrt („Forschung: …“), nach der Forschung mit Kosten und Erklärzeile verfügbar; ein Ersatz benennt den Knopf um.
-- Upgrade-Stufen mit genau einer Quelle (Tabelle unten, Übersicht auch im Bericht): Stufe 1 jedes Gebäudes ab dem Bau frei, Stufen ab 2 nach Quelle.
-
-| Upgrade | Stufe 1 (frei) | ab Stufe 2 | Quelle |
-|---|---|---|---|
-| Schmiede: Qualitätsstufe | Kauf 1–3 | Kauf 4 und folgende | Forschung Eisenwaffen |
-| Kaserne: Ausbau | Kaserne selbst (Stufe 1) | Kauf 1 (Stufe 2) und folgende | Forschung Reiter |
-| Mauer: Verstärkung | – | Kauf 1 (Stufe 2) / ab Kauf 2 (Stufe 3) | Karte Festungsbau / Forschung Mauerausbau III |
-| Mauer: Stachelwall, Mörtelkolonne | – | alle Käufe | Karte Festungsbau |
-| Turm: errichten / Kaliber | – | Kauf 1 (errichten) / ab Kauf 2 | Karte Festungsbau / Forschung Turmausbau |
-| Turm: Reichweite, Feuerrate | – | alle Käufe | Forschung Turmausbau |
-| Kontor: Zinseszins | alle Käufe frei | – | – (Kontor selbst über Karte Handel) |
-| Presse (Klickfeld) | alle Käufe frei | – | – |
-
-(Die Quellen stehen nur in `data/kartenpfad.js` bei den Karten und Forschungen als `schaltetFrei`.)
-
-## KP.6
-
-- Wagnis-Karten (eigene Seltenheit „Wagnis“, gestrichelter Rand, ab Wahl 5, brauchen Echtes Militär; höchstens eine je Angebot): Glaskanonen (Fernkampfschaden ×2, Fernkämpfer haben 1 Lebenspunkt, Stat `rangedHpOne`) und Volle Auslastung (Versorgung ×2, Materialertrag −50 %). Wirkung dauerhaft; das Gegenspiel (Gegner mit Fernkämpfern und Türmen) ist die vorhandene Spiellogik.
-- Exklusivpaar: Fortgeschrittene Taktiken (Nahkampf: Reiter, Schildträger) und Ballistik (Fernkampf: Armbrustschütze, Katapult als Datensätze) schließen sich aus (`exklusivMit`); die andere Karte erscheint nie wieder, ihre Forschungsgruppe in der Universität und ihre gesperrten Einheiten verschwinden. Die Detailzeile der Karte nennt den Ausschluss.
-- Mindesttempo: nach `KARTEN.maxAbstand` (180 s Spielzeit) ohne Wahl wird die nächste fällig (`S.pfad.free`, `log.freeChoice`). Die EP-Schwelle der folgenden Wahl bleibt unverändert (`xpNeed` rechnet die freien Stufen heraus). Im Standardmodus gibt es kein Mindesttempo.
-- Kaserne-Ausbau 2 hat zwei Quellen, die sich gegenseitig ausschließen (Forschung Reiter oder Forschung Armbrustschütze); je Partie bleibt es genau eine (Auslegung 17).
-
-## Balancing nach Simulation (KP.7, auf Vorschlag und mit Zustimmung des PO)
-
-Befund der ersten Serie: Bots gewannen im Modus karten nach etwa 6 min mit 3 Wahlen; der Pfad blieb unerreicht. Zielwerte jetzt: Partie 10–14 min (durchschnitt), mindestens 8 Wahlen. Umgesetzt (alle Werte in `config.js` bzw. `data/kartenpfad.js`):
-- Mehr Wahlen: `KARTEN.xpWachstum` 1,12 (vorher Standard 1,55), `xpFaktor` 0,85, `maxAbstand` 120 s (vorher 180).
-- Forschungsdauer 40–50 s statt 60–90 s (Reiter, Schildträger, Armbrust 45 s, Katapult und Eisenwaffen 50 s, Mauerausbau III und Turmausbau 40 s).
-- Echtes Militär: Versorgung +3 (vorher +2); Gewicht im Angebot 30, Metallverarbeitung 20 (Kaserne und Schmiede früh).
-- Längere Partien über die gegnerische Basis (`basisFaktor` 3,5) und späteres Wachstum der Gegnerwellen (`wellenFaktor` 1,5, linear über 8 min); ein Faktor auf alle Wellen scheiterte (die ersten Wellen entscheiden, 1,4 ließ gierig 9 von 10 Partien verlieren).
-- Kennzahlen: Kaserne und Schmiede zählen bis Minute 6 bzw. 8 oder bis zum Partieende; der Paarvergleich gilt für Technologie und Wagnis (Bau-Karten sind einzige Quelle).
-- Ergebnis (10 bzw. 8 Partien je Strategie, Normal, durchschnitt, Variante militaer): alle Partien gewonnen, Median 9–10 min, 8–9 Wahlen. Abschlussserie mit 50 Partien: siehe Bericht.
-
-## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
-
-1. Das Dokument `branch-konzepte-pacing.md` fehlt; der Unterbau folgt allein den Angaben im Anforderungsdokument.
-2. Das Audit prüft das Präfix `tut.` statt `tutorial.` (so heißen die Schlüssel im Spiel) und `kp.` für die Texte des Branches.
-3. Die Wortliste trifft am Wortanfang: „Kriegsbeute“ trifft „Krieg“, die Forschung „Eisenwaffen“ trifft „Waffe“ nicht. Sonst wäre der in KP.04 vorgegebene Name unzulässig.
-4. Der Auftrag „Stelle drei Läufer auf.“ nutzt „aufstellen“ wie im Glossar; die Schaltfläche trägt nur den Einheitennamen.
-5. Der Stapel steht am unteren Rand der Spielwelt (bei geschlossener Bühne) und rückt bei offener Bühne an den unteren Fensterrand, damit er keine Karte verdeckt.
-6. Das Familienband trägt vorerst die bisherige Kategorie (Wirtschaft, Armee …), das Symbol ist ein Schriftzeichen je Kategorie; die Familien (Bonus, Bau, Technologie, Wagnis) kommen mit KP.3.
-7. „Vorher/Nachher“-Werte bei Bonuskarten: Die Karte zeigt den Beschreibungstext mit dem Wert; eine Vorher/Nachher-Zeile gibt es erst, wenn die Kartendaten sie ausweisen (offen).
-8. Die Pfadkarte „Festungsbau“ hat die Kennung `pfadFestungsbau`, weil `festungsbau` schon eine Bonuskarte ist (Abschnitte +Lebenspunkte je Basiskarte). Beide tragen im Spiel den Namen „Festungsbau“; Vorschlag: die Bonuskarte im Modus karten umbenennen (offen).
-9. Pfadkarten der Familien Bau und Technologie lassen sich nicht bannen, denn jede ist die einzige Quelle ihrer Inhalte (REQ-KP.06: „gesperrt oder warnt“). Damit führt Bannen nie zu einer unlösbaren Kette.
-10. Harte Grenze „spätestens in der dritten Wahl“: Bei zwei Plätzen je Angebot (ohne Universität) gehört ein Platz der Bonuskarte und einer der Pfadkarte. Vier Bau-Karten sind ab Wahl 2 zugleich ziehbar; die Grenze hält daher nur, wenn höchstens drei Bau-Karten zugleich warten. Wer Bau-Karten wählt (der Normalfall), unterschreitet das. Die Warteschlange wählt die älteste unerfüllte Karte zuerst.
-11. Im Modus karten entfällt die gestaffelte Einführung der Gebäude (Stufe 2), weil Karten die Gebäude öffnen; der Erstkontakt-Hinweis „Neu: Schmiede, Kaserne …“ erscheint dort nicht.
-12. Test des Tutorials im Modus karten: Ein bekanntes Zeitverhalten im Tutorial-Test „Abschied 2 nach Klick“ (Blasen laufen nach `greetMs` selbst weiter) ließ einen Lauf unter Last scheitern; der Wiederholungslauf war grün.
-13. Bestehende Forschungen (REQ-KP.04, Zuordnung zur Freigabe): alle 13 Forschungen aus v0.8 bleiben Grundforschung (verfügbar, sobald die Universität steht); eine Zuordnung zu Technologiekarten gibt es nicht, weil sie die Karten- und Forschungsfolge zusätzlich verlängerte (ohnehin nur 3 bis 7 Wahlen je Partie). Ausnahme: „Schildträger“ (alt) entfällt im Modus karten und wird durch die neue Pfadforschung ersetzt (KP.5).
-14. Forschungsplatz: „ein Ausbau öffnet einen zweiten“ ist die bestehende Forschung „Zweiter Platz“; einen eigenen Ausbau der Universität gibt es nicht.
-15. Die Gebäude-Ausbaustufen sind den vorhandenen Upgrades zugeordnet (Tabelle bei KP.5). „Stufe 2“ der Kaserne (Ausbau) und die Schmiede-Stufen ab 4 liegen hinter Forschungen; das hält die Versorgung und die Schmiede lange klein (Risiko, in der Simulation prüfen, Bericht).
-16. Kontor-Zinseszins und Presse bleiben frei: Das Kontor selbst ist über „Handel“ gesperrt, und die Tabelle in KP.05 nennt für beide keine Quelle.
-17. Beide Linien des Exklusivpaars öffnen den Ausbau der Kaserne (Stufe 2): Forschung Reiter oder Forschung Armbrustschütze. Mit einer einzigen Quelle (Reiter, wie in der Tabelle KP.05) fehlte der Fernkampflinie dauerhaft Versorgung; ein Paarvergleich innerhalb von 15 pp wäre nicht erreichbar. Je Partie bleibt die Quelle eindeutig, weil die Linien sich ausschließen.
-18. Wagnis-Karten sind gewöhnliche Karten mit eigener Familie; ihr Ziehgewicht kommt aus `gewicht` (Startwert 4 gegenüber 10 bei Pfadkarten), nicht aus den Seltenheitsgewichten der Bonuskarten.
+### R.1 – R.4 (07.10.2026)
+- **R.1 Tutorial-Sprache** (`869a2a2`): Glossar und Ersatztexte, „Statthalter“, schwebende Zahl „Erfahrung“, Sprach-Audit (`tools/sprachliste.mjs`, `tests/sprache.test.mjs`, Präfix `tut.`). Die Variante des Abschieds für den Modus karten bleibt im Branch.
+- **R.2 Bot-Korrektur** (`a3a55bb`): Test `tests/bot-raster.test.mjs` zeigte den Fehler rot (leere Warteschlange bei vollem Raster); `reserve` ist ohne freien Bauplatz 0. Golden-Test neu erzeugt (`tests/unveraendert.test.mjs`). Vergleichsbasis vorher und nachher: `reports/vergleichsbasis-vorher|nachher.{json,txt}`, Auswertung im Bericht.
+- **R.3 Protokollfelder** (`feat/protokollfelder`): Format 2 (`thinkMs`, `rerolled`, `banned` je Kartenwahl), `tools/compare-human.mjs` liest es, ältere Protokolle bleiben lesbar; Tests in `tests/tutorial-messung.test.mjs` und `tests/browser-check.mjs`.
+- **R.4 Veröffentlichung**: Version 0.8.1; keine externen Schriften mehr (Google Fonts entfernt, `index.html`); `window.__kf` nur mit `?dev=1` oder `?debug=1`; Prüfliste automatisiert in `tests/browser-check.mjs` („Öffentliche Fassung“).
+- Auslegung: Die Prüfliste „keine externen Abrufe außer den Spieldateien“ verlangte, die Schriften von Google Fonts zu entfernen; die Schriftfamilien stehen weiter im CSS und fallen auf Systemschriften zurück (Aussehen leicht anders, kein Funktionsverlust).

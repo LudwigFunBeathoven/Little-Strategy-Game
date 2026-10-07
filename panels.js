@@ -72,6 +72,9 @@ function goBuild(type){
    Die Kartenknöpfe nehmen Klicks erst UI.draftLockMs nach dem Öffnen an und blenden in dieser Zeit ein. Mehrere Wahlen folgen
    nacheinander; danach kehrt der Arbeitsbereich zum vorigen Reiter samt Auswahl zurück. */
 let pointerHeld = false, draftAuto = null, draftShownKey = '', draftOpenedAt = -Infinity;
+let thinkLevel = null, thinkStart = 0;                                  // Bedenkzeit je Wahl: erstes Zeigen der Wahl dieser Stufe (Sitzungsprotokoll, REQ-R.04)
+/* Millisekunden seit dem ersten Zeigen der aktuellen Wahl; null, wenn keine gezeigt wurde */
+function draftThinkMs(){ return thinkLevel === null ? null : Math.round(performance.now() - thinkStart); }
 function draftLocked(){ return performance.now() - draftOpenedAt < C.UI.draftLockMs; }
 function autoDraft(){
   if (Stage.on()) return;                                              // die Kartenbühne öffnet sich selbst und wechselt keinen Reiter (REQ-KP.03)
@@ -81,6 +84,7 @@ function autoDraft(){
     if (key === draftShownKey || pointerHeld) return;                   // schon gezeigt, oder Maustaste gedrückt: nach dem Loslassen
     if (!draftAuto) draftAuto = { tab: activeTab, sel };
     draftShownKey = key;
+    if (d.level !== thinkLevel){ thinkLevel = d.level; thinkStart = performance.now(); }
     activeTab = 'cards';
     draftOpenedAt = performance.now();
     draftKey = '';
