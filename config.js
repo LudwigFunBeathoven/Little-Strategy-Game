@@ -10,7 +10,11 @@ const KF_CONFIG = {
   HINTS_KEY: 'klammerfront.hints.v1',   // gesehene Erstkontakt-Hinweise (REQ-20.3)
   TUTORIAL_KEY: 'klammerfront.tutorial.v1',   // Merker „erste Partie“: fehlt er, ist es die erste Partie dieses Browsers (REQ-T.04, T2.01)
   DIFFICULTY_KEY: 'klammerfront.difficulty',  // zuletzt gewählter Schwierigkeitsgrad (REQ-T2.01)
-  PACING_MODE: '',                            // Pacing-Modus für überschreibbare Tutorial-Texte (REQ-T2.05); leer = Standard
+  PACING_MODUS: 'standard',                    // Pacing-Modus: 'standard' (alles wie bisher) oder ein Modus aus PACING; wählt auch überschriebene Tutorial-Texte (REQ-T2.05)
+  /* Pacing-Modi (REQ-KP.01): Der Modus 'standard' sperrt nichts. Ein Modus sperrt die Schlüssel in gesperrt, bis unlockKey() sie öffnet
+     ('bau:<gebäude>', 'einheit:<typ>', 'forschung:<id>'), und bindet Upgrade-Stufen an eine Quelle (Karte oder Forschung):
+     stufen: { <upgrade>: [{ ab: n, quelle: id }] } – der Kauf der Stufe n und aller höheren verlangt die Quelle mit dem größten ab <= n. */
+  PACING: {},
   LANGUAGES: ['de', 'en'],
   FALLBACK_LANG: 'en',
 

@@ -4,25 +4,26 @@
   "version": "0.8",
   "lang": "de",
   "diff": "normal",
-  "startedAt": "2026-10-06T11:42:04.319Z",
-  "result": "lost",
-  "durationS": 296.7,
-  "clicks": 88,
+  "startedAt": "2026-10-07T09:11:33.769Z",
+  "result": "running",
+  "durationS": 300.8,
+  "clicks": 90,
   "clicksPerMinute": [
     17,
     18,
     18,
     18,
-    17
+    18,
+    1
   ],
   "clicksByPhase": {
-    "early": 39,
-    "mid": 49,
+    "early": 40,
+    "mid": 50,
     "late": 0
   },
   "timeByPhase": {
-    "early": 132.54999999999592,
-    "mid": 164.00000000003726,
+    "early": 134.6499999999964,
+    "mid": 166.00000000003772,
     "late": 0
   },
   "actions": [
@@ -72,274 +73,293 @@
       "arg": "laeufer"
     },
     {
-      "t": 61.25,
+      "t": 61.2,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 67.35,
+      "t": 67.3,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 70.4,
+      "t": 70.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 75.6,
+      "t": 77.45,
       "kind": "chooseDraft",
-      "arg": "vorposten"
+      "arg": "fliessband"
     },
     {
-      "t": 82.65,
+      "t": 82.6,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 85.7,
+      "t": 82.6,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 88.75,
+      "t": 85.65,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 101,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 104.05,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 110.15,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 122.4,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 125.45,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 128.5,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 132.7,
-      "kind": "chooseDraft",
-      "arg": "langeWurfarme"
-    },
-    {
-      "t": 140.75,
+      "t": 97.85,
       "kind": "buildAt",
       "arg": 1
     },
     {
-      "t": 143.8,
+      "t": 100.95,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 146.85,
+      "t": 104,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 146.85,
+      "t": 104,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 156,
+      "t": 116.2,
       "kind": "buildAt",
       "arg": 2
     },
     {
-      "t": 162.15,
+      "t": 122.35,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 162.15,
+      "t": 122.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 162.15,
+      "t": 122.35,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 174.35,
+      "t": 134.55,
       "kind": "buildAt",
       "arg": 3
     },
     {
-      "t": 180.45,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 180.45,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 180.45,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 192.65,
-      "kind": "buildAt",
-      "arg": 4
-    },
-    {
-      "t": 201.85,
-      "kind": "spawn",
-      "arg": "werfer"
-    },
-    {
-      "t": 201.85,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 201.85,
-      "kind": "spawn",
-      "arg": "laeufer"
-    },
-    {
-      "t": 202.7,
+      "t": 134.8,
       "kind": "chooseDraft",
       "arg": "maurerkolonne"
     },
     {
-      "t": 214.05,
+      "t": 140.7,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 140.7,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 140.7,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 152.9,
+      "kind": "buildAt",
+      "arg": 4
+    },
+    {
+      "t": 162.1,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 162.1,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 162.1,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 174.3,
       "kind": "buildAt",
       "arg": 5
     },
     {
-      "t": 220.15,
+      "t": 177.6,
+      "kind": "chooseDraft",
+      "arg": "maurerkolonne"
+    },
+    {
+      "t": 180.4,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 220.15,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 220.15,
+      "t": 180.4,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 241.6,
+      "t": 201.8,
       "kind": "buildAt",
       "arg": 6
     },
     {
-      "t": 244.65,
+      "t": 201.8,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 244.65,
+      "t": 201.8,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 244.65,
+      "t": 201.8,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 263,
+      "t": 220.1,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 263,
+      "t": 220.1,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 263,
+      "t": 220.1,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 281.35,
+      "t": 238.45,
       "kind": "buildAt",
       "arg": 7
     },
     {
-      "t": 284.4,
+      "t": 241.55,
       "kind": "spawn",
       "arg": "werfer"
     },
     {
-      "t": 284.4,
+      "t": 241.55,
       "kind": "spawn",
       "arg": "laeufer"
     },
     {
-      "t": 284.4,
+      "t": 241.55,
       "kind": "spawn",
       "arg": "laeufer"
+    },
+    {
+      "t": 262.95,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 262.95,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 262.95,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 266.65,
+      "kind": "chooseDraft",
+      "arg": "grossauftrag"
+    },
+    {
+      "t": 281.3,
+      "kind": "spawn",
+      "arg": "werfer"
+    },
+    {
+      "t": 281.3,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 281.3,
+      "kind": "spawn",
+      "arg": "laeufer"
+    },
+    {
+      "t": 293.5,
+      "kind": "buildAt",
+      "arg": 8
     }
   ],
   "drafts": [
     {
-      "t": 75.6,
+      "t": 77.4,
       "level": 1,
-      "chosen": "vorposten",
+      "chosen": "fliessband",
       "offered": [
-        "vorposten",
-        "fliessband"
-      ]
-    },
-    {
-      "t": 132.7,
-      "level": 2,
-      "chosen": "langeWurfarme",
-      "offered": [
-        "langeWurfarme",
+        "fliessband",
         "doppelschicht"
       ]
     },
     {
-      "t": 202.7,
+      "t": 134.8,
+      "level": 2,
+      "chosen": "maurerkolonne",
+      "offered": [
+        "maurerkolonne",
+        "drill"
+      ]
+    },
+    {
+      "t": 177.6,
       "level": 3,
       "chosen": "maurerkolonne",
       "offered": [
         "maurerkolonne",
-        "schwerePressen"
+        "kriegstrommeln"
+      ]
+    },
+    {
+      "t": 266.7,
+      "level": 4,
+      "chosen": "grossauftrag",
+      "offered": [
+        "grossauftrag",
+        "maurerkolonne"
       ]
     }
   ],
   "research": [],
-  "maxUnits": 7,
-  "maxArmy": 6,
-  "firstWallFallS": 290.8,
+  "maxUnits": 8,
+  "maxArmy": 5,
+  "firstWallFallS": null,
   "wallUse": {
     "repairs": 0,
     "upgrades": 0
   },
-  "kills": 40,
+  "kills": 45,
   "losses": 41,
   "tutorial": {
     "stepTimes": {},

@@ -107,7 +107,7 @@ das Tutorial. Das Tutorial läuft auf jedem Grad. Ablauf: Begrüßung (2 Blasen)
 `enemyWaveDefeated`, `cardChosen`, `xpBounty`) und die Schonfrist (`newGame(…, { hold: { maxS, size, bounty } })`, `releaseHold`, Zustand `S.hold`: erste Gegnerwelle klein und
 zurückgehalten; `S.firstBounty`: Kriegsbeute, nach der ersten besiegten Welle reichen die EP für die erste Kartenwahl). Ohne
 Zuhörer und ohne `hold` ändert sich nichts; `tests/unveraendert.test.mjs` hält das mit festen Seeds fest (nicht ohne Grund neu erzeugen).
-Regeln: je Schritt Erzählung (höchstens etwa 90 Zeichen) und Auftrag (höchstens etwa 30); Begrüßung und Abschied je zwei Blasen; Texte je Pacing-Modus überschreibbar (Schlüssel mit Suffix, `PACING_MODE`); Hinweise (`hints.js`) höchstens 90 Zeichen, einer gleichzeitig, nie im Tutorial, schließen nach
+Regeln: je Schritt Erzählung (höchstens etwa 90 Zeichen) und Auftrag (höchstens etwa 30); Begrüßung und Abschied je zwei Blasen; Texte je Pacing-Modus überschreibbar (Schlüssel mit Suffix, `PACING_MODUS`); Hinweise (`hints.js`) höchstens 90 Zeichen, einer gleichzeitig, nie im Tutorial, schließen nach
 `UI.hintAutoMs`; das Tutorial wechselt nie selbst den Reiter und sperrt nichts. Neue Schritte nur in `data/tutorial-steps.js` (höchstens fünf Dinge).
 
 ## Armee und Kampf (REQ-5.05, REQ-5.06)

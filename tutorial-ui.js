@@ -17,7 +17,7 @@ const TutUI = (() => {
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const hasWorld = () => cv && cw > 0;
   /* Text je Pacing-Modus überschreibbar (REQ-T2.05): Schlüssel mit Modus-Suffix, sonst der Standard */
-  const tx = key => { const m = C.PACING_MODE; return m && KF_I18N[lang] && KF_I18N[lang][key + '.' + m] !== undefined ? t(key + '.' + m) : t(key); };
+  const tx = key => { const m = G.S.pacing; return m && m !== 'standard' && KF_I18N[lang] && KF_I18N[lang][key + '.' + m] !== undefined ? t(key + '.' + m) : t(key); };
 
   /* ---------- Ziel des aktuellen Schritts, aus dem Zustand der Oberfläche abgeleitet ---------- */
   const tabBtn = id => tabEls[id].btn;

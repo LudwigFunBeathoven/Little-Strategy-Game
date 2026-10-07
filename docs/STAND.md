@@ -78,3 +78,27 @@ Siehe `docs/bericht-tutorial-2.md`, Abschnitt 2.
 ## Auslegungen und Abweichungen Teil 1 (zur Zustimmung durch den PO)
 Siehe `docs/bericht-tutorial.md`, Abschnitt 2 (15 Punkte). Wichtigste: (1) die gestaffelte Freischaltung bleibt, nur die Hinweistexte der Einführung entfallen;
 (2) `exp/kartenpfad` und `exp/zeitalter` gibt es im Repository nicht; (3) „Menü“ ist der Dialog „Neue Partie“; (4) Version 0.8, Spielstand-Version unverändert.
+
+## Pacing-Unterbau (KP.0, Vorarbeit für den Branch „Kartenpfad“)
+
+Gemeinsamer Unterbau auf `main`, Standardmodus unverändert (Golden-Test `tests/unveraendert.test.mjs` grün, `tests/pacing.test.mjs` neu).
+
+- Schalter `PACING_MODUS` (`config.js`, vorher `PACING_MODE`), im Spielstand `S.pacing`; `newGame(…, { pacing })` überschreibt ihn. Ohne Eintrag in `C.PACING` (Standard) ist nichts gesperrt.
+- Freischaltlogik: `C.PACING[modus].gesperrt` (Schlüssel `bau:<gebäude>`, `einheit:<typ>`, `forschung:<id>`), geöffnet mit `unlockKey` (`S.unlocks`); wirkt auf `isBuildable`, `unitUnlocked`, `researchBlock` (Grund `closed`).
+- Upgrade-Stufen: `C.PACING[modus].stufen` bindet den Kauf ab Stufe n an eine Quelle (Karte oder Forschung); `stageSource(id)`, `canBuy` prüft sie.
+- Einheitenersatz: `replaceUnit(von, nach)` wertet Warteschlange und Einheiten auf dem Feld auf (nichts wird gelöscht, Lebenspunkte im selben Verhältnis); `spawn` erzeugt danach den Ersatztyp.
+- Kein Spielstandformat geändert (neue Felder fehlen in älteren Ständen und fallen auf den Standard zurück), daher keine neue `SAVE_VERSION`.
+- Der Spezifikation fehlte `docs/branch-konzepte-pacing.md` (§4.1); der Unterbau folgt den Angaben in `docs/anforderungen-kartenpfad.md` (Branch `exp/kartenpfad`).
+
+Basislinie der Kartenwahlen im Standardmodus (Normal, 20 Partien je Zeile, `tools/baseline-wahlen.mjs`): Wahlen je Partie (Median) und erste Wahl:
+
+| Strategie | Profil | Wahlen | erste Wahl | Dauer bis Sieg | Siegquote |
+|---|---|---|---|---|---|
+| gierig | aktiv | 4 | 76 s | 6,5 min | 100 % |
+| gierig | durchschnitt | 7 | 85 s | 10,2 min | 95 % |
+| gierig | gelegentlich | 7 | 86 s | 13,5 min | 55 % |
+| einheiten-zuerst | aktiv | 3 | 76 s | 5,4 min | 100 % |
+| einheiten-zuerst | durchschnitt | 3 | 76 s | 6,1 min | 100 % |
+| einheiten-zuerst | gelegentlich | 3 | 77 s | 7,3 min | 100 % |
+
+Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad aus Karte und anschließender Forschung (zwei Schritte) braucht mehr Wahlen, als die Partie bietet; das gehört in den Bericht (Risiko „Zweistufiger Weg zur Einheit“, `anforderungen-kartenpfad.md` Abschnitt 5).

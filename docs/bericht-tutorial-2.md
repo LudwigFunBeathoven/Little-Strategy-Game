@@ -28,7 +28,7 @@ dass `startGame` nur vom Dialog und von den URL-Parametern aufgerufen wird. Ausf
 7. **Kamera im Abschied:** Die Kamera springt zum Reich zurück, auch wenn der Spieler sie bewegt hatte, damit der Quartiermeister vor dem Tor zu sehen ist.
 8. **Auftrag zu Schritt 3 ohne Material:** Es zeigt zuerst das Klickfeld, mit dem Auftrag „Klicke auf Fertigen.“ allein (Erzählung wird nie nachgeholt).
 9. **Auftragslänge:** „Wähle eine Karte. Sie verändert dein Reich.“ hat 43 Zeichen (Ihr Text); die Grenze „etwa 30“ gilt hier großzügig. Der Test lässt bis 45 zu.
-10. **Pacing-Modi:** Der Mechanismus steht (Konfigurationswert `PACING_MODE`, Schlüssel mit Suffix, z. B. `tut.bye1.<modus>`, sonst Standard). Modi gibt es im Repository nicht (wie in Teil 1: keine
+10. **Pacing-Modi:** Der Mechanismus steht (Konfigurationswert `PACING_MODUS`, Schlüssel mit Suffix, z. B. `tut.bye1.<modus>`, sonst Standard). Modi gibt es im Repository nicht (wie in Teil 1: keine
     Branches `exp/kartenpfad`, `exp/zeitalter`); es gibt daher keine Überschreibungen.
 11. **Hinweis „Karte“ entfällt:** Die Erzählung der Kartenwahl ersetzt ihn (Teil 1 sah dafür eine Zusatzzeile vor).
 12. **Vorführung entfällt, wenn der Spieler schneller war:** Klickt er schon während der Begrüßung auf Fertigen, führt die Figur den Klick nicht noch einmal vor.

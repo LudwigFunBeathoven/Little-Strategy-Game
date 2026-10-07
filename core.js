@@ -56,6 +56,7 @@ function freshState(diff, seed){
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0,    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
@@ -120,6 +121,51 @@ function create(){
   const categoryCount = cat => Object.keys(S.draft.stacks).filter(id => S.draft.stacks[id] > 0 && OPT[id] && OPT[id].category === cat).length;
   const synergyValue = id => { const o = OPT[id]; return o && o.synergy && cardTaken(id) > 0 ? o.synergy.perCard * categoryCount(o.category) : 0; };
   const mAdd = stat => mods().add[stat] ?? 0;
+
+  /* ---------- Pacing (REQ-KP.01): Freischaltungen, Upgrade-Stufen, Einheitenersatz ----------
+     Im Modus 'standard' (oder ohne Eintrag in C.PACING) ist nichts gesperrt. */
+  const pacingCfg = () => (S.pacing && C.PACING[S.pacing]) || null;
+  const isGated = key => { const c = pacingCfg(); return !!c && !!c.gesperrt && c.gesperrt.includes(key); };
+  const isOpen = key => !isGated(key) || !!S.unlocks[key];
+  function unlockKey(key){
+    if (isOpen(key)) return false;
+    S.unlocks[key] = true; S.pacingVer++;
+    return true;
+  }
+  /* Quelle erfüllt: Karte gewählt oder Forschung abgeschlossen */
+  const sourceMet = q => (S.draft.stacks[q] || 0) > 0 || (S.research.done[q] || 0) > 0;
+  /* Quelle, die für den nächsten Kauf des Upgrades fehlt (null = frei) */
+  function stageSource(id){
+    const c = pacingCfg(), list = c && c.stufen && c.stufen[id];
+    if (!list) return null;
+    const n = S.lvl[id] + 1;
+    let best = null;
+    for (const e of list) if (e.ab <= n && (!best || e.ab > best.ab)) best = e;
+    return best && !sourceMet(best.quelle) ? best.quelle : null;
+  }
+  const ownType = type => S.replace[type] || type;
+  /* Werte einer Einheit nach Typ und Seite (ohne Zufall); makeUnit und der Einheitenersatz nutzen dieselbe Rechnung */
+  function unitStats(side, type){
+    const spec = C.UNITS[type], p = side === 'p';
+    const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
+    return { speed: spec.speed, range: unitRange(side, type), ranged: isRangedType(type), hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()), cdMax: spec.cd * (p ? cdMultP() : 1) };
+  }
+  /* Einheitenersatz: ab jetzt entsteht to statt from; Einheiten in der Warteschlange und auf dem Feld werden aufgewertet, nichts wird gelöscht
+     und die Lebenspunkte bleiben im selben Verhältnis. Gibt die Zahl der aufgewerteten Einheiten zurück. */
+  function replaceUnit(from, to){
+    if (!C.UNITS[from] || !C.UNITS[to] || from === to || S.replace[from] === to) return 0;
+    S.replace[from] = to; S.pacingVer++;
+    let n = 0;
+    for (const q of S.queue) if (q.type === from){ q.type = to; n++; }
+    for (const u of S.units){
+      if (u.side !== 'p' || u.type !== from) continue;
+      const s = unitStats('p', to), ratio = u.maxHp > 0 ? u.hp / u.maxHp : 1;
+      Object.assign(u, { type: to, speed: s.speed, range: s.range, ranged: s.ranged, maxHp: s.hp, hp: s.hp * ratio, dmg: s.dmg, cdMax: s.cdMax });
+      u.cd = Math.min(u.cd, u.cdMax);
+      n++;
+    }
+    return n;
+  }
 
   /* ---------- abgeleitete Werte ---------- */
   const has = b => S.slots.some(s => s && s.type === b);
@@ -211,13 +257,13 @@ function create(){
     if (u.needs && S.lvl[u.needs] <= 0) return false;
     return true;
   }
-  const canBuy = id => S.status === 'running' && isAvailable(id) && !isMaxed(id) && S[C.UPGRADES[id].cur] >= upCost(id);
+  const canBuy = id => S.status === 'running' && isAvailable(id) && !stageSource(id) && !isMaxed(id) && S[C.UPGRADES[id].cur] >= upCost(id);
   const builtCount = () => S.slots.filter(Boolean).length;
   /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
   // Die erste Fabrik ist gratis (REQ-44)
   const factoryCost = () => C.FIRST_FACTORY_FREE && factoryCount() === 0 ? 0 : Math.ceil(C.FACTORY_BASE_COST * Math.pow(C.FACTORY_COST_GROWTH, factoryCount()) * mMul('factoryCost') * mMul('buildCost'));
   const buildCost = type => type === 'fabrik' ? factoryCost() : Math.ceil(C.BUILDING_COST[type] * mMul('buildCost'));
-  const isBuildable = type => C.START_BUILDINGS.includes(type) || !!S.unlocked[type];
+  const isBuildable = type => (C.START_BUILDINGS.includes(type) || !!S.unlocked[type]) && isOpen('bau:' + type);
   const refundFor = i => S.slots[i] ? Math.floor(S.slots[i].paid * C.REFUND_RATE) : 0;
   /* Warum ein Gebäude nicht baubar ist (null = baubar) */
   function buildBlock(i, type){
@@ -309,13 +355,12 @@ function create(){
   const dirOf = side => side === 'p' ? 1 : -1;
   const baseX = side => side === 'p' ? W - EBW : PBW;
   function makeUnit(side, type, lane, x, form){
-    const spec = C.UNITS[type], p = side === 'p';
-    const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
+    const p = side === 'p', s = unitStats(side, type);
     const u = {
-      id: S.nextId++, side, type, lane, laneF: lane, home: lane, x: x ?? (p ? spawnX() : W - EBW), form: form ?? null, speed: spec.speed,
-      range: unitRange(side, type), ranged: isRangedType(type),
-      hp, maxHp: hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()),
-      cdMax: spec.cd * (p ? cdMultP() : 1), cd: 0, flash: 0, bob: rnd() * 6, row: 0, col: 0, rowSize: 1,
+      id: S.nextId++, side, type, lane, laneF: lane, home: lane, x: x ?? (p ? spawnX() : W - EBW), form: form ?? null, speed: s.speed,
+      range: s.range, ranged: s.ranged,
+      hp: s.hp, maxHp: s.hp, dmg: s.dmg,
+      cdMax: s.cdMax, cd: 0, flash: 0, bob: rnd() * 6, row: 0, col: 0, rowSize: 1,
     };
     u.cd = u.cdMax * C.COMBAT.spawnStagger * rnd();                  // Versatz beim Entstehen: kein Gleichtakt einer Welle (REQ-6.02)
     return u;
@@ -404,11 +449,12 @@ function create(){
   /* Kauf legt die Einheit in die Warteschlange; sie rückt mit der nächsten Welle aus (REQ-14.1/14.2) */
   const supplyFull = () => S.queue.length >= supplyCap();
   /* Schildträger erst nach der Forschung (REQ-5.07, Zweig D) */
-  const unitUnlocked = type => !C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0;
+  const unitUnlocked = type => (!C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0) && isOpen('einheit:' + type);
   function spawn(type){
-    const cost = unitCost(type);
+    const cost = unitCost(ownType(type));
     if (S.status !== 'running' || supplyFull() || S.material < cost || !unitUnlocked(type)) return false;
     S.material -= cost;
+    type = ownType(type);
     S.queue.push({ type });
     emit('unitBought', { type });
     return true;
@@ -916,6 +962,7 @@ function create(){
     if (!r) return 'unknown';
     if (S.status !== 'running') return 'notRunning';
     if (!has('universitaet')) return 'noUni';
+    if (!isOpen('forschung:' + id)) return 'closed';
     if (!researchNext(id)) return 'maxed';
     if (S.research.locked && S.research.locked.includes(id)) return 'locked';   // nur Simulation: Paarvergleich gesperrt (REQ-6.06)
     if (r.requires && researchTier(r.requires.research) < r.requires.tier) return 'requires';
@@ -1091,6 +1138,7 @@ function create(){
   }
   function newGame(diff, seed, opts = {}){
     S = freshState(diff, seed);
+    S.pacing = opts.pacing || C.PACING_MODUS || 'standard';
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
     // Schonfrist (REQ-T.03): opts.hold = { maxS, size, bounty } – die erste Gegnerwelle besteht aus size Läufern und rückt erst nach releaseHold() oder nach maxS aus;
@@ -1141,6 +1189,7 @@ function create(){
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
+    isOpen, unlockKey, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
