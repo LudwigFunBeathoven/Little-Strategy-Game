@@ -122,3 +122,69 @@ test('Kartenkennungen sind eindeutig (Bonus- und Pfadkarten)', () => {
   const ids = G.ALL_OPTIONS.map(o => o.id);
   assert.equal(new Set(ids).size, ids.length);
 });
+
+/* ---------- Universität als Forschungsstätte (REQ-KP.04) ---------- */
+function withUni(seed = 9){
+  const g = game('karten', seed), { G } = g;
+  G.S.material = 1e6; G.unlockKey('bau:universitaet'); G.build('universitaet');
+  G.S.draft.stacks.pfadFestungsbau = 1; G.S.draft.ver++;
+  return g;
+}
+const pickCard = (G, id) => { G.S.pendingDraft = { level: 1, options: [id, 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; return G.chooseDraft(0); };
+
+test('Technologiekarte öffnet genau ihre Forschungen; vorher sind sie gesperrt', () => {
+  const { G } = withUni();
+  for (const id of ['r_mauerausbau3', 'r_turmausbau']) assert.equal(G.researchBlock(id), 'closed', id);
+  assert.ok(pickCard(G, 'befestigungskunde'));
+  for (const id of ['r_mauerausbau3', 'r_turmausbau']) assert.equal(G.researchBlock(id), null, id);
+});
+
+test('Pfadforschung gilt nur im Modus karten; im Standard ist sie nicht vorhanden', () => {
+  const { G } = game('standard'); G.S.material = 1e6; G.build('universitaet');
+  assert.equal(G.researchBlock('r_mauerausbau3'), 'notInMode');
+});
+
+test('Forschung läuft nur bei laufender Spielzeit; Abschluss öffnet die Stufe', () => {
+  const { G } = withUni(); pickCard(G, 'befestigungskunde');
+  assert.equal(G.stageSource('mauer') === null, true, 'Stufe 2 durch Festungsbau offen');
+  G.buy('mauer');
+  assert.equal(G.stageSource('mauer'), 'r_mauerausbau3', 'Stufe 3 braucht die Forschung');
+  assert.ok(G.startResearch('r_mauerausbau3'));
+  const a = G.S.research.active[0], t0 = a.t;
+  G.S.pendingDraft = { level: 1, options: ['bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1;   // offene Wahl pausiert die Zeit
+  for (let i = 0; i < 40; i++) G.tick(0.05);
+  assert.equal(a.t, t0, 'Pause: kein Fortschritt');
+  G.S.pendingDraft = null; G.S.pendingLevels = 0;
+  for (let i = 0; i < 60 * 20 + 5; i++) G.tick(0.05);
+  assert.equal(G.researchTier('r_mauerausbau3'), 1);
+  assert.equal(G.stageSource('mauer'), null);
+  assert.ok(G.buy('mauer'), 'Stufe 3 kaufbar');
+});
+
+test('Ein Forschungsplatz nimmt keine zweite Forschung an; mit zweitem Platz laufen beide', () => {
+  const { G } = withUni(); pickCard(G, 'befestigungskunde');
+  assert.ok(G.startResearch('r_mauerausbau3'));
+  assert.equal(G.researchBlock('r_turmausbau'), 'busy');
+  G.S.draft.stacks.x = 0; G.S.research.done.r_logistik = 1; G.S.research.done.r_zweiterplatz = 1; G.S.research.ver++;
+  assert.equal(G.researchSlots(), 2);
+  assert.ok(G.startResearch('r_turmausbau'));
+  assert.equal(G.S.research.active.length, 2);
+});
+
+test('Abriss der Universität: Fertiges bleibt wirksam, Laufendes pausiert', () => {
+  const { G } = withUni(); pickCard(G, 'befestigungskunde');
+  G.S.research.done.r_mauerausbau3 = 1; G.S.research.ver++;
+  G.S.lvl.mauer = 1;
+  assert.equal(G.stageSource('mauer'), null, 'Stufe 3 offen dank Forschung');
+  assert.ok(G.startResearch('r_turmausbau'));
+  const i = G.S.slots.findIndex(s => s && s.type === 'universitaet');
+  G.demolish(i);
+  const a = G.S.research.active[0], t0 = a.t;
+  for (let i2 = 0; i2 < 100; i2++) G.tick(0.05);
+  assert.equal(a.t, t0, 'ohne Universität kein Fortschritt');
+  assert.equal(G.researchTier('r_mauerausbau3'), 1, 'abgeschlossen bleibt');
+  assert.equal(G.stageSource('mauer'), null, 'die Wirkung bleibt');
+  G.build('universitaet');
+  for (let i2 = 0; i2 < 100; i2++) G.tick(0.05);
+  assert.ok(a.t > t0, 'mit neuer Universität geht es weiter');
+});

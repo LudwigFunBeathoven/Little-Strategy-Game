@@ -569,4 +569,13 @@ KF_I18N.en = {
   'kp.lock.research': 'Research: {name}',
   'kp.lock.opens': 'Opens with: card {name}',
   'log.unlockedKey': '{what} unlocked.',
+  'kp.card.befestigungskunde.name': 'Fortification Lore',
+  'kp.card.befestigungskunde.desc': 'Knowledge of walls and towers.',
+  'kp.res.mauerausbau3.name': 'Wall Works III',
+  'kp.res.mauerausbau3.desc': 'Wall level 3 can be built.',
+  'kp.res.turmausbau.name': 'Tower Works',
+  'kp.res.turmausbau.desc': 'Tower level 2 can be built.',
+  'kp.res.group.grund': 'Basic research',
+  'kp.res.group.pfad': 'Path research',
+  'kp.res.opensWith': 'Opens with: card {name}',
 };

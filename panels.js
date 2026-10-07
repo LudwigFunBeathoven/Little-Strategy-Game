@@ -160,7 +160,20 @@ function buildPanels(){
   ctxRepairOpt = makeOpt($('ctxRepair'), '', 'repair:' + C.GATE_LANE, () => { if (sel && sel.kind === 'section') G.repair(sel.lane); });
   // Forschungsbaum: ein Knopf je Forschung, einmal erzeugt (REQ-5.07)
   const BRANCH_BOX = { lehre: 'resLehre', archiv: 'resArchiv', forschung: 'resForschung', freischaltung: 'resFreischaltung' };
-  for (const r of G.RESEARCH) resEls[r.id] = makeOpt($(BRANCH_BOX[r.branch]), 'res', 'res:' + r.id, () => G.startResearch(r.id));
+  // Pfadforschungen (REQ-KP.04): gruppiert nach der Technologiekarte, die sie öffnet
+  const resGroups = resGroupsAll;
+  for (const o of G.ALL_OPTIONS) if (o.pfad && (o.pfad.oeffnetForschung || []).length){
+    const g = document.createElement('div'); g.className = 'res-group'; g.hidden = true;
+    const h = document.createElement('h3'); h.className = 'sub'; const opts = document.createElement('div'); opts.className = 'opts';
+    g.append(h, opts); $('resPfad').appendChild(g); resGroups[o.id] = { g, h, opts };
+  }
+  for (const r of G.RESEARCH){
+    if (r.branch === 'pfad'){
+      const card = G.ALL_OPTIONS.find(o => o.pfad && (o.pfad.oeffnetForschung || []).includes(r.id));
+      resEls[r.id] = makeOpt(resGroups[card.id].opts, 'res', 'res:' + r.id, () => G.startResearch(r.id));
+      resEls[r.id].card = card.id; resEls[r.id].group = resGroups[card.id];
+    } else resEls[r.id] = makeOpt($(BRANCH_BOX[r.branch]), 'res', 'res:' + r.id, () => G.startResearch(r.id));
+  }
   $('rerollBtn').addEventListener('click', () => { if (!isDis($('rerollBtn')) && G.rerollDraft()){ draftKey = ''; requestRender(); } });
   // Klickfeld löst auf pointerdown aus (REQ-5.01); Tastatur (Enter, Leertaste) kommt als click ohne Zeigerereignis
   const press = () => { if (!isDis($('clickBtn'))){ G.doClick(); requestRender(); } };
@@ -264,7 +277,7 @@ function renderContext(){
 
 /* ---------- Kaufknöpfe (Upgrades, Einheiten, Reparatur): nur Inhalt und Zustand ändern sich ---------- */
 let ctxRepairOpt = null;
-const resEls = {};
+const resEls = {}, resGroupsAll = {};
 function updateOpt(el, kind, a){
   const S = G.S;
   if (kind === 'repair'){
@@ -458,6 +471,7 @@ function researchReason(id){
     case 'notRunning': return t('tip.notRunning');
     case 'noUni': return t('tip.needsBuilding', { name: t('bld.universitaet.name') });
     case 'requires': return t('research.requires', { name: researchName(G.RES[r.requires.research], r.requires.tier) });
+    case 'closed': { const src = G.keySource('forschung:' + id); return t('kp.res.opensWith', { name: src && G.OPT[src] ? t(G.OPT[src].nameKey) : '' }); }
     case 'active': return t('research.running');
     case 'busy': return t('research.busy', { n: G.researchSlots() });
     case 'material': return missing('material', G.researchCost(id), G.S.material);
@@ -467,12 +481,18 @@ function researchReason(id){
 let resRunKey = '';
 function renderResearch(){
   const S = G.S;
+  const inMode = r => G.researchBlock(r.id) !== 'notInMode';
+  setHidden($('resPfad'), S.pacing !== 'karten');
+  for (const g of Object.values(resGroupsAll)) setHidden(g.g, S.pacing !== 'karten' || !G.RESEARCH.some(r => resEls[r.id] && resEls[r.id].group === g));
   for (const r of G.RESEARCH){
     const el = resEls[r.id], n = G.researchTier(r.id), next = G.researchNext(r.id);
+    setHidden(el.btn, !inMode(r));
+    if (!inMode(r)) continue;
+    if (el.group) setText(el.group.h, t(G.OPT[el.card].nameKey));
     setText(el.label, researchName(r, Math.min(n + 1, r.tiers.length)));
     setHidden(el.tag, n === 0);
     if (n > 0) setText(el.tag, `${n}/${r.tiers.length}`);
-    setText(el.expl, next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
+    setText(el.expl, G.researchBlock(r.id) === 'closed' ? researchReason(r.id) : next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
                           : t('opt.max'));
     setDis(el.btn, !!G.researchBlock(r.id));
   }

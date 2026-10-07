@@ -1074,6 +1074,27 @@ for (const lang of ['de', 'en']){
   await ctx.close();
 }
 
+/* ---------- Universität im Modus karten (REQ-KP.04) ---------- */
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.unlockKey('bau:universitaet'); G.build('universitaet'); document.querySelector('#hintBox').hidden = true; __kf.selectTab('uni'); }); await p.waitForTimeout(250);
+  const u1 = await p.evaluate(() => ({ box: !document.getElementById('resPfad').hidden, groups: [...document.querySelectorAll('#resPfad .res-group:not([hidden])')].map(g => g.textContent), dis: [...document.querySelectorAll('[data-tooltip="res:r_mauerausbau3"]')].map(b => b.getAttribute('aria-disabled')) }));
+  check(u1.box && u1.groups.length >= 1 && u1.groups[0].includes('Befestigungskunde') && u1.groups[0].includes('Öffnet mit: Karte Befestigungskunde') && u1.dis[0] === 'true', `Universität/karten: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“ ${JSON.stringify(u1.groups)}`);
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.pfadFestungsbau = 1; G.S.pendingDraft = { level: 1, options: ['befestigungskunde', 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0); G.startResearch('r_mauerausbau3'); __kf.requestRender(); });
+  await p.waitForTimeout(300);
+  const u2 = await p.evaluate(() => ({ run: document.getElementById('resActive').textContent, dis: document.querySelector('[data-tooltip="res:r_turmausbau"]').getAttribute('aria-disabled'), txt: document.querySelector('[data-tooltip="res:r_turmausbau"]').textContent }));
+  check(u2.run.includes('Mauerausbau III') && u2.run.includes('1:00') && !u2.txt.includes('Öffnet mit'), `Universität/karten: laufende Forschung mit Restzeit, zweite Forschung geöffnet ${JSON.stringify([u2.run.slice(0, 40), u2.dis])}`);
+  const a = await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }));
+  check(a.t === 0 && a.e === 0 && errs.length === 0, `Universität/karten: Tooltips, Erklärzeilen, keine Fehler${show(errs)}`);
+  // Standardmodus: keine Pfadforschung
+  const ctx2 = await b.newContext({ viewport: { width: 1280, height: 720 } }), p2 = await ctx2.newPage();
+  await p2.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p2.waitForTimeout(300);
+  check(await p2.evaluate(() => document.getElementById('resPfad').hidden && [...document.querySelectorAll('[data-tooltip="res:r_mauerausbau3"]')].every(b => b.hidden)), 'Universität/standard: keine Pfadforschung sichtbar');
+  await ctx2.close(); await ctx.close();
+}
+
 await b.close();
 server.close();
 process.exit(failed ? 1 : 0);

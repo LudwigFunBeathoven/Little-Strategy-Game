@@ -21,7 +21,7 @@ Grundlage: `docs/anforderungen-kartenpfad.md`. Branch von `main` (Commit `9b3ccb
 | KP.1 | Tutorial-Sprache, Glossar, Sprach-Audit | KP.08 | fertig |
 | KP.2 | Kartenbühne | KP.03 | fertig (Familien-Band und „Pfadkarte“-Hinweise folgen mit KP.3) |
 | KP.3 | Kartenfamilien, Startzustand, Meilenstein-Platz | KP.01, 02, 06 | fertig (nur Bau-Karten; Technologie mit KP.4, Wagnis mit KP.6) |
-| KP.4 | Universität als Forschungsstätte | KP.04 | offen |
+| KP.4 | Universität als Forschungsstätte | KP.04 | fertig (Forschungen Mauerausbau III und Turmausbau; Reiter, Schildträger, Eisenwaffen mit KP.5) |
 | KP.5 | Upgrades, Einheitenersatz | KP.05 | offen |
 | KP.6 | Wagnis, Exklusivpfade, Mindesttempo | KP.06, 07 | offen |
 | KP.7 | Bots, Simulation, Bericht, Testbuild | KP.09 | offen |
@@ -80,6 +80,15 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 - Tests: `tests/kartenpfad.test.mjs` (Startzustand, Freischaltung, Graphtest, 1.000 Angebote, Rückkehr in den Stapel, harte Grenze), `tests/browser-check.mjs` (gesperrte Inhalte, Pfadkarten auf der Bühne, Tutorial im Modus karten).
 - Bots: die Strategien wählen Pfadkarten nach einer Reihenfolge (`KF_BROWSER_BOT.pfadPick`); ohne Pfadkarte im Angebot gilt die bisherige Regel.
 
+## KP.4
+
+- Technologiekarte `befestigungskunde` (ab Wahl 4; braucht Festungsbau und die gebaute Universität) öffnet die Forschungen `r_mauerausbau3` und `r_turmausbau` (je 60 s, 300 Material; Startwerte). Die Forschungen stehen in `KF_PFAD.forschungen` (Schema wie `data/research.js`, dazu `schaltetFrei`, `ersetzt`) und laufen über dieselbe Pipeline (`startResearch`, `progressResearch`).
+- Ergebnis einer Pfadforschung: Schlüssel öffnen, Einheiten ersetzen; Upgrade-Stufen öffnen sich über `sourceMet` (Karte gewählt oder Forschung abgeschlossen), ohne zweite Buchführung.
+- Pfadforschung gilt nur im Modus karten (`researchBlock` meldet sonst `notInMode`, die Oberfläche blendet sie aus).
+- Forschungsplätze: ein Platz, der zweite über die vorhandene Forschung „Zweiter Platz“ (Auslegung von „ein Ausbau öffnet einen zweiten“); eine laufende Forschung lässt sich nicht abbrechen; Beschleunigen gegen Material wie in v0.8. Abriss der Universität: Abgeschlossenes bleibt wirksam, Laufendes pausiert (Test).
+- Reiter „Universität“: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“, Fortschrittsbalken und Restzeit je laufender Forschung, Hinweis bei Abschluss (Toast und Marke am Reiter) wie bisher.
+- Tests: `tests/kartenpfad.test.mjs` (Karte öffnet Forschung, Zeit, Plätze, Abriss), `tests/browser-check.mjs` (Universität im Modus karten).
+
 ## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
 
 1. Das Dokument `branch-konzepte-pacing.md` fehlt; der Unterbau folgt allein den Angaben im Anforderungsdokument.
@@ -94,3 +103,5 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 10. Harte Grenze „spätestens in der dritten Wahl“: Bei zwei Plätzen je Angebot (ohne Universität) gehört ein Platz der Bonuskarte und einer der Pfadkarte. Vier Bau-Karten sind ab Wahl 2 zugleich ziehbar; die Grenze hält daher nur, wenn höchstens drei Bau-Karten zugleich warten. Wer Bau-Karten wählt (der Normalfall), unterschreitet das. Die Warteschlange wählt die älteste unerfüllte Karte zuerst.
 11. Im Modus karten entfällt die gestaffelte Einführung der Gebäude (Stufe 2), weil Karten die Gebäude öffnen; der Erstkontakt-Hinweis „Neu: Schmiede, Kaserne …“ erscheint dort nicht.
 12. Test des Tutorials im Modus karten: Ein bekanntes Zeitverhalten im Tutorial-Test „Abschied 2 nach Klick“ (Blasen laufen nach `greetMs` selbst weiter) ließ einen Lauf unter Last scheitern; der Wiederholungslauf war grün.
+13. Bestehende Forschungen (REQ-KP.04, Zuordnung zur Freigabe): alle 13 Forschungen aus v0.8 bleiben Grundforschung (verfügbar, sobald die Universität steht); eine Zuordnung zu Technologiekarten gibt es nicht, weil sie die Karten- und Forschungsfolge zusätzlich verlängerte (ohnehin nur 3 bis 7 Wahlen je Partie). Ausnahme: „Schildträger“ (alt) entfällt im Modus karten und wird durch die neue Pfadforschung ersetzt (KP.5).
+14. Forschungsplatz: „ein Ausbau öffnet einen zweiten“ ist die bestehende Forschung „Zweiter Platz“; einen eigenen Ausbau der Universität gibt es nicht.

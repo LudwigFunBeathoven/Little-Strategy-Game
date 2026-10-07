@@ -569,4 +569,13 @@ KF_I18N.de = {
   'kp.lock.research': 'Forschung: {name}',
   'kp.lock.opens': 'Öffnet mit: Karte {name}',
   'log.unlockedKey': '{what} freigeschaltet.',
+  'kp.card.befestigungskunde.name': 'Befestigungskunde',
+  'kp.card.befestigungskunde.desc': 'Wissen über Mauern und Türme.',
+  'kp.res.mauerausbau3.name': 'Mauerausbau III',
+  'kp.res.mauerausbau3.desc': 'Mauer Stufe 3 wird baubar.',
+  'kp.res.turmausbau.name': 'Turmausbau',
+  'kp.res.turmausbau.desc': 'Turm Stufe 2 wird baubar.',
+  'kp.res.group.grund': 'Grundforschung',
+  'kp.res.group.pfad': 'Pfadforschung',
+  'kp.res.opensWith': 'Öffnet mit: Karte {name}',
 };

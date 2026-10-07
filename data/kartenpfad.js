@@ -29,5 +29,20 @@ const KF_PFAD = {
     { id: 'handel', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['gelehrte'],
       schaltetFrei: ['bau:kontor'],
       nameKey: 'kp.card.handel.name', descKey: 'kp.card.handel.desc', tiers: [{ effect: [] }] },
+    /* ---------- Technologie: öffnet Forschungsoptionen in der Universität (REQ-KP.04) ---------- */
+    { id: 'befestigungskunde', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['pfadFestungsbau', 'gebaut:universitaet'],
+      oeffnetForschung: ['r_mauerausbau3', 'r_turmausbau'],
+      nameKey: 'kp.card.befestigungskunde.name', descKey: 'kp.card.befestigungskunde.desc', tiers: [{ effect: [] }] },
+  ],
+
+  /* Forschungen der Pfadkarten (REQ-KP.04); Schema wie data/research.js, dazu:
+       schaltetFrei   Schlüssel, die der Abschluss öffnet ('einheit:<typ>', 'stufe:<upgrade>:<n>')
+       ersetzt        Einheitenersatz { von: nach }
+     Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
+  forschungen: [
+    { id: 'r_mauerausbau3', branch: 'pfad', nameKey: 'kp.res.mauerausbau3.name', descKey: 'kp.res.mauerausbau3.desc',
+      schaltetFrei: ['stufe:mauer:2'], tiers: [{ cost: 300, timeS: 60, effect: [] }] },
+    { id: 'r_turmausbau', branch: 'pfad', nameKey: 'kp.res.turmausbau.name', descKey: 'kp.res.turmausbau.desc',
+      schaltetFrei: ['stufe:turm_0:2', 'stufe:turm_2:2', 'stufe:reichweite_0:1', 'stufe:reichweite_2:1', 'stufe:kadenz_0:1', 'stufe:kadenz_2:1'], tiers: [{ cost: 300, timeS: 60, effect: [] }] },
   ],
 };

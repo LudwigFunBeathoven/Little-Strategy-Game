@@ -28,7 +28,8 @@ const PACING_DERIVED = (() => {
   for (const r of PFAD.forschungen || []) for (const key of r.schaltetFrei || []) add(key, r.id);
   return { gesperrt: [...gesperrt], stufen, quellen };
 })();
-const RESEARCH = (typeof KF_RESEARCH !== 'undefined') ? KF_RESEARCH : [];
+const RESEARCH_BASE = (typeof KF_RESEARCH !== 'undefined') ? KF_RESEARCH : [];
+const RESEARCH = [...RESEARCH_BASE, ...(typeof KF_PFAD !== 'undefined' && KF_PFAD.forschungen ? KF_PFAD.forschungen : [])];   // Forschungen der Pfadkarten gelten nur im Modus karten (researchBlock)
 const RES = Object.fromEntries(RESEARCH.map(r => [r.id, r]));
 const NEIGHBORS = (typeof KF_NEIGHBORS !== 'undefined') ? KF_NEIGHBORS : [];       // Nachbarschaftsregeln (REQ-6.07 a)
 const NB_RULE = Object.fromEntries(NEIGHBORS.map(r => [r.building, r]));
@@ -1031,6 +1032,7 @@ function create(){
     const r = RES[id];
     if (!r) return 'unknown';
     if (S.status !== 'running') return 'notRunning';
+    if (r.branch === 'pfad' && S.pacing !== 'karten') return 'notInMode';
     if (!has('universitaet')) return 'noUni';
     if (!isOpen('forschung:' + id)) return 'closed';
     if (!researchNext(id)) return 'maxed';
@@ -1056,6 +1058,12 @@ function create(){
     progressResearch(0);
     return true;
   }
+  /* Ergebnis einer Pfadforschung (REQ-KP.04/05): Schlüssel öffnen, Einheiten ersetzen; Upgrade-Stufen öffnen sich über ihre Quelle (sourceMet) */
+  function applyResearchResult(r){
+    if (!r || r.branch !== 'pfad') return;
+    for (const key of r.schaltetFrei || []) if (!key.startsWith('stufe:') && unlockKey(key)) log('log.unlockedKey', { what: '@' + keyNameKey(key) });
+    for (const [from, to] of Object.entries(r.ersetzt || {})) replaceUnit(from, to);
+  }
   function startResearch(id){
     if (researchBlock(id)) return false;
     const t = researchNext(id);
@@ -1074,6 +1082,7 @@ function create(){
     S.research.active = S.research.active.filter(a => a.t < a.timeS);
     for (const a of done){
       S.research.done[a.id] = a.tier; S.research.ver++; S.research.fresh = true;
+      applyResearchResult(RES[a.id]);
       (S.stats.researchDone = S.stats.researchDone || []).push({ id: a.id, tier: a.tier, t: +S.t.toFixed(1) });   // Forschungstempo (REQ-6.06)
       log('log.research', { name: '@' + RES[a.id].nameKey, tier: a.tier });
     }
