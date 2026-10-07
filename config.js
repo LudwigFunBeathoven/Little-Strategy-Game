@@ -3,18 +3,23 @@
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
   VERSION: '0.8',
-  SAVE_KEY: 'klammerfront.save.v7',
+  SAVE_KEY: 'klammerfront.save.v8',
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
   HINTS_KEY: 'klammerfront.hints.v1',   // gesehene Erstkontakt-Hinweise (REQ-20.3)
   TUTORIAL_KEY: 'klammerfront.tutorial.v1',   // Merker „erste Partie“: fehlt er, ist es die erste Partie dieses Browsers (REQ-T.04, T2.01)
   DIFFICULTY_KEY: 'klammerfront.difficulty',  // zuletzt gewählter Schwierigkeitsgrad (REQ-T2.01)
-  PACING_MODUS: 'standard',                    // Pacing-Modus: 'standard' (alles wie bisher) oder ein Modus aus PACING; wählt auch überschriebene Tutorial-Texte (REQ-T2.05)
+  PACING_MODUS: 'karten',                      // Pacing-Modus: 'standard' (alles wie bisher; Testbuild: ?pacing=standard) oder 'karten' oder ein Modus aus PACING; wählt auch überschriebene Tutorial-Texte (REQ-T2.05)
   /* Pacing-Modi (REQ-KP.01): Der Modus 'standard' sperrt nichts. Ein Modus sperrt die Schlüssel in gesperrt, bis unlockKey() sie öffnet
      ('bau:<gebäude>', 'einheit:<typ>', 'forschung:<id>'), und bindet Upgrade-Stufen an eine Quelle (Karte oder Forschung):
      stufen: { <upgrade>: [{ ab: n, quelle: id }] } – der Kauf der Stufe n und aller höheren verlangt die Quelle mit dem größten ab <= n. */
   PACING: {},
+  /* Kartenpfad (REQ-KP.02, KP.06): Angebot im Modus 'karten'; Startwerte, per Simulation zu kalibrieren */
+  KARTEN: {
+    rueckstandPlus: 0.5,        // Gewichtszuschlag je Wahl, in der eine ziehbare Bau-Karte nicht im Angebot erschien (Faktor auf das Grundgewicht)
+    maxWarten: 3,               // eine ziehbare Bau-Karte erscheint spätestens in der n-ten Wahl nach ihrer Freigabe (harte Grenze)
+  },
   LANGUAGES: ['de', 'en'],
   FALLBACK_LANG: 'en',
 
@@ -104,6 +109,7 @@ const KF_CONFIG = {
     aufdeckAbstandMs: 110,      // Abstand zwischen zwei Karten (insgesamt höchstens 600 ms)
     faecherGrad: 6,             // äußerste Karten stehen um so viele Grad schief
     hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
+    inhaltSymbole: { bau: '\u2302', einheit: '\u25B2', stufe: '\u21E7', forschung: '\u2697' },   // Symbole für Inhalte auf den Karten (Gebäude, Einheit, Ausbaustufe, Forschung)
     symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0' },
   },
 

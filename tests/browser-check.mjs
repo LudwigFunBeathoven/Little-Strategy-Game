@@ -23,8 +23,8 @@ const server = http.createServer((req, res) => {
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}/`;
 // ?tutorial=0: die bisherigen Abläufe starten über den Startdialog; das Tutorial hat unten eigene Prüfungen (REQ-T.04)
-const url = base + 'index.html?dev=1&tutorial=0';
-const urlTutorial = base + 'index.html?dev=1';   // Tutorial-Prüfungen hängen ?lang= und ?difficulty= an (überspringen den Startbildschirm)
+const url = base + 'index.html?dev=1&tutorial=0&pacing=standard';
+const urlTutorial = base + 'index.html?dev=1&pacing=standard';   // Tutorial-Prüfungen hängen ?lang= und ?difficulty= an (überspringen den Startbildschirm)
 const b = await chromium.launch();
 let failed = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failed++; };
@@ -627,7 +627,7 @@ async function freshTutorialPage(lang = 'de', query = '&difficulty=easy', locale
   p.on('pageerror', e => errs.push(e.message));
   // Der Spielstand wird beim Verlassen der Seite geschrieben; „kfDropSave“ löscht ihn erst nach dem Neuladen (zweiter Start im selben Browser)
   await ctx.addInitScript(() => { if (!sessionStorage.getItem('kfInit')){ localStorage.clear(); sessionStorage.setItem('kfInit', '1'); }
-    if (sessionStorage.getItem('kfDropSave')){ localStorage.removeItem('klammerfront.save.v7'); sessionStorage.removeItem('kfDropSave'); } });
+    if (sessionStorage.getItem('kfDropSave')){ localStorage.removeItem('klammerfront.save.v8'); sessionStorage.removeItem('kfDropSave'); } });
   // query: null = nur ?dev=1 (Startbildschirm); „!…“ = Parameter unverändert; sonst wird ?lang= ergänzt
   const q = query === null ? '' : query.startsWith('!') ? query.slice(1) : (query.includes('lang=') ? '' : `&lang=${lang}`) + query;
   await p.goto(urlTutorial + q); await p.waitForTimeout(300);
@@ -935,7 +935,7 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
   const ctx = await b.newContext({ viewport: { width: vw, height: vh } });
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
-  await p.goto(base + 'index.html?dev=1&tutorial=0&buehne=1&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&buehne=1&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   const lv = n => p.evaluate(n => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + n); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99990 + n, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); }, n);
   const st = () => p.evaluate(() => { const g = id => document.getElementById(id), r = g('stageCards').getBoundingClientRect(), cs = [...g('stageCards').children];
@@ -999,12 +999,78 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage();
-  await p.goto(base + 'index.html?dev=1&tutorial=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + 1); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99991, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
   await p.waitForFunction(() => __kf.tab === 'cards', null, { timeout: 3000 }).catch(() => {});
   const o = await p.evaluate(() => ({ tab: __kf.tab, stage: document.getElementById('stage').hidden, deck: document.getElementById('deckBtn').hidden, box: !document.getElementById('draftBox').hidden }));
   check(o.tab === 'cards' && o.stage && o.deck && o.box, `Kartenbühne aus: Wahl im Reiter Karten wie in v0.8 ${JSON.stringify(o)}`);
+  await ctx.close();
+}
+
+/* ---------- Modus karten: gesperrte Inhalte, Pfadkarten auf der Bühne (REQ-KP.01, KP.02) ---------- */
+for (const lang of ['de', 'en']){
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage();
+  const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if ((m.type() === 'error' || (m.type() === 'warning' && m.text().includes('[i18n]'))) && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
+  await p.goto(base + `index.html?dev=1&tutorial=0&pacing=karten&lang=${lang}&difficulty=easy`); await p.waitForTimeout(400);
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.G.S.material = 3000; __kf.selectPlot(1); }); await p.waitForTimeout(250);
+  const srcName = id => p.evaluate(id => __kf.t(__kf.G.OPT[id].nameKey), id);
+  const buildTxt = await p.evaluate(() => [...document.querySelectorAll('#ctxBuild .pick')].map(x => ({ type: x.dataset.tooltip.split(':')[1], dis: x.getAttribute('aria-disabled'), txt: x.textContent })));
+  const kas = buildTxt.find(x => x.type === 'kaserne'), fab = buildTxt.find(x => x.type === 'fabrik');
+  check(kas && kas.dis === 'true' && kas.txt.includes(await srcName('echtesMilitaer')) && fab && fab.dis !== 'true', `[${lang}] Karten: Kaserne gesperrt mit Quelle „${kas && kas.txt.slice(-40)}“, Fabrik frei`);
+  await p.evaluate(() => __kf.selectTab('army')); await p.waitForTimeout(150);
+  const werfer = await p.evaluate(() => { const b = document.querySelector('[data-tooltip="unit:werfer"]'); return { vis: b && !b.hidden, dis: b && b.getAttribute('aria-disabled'), txt: b ? b.textContent : '', fresh: b ? !b.querySelector('i.new').hidden : null }; });
+  check(werfer.vis && werfer.dis === 'true' && werfer.txt.includes(await srcName('echtesMilitaer')) && werfer.fresh === false, `[${lang}] Karten: Werfer sichtbar, gesperrt, nennt die Karte, ohne Marke „neu“`);
+  await p.evaluate(() => __kf.selectTab('wall')); await p.waitForTimeout(150);
+  const wall = await p.evaluate(() => ['upg:mauer', 'upg:turm_0', 'upg:stacheln'].map(k => { const b = document.querySelector(`[data-tooltip="${k}"]`); return b && !b.hidden && b.getAttribute('aria-disabled') === 'true' && b.textContent; }));
+  check(wall.every(x => x && x.includes(lang === 'de' ? 'Festungsbau' : 'Fortification')), `[${lang}] Karten: Mauerstufe, Turm und Stachelwall sind gesperrt und nennen die Karte Festungsbau`);
+  check((await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }))).t === 0 && (await p.evaluate(() => __kf.explAudit().length)) === 0, `[${lang}] Karten: Tooltip und Erklärzeile an jedem Element (Startzustand)`);
+  // erste Wahl: Pfadkarte auf der Bühne mit „Schaltet frei:“
+  await p.evaluate(() => { const G = __kf.G; G.S.level = 1; G.S.pendingLevels = 1; G.S.xpTotal = G.xpNeed(1); G.S.xp = G.S.xpTotal;
+    G.S.units.push({ id: 99990, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
+  await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
+  const cards = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(c => ({ fam: [...c.classList].find(x => x.startsWith('fam-')), txt: c.textContent })));
+  check(cards.length >= 2 && cards.some(c => c.fam !== 'fam-bonus' && /⌂|▲|⇧/.test(c.txt)) && cards.some(c => c.fam === 'fam-bonus'), `[${lang}] Karten: Angebot mit Pfad- und Bonuskarte, Pfadkarte nennt, was sie freischaltet ${JSON.stringify(cards.map(c => c.fam))}`);
+  // Detailzeile der Pfadkarte nennt die Rückkehr in den Stapel
+  await p.evaluate(() => { const i = [...document.querySelectorAll('.kcard')].findIndex(c => !c.classList.contains('fam-bonus')); document.querySelectorAll('.kcard')[i].focus(); });
+  await p.waitForTimeout(100);
+  check((await p.evaluate(() => document.getElementById('stageDetail').textContent)).includes(await p.evaluate(() => __kf.t('kp.card.returns'))), `[${lang}] Karten: Detailzeile nennt „kehrt in den Stapel zurück“`);
+  const aud = await p.evaluate(() => ({ t: __kf.tooltipAudit(), e: __kf.explAudit() }));
+  check(aud.t.length === 0 && aud.e.length === 0, `[${lang}] Karten: Bühne mit Pfadkarten: Tooltip und Erklärzeile${show([...aud.t, ...aud.e])}`);
+  // Pfadkarte wählen: Inhalt wird baubar
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
+  const pickedId = await p.evaluate(() => { const d = __kf.G.S.pendingDraft; const i = d.options.findIndex(id => __kf.G.OPT[id].pfad); __kf.G.chooseDraft(i); return d.options[i]; });
+  const opened = await p.evaluate(id => ({ card: id, kaserne: __kf.G.isBuildable('kaserne'), werfer: __kf.G.unitUnlocked('werfer'), mauer: !__kf.G.stageSource('mauer'), schmiede: __kf.G.isBuildable('schmiede') }), pickedId);
+  check((opened.card === 'echtesMilitaer' && opened.kaserne && opened.werfer && !opened.schmiede) || (opened.card === 'pfadFestungsbau' && opened.mauer && !opened.kaserne) || (!['echtesMilitaer', 'pfadFestungsbau'].includes(opened.card) && !opened.kaserne), `[${lang}] Karten: gewählte Pfadkarte schaltet genau ihre Inhalte frei ${JSON.stringify(opened)}`);
+  check(errs.length === 0, `[${lang}] Karten: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
+/* ---------- Tutorial im Modus karten: Kartenwahl auf der Bühne, Abschied „Karten öffnen den Weg“ (REQ-KP.08, KP.03) ---------- */
+for (const lang of ['de', 'en']){
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+  const p = await ctx.newPage(), errs = [];
+  p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); if (m.type() === 'warning' && m.text().includes('[i18n]')) errs.push(m.text()); });
+  p.on('pageerror', e => errs.push(e.message));
+  await ctx.addInitScript(() => { if (!sessionStorage.getItem('kfInit')){ localStorage.clear(); sessionStorage.setItem('kfInit', '1'); } });
+  await p.goto(base + `index.html?dev=1&pacing=karten&lang=${lang}&difficulty=easy&tutorial=1`); await p.waitForTimeout(400);
+  await endGreeting(p); await waitText(p);
+  // Schritte 1 bis 4 über die Spiellogik erledigen, danach die erste Welle besiegen lassen
+  for (let i = 0; i < 12; i++){ await p.click('#clickBtn'); await p.waitForTimeout(100); }
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 400; G.build('fabrik'); for (let i = 0; i < 3; i++) G.spawn('laeufer'); G.S.sections.forEach(s => { s.hp = 1e6; }); });
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id !== 'fertigen', null, { timeout: 20000 });
+  await p.evaluate(() => { const G = __kf.G; G.rushWave && G.rushWave(); G.releaseHold && G.releaseHold(false); for (let i = 0; i < 20 * 150 && !(__kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte'); i++){ G.S.material = Math.max(G.S.material, 100); G.spawn('laeufer'); G.tick(0.05); } });
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 30000 });
+  const s6 = await p.evaluate(() => { const bb = document.querySelector('#tutBubble').getBoundingClientRect(), cr = document.querySelector('#stageCards').getBoundingClientRect();
+    return { stage: !document.querySelector('#stage').hidden, tab: __kf.tab, narr: document.querySelector('#tutBubbleNarr').textContent, task: document.querySelector('#tutBubbleTask').textContent, bubbleBottom: bb.bottom, cardsTop: cr.top }; });
+  check(s6.stage && s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task'), `[${lang}] Tutorial/karten: erste Kartenwahl auf der Bühne mit Erzählung und Auftrag ${JSON.stringify([s6.stage, s6.tab])}`);
+  check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Tutorial/karten: Sprechblase sitzt über der Bühne und verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 5000 });
+  await p.click('.kcard >> nth=0'); await p.waitForTimeout(400);
+  const f1 = await tutState(p);
+  check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1.karten'), `[${lang}] Tutorial/karten: Abschied 1 im Modus karten „${f1.narr}“`);
+  check(errs.length === 0, `[${lang}] Tutorial/karten: keine Fehler${show(errs)}`);
   await ctx.close();
 }
 

@@ -33,8 +33,8 @@ function baseHealth(G){
 function botRng(seed){ let s = (seed ^ 0x9e3779b9) >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 /* Bots spielen wie ein neuer Spieler mit gestaffelter Einführung (REQ-47); KF_SKIP_INTRO=1 schaltet sie ab */
-export function newGame(diff, seed){
-  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { intro: process.env.KF_SKIP_INTRO !== '1' });
+export function newGame(diff, seed, pacing){
+  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { intro: process.env.KF_SKIP_INTRO !== '1', pacing });
   return G;
 }
 function forkGame(G){
@@ -144,7 +144,9 @@ export class Bot {
   draft(G, stats){
     const offer = G.S.pendingDraft.options;
     let pick = 0;
-    if (this.o.strategy === 'gierig' && this.o.lookahead && offer.length > 1){
+    const pp = KF_BROWSER_BOT.pfadPick(G, offer, this.o.pfad);       // Pfadkarten der Bauordnung haben Vorrang (REQ-KP.09)
+    if (pp !== null) pick = pp;
+    else if (this.o.strategy === 'gierig' && this.o.lookahead && offer.length > 1){
       let bestScore = -Infinity;
       offer.forEach((id, i) => {
         const F = forkGame(G);
@@ -172,7 +174,7 @@ export class Bot {
     if (o.useWall) S.sections.forEach((sec, i) => { if (sec.hp < G.sectionMax(i) * 0.5) G.repair(i); });
     const own = S.units.filter(u => u.side === 'p').length;
     const threat = S.units.some(u => u.side === 'e' && u.x < 400);
-    const trySpawn = n => { if (o.noUnits) return; for (let k = 0; k < n; k++){ if (own + S.queue.length >= o.cap) break; if (this.mix % 3 === 2 ? G.spawn('werfer') : G.spawn('laeufer')) this.mix++; else break; } };
+    const trySpawn = n => { if (o.noUnits) return; for (let k = 0; k < n; k++){ if (own + S.queue.length >= o.cap) break; if (this.mix % 3 === 2 && G.unitUnlocked('werfer') ? G.spawn('werfer') : G.spawn('laeufer')) this.mix++; else break; } };
     // Die erste Fabrik hat Vorrang: ohne sie gibt es kein Einkommen außer Klicks
     const needFactory = G.factoryCount() === 0;
     if (threat && own < 4 && !needFactory) trySpawn(2);
@@ -263,10 +265,11 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush }){
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
-  const G = newGame(diff, seed);
+  if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
+  const G = newGame(diff, seed, pacing);
   if (noRush) G.rushWave = () => false;                                   // Paarvergleich: ohne „Welle vorziehen“ (REQ-6.07 c)
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {} };
   // Handlungen in den ersten SIM_STYLE_WINDOW_S Sekunden: Anteil der Einheitenkäufe (Merkmal der Strategie für compare-human)
@@ -280,9 +283,10 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     const recordDraft = F => {
       const offer = F.S.pendingDraft.options;
       for (const id of offer) stats.offered[id] = (stats.offered[id] || 0) + 1;
-      stats.picked[offer[0]] = (stats.picked[offer[0]] || 0) + 1;
+      const pi = KF_BROWSER_BOT.pfadPick(F, offer, prof.pfad), ci = pi === null ? 0 : pi;
+      stats.picked[offer[ci]] = (stats.picked[offer[ci]] || 0) + 1;
       stats.draftTimes.push({ t: F.S.t, level: F.S.pendingDraft.level });
-      offer.forEach((oid, i) => stats.offers.push({ id: oid, tier: F.cardTaken(oid) + 1, chosen: i === 0 }));
+      offer.forEach((oid, i) => stats.offers.push({ id: oid, tier: F.cardTaken(oid) + 1, chosen: i === ci }));
     };
     const simple = KF_BROWSER_BOT(G, Object.assign({}, prof, forbid ? { forbid } : {}), {
       draft: recordDraft, built: type => { stats.built[type] = (stats.built[type] || 0) + 1; },

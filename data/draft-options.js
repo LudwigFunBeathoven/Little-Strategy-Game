@@ -54,7 +54,7 @@ const KF_DRAFT_OPTIONS = [
   { id: 'belagerungsgeraet', category: 'armee', rarity: 'common', nameKey: 'draft.belagerungsgeraet.name', descKey: 'draft.belagerungsgeraet.desc',
     tiers: [{ effect: [{ stat: 'dmgVsBase', mul: 1.6 }], drawback: [{ stat: 'dmgVsUnits', mul: 0.8 }] },
             { effect: [{ stat: 'dmgVsBase', mul: 2.2 }], drawback: [{ stat: 'dmgVsUnits', mul: 0.65 }] }] },
-  { id: 'langeWurfarme', category: 'armee', rarity: 'common', nameKey: 'draft.langeWurfarme.name', descKey: 'draft.langeWurfarme.desc',
+  { id: 'langeWurfarme', category: 'armee', rarity: 'common', nameKey: 'draft.langeWurfarme.name', descKey: 'draft.langeWurfarme.desc', requires: { unit: 'werfer' },
     tiers: [{ effect: [{ stat: 'werferRange', add: 25 }], drawback: [{ stat: 'werferHp', mul: 0.85 }] },
             { effect: [{ stat: 'werferRange', add: 50 }], drawback: [{ stat: 'werferHp', mul: 0.7 }] }] },
   { id: 'vorposten', category: 'armee', rarity: 'common', nameKey: 'draft.vorposten.name', descKey: 'draft.vorposten.desc',

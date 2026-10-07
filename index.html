@@ -187,6 +187,7 @@
   .pick .k{font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--brass); align-self:center;}
   /* Spezialkarten (REQ-45): Farbe je Kategorie, Rahmen je Seltenheit */
   .cat-wirtschaft{--cat:var(--cat-wirtschaft);} .cat-armee{--cat:var(--cat-armee);} .cat-basis{--cat:var(--cat-basis);}
+  .cat-bau{--cat:var(--steel);} .cat-technologie{--cat:var(--cat-automatisierung);} .cat-wagnis{--cat:var(--rust);}
   .cat-automatisierung{--cat:var(--cat-automatisierung);} .cat-sonderregel{--cat:var(--cat-sonderregel);}
   .card-pick{border-left:5px solid var(--cat);}
   .card-pick .k{color:var(--cat);}
@@ -211,23 +212,26 @@
   .stage-tools [hidden]{display:none;}
   .stage-tools .ctx-actions{display:flex; flex-wrap:wrap; gap:6px;}
   .kcard{position:relative; width:var(--kw); aspect-ratio:5 / 7; display:flex; flex-direction:column; gap:6px; padding:8px 10px; text-align:left; font:inherit; color:var(--ink);
-         background:var(--surface); border:2px solid var(--cat, var(--rule-strong)); border-top-width:22px; border-radius:8px; cursor:pointer; overflow:hidden;
+         background:var(--surface); border:2px solid var(--cat, var(--rule-strong)); border-radius:8px; cursor:pointer; overflow:hidden;
          transform:rotate(var(--rot, 0deg)); transition:transform .12s ease-out, box-shadow .12s ease-out; box-shadow:0 6px 18px rgba(0,0,0,.35);}
   .kcard:hover, .kcard:focus-visible{transform:rotate(0deg) translateY(calc(var(--k-lift, 8%) * -1)); box-shadow:0 12px 26px rgba(0,0,0,.45); outline:3px solid var(--brass); outline-offset:2px; z-index:1;}
   .kcard[aria-disabled="true"]{cursor:default;}
-  .kcard.rar-rare{border-width:3px; border-top-width:22px;}
-  .kcard.rar-legendary{border:3px double var(--gold); border-top:22px solid var(--gold); background:var(--brass-soft);}
-  .kc-head{position:absolute; left:0; right:0; top:-20px; height:18px; display:flex; align-items:center; gap:6px; padding:0 8px; font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:#FBFBF8; font-weight:600;}
+  .kcard.rar-rare{border-width:3px;}
+  .kcard.rar-legendary{border:3px double var(--gold); background:var(--brass-soft);}
+  .kc-head{flex:0 0 auto; margin:-8px -10px 2px; min-height:20px; display:flex; align-items:center; gap:6px; padding:2px 8px; background:var(--cat, var(--rule-strong)); font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:#FBFBF8; font-weight:600;}
   .kc-key{margin-left:auto; opacity:.8;}
   .kc-name{font-size:15px; line-height:1.2; margin-top:2px;}
   .kc-art{display:flex; align-items:center; justify-content:center; flex:1 1 0; min-height:0; overflow:hidden; font-size:calc(var(--kw) * .22); color:var(--cat); opacity:.85;}
   .kc-desc{font-size:12px; line-height:1.3; color:var(--ink-soft); flex:0 0 auto;}
+  .kc-unlock, .kc-needs{display:block; margin-top:4px; font-size:11.5px; color:var(--ink);} .kc-needs{color:var(--ink-faint);}
+  .fam-bonus{--fam:var(--brass);} .fam-bau{--fam:var(--steel);} .fam-technologie{--fam:var(--cat-automatisierung);} .fam-wagnis{--fam:var(--rust);}
+  .stage .kcard.fam-bau, .stage .kcard.fam-technologie, .stage .kcard.fam-wagnis, .stage .kcard.fam-bonus{--cat:var(--fam);}
   .kc-foot{display:flex; justify-content:space-between; align-items:center; font-family:"IBM Plex Mono", monospace; font-size:11px; color:var(--ink-faint);}
   .kcard .expl{font-size:10px;}
   @keyframes kflip{from{opacity:0; transform:rotate(var(--rot, 0deg)) translateY(30px) scale(.92);} to{opacity:1; transform:rotate(var(--rot, 0deg));}}
   .stage-cards.reveal .kcard{animation:kflip var(--k-flip, 110ms) ease-out var(--delay, 0ms) both;}
   @media (prefers-reduced-motion: reduce){ .stage-cards .kcard{animation:none; transition:none;} .deck.pulse{animation:none;} }
-  .deck{position:fixed; z-index:21; left:50%; bottom:calc(var(--band-work, 40vh) + 8px); transform:translateX(-50%); display:flex; align-items:center; gap:10px; padding:6px 12px 6px 8px;
+  .deck{position:fixed; z-index:21; left:50%; bottom:calc(var(--band-work, 40vh) + 40px); transform:translateX(-50%); display:flex; align-items:center; gap:10px; padding:6px 12px 6px 8px;
         background:var(--surface); border:1px solid var(--rule-strong); border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,.25); font:inherit; color:var(--ink); cursor:pointer; text-align:left;}
   .deck-stack{position:relative; width:34px; height:46px; flex:0 0 auto;}
   .deck-stack i{position:absolute; inset:0; background:var(--brass); border:2px solid var(--brass-ink); border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,.4);}
@@ -549,6 +553,7 @@
 <script src="i18n/de.js"></script>
 <script src="i18n/en.js"></script>
 <script src="data/draft-options.js"></script>
+<script src="data/kartenpfad.js"></script>
 <script src="data/research.js"></script>
 <script src="data/neighbors.js"></script>
 <script src="data/tutorial-steps.js"></script>

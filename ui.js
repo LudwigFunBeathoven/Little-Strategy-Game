@@ -12,6 +12,8 @@ const URL_PARAMS = new URLSearchParams(location.search);
 const DIFF_ALIAS = { easy: 'leicht', normal: 'normal', hard: 'schwer', leicht: 'leicht', schwer: 'schwer' };
 const LANG_PARAM = KF_CONFIG.LANGUAGES.includes(URL_PARAMS.get('lang')) ? URL_PARAMS.get('lang') : null;
 const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
+/* ?pacing=standard|karten wählt den Pacing-Modus (REQ-KP.01); sonst gilt PACING_MODUS aus config.js */
+const PACING_PARAM = ['standard', 'karten'].includes(URL_PARAMS.get('pacing')) ? URL_PARAMS.get('pacing') : null;
 
 /* ================= Sprache ================= */
 function storageGet(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -122,20 +124,37 @@ function previewUpgrade(id){
 /* Erklärzeile unter jedem Kaufknopf: Wirkung · Kosten (REQ-20.1) */
 function explUpgrade(id){
   if (G.isMaxed(id)) return t('opt.max');
+  if (G.stageSource(id)) return sourceLabel(G.stageSource(id));
   const [label, change] = previewUpgrade(id);
   return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
 }
 function explUnit(id){
+  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: G.S.queue.length, max: G.supplyCap() });   // Grund der Sperre (REQ-14.2)
   const spec = C.UNITS[id], hp = spec.hp * G.hpMultP() * G.mMul('unitHp') * (id === 'werfer' ? G.mMul('werferHp') : 1);
   return t('ex.unit', { role: t(G.unitRange('p', id) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitCost(id)) });
 }
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
-function buildReason(block, cost){
+/* Wer einen gesperrten Inhalt öffnet: Karte oder Forschung (REQ-KP.01); id = Karten- oder Forschungs-Id */
+function sourceLabel(id){
+  if (G.OPT[id]) return t('kp.lock.card', { name: t(G.OPT[id].nameKey) });
+  if (G.RES[id]) return t('kp.lock.research', { name: t(G.RES[id].nameKey) });
+  return null;
+}
+/* Name eines Inhalts aus einem Freischaltschlüssel ('bau:kaserne', 'einheit:werfer', 'stufe:mauer:1', 'forschung:r_x') */
+function keyLabel(key){
+  const [kind, a] = key.split(':');
+  if (kind === 'bau') return t(`bld.${a}.name`);
+  if (kind === 'einheit') return t(`unit.${a}.name`);
+  if (kind === 'forschung') return G.RES[a] ? t(G.RES[a].nameKey) : a;
+  if (kind === 'stufe'){ const u = C.UPGRADES[a]; return t(`upg.${(u && u.base) || a}.name`) + (u && u.tower !== undefined ? ' ' + t('lane.' + u.tower) : ''); }
+  return key;
+}
+function buildReason(block, cost, type){
   switch (block){
     case null: return null;
     case 'notRunning': return t('tip.notRunning');
-    case 'locked': return t('build.reason.locked');
+    case 'locked': { const src = type ? G.keySource('bau:' + type) : null; return (src && sourceLabel(src)) || t('build.reason.locked'); }
     case 'standing': return t('build.reason.standing');
     case 'material': return missing('material', cost, G.S.material);
   }
@@ -145,6 +164,7 @@ function upgradeReason(id){
   const S = G.S, u = C.UPGRADES[id];
   if (S.status !== 'running') return t('tip.notRunning');
   if (G.isMaxed(id)) return t('tip.maxed');
+  if (G.stageSource(id)) return sourceLabel(G.stageSource(id));
   if (C.BUILDINGS.includes(u.group) && !G.has(u.group)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
   if (u.needs && S.lvl[u.needs] <= 0) return t('tip.needsTower');
   if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);
@@ -161,6 +181,7 @@ function repairReason(i){
 function unitReason(id){
   const S = G.S, c = G.unitCost(id);
   if (S.status !== 'running') return t('tip.notRunning');
+  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); return (src && sourceLabel(src)) || t('build.reason.locked'); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: S.queue.length, max: G.supplyCap() });
   if (S.material < c) return missing('material', c, S.material);
   return null;
@@ -202,7 +223,7 @@ function tipContent(id){
       const cost = G.buildCost(a), block = G.buildBlock(Number(b), a);
       const nbText = nbPreviewText(Number(b), a);
       return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }) + (nbText ? ' ' + nbText : ''),
-               rows: [[t('tip.cost'), costText('material', cost)]], reason: buildReason(block, cost) };
+               rows: [[t('tip.cost'), costText('material', cost)]], reason: buildReason(block, cost, a) };
     }
     case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
     case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: refundText(G.refundFor(Number(a))) }) };
@@ -554,7 +575,7 @@ function startGame(diff, opts = {}){
   storageSet(C.DIFFICULTY_KEY, diff);
   TutUI.reset(); NewMarks.reset();
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
-    { intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
+    { pacing: PACING_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
   if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
   resultShownFor = null;
   save();
@@ -637,7 +658,7 @@ function render(){
   Tip.refresh();
   // Erstkontakt-Hinweise: im Moment, in dem ein Inhalt erstmals verfügbar wird (REQ-20.2, REQ-T.05); nicht während des Tutorials
   if (S.status === 'running' && !Tutorial.active()){
-    if (G.introShows('buildings') && (S.level >= C.INTRO_BUILDINGS_LEVEL || !S.intro)) showHint('buildings');
+    if (S.pacing === 'standard' && G.introShows('buildings') && (S.level >= C.INTRO_BUILDINGS_LEVEL || !S.intro)) showHint('buildings');
     if (G.has('universitaet')) showHint('research');
     if (G.has('schmiede')) showHint('smithy');
     if (G.has('kontor')) showHint('kontor');

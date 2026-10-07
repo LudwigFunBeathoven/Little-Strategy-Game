@@ -193,7 +193,7 @@ function nbPreviewText(i, type){
 /* ---------- Kontextkopf: ausgewähltes Objekt mit seinen Aktionen ---------- */
 function updatePicks(){
   for (const p of picks){
-    const block = G.buildBlock(p.i, p.type), cost = G.buildCost(p.type), why = buildReason(block, cost);
+    const block = G.buildBlock(p.i, p.type), cost = G.buildCost(p.type), why = buildReason(block, cost, p.type);
     setText(p.nm, p.type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${p.type}.name`));
     setText(p.ex, t('ex.line', { effect: bldEffect(p.type, false), cost: costText('material', cost) }));
     setText(p.w, why || ''); setHidden(p.w, !why);
@@ -280,7 +280,7 @@ function renderOpts(){
   const S = G.S;
   for (const id in C.UPGRADES){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];
-    setHidden(el.btn, !(G.isAvailable(id) && S.revealed[id]));
+    setHidden(el.btn, !(G.isAvailable(id) && (S.revealed[id] || (S.pacing === 'karten' && G.stageSource(id)))));
     if (el.btn.hidden) continue;
     setText(el.label, baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`));
     setHidden(el.tag, lv === 0);
@@ -290,11 +290,12 @@ function renderOpts(){
   }
   for (const id in C.UNITS){
     const spec = C.UNITS[id], el = optEls['unit_' + id];
-    setHidden(el.btn, !G.unitUnlocked(id));
+    setHidden(el.btn, !G.unitUnlocked(id) && !(S.pacing === 'karten' && G.unitSource(id)));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
     setHidden(el.kbd, false); setText(el.kbd, spec.key);
     setText(el.label, t(`unit.${id}.name`));
-    setText(el.fresh, t('mark.new')); setHidden(el.fresh, el.btn.hidden || !NewMarks.isNew('unit:' + id));
-    if (activeTab === 'army' && !el.btn.hidden) NewMarks.view('unit:' + id);
+    const open = G.unitUnlocked(id);                                          // gesperrt sichtbar: keine Marke „neu“, erst nach der Freischaltung
+    setText(el.fresh, t('mark.new')); setHidden(el.fresh, el.btn.hidden || !open || !NewMarks.isNew('unit:' + id));
+    if (activeTab === 'army' && !el.btn.hidden && open) NewMarks.view('unit:' + id);
     setText(el.expl, explUnit(id));
     setDis(el.btn, !!unitReason(id));
   }

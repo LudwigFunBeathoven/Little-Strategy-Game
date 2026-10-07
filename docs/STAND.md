@@ -20,7 +20,7 @@ Grundlage: `docs/anforderungen-kartenpfad.md`. Branch von `main` (Commit `9b3ccb
 | KP.0 | Voraussetzungen, Unterbau auf `main`, Basislinie | KP.01 | fertig |
 | KP.1 | Tutorial-Sprache, Glossar, Sprach-Audit | KP.08 | fertig |
 | KP.2 | Kartenbühne | KP.03 | fertig (Familien-Band und „Pfadkarte“-Hinweise folgen mit KP.3) |
-| KP.3 | Kartenfamilien, Startzustand, Meilenstein-Platz | KP.01, 02, 06 | offen |
+| KP.3 | Kartenfamilien, Startzustand, Meilenstein-Platz | KP.01, 02, 06 | fertig (nur Bau-Karten; Technologie mit KP.4, Wagnis mit KP.6) |
 | KP.4 | Universität als Forschungsstätte | KP.04 | offen |
 | KP.5 | Upgrades, Einheitenersatz | KP.05 | offen |
 | KP.6 | Wagnis, Exklusivpfade, Mindesttempo | KP.06, 07 | offen |
@@ -69,6 +69,17 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 - Hinweise (Erstkontakt) erscheinen nicht bei offener Bühne. Die Sprechblase der ersten Kartenwahl sitzt über der Bühnenüberschrift.
 - Tests: `tests/stage.test.mjs` (Spielzeit), `tests/browser-check.mjs` (Abschnitt „Kartenbühne“, 1280×720 und 1920×1080).
 
+## KP.3
+
+- `data/kartenpfad.js` (`KF_PFAD`): Pfadkarten deklarativ (Felder nach REQ-KP.01). Fünf Bau-Karten: Echtes Militär, Festungsbau, Metallverarbeitung, Gelehrte, Handel. Aus den Datensätzen leitet `core.js` die Sperren (`gesperrt`) und Upgrade-Stufen mit Quelle (`stufen`) ab; es gibt keine zweite Liste.
+- Modus: `PACING_MODUS` steht auf diesem Branch auf `karten`; `?pacing=standard` schaltet auf das Verhalten von `main` zurück. Simulation und Tests laufen im Standardmodus (`tools/load-core.mjs`), im Modus karten mit `KF_PACING=karten`.
+- Startzustand karten: Fabrik und Läufer frei; gesperrt sind Kaserne, Schmiede, Universität, Kontor, Werfer sowie die Stufen Türme, Mauer (Verstärkung, Stachelwall, Mörtelkolonne). Die Presse bleibt frei. Gesperrtes bleibt sichtbar, ausgegraut, mit „Freischaltung: Karte …“ (Bauen, Armee, Mauer & Türme).
+- Angebot (`drawOptionsKarten`): ein Platz für eine Pfadkarte (Meilenstein-Platz), mindestens eine Bonuskarte, höchstens eine Wagnis-Karte, Reihenfolge gemischt. Technologiekarten brauchen die gebaute Universität. Neu ziehen und Bannen nutzen dieselbe Ziehung; Pfadkarten (Bau, Technologie) lassen sich nicht bannen.
+- Rückstandsgewicht: `KARTEN.rueckstandPlus` je Wahl ohne Erscheinen; harte Grenze `KARTEN.maxWarten` (3): Eine Bau-Karte, die seit ihrer Freigabe noch nie angeboten wurde, rückt spätestens in der dritten Wahl ein. Bei mehreren wartenden Karten gilt eine Warteschlange (Wartezeit plus Rang), sonst ließe sich die Grenze bei einem Pfadplatz nicht halten.
+- `SAVE_VERSION` 8, `SAVE_KEY` `klammerfront.save.v8`: ältere Spielstände werden mit dem vorhandenen Hinweis des Startbildschirms verworfen.
+- Tests: `tests/kartenpfad.test.mjs` (Startzustand, Freischaltung, Graphtest, 1.000 Angebote, Rückkehr in den Stapel, harte Grenze), `tests/browser-check.mjs` (gesperrte Inhalte, Pfadkarten auf der Bühne, Tutorial im Modus karten).
+- Bots: die Strategien wählen Pfadkarten nach einer Reihenfolge (`KF_BROWSER_BOT.pfadPick`); ohne Pfadkarte im Angebot gilt die bisherige Regel.
+
 ## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
 
 1. Das Dokument `branch-konzepte-pacing.md` fehlt; der Unterbau folgt allein den Angaben im Anforderungsdokument.
@@ -78,3 +89,8 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 5. Der Stapel steht am unteren Rand der Spielwelt (bei geschlossener Bühne) und rückt bei offener Bühne an den unteren Fensterrand, damit er keine Karte verdeckt.
 6. Das Familienband trägt vorerst die bisherige Kategorie (Wirtschaft, Armee …), das Symbol ist ein Schriftzeichen je Kategorie; die Familien (Bonus, Bau, Technologie, Wagnis) kommen mit KP.3.
 7. „Vorher/Nachher“-Werte bei Bonuskarten: Die Karte zeigt den Beschreibungstext mit dem Wert; eine Vorher/Nachher-Zeile gibt es erst, wenn die Kartendaten sie ausweisen (offen).
+8. Die Pfadkarte „Festungsbau“ hat die Kennung `pfadFestungsbau`, weil `festungsbau` schon eine Bonuskarte ist (Abschnitte +Lebenspunkte je Basiskarte). Beide tragen im Spiel den Namen „Festungsbau“; Vorschlag: die Bonuskarte im Modus karten umbenennen (offen).
+9. Pfadkarten der Familien Bau und Technologie lassen sich nicht bannen, denn jede ist die einzige Quelle ihrer Inhalte (REQ-KP.06: „gesperrt oder warnt“). Damit führt Bannen nie zu einer unlösbaren Kette.
+10. Harte Grenze „spätestens in der dritten Wahl“: Bei zwei Plätzen je Angebot (ohne Universität) gehört ein Platz der Bonuskarte und einer der Pfadkarte. Vier Bau-Karten sind ab Wahl 2 zugleich ziehbar; die Grenze hält daher nur, wenn höchstens drei Bau-Karten zugleich warten. Wer Bau-Karten wählt (der Normalfall), unterschreitet das. Die Warteschlange wählt die älteste unerfüllte Karte zuerst.
+11. Im Modus karten entfällt die gestaffelte Einführung der Gebäude (Stufe 2), weil Karten die Gebäude öffnen; der Erstkontakt-Hinweis „Neu: Schmiede, Kaserne …“ erscheint dort nicht.
+12. Test des Tutorials im Modus karten: Ein bekanntes Zeitverhalten im Tutorial-Test „Abschied 2 nach Klick“ (Blasen laufen nach `greetMs` selbst weiter) ließ einen Lauf unter Last scheitern; der Wiederholungslauf war grün.

@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCore } from '../tools/load-core.mjs';
 
-const PACING = { karten: { gesperrt: ['bau:kaserne', 'einheit:werfer', 'forschung:r_drill'], stufen: { ausbau: [{ ab: 1, quelle: 'zinnen' }], qualitaet: [{ ab: 3, quelle: 'r_metallurgie' }] } } };
+const PACING = { test: { gesperrt: ['bau:kaserne', 'einheit:werfer', 'forschung:r_drill'], stufen: { ausbau: [{ ab: 1, quelle: 'zinnen' }], qualitaet: [{ ab: 3, quelle: 'r_metallurgie' }] } } };
 function game(pacing, seed = 11){
   const { KlammerCore, KF_CONFIG } = loadCore();
   KF_CONFIG.PACING = PACING;
@@ -21,9 +21,9 @@ test('Standard: nichts ist gesperrt, auch wenn der Modus Sperren kennt', () => {
   assert.equal(G.stageSource('ausbau'), null);
 });
 
-test('Modus karten: gesperrte Schlüssel öffnen erst mit unlockKey', () => {
-  const { G } = game('karten');
-  assert.equal(G.pacing(), 'karten');
+test('Modus test: gesperrte Schlüssel öffnen erst mit unlockKey', () => {
+  const { G } = game('test');
+  assert.equal(G.pacing(), 'test');
   G.S.material = 1e4;
   assert.equal(G.isBuildable('kaserne'), false);
   assert.equal(G.build('kaserne'), false);
@@ -40,7 +40,7 @@ test('Modus karten: gesperrte Schlüssel öffnen erst mit unlockKey', () => {
 });
 
 test('Upgrade-Stufen: der Kauf verlangt die Quelle der Stufe', () => {
-  const { G } = game('karten');
+  const { G } = game('test');
   G.S.material = 1e6; G.unlockKey('bau:kaserne'); G.build('kaserne'); G.build('schmiede');
   assert.equal(G.stageSource('ausbau'), 'zinnen');
   assert.equal(G.buy('ausbau'), false);
@@ -55,7 +55,7 @@ test('Upgrade-Stufen: der Kauf verlangt die Quelle der Stufe', () => {
 });
 
 test('Einheitenersatz: Warteschlange und Feld werden aufgewertet, die Zahl bleibt gleich', () => {
-  const { G, C } = game('karten');
+  const { G, C } = game('test');
   C.UNITS.testklinge = { key: '9', cost: 20, hp: 60, dmg: 8, cd: 0.8, range: 14, bounty: 10, speed: 34 };
   G.S.material = 1e4;
   G.spawn('laeufer'); G.spawn('laeufer');

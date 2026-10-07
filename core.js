@@ -7,7 +7,27 @@ const C = KF_CONFIG;
 const W = C.LANE, PBW = C.PLAYER_BASE_WIDTH, EBW = C.ENEMY_BASE_WIDTH;
 const LANES = C.LANE_COUNT, GATE = C.GATE_LANE, SLOTS = C.GRID_SIZE * C.GRID_SIZE;
 const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [];
-const OPT = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
+/* Kartenpfad (REQ-KP.01, KP.02): Pfadkarten aus data/kartenpfad.js sind Optionen mit Familie; im Pool nur im Pacing-Modus 'karten' (drawOptions, optionAvailable).
+   Aus ihren Datensätzen entstehen die Sperren (Schlüssel) und Upgrade-Stufen des Modus 'karten' samt ihrer Quelle (Karte oder Forschung). */
+const PFAD = (typeof KF_PFAD !== 'undefined') ? KF_PFAD : null;
+const PFAD_OPTIONS = PFAD ? PFAD.karten.map(k => ({ id: k.id, category: k.familie, family: k.familie, rarity: k.rarity || 'common', nameKey: k.nameKey, descKey: k.descKey, tiers: k.tiers, pfad: k })) : [];
+const ALL_OPTIONS = [...OPTIONS, ...PFAD_OPTIONS];
+const OPT = Object.fromEntries(ALL_OPTIONS.map(o => [o.id, o]));
+const PACING_DERIVED = (() => {
+  if (!PFAD) return null;
+  const gesperrt = new Set(), stufen = {}, quellen = {};
+  const add = (key, quelle) => {
+    quellen[key] = quelle;
+    const m = /^stufe:(\w+):(\d+)$/.exec(key);
+    if (m) (stufen[m[1]] = stufen[m[1]] || []).push({ ab: Number(m[2]), quelle }); else gesperrt.add(key);
+  };
+  for (const k of PFAD.karten){
+    for (const key of k.schaltetFrei || []) add(key, k.id);
+    for (const r of k.oeffnetForschung || []) add('forschung:' + r, k.id);
+  }
+  for (const r of PFAD.forschungen || []) for (const key of r.schaltetFrei || []) add(key, r.id);
+  return { gesperrt: [...gesperrt], stufen, quellen };
+})();
 const RESEARCH = (typeof KF_RESEARCH !== 'undefined') ? KF_RESEARCH : [];
 const RES = Object.fromEntries(RESEARCH.map(r => [r.id, r]));
 const NEIGHBORS = (typeof KF_NEIGHBORS !== 'undefined') ? KF_NEIGHBORS : [];       // Nachbarschaftsregeln (REQ-6.07 a)
@@ -18,7 +38,7 @@ const adjacent = i => { const g = C.GRID_SIZE, r = Math.floor(i / g), c = i % g,
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 7;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+const SAVE_VERSION = 8;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
@@ -56,7 +76,7 @@ function freshState(diff, seed){
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
-    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0,    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, wait: {}, seen: {} },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
@@ -124,7 +144,7 @@ function create(){
 
   /* ---------- Pacing (REQ-KP.01): Freischaltungen, Upgrade-Stufen, Einheitenersatz ----------
      Im Modus 'standard' (oder ohne Eintrag in C.PACING) ist nichts gesperrt. */
-  const pacingCfg = () => (S.pacing && C.PACING[S.pacing]) || null;
+  const pacingCfg = () => S.pacing === 'karten' && PACING_DERIVED ? PACING_DERIVED : ((S.pacing && C.PACING[S.pacing]) || null);
   const isGated = key => { const c = pacingCfg(); return !!c && !!c.gesperrt && c.gesperrt.includes(key); };
   const isOpen = key => !isGated(key) || !!S.unlocks[key];
   function unlockKey(key){
@@ -143,6 +163,8 @@ function create(){
     for (const e of list) if (e.ab <= n && (!best || e.ab > best.ab)) best = e;
     return best && !sourceMet(best.quelle) ? best.quelle : null;
   }
+  /* Sprachschlüssel für den Namen eines Inhalts: 'bau:kaserne' → bld.kaserne.name, 'einheit:werfer' → unit.werfer.name */
+  const keyNameKey = key => { const [kind, id] = key.split(':'); return kind === 'bau' ? `bld.${id}.name` : kind === 'einheit' ? `unit.${id}.name` : kind === 'forschung' && RES[id] ? RES[id].nameKey : key; };
   const ownType = type => S.replace[type] || type;
   /* Werte einer Einheit nach Typ und Seite (ohne Zufall); makeUnit und der Einheitenersatz nutzen dieselbe Rechnung */
   function unitStats(side, type){
@@ -883,14 +905,28 @@ function create(){
     }
     if (!S.pendingDraft && S.pendingLevels > 0) offerDraft();
   }
+  /* Pfadkarten (Modus 'karten'): ziehbar ab der abWahl-ten Wahl, wenn ihre Voraussetzungen stehen und keine Exklusivkarte gewählt ist (REQ-KP.02) */
+  const requirementMet = b => b.startsWith('gebaut:') ? has(b.slice(7)) : sourceMet(b);
+  const isPathFamily = o => !!o.pfad && (o.family === 'bau' || o.family === 'technologie');
+  function pfadAvailable(o){
+    const k = o.pfad;
+    if (S.pacing !== 'karten' || cardTaken(o.id) > 0 || S.research.banned.includes(o.id)) return false;
+    if (k.abWahl > S.pfad.choices + 1) return false;
+    if (!(k.benoetigt || []).every(requirementMet)) return false;
+    if (k.familie === 'technologie' && !has('universitaet')) return false;
+    if ((k.exklusivMit || []).some(id => cardTaken(id) > 0)) return false;
+    return true;
+  }
   /* Nach der höchsten Stufe erscheint eine Karte nicht mehr; sonst liegt genau die nächste Stufe im Pool (REQ-18.2) */
   function optionAvailable(o){
+    if (o.pfad) return pfadAvailable(o);
     const n = cardTaken(o.id);
     if (S.research.banned.includes(o.id)) return false;
     if (n >= Math.min(o.tiers.length, C.CARD_MAX_TIER)) return false;
     if (o.requires){
       if (o.requires.upgrade && !Object.keys(C.UPGRADES).some(id => (C.UPGRADES[id].base || id) === o.requires.upgrade && S.lvl[id] > 0)) return false;
       if (o.requires.building && !has(o.requires.building)) return false;
+      if (o.requires.unit && !isOpen('einheit:' + o.requires.unit)) return false;
     }
     for (const e of o.tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
     return true;
@@ -923,8 +959,40 @@ function create(){
     }
     return out;
   }
+  /* Angebot im Modus 'karten' (REQ-KP.02, KP.06): ein Platz für eine Pfadkarte (Meilenstein-Platz), mindestens eine Bonuskarte, höchstens eine Wagnis-Karte;
+     eine ziehbare Bau-Karte, die zu lange wartete, rückt zwingend ein (harte Grenze C.KARTEN.maxWarten). Die Reihenfolge der Plätze wird gemischt. */
+  const pfadWait = o => S.pfad.wait[o.id] || 0;
+  const pickWeighted = (list, w) => {
+    const total = list.reduce((a, o) => a + w(o), 0);
+    let r = rnd() * total, i = 0;
+    while (i < list.length - 1 && r >= w(list[i])){ r -= w(list[i]); i++; }
+    return list[i];
+  };
+  const weightKarten = o => o.pfad ? o.pfad.gewicht * (1 + C.KARTEN.rueckstandPlus * pfadWait(o)) : cardWeight(o);
+  function drawOptionsKarten(k, keep){
+    const pool = ALL_OPTIONS.filter(o => optionAvailable(o) && !(keep && keep.includes(o.id)));
+    const pf = pool.filter(isPathFamily), bonus = pool.filter(o => !o.pfad);
+    const out = (keep || []).map(id => OPT[id]);
+    const remove = o => { for (const l of [pf, bonus, pool]){ const i = l.indexOf(o); if (i >= 0) l.splice(i, 1); } };
+    const add = o => { out.push(o); remove(o); };
+    const reserve = bonus.length && !out.some(o => !o.pfad) ? 1 : 0;      // ein Platz bleibt der Bonuskarte
+    // harte Grenze: Bau-Karten, die seit ihrer Freigabe noch nie im Angebot standen, rücken zwingend ein, sobald ihre Frist (Wartezeit plus Rang in der Schlange) abläuft
+    const unseen = pf.filter(o => o.family === 'bau' && !S.pfad.seen[o.id]).sort((a, b) => pfadWait(b) - pfadWait(a));
+    const forced = unseen.filter((o, i) => pfadWait(o) + i >= C.KARTEN.maxWarten - 1);
+    for (const o of forced) if (out.length < k - reserve) add(o);
+    if (!out.some(isPathFamily) && pf.length && out.length < k - reserve) add(pickWeighted(pf, weightKarten));
+    if (reserve && out.length < k) add(pickWeighted(bonus, weightKarten));
+    while (out.length < k && pool.length){
+      const hasWag = out.some(o => o.family === 'wagnis'), hasLeg = out.some(o => o.rarity === 'legendary');
+      const cand = pool.filter(o => !(o.family === 'wagnis' && hasWag) && !(o.rarity === 'legendary' && hasLeg));
+      if (!cand.length) break;
+      add(pickWeighted(cand, weightKarten));
+    }
+    for (let i = out.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+    return out.map(o => o.id);
+  }
   function offerDraft(){
-    const options = drawOptions(draftSize());
+    const options = S.pacing === 'karten' ? drawOptionsKarten(draftSize()) : drawOptions(draftSize());
     if (!options.length){ S.pendingLevels = 0; return; }
     S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0 };
   }
@@ -932,19 +1000,21 @@ function create(){
   const rerollsLeft = () => S.pendingDraft ? Math.max(0, mAdd('rerolls') - (S.pendingDraft.rerolled || 0)) : 0;
   function rerollDraft(){
     if (!S.pendingDraft || rerollsLeft() <= 0) return false;
-    const options = drawOptions(draftSize());
+    const options = S.pacing === 'karten' ? drawOptionsKarten(draftSize()) : drawOptions(draftSize());
     if (!options.length) return false;
     S.pendingDraft.options = options; S.pendingDraft.rerolled = (S.pendingDraft.rerolled || 0) + 1;
     return true;
   }
   /* Bann (REQ-5.07): eine angebotene Karte für diese Partie aus dem Pool nehmen; an ihre Stelle tritt eine neue */
+  /* Pfadkarten der Familien Bau und Technologie sind die einzige Quelle ihrer Inhalte; sie lassen sich nicht bannen, sonst bliebe etwas unerreichbar (REQ-KP.06) */
+  const canBan = id => !(OPT[id] && isPathFamily(OPT[id]));
   const bansLeft = () => Math.max(0, mAdd('bans') - S.research.banned.length);
   function banOption(i){
     const d = S.pendingDraft;
-    if (!d || bansLeft() <= 0 || i < 0 || i >= d.options.length) return false;
+    if (!d || bansLeft() <= 0 || i < 0 || i >= d.options.length || !canBan(d.options[i])) return false;
     S.research.banned.push(d.options[i]);
     const rest = d.options.filter((_, k) => k !== i);
-    const pool = OPTIONS.filter(o => optionAvailable(o) && !rest.includes(o.id));
+    const pool = (S.pacing === 'karten' ? ALL_OPTIONS : OPTIONS).filter(o => optionAvailable(o) && !rest.includes(o.id));
     const total = pool.reduce((a, o) => a + cardWeight(o), 0);
     let repl = null;
     if (pool.length){ let r = rnd() * total, k = 0; while (k < pool.length - 1 && r >= cardWeight(pool[k])){ r -= cardWeight(pool[k]); k++; } repl = pool[k].id; }
@@ -1012,8 +1082,15 @@ function create(){
     const d = S.pendingDraft;
     if (!d || i < 0 || i >= d.options.length) return false;
     const o = OPT[d.options[i]];
+    // Rückstandsgewicht: ziehbare Bau-Karten, die nicht im Angebot standen, warten eine Wahl länger; wer erschien, beginnt von vorn (REQ-KP.06)
+    if (S.pacing === 'karten') for (const q of PFAD_OPTIONS) if (q.family === 'bau' && optionAvailable(q)) { const shown = d.options.includes(q.id); S.pfad.wait[q.id] = shown ? 0 : pfadWait(q) + 1; if (shown) S.pfad.seen[q.id] = true; }
     S.draft.stacks[o.id] = cardTaken(o.id) + 1;
     S.draft.ver++;
+    if (o.pfad){
+      for (const key of o.pfad.schaltetFrei || []) if (!key.startsWith('stufe:') && unlockKey(key)) log('log.unlockedKey', { what: '@' + keyNameKey(key) });
+      for (const r of o.pfad.oeffnetForschung || []) if (unlockKey('forschung:' + r)) S.research.fresh = true;
+    }
+    S.pfad.choices++;
     for (const e of cardTier(o.id, S.draft.stacks[o.id]).effect || []){
       if (e.unlock){ unlockBuilding(e.unlock); log('log.unlocked', { building: '@bld.' + e.unlock + '.name' }); }
       if (e.grant === 'production') addMaterial(Math.max(matRate(), C.GRANT_MIN_RATE) * e.seconds);
@@ -1135,6 +1212,7 @@ function create(){
   /* Gestaffelte Einführung (REQ-47): welche Systeme schon sichtbar sind; ohne Einführung alle */
   function introShows(sys){
     if (!S.intro) return true;
+    if (S.pacing === 'karten' && sys === 'buildings') return true;       // im Modus karten öffnen Karten die Gebäude, keine Stufe (REQ-KP.01)
     if (sys === 'waves') return S.waveNo >= 1 || S.ownWaveNo >= 1;
     if (sys === 'cards') return S.level >= 1;
     if (sys === 'buildings') return S.level >= C.INTRO_BUILDINGS_LEVEL;
@@ -1194,7 +1272,7 @@ function create(){
     canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
-    isOpen, unlockKey, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
+    canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,

@@ -5,7 +5,7 @@
 const Stage = (() => {
   const K = C.KARTENBUEHNE;
   const flag = URL_PARAMS.get('buehne');
-  const enabled = () => flag === '1' ? true : flag === '0' ? false : C.UI.kartenbuehne !== null && C.UI.kartenbuehne !== undefined ? !!C.UI.kartenbuehne : C.PACING_MODUS === 'karten';
+  const enabled = () => flag === '1' ? true : flag === '0' ? false : C.UI.kartenbuehne !== null && C.UI.kartenbuehne !== undefined ? !!C.UI.kartenbuehne : G.S.pacing === 'karten';
   let key = '', openedAt = -Infinity, folded = false, focusI = 0, lockMs = C.UI.draftLockMs, hover = -1, built = false, wasVisible = false;
   const el = {};
   const ids = ['stage', 'stageHead', 'stageCards', 'stageDetail', 'stageTools', 'stageReroll', 'stageLater', 'stageBans', 'deckBtn', 'deckFill', 'deckCount', 'deckExpl'];
@@ -25,7 +25,24 @@ const Stage = (() => {
     st.setProperty('--k-flip', K.aufdeckMs + 'ms');
     el.stage.classList.toggle('two-rows', w < K.zweiZeilenBisPx);
   }
-  function symbol(o){ return K.symbole[o.family || o.category] || K.symbole.bonus; }
+  const familyOf = o => o.family || 'bonus';
+  function symbol(o){ return K.symbole[o.pfad ? o.family : o.category] || K.symbole.bonus; }
+  /* Inhalte einer Pfadkarte mit Symbol: „Schaltet frei:“, „Öffnet Forschung:“ (REQ-KP.03) */
+  const contentSymbol = key => K.inhaltSymbole[key.split(':')[0]] || '';
+  function pathLines(o){
+    const k = o.pfad, out = [];
+    if (!k) return out;
+    const un = (k.schaltetFrei || []).map(key => `${contentSymbol(key)} ${keyLabel(key)}`);
+    if (un.length) out.push(t('kp.card.unlocks', { list: un.join(', ') }));
+    const op = (k.oeffnetForschung || []).map(id => `${K.inhaltSymbole.forschung} ${keyLabel('forschung:' + id)}`);
+    if (op.length) out.push(t('kp.card.opens', { list: op.join(', ') }));
+    return out;
+  }
+  function needsLine(o){
+    const k = o.pfad;
+    if (!k || !(k.benoetigt || []).length) return '';
+    return t('kp.card.needs', { list: k.benoetigt.map(b => b.startsWith('gebaut:') ? t('kp.card.built', { name: t(`bld.${b.slice(7)}.name`) }) : (G.OPT[b] ? t(G.OPT[b].nameKey) : (G.RES[b] ? t(G.RES[b].nameKey) : b))).join(', ') });
+  }
 
   function build(d){
     const list = el.stageCards; list.innerHTML = '';
@@ -33,18 +50,20 @@ const Stage = (() => {
     d.options.forEach((id, i) => {
       const o = G.OPT[id], tier = G.cardTaken(id) + 1;
       const b = document.createElement('button');
-      b.type = 'button'; b.className = ['kcard', cardClass(o)].join(' '); b.dataset.tooltip = 'draftopt:' + i; b.dataset.i = String(i);
+      b.type = 'button'; b.className = ['kcard', cardClass(o), 'fam-' + familyOf(o)].join(' '); b.dataset.tooltip = 'draftopt:' + i; b.dataset.i = String(i);
       const rot = n > 1 ? (-K.faecherGrad + 2 * K.faecherGrad * i / (n - 1)) : 0;
       b.style.setProperty('--rot', rot.toFixed(2) + 'deg');
       b.style.setProperty('--delay', (i * K.aufdeckAbstandMs) + 'ms');
       const head = document.createElement('span'); head.className = 'kc-head';
       const sym = document.createElement('i'); sym.className = 'kc-sym'; sym.setAttribute('aria-hidden', 'true'); sym.textContent = symbol(o);
-      const fam = document.createElement('span'); fam.className = 'kc-fam'; fam.textContent = t('draft.cat.' + o.category);
+      const fam = document.createElement('span'); fam.className = 'kc-fam'; fam.textContent = o.pfad ? t('kp.fam.' + o.family) : `${t('kp.fam.bonus')} · ${t('draft.cat.' + o.category)}`;
       const num = document.createElement('span'); num.className = 'kc-key'; num.textContent = String(i + 1);
       head.append(sym, fam, num);
       const nm = document.createElement('b'); nm.className = 'kc-name'; nm.textContent = cardName(o, tier);
       const art = document.createElement('span'); art.className = 'kc-art'; art.setAttribute('aria-hidden', 'true'); art.textContent = symbol(o);
       const ds = document.createElement('span'); ds.className = 'kc-desc'; ds.textContent = t(o.descKey, optParams(o, tier));
+      for (const line of pathLines(o)){ const u = document.createElement('span'); u.className = 'kc-unlock'; u.textContent = line; ds.appendChild(u); }
+      const nd = needsLine(o); if (nd){ const u = document.createElement('span'); u.className = 'kc-needs'; u.textContent = nd; ds.appendChild(u); }
       const foot = document.createElement('span'); foot.className = 'kc-foot';
       const dots = document.createElement('span'); dots.className = 'kc-tier'; dots.setAttribute('aria-hidden', 'true');
       dots.textContent = '●'.repeat(tier) + '○'.repeat(o.tiers.length - tier);
@@ -61,6 +80,7 @@ const Stage = (() => {
     // Bann: je Karte ein Knopf, solange Banne übrig sind (wie in v0.6)
     const bans = el.stageBans; bans.innerHTML = '';
     if (G.bansLeft() > 0) d.options.forEach((id, i) => {
+      if (!G.canBan(id)) return;                                      // Pfadkarten sind einzige Quelle ihrer Inhalte (REQ-KP.06)
       bans.appendChild(mkButton('btn-ghost', t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }),
         () => { if (!locked() && G.banOption(i)){ key = ''; requestRender(); } }, 'ban:' + i, t('ex.draft.ban', { n: G.bansLeft() })));
     });
@@ -77,7 +97,8 @@ const Stage = (() => {
     const i = hover >= 0 ? hover : focusI, id = d.options[i];
     if (id === undefined){ setText(el.stageDetail, t('kp.stage.hint', { n: d.options.length })); return; }
     const o = G.OPT[id], tier = G.cardTaken(id) + 1;
-    setText(el.stageDetail, `${cardName(o, tier)} – ${t(o.descKey, optParams(o, tier))} (${optLimit(o)})`);
+    const parts = [`${cardName(o, tier)} – ${t(o.descKey, optParams(o, tier))}`, ...pathLines(o), needsLine(o), o.pfad && (o.pfad.exklusivMit || []).length ? t('kp.card.excludes', { list: o.pfad.exklusivMit.map(x => t(G.OPT[x].nameKey)).join(', ') }) : '', o.pfad ? t('kp.card.returns') : '', optLimit(o)].filter(Boolean);
+    setText(el.stageDetail, parts.join(' · '));
   }
 
   function render(){
