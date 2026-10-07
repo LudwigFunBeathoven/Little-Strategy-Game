@@ -12,7 +12,9 @@ const NewMarks = (() => {
   let seen = new Set(), baseline = true, since = new Map(), touched = new Set();
   const ids = () => [...TABS.filter(tabVisible).map(x => 'tab:' + x),
                      ...C.BUILDINGS.filter(b => G.isBuildable(b) && (b === 'fabrik' || G.introShows('buildings'))).map(b => 'pick:' + b),
-                     ...Object.keys(C.UNITS).filter(u => !C.UNITS[u].replacement && G.unitUnlocked(u)).map(u => 'unit:' + u)];
+                     ...Object.keys(C.UNITS).filter(u => !C.UNITS[u].replacement && G.unitUnlocked(u)).map(u => 'unit:' + u),
+                     ...Object.keys(C.UPGRADES).filter(u => optEls[u] && !optEls[u].btn.hidden).map(u => 'upg:' + u),
+                     ...G.RESEARCH.filter(r => resEls[r.id] && !resEls[r.id].btn.hidden).map(r => 'res:' + r.id)];
   return {
     isNew: id => !baseline && !seen.has(id),
     /* Der Inhalt ist gerade zu sehen; nach UI.newSeenMs gilt er als angesehen. */
@@ -28,6 +30,8 @@ const NewMarks = (() => {
       touched.clear();
       if (baseline && G.S.status === 'running'){ for (const id of ids()) seen.add(id); baseline = false; }
     },
+    /* Marke „neu“ gezielt setzen (REQ-K2.02/K2.06): der Wirkort einer gewählten Karte trägt sie, bis er gesehen oder benutzt wurde */
+    flag(id){ if (!baseline){ seen.delete(id); since.delete(id); } },
     reset(){ seen = new Set(); baseline = true; since.clear(); touched.clear(); },
     snapshot: () => baseline ? undefined : { seen: [...seen] },
     restore(o){ since.clear(); touched.clear(); if (o && Array.isArray(o.seen)){ seen = new Set(o.seen); baseline = false; } else { seen = new Set(); baseline = true; } },
@@ -294,6 +298,7 @@ function updateOpt(el, kind, a){
     setDis(el.btn, !!repairReason(i));
   }
 }
+const UP_TAB = { fertigung: null, mauer: 'wall', turm_0: 'wall', turm_2: 'wall', schmiede: 'smithy', kaserne: 'army', kontor: 'ctx' };     // Reiter, in dem ein Ausbau zu sehen ist
 function renderOpts(){
   const S = G.S;
   for (const id in C.UPGRADES){
@@ -303,6 +308,11 @@ function renderOpts(){
     setText(el.label, baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`));
     setHidden(el.tag, lv === 0);
     if (lv > 0) setText(el.tag, u.max !== undefined ? `${lv}/${u.max}` : String(lv));
+    if (Disc.on()){                                                        // REQ-K2.06: „neu“, bis der Ausbau gesehen oder gekauft wurde
+      const home = UP_TAB[u.group];
+      setText(el.fresh, t('mark.new')); setHidden(el.fresh, lv > 0 || !NewMarks.isNew('upg:' + id));
+      if (lv > 0 || home === null || home === activeTab || (home === 'ctx' && ctxVisible())) NewMarks.view('upg:' + id);
+    }
     setText(el.expl, explUpgrade(id));
     setDis(el.btn, !G.canBuy(id));
   }
@@ -526,6 +536,10 @@ function renderResearch(){
     setText(el.label, researchName(r, Math.min(n + 1, r.tiers.length)));
     setHidden(el.tag, n === 0);
     if (n > 0) setText(el.tag, `${n}/${r.tiers.length}`);
+    if (Disc.on()){
+      setText(el.fresh, t('mark.new')); setHidden(el.fresh, !NewMarks.isNew('res:' + r.id));
+      if (activeTab === 'uni' || S.research.active.some(a => a.id === r.id)) NewMarks.view('res:' + r.id);
+    }
     setText(el.expl, G.researchBlock(r.id) === 'closed' ? researchReason(r.id) : next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
                           : t('opt.max'));
     setDis(el.btn, !!G.researchBlock(r.id));
@@ -561,7 +575,8 @@ function renderResearch(){
   // Rückmeldung bei abgeschlossener Forschung (REQ-6.06): kurzer Hinweis über dem Arbeitsbereich, dazu die Markierung am Reiter
   const done = S.stats.researchDone || [];
   if (done.length !== resDoneSeen){
-    if (done.length > resDoneSeen && resDoneSeen >= 0){ const d = done[done.length - 1]; toast(t('research.doneToast', { name: researchName(G.RES[d.id], d.tier) })); }
+    if (done.length > resDoneSeen && resDoneSeen >= 0){ const d = done[done.length - 1]; toast(t('research.doneToast', { name: researchName(G.RES[d.id], d.tier) }));
+      if (Disc.on()){ NewMarks.flag('res:' + d.id); NewMarks.flag('tab:uni'); Disc.announceDone('done:res:' + d.id, researchName(G.RES[d.id], d.tier)); } }
     resDoneSeen = done.length;
   }
 }
@@ -657,4 +672,5 @@ function renderPanels(){
   renderDraft();
   renderChosen();
   NewMarks.endRender();
+  Disc.tick();
 }

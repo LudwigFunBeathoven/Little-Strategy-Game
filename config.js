@@ -97,6 +97,7 @@ const KF_CONFIG = {
     // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
     homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
     draftLockMs: 400,
+    entdecken: null,            // Sichtbarkeitsregel „nur, was jetzt nutzbar ist“ (REQ-K2.04–K2.06): null = nach Pacing-Modus (an bei 'karten'), true/false erzwingt; URL ?entdecken=1|0
     kartenbuehne: null,         // Kartenbühne in der Bildmitte (REQ-KP.03): null = nach Pacing-Modus (an bei 'karten'), true/false erzwingt; URL ?buehne=1|0
     hintAutoMs: 8000,           // ein Erstkontakt-Hinweis schließt sich nach so langer Zeit von selbst (REQ-T.05)
     newSeenMs: 1500,            // Markierung „neu“: so lange muss der Inhalt sichtbar sein, bis er als angesehen gilt (REQ-T.05)
@@ -105,6 +106,11 @@ const KF_CONFIG = {
   },
 
   /* Kartenbühne (REQ-KP.03) */
+  ENTDECKEN: {
+    vorschau: 'keine',          // 'keine' oder 'naechste': höchstens ein Platzhalter „?“ je Bereich (REQ-K2.04, Soll); URL ?vorschau=naechste
+    einblendenMs: 300,          // neues Element blendet so lange ein (höchstens 300)
+    hinweisMs: 8000,            // Erstkontakt-Hinweis zu neuem Inhalt schließt nach so vielen ms (REQ-K2.06)
+  },
   KARTENBUEHNE: {
     zeit: 'pause',              // Spielzeit bei offener Bühne: 'pause' (wie v0.6), 'langsam' (Faktor langsamFaktor) oder 'lauf'
     langsamFaktor: 0.2,
@@ -112,8 +118,13 @@ const KF_CONFIG = {
     kartenBreitePct: 16,        // Kartenbreite in Prozent der Fensterbreite (14–18), begrenzt durch:
     kartenMinPx: 160, kartenMaxPx: 260,
     zweiZeilenBisPx: 900,       // unter dieser Fensterbreite liegt die Reihe in zwei Zeilen
+    austeilMs: 220,             // Karten fliegen aus dem Symbol der Ressourcenleiste an ihren Platz (REQ-K2.02); Erscheinen + Aufdecken ≤ 800 ms
     aufdeckMs: 110,             // eine Karte deckt so lange auf (höchstens 120)
-    aufdeckAbstandMs: 110,      // Abstand zwischen zwei Karten (insgesamt höchstens 600 ms)
+    aufdeckAbstandMs: 100,      // Abstand zwischen zwei Karten (links nach rechts)
+    sperreMinMs: 400,           // Eingabesperre: endet mit der letzten aufgedeckten Karte, frühestens so viele ms nach dem Erscheinen
+    wirkflugMs: 450,            // die gewählte Karte fliegt zu ihrem Wirkort, die übrigen zurück in den Stapel (Wirkung + Abräumen ≤ 700 ms)
+    abraeumenMs: 700,           // Gesamtdauer vom Klick bis zum Ende des Abräumens; die Spielzeit steht bei zeit = pause bis dahin
+    leuchtMs: 1600,             // Wirkort leuchtet nach der Wahl so lange auf
     faecherGrad: 6,             // äußerste Karten stehen um so viele Grad schief
     hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
     inhaltSymbole: { bau: '\u2302', einheit: '\u25B2', stufe: '\u21E7', forschung: '\u2697' },   // Symbole für Inhalte auf den Karten (Gebäude, Einheit, Ausbaustufe, Forschung)

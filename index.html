@@ -213,13 +213,24 @@
   .stage-tools [hidden]{display:none;}
   .stage-tools .ctx-actions{display:flex; flex-wrap:wrap; gap:6px;}
   .kcard{position:relative; width:var(--kw); aspect-ratio:5 / 7; display:flex; flex-direction:column; gap:6px; padding:8px 10px; text-align:left; font:inherit; color:var(--ink);
-         background:var(--surface); border:2px solid var(--cat, var(--rule-strong)); border-radius:8px; cursor:pointer; overflow:hidden;
+         background:var(--surface); border:2px solid var(--frame, var(--rule-strong)); border-radius:8px; cursor:pointer; overflow:hidden;
          transform:rotate(var(--rot, 0deg)); transition:transform .12s ease-out, box-shadow .12s ease-out; box-shadow:0 6px 18px rgba(0,0,0,.35);}
   .kcard:hover, .kcard:focus-visible{transform:rotate(0deg) translateY(calc(var(--k-lift, 8%) * -1)); box-shadow:0 12px 26px rgba(0,0,0,.45); outline:3px solid var(--brass); outline-offset:2px; z-index:1;}
   .kcard[aria-disabled="true"]{cursor:default;}
-  .kcard.rar-rare{border-width:3px;}
-  .kcard.rar-wagnis{border-style:dashed;}
+  .kcard.rar-rare{border-width:3px; --frame:var(--steel);}
+  .kcard.rar-wagnis{border-style:dashed; --frame:var(--rust);}
   .kcard.rar-legendary{border:3px double var(--gold); background:var(--brass-soft);}
+  .kc-face{display:flex; flex-direction:column; gap:6px; flex:1 1 auto; min-height:0;}
+  .kc-back{display:none; position:absolute; inset:0; align-items:center; justify-content:center; font-size:calc(var(--kw) * .3); color:var(--brass-soft);
+           background:repeating-linear-gradient(45deg, var(--brass-ink) 0 6px, var(--brass) 6px 12px);}
+  .kcard.back-up .kc-face{visibility:hidden;} .kcard.back-up .kc-back{display:flex;}
+  .kc-risk{color:var(--rust); font-weight:600;}
+  .stage-fly{position:absolute; inset:0; pointer-events:none;}
+  body.stage-leaving .stage{background:transparent; transition:background .25s ease-out;}
+  @keyframes fxglow{0%,100%{box-shadow:0 0 0 0 rgba(176,138,30,0);} 30%{box-shadow:0 0 0 8px rgba(176,138,30,.7);} 60%{box-shadow:0 0 0 3px rgba(176,138,30,.45);}}
+  .fx-glow{animation:fxglow .8s ease-in-out 2;}
+  @keyframes discin{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+  .disc-in{animation:discin .3s ease-out;}
   .kc-head{flex:0 0 auto; margin:-8px -10px 2px; min-height:20px; display:flex; align-items:center; gap:6px; padding:2px 8px; background:var(--cat, var(--rule-strong)); font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:#FBFBF8; font-weight:600;}
   .kc-key{margin-left:auto; opacity:.8;}
   .kc-name{font-size:15px; line-height:1.2; margin-top:2px;}
@@ -230,9 +241,7 @@
   .stage .kcard.fam-bau, .stage .kcard.fam-technologie, .stage .kcard.fam-wagnis, .stage .kcard.fam-bonus{--cat:var(--fam);}
   .kc-foot{display:flex; justify-content:space-between; align-items:center; font-family:"IBM Plex Mono", monospace; font-size:11px; color:var(--ink-faint);}
   .kcard .expl{font-size:10px;}
-  @keyframes kflip{from{opacity:0; transform:rotate(var(--rot, 0deg)) translateY(30px) scale(.92);} to{opacity:1; transform:rotate(var(--rot, 0deg));}}
-  .stage-cards.reveal .kcard{animation:kflip var(--k-flip, 110ms) ease-out var(--delay, 0ms) both;}
-  @media (prefers-reduced-motion: reduce){ .stage-cards .kcard{animation:none; transition:none;} .card-sym.pulse{animation:none;} }
+  @media (prefers-reduced-motion: reduce){ .stage-cards .kcard{animation:none; transition:none;} .card-sym.pulse{animation:none;} .fx-glow{animation:none; outline:3px solid var(--brass);} .disc-in{animation:none;} }
         background:var(--surface); border:1px solid var(--rule-strong); border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,.25); font:inherit; color:var(--ink); cursor:pointer; text-align:left;}
   body.stage-on #draftBox{display:none;}
   .stage-head small{display:block; font-size:13px; font-weight:400; opacity:.9; margin-top:2px;}
@@ -272,7 +281,8 @@
   .res-run .rush{margin-left:8px;}
   @media (prefers-reduced-motion: reduce){ .tabpanel:not([hidden]), .float, .hud-draft{animation:none;} }
   .hud-s{font-size:11.5px; color:var(--ink-soft);}
-  .card-sym{display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:1px 4px; background:transparent; border:1px solid var(--rule-strong); border-radius:4px; cursor:pointer; vertical-align:middle;}
+  .xp-row{display:flex; align-items:center; gap:2px;}
+  .card-sym{display:inline-flex; width:auto; flex:0 0 auto; align-items:center; gap:4px; margin-left:6px; padding:1px 4px; background:transparent; border:1px solid var(--rule-strong); border-radius:4px; cursor:pointer; vertical-align:middle;}
   .card-sym .cs-card{position:relative; display:inline-block; width:12px; height:17px; border:1.5px solid var(--brass-ink); border-radius:2px; background:var(--surface); overflow:hidden;}
   .card-sym .cs-card i{position:absolute; left:0; right:0; bottom:0; height:0; background:var(--brass);}
   .card-sym .cs-n{font-size:11px;} .card-sym .expl{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
@@ -401,7 +411,7 @@
   <header class="hud" id="hud">
     <div class="hud-item" data-tooltip="hud:soldiers"><span class="hud-l" data-i18n="hud.soldiers"></span><b class="num" id="hudSoldiers">0/3</b></div>
     <div class="hud-item" data-tooltip="hud:material"><span class="hud-l" data-i18n="hud.material"></span><b class="num" id="material">0</b><span class="hud-s num" id="rate"></span></div>
-    <div class="hud-item hud-xp" data-tooltip="hud:xp"><span class="hud-l" data-i18n="hud.xp"></span><b class="num" id="xpVal">0</b><button class="card-sym" id="cardSym" type="button" data-tooltip="deck" hidden><span class="cs-card" aria-hidden="true"><i id="deckFill"></i></span><span class="cs-n num" id="deckCount"></span><span class="expl" id="deckExpl"></span></button>
+    <div class="hud-item hud-xp" data-tooltip="hud:xp"><span class="hud-l" data-i18n="hud.xp"></span><span class="xp-row"><b class="num" id="xpVal">0</b><button class="card-sym" id="cardSym" type="button" data-tooltip="deck" hidden><span class="cs-card" aria-hidden="true"><i id="deckFill"></i></span><span class="cs-n num" id="deckCount"></span><span class="expl" id="deckExpl"></span></button></span>
       <span class="bar brass"><i id="barLvl"></i></span><span class="hud-s num"><span id="xpRate"></span> · <span id="lvlProg"></span></span></div>
     <div class="hud-item" id="hudWaves" data-tooltip="hud:waves"><span class="hud-l" data-i18n="hud.waves"></span>
       <span class="hud-waves"><span class="num p" id="waveIn">0:20</span><span class="num e" id="enemyWaveIn">0:20</span></span><span class="siege num" id="siegeInfo" hidden></span></div>
@@ -522,6 +532,7 @@
 </div>
 
 <div class="stage" id="stage" role="group" aria-labelledby="stageHead" hidden>
+  <div class="stage-fly" id="stageFly" aria-hidden="true"></div>
   <div class="stage-grid">
     <h2 class="stage-head" id="stageHead"></h2>
     <div class="stage-cards" id="stageCards"></div>

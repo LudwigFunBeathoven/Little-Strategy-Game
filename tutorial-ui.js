@@ -55,6 +55,7 @@ const TutUI = (() => {
         if (Stage.on()){                                            // Kartenbühne: die Sprechblase sitzt über der Bühne und verdeckt keine Karte (REQ-KP.03)
           if (!S.pendingDraft) return null;
           if (Stage.folded) return own($('cardSym'));
+          if (Stage.dealing) return null;                           // REQ-K2.02: die Blase kommt erst nach dem Aufdecken, über den Karten
           return { els: [], world: null, narrKey: step.narrKey, taskKey: step.taskKey, anchor: $('stageHead'), clickable: false };
         }
         if (!S.pendingDraft || !tabVisible('cards')) return null;

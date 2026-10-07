@@ -1,5 +1,13 @@
 # Änderungen
 
+## v0.9-kartenpfad-2 – Branch `exp/kartenpfad`, Teil 2 (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad-2.md`, Bericht `docs/bericht-kartenpfad-2.md`, Testleitfaden `docs/testleitfaden-kartenpfad-2.md`. Spielwerte und Spielstand-Version (8) unverändert.
+- Kein Dauerstapel mehr in der Bildmitte: Fortschritt zur nächsten Wahl als Kartensymbol mit Füllstand in der Ressourcenleiste.
+- Kartenwahl als Ablauf: Karten fliegen aus der Leiste, decken von links nach rechts auf, die gewählte Karte fliegt zu ihrem Wirkort, der Rest zurück in den Stapel. Kartenvorderseite mit Band, Name, Symbol, einer Wirkungszeile, Stufenpunkten und Rahmen nach Seltenheit; einheitliche Rückseite.
+- „Nur, was jetzt nutzbar ist“: Reiter, Abschnitte, Knöpfe und Leistenelemente erscheinen erst, wenn sie nutzbar sind; keine ausgegrauten Sperren, keine Pfadübersicht, kein „Öffnet mit“. Neue Elemente blenden ein, tragen „neu“ und lösen genau einen Hinweis aus.
+- Schalter per Adresse: `?buehne=1|0`, `?entdecken=1|0`, `?vorschau=naechste`, `?zeit=lauf`. Ohne Schalter ist `standard` unverändert.
+- Protokoll (`?debug=1`): Sichtbarkeitszeit und Entdeckungszeit je Element, Hover je Karte, aktive Schalter.
+
 ## v0.9-kartenpfad – Branch `exp/kartenpfad` (Experiment, Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad.md`, Bericht `docs/bericht-kartenpfad.md`, Testleitfaden `docs/testleitfaden-kartenpfad.md`.
 **Spielstand-Version 8 (vorher 7): ältere Spielstände werden mit Hinweis verworfen.**

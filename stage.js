@@ -8,8 +8,9 @@ const Stage = (() => {
   const enabled = () => flag === '1' ? true : flag === '0' ? false : C.UI.kartenbuehne !== null && C.UI.kartenbuehne !== undefined ? !!C.UI.kartenbuehne : G.S.pacing === 'karten';
   let lvlKey = null, lvlOpenedAt = 0;                                     // erstes Öffnen der Bühne je Wahl: Bedenkzeit für das Sitzungsprotokoll
   let key = '', openedAt = -Infinity, folded = false, focusI = 0, lockMs = C.UI.draftLockMs, hover = -1, built = false, wasVisible = false;
+  let leaving = false, chain = false, dealing = false, flyEls = [];                      // Abräumen läuft; auf eine Wahl folgt gleich die nächste; fliegende Kopien der Karten
   const el = {};
-  const ids = ['stage', 'stageHead', 'stageCards', 'stageDetail', 'stageTools', 'stageReroll', 'stageLater', 'stageBans', 'cardSym', 'deckFill', 'deckCount', 'deckExpl'];
+  const ids = ['stage', 'stageFly', 'stageHead', 'stageCards', 'stageDetail', 'stageTools', 'stageReroll', 'stageLater', 'stageBans', 'cardSym', 'deckFill', 'deckCount', 'deckExpl'];
   const reveal = () => window.matchMedia && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function on(){ return enabled(); }
@@ -44,6 +45,17 @@ const Stage = (() => {
     if (!k || !(k.benoetigt || []).length) return '';
     return t('kp.card.needs', { list: k.benoetigt.map(b => b.startsWith('gebaut:') ? t('kp.card.built', { name: t(`bld.${b.slice(7)}.name`) }) : (G.OPT[b] ? t(G.OPT[b].nameKey) : (G.RES[b] ? t(G.RES[b].nameKey) : b))).join(', ') });
   }
+  const hasKey = k => !!(KF_I18N[lang] && KF_I18N[lang][k]);
+  /* Eine Wirkungszeile auf der Karte (REQ-K2.03): nur die unmittelbare Wirkung, keine Folgekarten */
+  function effLine(o, tier){
+    if (hasKey('kp.eff.' + o.id)) return t('kp.eff.' + o.id, optParams(o, tier));
+    const l = pathLines(o);
+    return l.length ? l[0] : t(o.descKey, optParams(o, tier));
+  }
+  const hasDrawback = (o, tier) => !!(o.tiers[Math.min(tier, o.tiers.length) - 1] || {}).drawback;
+  const discOn = () => Disc.on();
+  /* Rahmenfarbe = Seltenheit, Band = Familie (Modus karten) bzw. Kategorie (Standard mit Bühne) */
+  const bandWord = o => o.pfad ? t('kp.fam.' + o.family) : G.S.pacing === 'karten' ? t('kp.fam.bonus') : t('draft.cat.' + o.category);
 
   function build(d){
     const list = el.stageCards; list.innerHTML = '';
@@ -55,23 +67,24 @@ const Stage = (() => {
       const rot = n > 1 ? (-K.faecherGrad + 2 * K.faecherGrad * i / (n - 1)) : 0;
       b.style.setProperty('--rot', rot.toFixed(2) + 'deg');
       b.style.setProperty('--delay', (i * K.aufdeckAbstandMs) + 'ms');
+      const face = document.createElement('span'); face.className = 'kc-face';
       const head = document.createElement('span'); head.className = 'kc-head';
       const sym = document.createElement('i'); sym.className = 'kc-sym'; sym.setAttribute('aria-hidden', 'true'); sym.textContent = symbol(o);
-      const fam = document.createElement('span'); fam.className = 'kc-fam'; fam.textContent = o.pfad ? t('kp.fam.' + o.family) : `${t('kp.fam.bonus')} · ${t('draft.cat.' + o.category)}`;
+      const fam = document.createElement('span'); fam.className = 'kc-fam'; fam.textContent = bandWord(o);
       const num = document.createElement('span'); num.className = 'kc-key'; num.textContent = String(i + 1);
       head.append(sym, fam, num);
       const nm = document.createElement('b'); nm.className = 'kc-name'; nm.textContent = cardName(o, tier);
       const art = document.createElement('span'); art.className = 'kc-art'; art.setAttribute('aria-hidden', 'true'); art.textContent = symbol(o);
-      const ds = document.createElement('span'); ds.className = 'kc-desc'; ds.textContent = t(o.descKey, optParams(o, tier));
-      for (const line of pathLines(o)){ const u = document.createElement('span'); u.className = 'kc-unlock'; u.textContent = line; ds.appendChild(u); }
-      const nd = needsLine(o); if (nd){ const u = document.createElement('span'); u.className = 'kc-needs'; u.textContent = nd; ds.appendChild(u); }
+      const ds = document.createElement('span'); ds.className = 'kc-desc'; ds.textContent = effLine(o, tier);
       const foot = document.createElement('span'); foot.className = 'kc-foot';
       const dots = document.createElement('span'); dots.className = 'kc-tier'; dots.setAttribute('aria-hidden', 'true');
       dots.textContent = '●'.repeat(tier) + '○'.repeat(o.tiers.length - tier);
-      const rar = document.createElement('span'); rar.className = 'kc-rar'; rar.textContent = t('draft.rarity.' + o.rarity);
-      foot.append(dots, rar);
+      foot.append(dots);
+      if (hasDrawback(o, tier)){ const r = document.createElement('span'); r.className = 'kc-risk'; r.textContent = t('kp.card.drawback'); foot.appendChild(r); }
       const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.kp.card', { tier: optLimit(o) });
-      b.append(head, nm, art, ds, foot, ex);
+      face.append(head, nm, art, ds, foot, ex);
+      const back = document.createElement('span'); back.className = 'kc-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = '\u25C6';
+      b.append(face, back);
       b.addEventListener('click', () => choose(i));
       b.addEventListener('pointerenter', () => { hover = i; detail(); });
       b.addEventListener('pointerleave', () => { if (hover === i) hover = -1; detail(); });
@@ -83,14 +96,83 @@ const Stage = (() => {
     if (G.bansLeft() > 0) d.options.forEach((id, i) => {
       if (!G.canBan(id)) return;                                      // Pfadkarten sind einzige Quelle ihrer Inhalte (REQ-KP.06)
       bans.appendChild(mkButton('btn-ghost', t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }),
-        () => { if (!locked() && G.banOption(i)){ key = ''; requestRender(); } }, 'ban:' + i, t('ex.draft.ban', { n: G.bansLeft() })));
+        () => { if (locked() || leaving) return; const c = el.stageCards.children[i]; if (c && c.animate && reveal()) c.animate([{ opacity: 1, transform: getComputedStyle(c).transform }, { opacity: 0, transform: 'scale(.6) rotate(8deg)' }], { duration: 180, fill: 'forwards' }); setTimeout(() => { if (G.S.pendingDraft && G.banOption(i)){ chain = true; key = ''; requestRender(); } }, reveal() ? 190 : 0); }, 'ban:' + i, t('ex.draft.ban', { n: G.bansLeft() })));
     });
-    lockMs = Math.max(C.UI.draftLockMs, reveal() ? (n - 1) * K.aufdeckAbstandMs + K.aufdeckMs : 0);
-    el.stageCards.classList.toggle('reveal', reveal());
+    const dealMs = reveal() && !chain ? K.austeilMs : 0, flipMs = reveal() ? (n - 1) * K.aufdeckAbstandMs + K.aufdeckMs : 0;
+    lockMs = Math.max(reveal() ? K.sperreMinMs : C.UI.draftLockMs, dealMs + flipMs);       // Sperre endet mit der letzten aufgedeckten Karte, frühestens nach sperreMinMs (REQ-K2.02)
+    dealing = reveal();
+    if (reveal()) deal(dealMs); else dealing = false;
+    chain = false;
+  }
+  /* Austeilen: Karten fliegen als Rückseiten aus dem Kartensymbol der Leiste an ihren Platz und decken nacheinander (links nach rechts) auf (REQ-K2.02) */
+  function deal(dealMs){
+    const cards = [...el.stageCards.children], from = el.cardSym.getBoundingClientRect(), n = cards.length;
+    cards.forEach(c => c.classList.add('back-up'));
+    cards.forEach((c, i) => {
+      const r = c.getBoundingClientRect(), dx = from.left + from.width / 2 - (r.left + r.width / 2), dy = from.top + from.height / 2 - (r.top + r.height / 2);
+      const rot = getComputedStyle(c).getPropertyValue('--rot') || '0deg', t0 = i * K.aufdeckAbstandMs;
+      if (dealMs > 0 && c.animate) c.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.18) rotate(0deg)`, opacity: .9 }, { transform: `translate(0, 0) scale(1) rotate(${rot})`, opacity: 1 }],
+        { duration: dealMs, delay: t0, easing: 'ease-out', fill: 'backwards' });
+      setTimeout(() => {                                                    // Aufdecken: Rückseite schrumpft, Vorderseite wächst
+        if (!c.isConnected) return;
+        if (c.animate) c.animate([{ transform: `rotate(${rot}) scaleX(1)` }, { transform: `rotate(${rot}) scaleX(0)`, offset: .5 }, { transform: `rotate(${rot}) scaleX(1)` }], { duration: K.aufdeckMs, easing: 'ease-in-out' });
+        setTimeout(() => c.classList.remove('back-up'), c.animate ? K.aufdeckMs / 2 : 0);
+      }, dealMs + t0);
+    });
+    setTimeout(() => { dealing = false; requestRender(); }, dealMs + (n - 1) * K.aufdeckAbstandMs + K.aufdeckMs + 20);
+  }
+  /* Wirkort der gewählten Karte (REQ-K2.02): neue Bau-Option bzw. Reiter „Bauen“; Technologie: Reiter „Universität“; Bonus: betroffenes Element,
+     sonst Reiter „Karten“; Wagnis: Ressourcenleiste. mark = Schlüssel der Markierung „neu“. */
+  const vis = e => e && e.isConnected && e.getClientRects().length > 0 && !e.closest('[hidden]');
+  function effectTarget(o){
+    const tab = id => ({ el: $('tab-' + id), mark: 'tab:' + id });
+    const free = k => k && k.startsWith('bau:');
+    if (o.pfad && o.pfad.schaltetFrei && o.pfad.schaltetFrei.length){
+      const k = o.pfad.schaltetFrei[0], [kind, a] = k.split(':');
+      if (kind === 'bau'){ const pk = document.querySelector(`#ctxBuild [data-tooltip^="pick:${a}:"]`); return vis(pk) ? { el: pk, mark: 'pick:' + a } : tab('build'); }
+      if (kind === 'einheit'){ const ub = document.querySelector(`[data-tooltip="unit:${a}"]`); return vis(ub) ? { el: ub, mark: 'unit:' + a } : tab('army'); }
+      return tab('wall');
+    }
+    if (o.pfad && o.family === 'technologie') return tab('uni');
+    if (o.pfad && o.family === 'wagnis') return { el: document.querySelector('.hud-item[data-tooltip="hud:material"]'), mark: null };
+    const hudOf = { wirtschaft: 'hud:material', armee: 'hud:soldiers', basis: 'hud:walls' }[o.category];
+    const he = hudOf && document.querySelector(`.hud-item[data-tooltip="${hudOf}"]`);
+    if (he && vis(he)) return { el: he, mark: null };
+    return tab('cards');
+  }
+  /* Eine fliegende Kopie der Karte von ihrem Platz zum Ziel (Mitte), schrumpfend */
+  function flyClone(card, to, ms, fade){
+    const r = card.getBoundingClientRect(), c = card.cloneNode(true);
+    Object.assign(c.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', margin: 0, pointerEvents: 'none', zIndex: 30, transform: getComputedStyle(card).transform });
+    c.classList.remove('back-up'); c.removeAttribute('data-tooltip'); c.tabIndex = -1;
+    el.stageFly.appendChild(c); flyEls.push(c);
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const tx = Math.max(8, Math.min(vw - 8, to.left + to.width / 2)), ty = Math.max(8, Math.min(vh - 8, to.top + to.height / 2));     // außerhalb des Bildes: an den Rand
+    const dx = tx - (r.left + r.width / 2), dy = ty - (r.top + r.height / 2);
+    c.animate([{ transform: getComputedStyle(card).transform, opacity: 1 }, { transform: `translate(${dx}px, ${dy}px) scale(.12) rotate(0deg)`, opacity: fade ? 0 : .95 }], { duration: ms, easing: 'ease-in', fill: 'forwards' });
   }
   function choose(i){
-    if (locked() || !G.S.pendingDraft) return;
-    if (G.chooseDraft(i)){ key = ''; hover = -1; chosenKey = ''; requestRender(); }
+    if (locked() || leaving || !G.S.pendingDraft) return;
+    const d = G.S.pendingDraft;
+    if (!reveal()){ commit(i, null); return; }
+    leaving = true; Tip.hide();
+    const o = G.OPT[d.options[i]], tg = effectTarget(o), cards = [...el.stageCards.children];
+    const more = G.S.pendingLevels > 1, sym = el.cardSym.getBoundingClientRect();
+    cards.forEach((c, k) => flyClone(c, k === i ? (tg.el ? tg.el.getBoundingClientRect() : sym) : sym, k === i ? K.wirkflugMs : K.wirkflugMs, k !== i && more));
+    el.stageCards.style.visibility = 'hidden'; el.stageTools.style.visibility = 'hidden'; el.stageDetail.style.visibility = 'hidden'; el.stageHead.style.visibility = 'hidden';
+    document.body.classList.add('stage-leaving');
+    setTimeout(() => { commit(i, tg); }, K.abraeumenMs);
+  }
+  function commit(i, tg){
+    const more = G.S.pendingLevels > 1;
+    leaving = false; flyEls.forEach(e => e.remove()); flyEls = [];
+    document.body.classList.remove('stage-leaving');
+    for (const e of [el.stageCards, el.stageTools, el.stageDetail, el.stageHead]) e.style.visibility = '';
+    if (G.S.pendingDraft && G.chooseDraft(i)){
+      key = ''; hover = -1; chosenKey = ''; chain = more;
+      if (tg){ if (tg.mark) NewMarks.flag(tg.mark); if (tg.el){ tg.el.classList.add('fx-glow'); setTimeout(() => tg.el.classList.remove('fx-glow'), K.leuchtMs); } }
+      requestRender();
+    }
   }
   /* Detailzeile: Wirkung der überfahrenen oder fokussierten Karte */
   function detail(){
@@ -98,7 +180,7 @@ const Stage = (() => {
     const i = hover >= 0 ? hover : focusI, id = d.options[i];
     if (id === undefined){ setText(el.stageDetail, t('kp.stage.hint', { n: d.options.length })); return; }
     const o = G.OPT[id], tier = G.cardTaken(id) + 1;
-    const parts = [`${cardName(o, tier)} – ${t(o.descKey, optParams(o, tier))}`, ...pathLines(o), needsLine(o), o.pfad && (o.pfad.exklusivMit || []).length ? t('kp.card.excludes', { list: o.pfad.exklusivMit.map(x => t(G.OPT[x].nameKey)).join(', ') }) : '', o.pfad ? t('kp.card.returns') : '', optLimit(o)].filter(Boolean);
+    const parts = [`${cardName(o, tier)} – ${t(o.descKey, optParams(o, tier))}`, ...(o.family === 'technologie' ? pathLines(o) : []), o.pfad && (o.pfad.exklusivMit || []).length ? t('kp.card.excludesGeneric') : '', optLimit(o)].filter(Boolean);       // REQ-K2.03: nur die unmittelbare Wirkung, keine Folgekarten
     setText(el.stageDetail, parts.join(' · '));
   }
 
@@ -118,7 +200,7 @@ const Stage = (() => {
       setText(el.deckExpl, t('ex.kp.deck', { cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
       el.cardSym.classList.toggle('pulse', !!d && folded);
     }
-    if (!active || !d){ key = ''; folded = false; setHidden(el.stage, true); return; }
+    if (!active || !d){ key = ''; folded = false; chain = chain && !!d; setHidden(el.stage, true); return; }
     const k = d.level + ':' + d.options.join() + ':' + (d.rerolled || 0) + ':' + G.bansLeft() + ':' + lang;
     if (d.level !== lvlKey){ lvlKey = d.level; lvlOpenedAt = performance.now(); }
     if (k !== key){
@@ -165,7 +247,7 @@ const Stage = (() => {
   function init(){
     for (const id of ids) el[id] = $(id);
     built = true;
-    el.stageReroll.addEventListener('click', () => { if (!isDis(el.stageReroll) && G.rerollDraft()){ key = ''; requestRender(); } });
+    el.stageReroll.addEventListener('click', () => { if (!isDis(el.stageReroll) && !leaving && G.rerollDraft()){ key = ''; requestRender(); } });       // neu gezogen wird neu ausgeteilt (REQ-K2.02)
     el.stageLater.addEventListener('click', fold);
     el.cardSym.addEventListener('click', reopen);
     document.addEventListener('keydown', keydown, true);
@@ -173,5 +255,5 @@ const Stage = (() => {
     layout();
   }
   const thinkMs = () => on() && lvlKey !== null ? Math.round(performance.now() - lvlOpenedAt) : null;
-  return { init, render, on, thinkMs, visible, reopen, fold, locked, get folded(){ return folded; }, get el(){ return el; } };
+  return { init, render, on, thinkMs, visible, reopen, fold, locked, get dealing(){ return dealing; }, get leaving(){ return leaving; }, effectTarget, get folded(){ return folded; }, get el(){ return el; } };
 })();

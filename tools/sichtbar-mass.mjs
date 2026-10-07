@@ -19,6 +19,7 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
 const p = await ctx.newPage();
+const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
 await p.goto(`http://127.0.0.1:${server.address().port}/index.html?dev=1&tutorial=0&lang=de&difficulty=normal&${query}`);
 await p.evaluate(() => { localStorage.setItem('klammerfront.skipIntro', '0'); });
 await p.waitForTimeout(400);
@@ -54,6 +55,7 @@ for (const minute of [1, 5, 10]){
 const first = new Set(out.min1.els);
 out.neu1bis10 = out.min10.els.filter(x => !first.has(x)).length;
 const res = { label: args.label || query, query, seed: SEED, min1: out.min1.n, min5: out.min5.n, min10: out.min10.n, neu1bis10: out.neu1bis10, rahmen: out.min1.frame };
+if (errs.length) console.error('FEHLER', errs);
 console.log(JSON.stringify(res));
 if (args.json) writeFileSync(args.json, JSON.stringify(Object.assign(res, { elemente: { min1: out.min1.els, min5: out.min5.els, min10: out.min10.els } }), null, 1));
 await b.close(); server.close();

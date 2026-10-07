@@ -426,7 +426,7 @@ function load(){
     if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]){ discardedSave = true; dropStaleSaves([C.SAVE_KEY]); return false; }
     const tut = d.tut, ui = d.ui; delete d.tut; delete d.ui;     // Tutorial-Fortschritt und Anzeigezustand liegen neben dem Spielstand, nicht darin
     G.adopt(d);
-    NewMarks.restore(ui);
+    NewMarks.restore(ui); Disc.reset();
     Tutorial.restore(TUTORIAL_PARAM === '0' ? null : tut);
     // Reines Online-Spiel (REQ-6.03): beim Laden vergeht keine Spielzeit, die Partie beginnt pausiert; im Tutorial läuft sie von selbst weiter (kein „Weiter“-Klick)
     if (G.S.status === 'running' && !Tutorial.active()) setPaused(true);
@@ -459,7 +459,7 @@ function renderHint(){
   setHidden(box, !id);
   if (!id){ clearTimeout(hintTimer); hintShown = null; return; }
   setText($('hintTitle'), t('hint.title'));
-  setText($('hintText'), t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() }));
+  setText($('hintText'), id.startsWith('disc:') ? Disc.hintText(id) : t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() }));
   setText($('hintOk').querySelector('.btn-label'), t('hint.ok'));
   setText($('hintOk').querySelector('.expl'), t('ex.hintOk'));
   if (hintShown !== id){ hintShown = id; clearTimeout(hintTimer); hintTimer = setTimeout(dismissHint, C.UI.hintAutoMs); }
@@ -575,7 +575,7 @@ function startGame(diff, opts = {}){
   discardedSave = false;
   const tut = opts.tutorial === true;
   storageSet(C.DIFFICULTY_KEY, diff);
-  TutUI.reset(); NewMarks.reset();
+  TutUI.reset(); NewMarks.reset(); Disc.reset();
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
     { pacing: PACING_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
   if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
@@ -669,6 +669,7 @@ function render(){
     if (S.slots.some((sl, i) => sl && G.neighborValue(i, sl.type) !== 0)) showHint('neighbors');
     if (G.siegeAnnounced()) showHint('siege');
   }
+  if (S.status === 'running' && !Tutorial.active() && Disc.on()){ const id = Disc.flush(); if (id) showHint(id); }          // REQ-K2.06: ein Hinweis je Entdeckungsmoment
   renderHint();
   if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t && !modalOpen){
     resultShownFor = S.t;

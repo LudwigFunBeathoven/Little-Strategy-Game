@@ -149,3 +149,31 @@ Befund der ersten Serie: Bots gewannen im Modus karten nach etwa 6 min mit 3 Wah
 16. Kontor-Zinseszins und Presse bleiben frei: Das Kontor selbst ist über „Handel“ gesperrt, und die Tabelle in KP.05 nennt für beide keine Quelle.
 17. Beide Linien des Exklusivpaars öffnen den Ausbau der Kaserne (Stufe 2): Forschung Reiter oder Forschung Armbrustschütze. Mit einer einzigen Quelle (Reiter, wie in der Tabelle KP.05) fehlte der Fernkampflinie dauerhaft Versorgung; ein Paarvergleich innerhalb von 15 pp wäre nicht erreichbar. Je Partie bleibt die Quelle eindeutig, weil die Linien sich ausschließen.
 18. Wagnis-Karten sind gewöhnliche Karten mit eigener Familie; ihr Ziehgewicht kommt aus `gewicht` (Startwert 4 gegenüber 10 bei Pfadkarten), nicht aus den Seltenheitsgewichten der Bonuskarten.
+
+
+# Teil 2: Kartendarstellung und Entdecken (`docs/anforderungen-kartenpfad-2.md`)
+
+## K2.0 Voraussetzungen und Ursache
+- Stand nach Teil 1 (Commit `79ccab4` plus Anforderungsdokument): `main` (v0.8.1) ist eingemischt, `npm test` grün, Browser-Prüfung grün. Die Messung „sichtbare Bedienelemente“ für diesen Stand steht im Bericht (`reports/sichtbar-*.json`).
+- **Ursache der Mitte-Störung (K2.01):** Der Dauerstapel `#deckBtn` war ein Element mit `position: fixed`, `left: 50%`, `bottom: calc(var(--band-work) + 40px)` – also über dem unteren Band in der Bildmitte –, das bei laufender Partie immer sichtbar war (Kartenbühne an). Er lag über Spielwelt und Armee und bildete das Artefakt; bei offener Bühne rückte er an den Fensterrand. Behebung: Das Element ist entfernt; der Fortschritt zur nächsten Wahl liegt als kleines Kartensymbol mit Füllstand in der Ressourcenleiste (`#cardSym`, neben dem EP-Wert), pulsiert bei aufgeschobener Wahl und öffnet beim Klick die Bühne. Außerhalb einer Wahl gibt es kein Bühnenelement (`#stage` ist `hidden`, `display: none`).
+- Ausgangslage Sichtbarkeit: Der Branch zeigte gesperrte Inhalte ausgegraut mit Quelle („Freischaltung: Karte …“, „Öffnet mit …“, Pfadübersicht). K2.04/K2.05 ersetzen das durch „nur, was jetzt nutzbar ist“.
+
+## Umsetzung
+| Inkrement | Inhalt |
+|---|---|
+| K2.1 | Dauerstapel entfernt, `#cardSym` in der Leiste (Füllstand, Zähler, Pulsieren, Klick öffnet die Bühne). |
+| K2.4 | `discover.js` (`Disc`): Tabelle „sichtbar ab“ je Element, Merker je Partie (einmal sichtbar, bleibt sichtbar); Reiter, Abschnitte (Kaserne, Mauer-Spalten, Forschungsspalten), Leistenelemente (EP, Kartensymbol, Versorgung, Armee), Bauoptionen, Einheiten, Ausbaustufen, Forschungen. Reine Anzeige, `core.js` unverändert. |
+| K2.5 | Pfadübersicht, „Öffnet mit“, „Freischaltung: Karte …“ entfallen (`sourceLabel` liefert bei Entdecken nichts); Sammlung nach Familie mit Stufe, dazu die gebannten Karten. |
+| K2.3 | Kartenvorderseite: Band (Familie, bzw. Kategorie ohne Pfad), Name, Symbol, eine Wirkungszeile (`kp.eff.<id>`, höchstens 44 Zeichen; Pfadkarten: „Schaltet frei: …“ bzw. „Öffnet Forschung: …“), Stufenpunkte, Seltenheit als Rahmen, „mit Nachteil“ bei Karten mit Nachteil; einheitliche Rückseite; Detailzeile ohne Folgekarten. |
+| K2.2 | Ablauf: Karten fliegen aus dem Kartensymbol, decken von links nach rechts auf (`KARTENBUEHNE.austeilMs/aufdeckMs/aufdeckAbstandMs`), Eingabesperre bis zur letzten aufgedeckten Karte, frühestens `sperreMinMs`; Wahl: die Karte fliegt zu ihrem Wirkort, die übrigen zurück ins Symbol (`wirkflugMs`, `abraeumenMs`); `prefers-reduced-motion`: keine Bewegung. |
+| K2.6 | Einblenden (≤ 300 ms), Marke „neu“ an Reiter, Bauoption, Einheit, Ausbau und Forschung, genau ein Hinweis je Entdeckungsmoment (`Hints` mit `disc:`-Kennungen, einmal je Browser), Hinweis und Marke nach fertiger Forschung. |
+| K2.7 | Schalter `UI.entdecken`, `UI.kartenbuehne`, `ENTDECKEN.vorschau`, `KARTENBUEHNE.zeit` mit URL-Parametern; Protokoll mit Sichtbarkeitszeit, Entdeckungszeit, Hover je Karte, Schaltern; Messung `tools/sichtbar-mass.mjs`; Testleitfaden; Bericht. |
+
+## Auslegungen und Abweichungen Teil 2 (zur Zustimmung durch den PO)
+19. „Nicht im DOM“ (K2.04) ist als „nicht dargestellt“ umgesetzt (`hidden`, `display: none`, nicht fokussierbar, für Hilfstechniken unsichtbar). Das Element bleibt im Dokument, weil Knöpfe einmal erzeugt werden (REQ-5.01, kein Neuaufbau je Bild); die Tests prüfen `checkVisibility()`.
+20. Der Reiter eines abgerissenen Gebäudes bleibt (Merker je Partie); nach dem Neuladen eines Spielstands gilt die Bedingung wieder neu, ein abgerissener Reiter erscheint dann nicht.
+21. Die Karten nennen bei Mehrfachwirkung nur die erste Wirkung (Echtes Militär: „Schaltet frei: Kaserne, Werfer“; die Versorgung +3 steht in der Detailzeile). Nachteile erscheinen auf der Karte als „mit Nachteil“, der Wortlaut in der Detailzeile.
+22. Die Detailzeile nennt den Ausschluss eines Paares („Schließt eine andere Technologie aus.“) ohne die andere Karte zu benennen, weil K2.03 verbietet, Karten zu nennen, die nicht zur unmittelbaren Wirkung gehören.
+23. Fund beim Messen: Knöpfe mit Klassenregeln (`.btn-ghost`) blieben trotz `hidden` sichtbar (z. B. „Welle vorziehen“ ohne Kaserne). Bei Entdecken behoben (`body.disc button[hidden]`); im Standardmodus ohne Entdecken unverändert, um `main` nicht zu verändern. Vorschlag: eine allgemeine Regel auch für `main` (Patch).
+24. Leistenelement Wellen: nach K2.04 von Anfang an sichtbar (bisher erst mit der ersten Welle, wenn die gestaffelte Einführung lief); im Modus `karten` ohne Einführung war das schon so.
+25. Kennzahl „sichtbare Bedienelemente“ (K2.08): Knöpfe und Reiter sowie Leistenelemente, alle Reiter aufgeklappt gezählt, ohne den Rahmen (Menü, Kamera, Raster-Plätze, Hinweisknopf); der Rahmen wird getrennt ausgewiesen. Ziel „Minute 1 ≤ ein Drittel von Minute 10“: siehe Bericht.
