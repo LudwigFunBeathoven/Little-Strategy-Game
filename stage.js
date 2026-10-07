@@ -9,7 +9,7 @@ const Stage = (() => {
   let lvlKey = null, lvlOpenedAt = 0;                                     // erstes Öffnen der Bühne je Wahl: Bedenkzeit für das Sitzungsprotokoll
   let key = '', openedAt = -Infinity, folded = false, focusI = 0, lockMs = C.UI.draftLockMs, hover = -1, built = false, wasVisible = false;
   const el = {};
-  const ids = ['stage', 'stageHead', 'stageCards', 'stageDetail', 'stageTools', 'stageReroll', 'stageLater', 'stageBans', 'deckBtn', 'deckFill', 'deckCount', 'deckExpl'];
+  const ids = ['stage', 'stageHead', 'stageCards', 'stageDetail', 'stageTools', 'stageReroll', 'stageLater', 'stageBans', 'cardSym', 'deckFill', 'deckCount', 'deckExpl'];
   const reveal = () => window.matchMedia && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function on(){ return enabled(); }
@@ -109,14 +109,14 @@ const Stage = (() => {
     const vis = visible();
     document.body.classList.toggle('stage-open', vis);
     if (vis !== wasVisible){ wasVisible = vis; renderHint(); }
-    // Stapel: dauerhaft sichtbar, solange die Partie läuft
-    setHidden(el.deckBtn, !(active && run));
+    // Kartensymbol in der Ressourcenleiste (REQ-K2.01); kein Bühnenelement außerhalb einer Wahl
+    setHidden(el.cardSym, !(active && run && Disc.shows('hud:cardSym')));
     if (active && run){
       const x = G.xpProgress(), total = Object.values(S.draft.stacks).reduce((a, b) => a + b, 0);
-      setWidth(el.deckFill, 100 * Math.max(0, Math.min(1, x.cur / x.need)));
-      setText(el.deckCount, t('kp.deck.count', { n: total }));
+      { const h = (100 * Math.max(0, Math.min(1, x.cur / x.need))).toFixed(0) + '%'; if (el.deckFill.style.height !== h) el.deckFill.style.height = h; }
+      setText(el.deckCount, total ? fmt(total) : '');
       setText(el.deckExpl, t('ex.kp.deck', { cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
-      el.deckBtn.classList.toggle('pulse', !!d && folded);
+      el.cardSym.classList.toggle('pulse', !!d && folded);
     }
     if (!active || !d){ key = ''; folded = false; setHidden(el.stage, true); return; }
     const k = d.level + ':' + d.options.join() + ':' + (d.rerolled || 0) + ':' + G.bansLeft() + ':' + lang;
@@ -167,7 +167,7 @@ const Stage = (() => {
     built = true;
     el.stageReroll.addEventListener('click', () => { if (!isDis(el.stageReroll) && G.rerollDraft()){ key = ''; requestRender(); } });
     el.stageLater.addEventListener('click', fold);
-    el.deckBtn.addEventListener('click', reopen);
+    el.cardSym.addEventListener('click', reopen);
     document.addEventListener('keydown', keydown, true);
     window.addEventListener('resize', () => { if (built) layout(); });
     layout();

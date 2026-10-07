@@ -104,7 +104,9 @@
   .opt:hover:not(:disabled){border-color:var(--brass); background:var(--brass-soft);}
   .opt.unit:hover:not(:disabled){border-color:var(--steel); background:var(--steel-soft);}
   .opt:disabled{cursor:default; opacity:.5;}
+  .barracks[hidden], .res-tree > div[hidden], .res-group[hidden], .cols > div[hidden]{display:none;}
   .opt[hidden]{display:none;}
+  body.disc button[hidden]{display:none;}              /* REQ-K2.04: ein verborgener Knopf ist nicht sichtbar (Klassenregeln wie .btn-ghost überschrieben sonst das Attribut) */
   .opt-name{font-weight:600; font-size:14px;}
   .opt-name em{font-style:normal; font-weight:400; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; font-size:11.5px; margin-left:6px;}
   .opt-name kbd{font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:500; border:1px solid var(--rule-strong); border-radius:3px; padding:0 5px; margin-right:7px; color:var(--ink-soft);}
@@ -191,6 +193,7 @@
   .card-pick .k{color:var(--cat);}
   .card-pick.rar-rare{border-top:2px solid var(--cat); border-right:2px solid var(--cat); border-bottom:2px solid var(--cat);}
   .card-pick.rar-legendary{border:3px double var(--gold); border-left:5px solid var(--cat); background:var(--brass-soft);}
+  .chosen .fam-h{flex-basis:100%; font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin-top:4px;}
   .chosen .opt-tag{border-left:4px solid var(--cat);}
   .chosen .opt-tag.rar-rare{box-shadow:inset 0 0 0 1px var(--cat);}
   .chosen .opt-tag.rar-legendary{box-shadow:inset 0 0 0 2px var(--gold);}
@@ -198,7 +201,7 @@
 
   /* Kartenbühne (REQ-KP.03): Schleier über allem, Kartenreihe genau in der Bildmitte (Raster 1fr auto 1fr), Stapel am unteren Rand der Bildmitte */
   .stage{position:fixed; inset:0; z-index:20; background:rgba(10,11,7,var(--stage-dim, .45));}
-  .stage[hidden], .deck[hidden]{display:none;}
+  .stage[hidden]{display:none;}
   .stage-grid{position:absolute; inset:0; display:grid; grid-template-rows:minmax(0, 1fr) auto minmax(0, 1fr); justify-items:center; padding:84px 16px;}
   @media (max-height:760px){ .stage-grid{padding:64px 16px;} }
   .stage-head{align-self:end; margin:0 0 14px; color:#FBFBF8; font-size:20px; font-weight:600; text-align:center; text-shadow:0 1px 4px rgba(0,0,0,.6);}
@@ -229,20 +232,9 @@
   .kcard .expl{font-size:10px;}
   @keyframes kflip{from{opacity:0; transform:rotate(var(--rot, 0deg)) translateY(30px) scale(.92);} to{opacity:1; transform:rotate(var(--rot, 0deg));}}
   .stage-cards.reveal .kcard{animation:kflip var(--k-flip, 110ms) ease-out var(--delay, 0ms) both;}
-  @media (prefers-reduced-motion: reduce){ .stage-cards .kcard{animation:none; transition:none;} .deck.pulse{animation:none;} }
-  .deck{position:fixed; z-index:21; left:50%; bottom:calc(var(--band-work, 40vh) + 40px); transform:translateX(-50%); display:flex; align-items:center; gap:10px; padding:6px 12px 6px 8px;
+  @media (prefers-reduced-motion: reduce){ .stage-cards .kcard{animation:none; transition:none;} .card-sym.pulse{animation:none;} }
         background:var(--surface); border:1px solid var(--rule-strong); border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,.25); font:inherit; color:var(--ink); cursor:pointer; text-align:left;}
-  .deck-stack{position:relative; width:34px; height:46px; flex:0 0 auto;}
-  .deck-stack i{position:absolute; inset:0; background:var(--brass); border:2px solid var(--brass-ink); border-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,.4);}
-  .deck-stack i:nth-child(1){transform:translate(-4px, 3px) rotate(-6deg); opacity:.55;} .deck-stack i:nth-child(2){transform:translate(2px, 1px) rotate(4deg); opacity:.8;}
-  .deck-body{display:flex; flex-direction:column; gap:2px; min-width:150px;}
-  .deck-l{font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
-  .deck-n{font-size:13px; font-weight:600;}
-  .deck .expl{font-size:10px;}
-  @keyframes deckpulse{0%,100%{box-shadow:0 0 0 0 rgba(176,138,30,.0);} 50%{box-shadow:0 0 0 6px rgba(176,138,30,.55);}}
-  .deck.pulse{animation:deckpulse .9s ease-in-out infinite; border-color:var(--brass);}
   body.stage-on #draftBox{display:none;}
-  body.stage-open .deck{bottom:10px;}
   .stage-head small{display:block; font-size:13px; font-weight:400; opacity:.9; margin-top:2px;}
 
   /* REQ-03.5: Klick-Knopf tritt in Phase Spät optisch zurück, bleibt bedienbar */
@@ -280,6 +272,12 @@
   .res-run .rush{margin-left:8px;}
   @media (prefers-reduced-motion: reduce){ .tabpanel:not([hidden]), .float, .hud-draft{animation:none;} }
   .hud-s{font-size:11.5px; color:var(--ink-soft);}
+  .card-sym{display:inline-flex; align-items:center; gap:4px; margin-left:6px; padding:1px 4px; background:transparent; border:1px solid var(--rule-strong); border-radius:4px; cursor:pointer; vertical-align:middle;}
+  .card-sym .cs-card{position:relative; display:inline-block; width:12px; height:17px; border:1.5px solid var(--brass-ink); border-radius:2px; background:var(--surface); overflow:hidden;}
+  .card-sym .cs-card i{position:absolute; left:0; right:0; bottom:0; height:0; background:var(--brass);}
+  .card-sym .cs-n{font-size:11px;} .card-sym .expl{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+  @keyframes cspulse{0%,100%{box-shadow:0 0 0 0 rgba(176,138,30,0);} 50%{box-shadow:0 0 0 5px rgba(176,138,30,.55);}}
+  .card-sym.pulse{animation:cspulse .9s ease-in-out infinite; border-color:var(--brass);}
   .hud-xp{min-width:170px;} .hud-xp .bar{height:5px; margin-top:2px;}
   .hud-waves{display:flex; gap:10px; font-size:16px; font-weight:500;}
   .hud-waves .p{color:var(--steel);} .hud-waves .e{color:var(--rust);}
@@ -403,7 +401,7 @@
   <header class="hud" id="hud">
     <div class="hud-item" data-tooltip="hud:soldiers"><span class="hud-l" data-i18n="hud.soldiers"></span><b class="num" id="hudSoldiers">0/3</b></div>
     <div class="hud-item" data-tooltip="hud:material"><span class="hud-l" data-i18n="hud.material"></span><b class="num" id="material">0</b><span class="hud-s num" id="rate"></span></div>
-    <div class="hud-item hud-xp" data-tooltip="hud:xp"><span class="hud-l" data-i18n="hud.xp"></span><b class="num" id="xpVal">0</b>
+    <div class="hud-item hud-xp" data-tooltip="hud:xp"><span class="hud-l" data-i18n="hud.xp"></span><b class="num" id="xpVal">0</b><button class="card-sym" id="cardSym" type="button" data-tooltip="deck" hidden><span class="cs-card" aria-hidden="true"><i id="deckFill"></i></span><span class="cs-n num" id="deckCount"></span><span class="expl" id="deckExpl"></span></button>
       <span class="bar brass"><i id="barLvl"></i></span><span class="hud-s num"><span id="xpRate"></span> · <span id="lvlProg"></span></span></div>
     <div class="hud-item" id="hudWaves" data-tooltip="hud:waves"><span class="hud-l" data-i18n="hud.waves"></span>
       <span class="hud-waves"><span class="num p" id="waveIn">0:20</span><span class="num e" id="enemyWaveIn">0:20</span></span><span class="siege num" id="siegeInfo" hidden></span></div>
@@ -537,10 +535,6 @@
     </div>
   </div>
 </div>
-<button class="deck" id="deckBtn" type="button" data-tooltip="deck" hidden>
-  <span class="deck-stack" aria-hidden="true"><i></i><i></i><i></i></span>
-  <span class="deck-body"><span class="deck-l" data-i18n="kp.deck.label"></span><span class="bar thin brass"><i id="deckFill"></i></span><span class="deck-n" id="deckCount"></span><span class="expl" id="deckExpl"></span></span>
-</button>
 
 <div class="tut-bubble" id="tutBubble" role="status" hidden><span class="tb-narr" id="tutBubbleNarr"></span><b class="tb-task" id="tutBubbleTask"></b><i class="tb-more" id="tutBubbleMore" hidden></i></div>
 
@@ -572,6 +566,7 @@
 <script src="core.js"></script>
 <script src="ui.js"></script>
 <script src="render.js"></script>
+<script src="discover.js"></script>
 <script src="hud.js"></script>
 <script src="panels.js"></script>
 <script src="stage.js"></script>

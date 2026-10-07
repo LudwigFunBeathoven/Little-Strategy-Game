@@ -124,12 +124,12 @@ function previewUpgrade(id){
 /* Erklärzeile unter jedem Kaufknopf: Wirkung · Kosten (REQ-20.1) */
 function explUpgrade(id){
   if (G.isMaxed(id)) return t('opt.max');
-  if (G.stageSource(id)) return sourceLabel(G.stageSource(id));
+  if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || t('build.reason.locked');
   const [label, change] = previewUpgrade(id);
   return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
 }
 function explUnit(id){
-  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src); }
+  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src) || t('build.reason.locked'); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: G.S.queue.length, max: G.supplyCap() });   // Grund der Sperre (REQ-14.2)
   const own = G.ownType(id), hp = G.unitStats('p', own).hp;
   return t('ex.unit', { role: t(G.unitRange('p', own) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitCost(own)) });
@@ -137,6 +137,7 @@ function explUnit(id){
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
 /* Wer einen gesperrten Inhalt öffnet: Karte oder Forschung (REQ-KP.01); id = Karten- oder Forschungs-Id */
 function sourceLabel(id){
+  if (Disc.on()) return null;                                              // REQ-K2.05: nie Gesperrtes benennen
   if (Array.isArray(id)) return id.map(sourceLabel).filter(Boolean).join(' / ');
   if (G.OPT[id]) return t('kp.lock.card', { name: t(G.OPT[id].nameKey) });
   if (G.RES[id]) return t('kp.lock.research', { name: t(G.RES[id].nameKey) });
@@ -165,7 +166,7 @@ function upgradeReason(id){
   const S = G.S, u = C.UPGRADES[id];
   if (S.status !== 'running') return t('tip.notRunning');
   if (G.isMaxed(id)) return t('tip.maxed');
-  if (G.stageSource(id)) return sourceLabel(G.stageSource(id));
+  if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || t('build.reason.locked');
   if (C.BUILDINGS.includes(u.group) && !G.has(u.group)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
   if (u.needs && S.lvl[u.needs] <= 0) return t('tip.needsTower');
   if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);
@@ -714,7 +715,7 @@ function boot(){
 
   // Schnittstelle für automatisierte Browser-Tests; nur mit ?dev=1 oder ?debug=1 (im öffentlichen Spiel nicht vorhanden, REQ-R.05)
   if (DEV || DEBUG) window.__kf = { G, C, t, save, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, Tutorial, TutUI,
-                  selectPlot, selectSection, clearSelection, selectTab, setPaused,
+                  selectPlot, selectSection, clearSelection, selectTab, setPaused, Disc, Stage,
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };
 

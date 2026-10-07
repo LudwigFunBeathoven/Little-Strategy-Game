@@ -46,6 +46,7 @@ function tabForSel(s){
   return sl ? C.UI.homeTab[sl.type] : 'build';
 }
 function tabVisible(id){
+  if (Disc.on()) return Disc.shows('tab:' + id);                           // REQ-K2.04: Reiter erst, wenn etwas darin nutzbar ist; ein Reiter bleibt danach
   if (id === 'smithy') return G.has('schmiede');
   if (id === 'cards') return G.introShows('cards');
   return true;
@@ -252,7 +253,7 @@ function renderContext(){
     const i = sel.i;
     for (const type of C.BUILDINGS){
       const block = G.buildBlock(i, type);
-      if (block === 'standing' || block === 'hidden') continue;
+      if (block === 'standing' || block === 'hidden' || (block === 'locked' && Disc.on())) continue;
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `pick:${type}:${i}`;
       const nm = document.createElement('b');
@@ -297,7 +298,7 @@ function renderOpts(){
   const S = G.S;
   for (const id in C.UPGRADES){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];
-    setHidden(el.btn, !(G.isAvailable(id) && (S.revealed[id] || (S.pacing === 'karten' && G.stageSource(id)))));
+    setHidden(el.btn, !(G.isAvailable(id) && (S.revealed[id] || (!Disc.on() && S.pacing === 'karten' && G.stageSource(id)))));
     if (el.btn.hidden) continue;
     setText(el.label, baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`));
     setHidden(el.tag, lv === 0);
@@ -308,7 +309,7 @@ function renderOpts(){
   for (const id in C.UNITS){
     if (C.UNITS[id].replacement) continue;                                     // Ersatzeinheiten haben keinen eigenen Knopf (REQ-KP.05)
     const spec = C.UNITS[id], el = optEls['unit_' + id];
-    setHidden(el.btn, !G.unitUnlocked(id) && !(S.pacing === 'karten' && G.unitSource(id) && G.sourceReachable(G.unitSource(id))));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
+    setHidden(el.btn, !G.unitUnlocked(id) && !(!Disc.on() && S.pacing === 'karten' && G.unitSource(id) && G.sourceReachable(G.unitSource(id))));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
     setHidden(el.kbd, false); setText(el.kbd, spec.key);
     setText(el.label, t(`unit.${G.ownType(id)}.name`));
     const open = G.unitUnlocked(id);                                          // gesperrt sichtbar: keine Marke „neu“, erst nach der Freischaltung
@@ -371,14 +372,15 @@ function pathStatus(){
   }
   return out;
 }
+const FAMILY_ORDER = ['bau', 'technologie', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
 let chosenKey = '', draftKey = '';
 function renderChosen(){
-  const ps = Stage.on() ? pathStatus() : [];
-  const st = G.S.draft.stacks, key = lang + JSON.stringify(st) + JSON.stringify(G.S.research.banned) + Stage.on() + ps.map(x => x.id + x.st).join();
+  const ps = Stage.on() && !Disc.on() ? pathStatus() : [];
+  const st = G.S.draft.stacks, key = lang + JSON.stringify(st) + JSON.stringify(G.S.research.banned) + Stage.on() + Disc.on() + ps.map(x => x.id + x.st).join();
   if (key === chosenKey) return;
   // Sammlung (Kartenbühne): Hinweis und gebannte Karten; gewählt wird auf der Bühne (REQ-KP.03)
   const coll = Stage.on(), banned = G.S.research.banned || [];
-  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll); setHidden($('pathHead'), !coll); setHidden($('pathList'), !coll);
+  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll); setHidden($('pathHead'), !coll || Disc.on()); setHidden($('pathList'), !coll || Disc.on());       // REQ-K2.05: keine Pfadübersicht
   if (coll){
     setText($('collHint'), t('kp.collection.hint'));
     const pl = $('pathList'); pl.innerHTML = '';
@@ -400,8 +402,11 @@ function renderChosen(){
   const box = $('chosen'); box.innerHTML = '';
   const ids = Object.keys(st).filter(id => st[id] > 0);
   if (!ids.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('level.none'); box.appendChild(e); return; }
+  let lastFam = null;
+  if (Disc.on()) ids.sort((a, b) => FAMILY_ORDER.indexOf(famOf(G.OPT[a])) - FAMILY_ORDER.indexOf(famOf(G.OPT[b])));      // REQ-K2.05: Sammlung nach Familie
   for (const id of ids){
     const o = G.OPT[id], tag = document.createElement('span');
+    if (Disc.on() && famOf(o) !== lastFam){ lastFam = famOf(o); const h = document.createElement('span'); h.className = 'fam-h fam-' + lastFam; h.textContent = t('kp.fam.' + lastFam); box.appendChild(h); }
     tag.className = 'opt-tag ' + cardClass(o); tag.dataset.tooltip = 'chosen:' + id;
     const b = document.createElement('b'); b.textContent = cardName(o, st[id]);
     tag.appendChild(b);
@@ -514,8 +519,9 @@ function renderResearch(){
   for (const [cid, g] of Object.entries(resGroupsAll)) setHidden(g.g, S.pacing !== 'karten' || G.cardExcluded(cid));
   for (const r of G.RESEARCH){
     const el = resEls[r.id], n = G.researchTier(r.id), next = G.researchNext(r.id);
-    setHidden(el.btn, !inMode(r));
-    if (!inMode(r)) continue;
+    const vis = inMode(r) && !(Disc.on() && ['closed', 'requires'].includes(G.researchBlock(r.id)));
+    setHidden(el.btn, !vis);
+    if (!vis) continue;
     if (el.group) setText(el.group.h, t(G.OPT[el.card].nameKey));
     setText(el.label, researchName(r, Math.min(n + 1, r.tiers.length)));
     setHidden(el.tag, n === 0);
@@ -523,6 +529,11 @@ function renderResearch(){
     setText(el.expl, G.researchBlock(r.id) === 'closed' ? researchReason(r.id) : next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
                           : t('opt.max'));
     setDis(el.btn, !!G.researchBlock(r.id));
+  }
+  if (Disc.on()){                                                          // REQ-K2.04: keine leeren Bereiche, Gruppen und Spalten ohne sichtbare Forschung entfallen
+    for (const g of Object.values(resGroupsAll)) setHidden(g.g, !g.opts.querySelector('.opt:not([hidden])'));
+    for (const col of document.querySelectorAll('.res-tree > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));
+    setHidden($('resPfad'), !Object.values(resGroupsAll).some(g => !g.g.hidden));
   }
   // Laufende Forschung mit Fortschrittsbalken; Knoten nur neu bei geänderter Liste
   const box = $('resActive'), key = lang + S.research.active.map(a => a.id + a.tier).join();
@@ -565,6 +576,7 @@ function toast(text){
 function renderPanels(){
   const S = G.S, running = S.status === 'running';
   autoDraft();
+  document.body.classList.toggle('disc', Disc.on());
   if (!tabVisible(activeTab)) activeTab = 'build';                      // Reiter verschwunden (Schmiede abgerissen)
   for (const id of TABS){
     const el = tabEls[id], on = id === activeTab;
@@ -594,6 +606,10 @@ function renderPanels(){
   renderOpts();
   renderContext();
   renderDraftLock();
+  if (Disc.on()){                                                          // REQ-K2.04: Abschnitte ohne nutzbaren Inhalt entfallen
+    for (const col of document.querySelectorAll('#panel-wall > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));
+    setHidden($('armyKaserne'), !Disc.shows('army:kaserne'));
+  }
   // Kaserne im Reiter Armee (REQ-6.05)
   const kas = G.has('kaserne');
   setText($('kaserneStatus'), kas ? t('kaserne.status.built', { n: G.kaserneLevel(), m: G.supplyCap() }) : t('kaserne.status.none'));

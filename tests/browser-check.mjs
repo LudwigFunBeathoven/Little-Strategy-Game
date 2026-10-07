@@ -942,9 +942,9 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
     return { vis: !g('stage').hidden, pending: !!__kf.G.S.pendingDraft, levels: __kf.G.S.pendingLevels, tab: __kf.tab, n: cs.length,
       cx: (r.left + r.width / 2) / innerWidth, cy: (r.top + r.height / 2) / innerHeight, locked: g('stageCards').classList.contains('locked'),
       inView: cs.every(c => { const q = c.getBoundingClientRect(); return q.left >= 0 && q.right <= innerWidth && q.top >= 0 && q.bottom <= innerHeight; }),
-      w: cs[0] ? cs[0].offsetWidth : 0, deck: !g('deckBtn').hidden, oldBox: !g('draftBox').offsetParent === false }; });
+      w: cs[0] ? cs[0].offsetWidth : 0, deck: !g('cardSym').hidden, oldBox: !g('draftBox').offsetParent === false }; });
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.selectTab ? 0 : 0; });
-  check(await p.evaluate(() => !document.getElementById('deckBtn').hidden), `[${vw}] Kartenbühne: Stapel ist vor der ersten Wahl sichtbar`);
+  check(await p.evaluate(() => !document.getElementById('cardSym').hidden), `[${vw}] Kartenbühne: Kartensymbol ist vor der ersten Wahl sichtbar (ohne Entdecken)`);
   const tab0 = await p.evaluate(() => __kf.tab);
   await lv(2); await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 }).catch(() => {});
   const s1 = await st();
@@ -976,9 +976,9 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
   await lv(1); await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
   await p.click('#stageLater'); await p.waitForTimeout(80);
-  const f1 = await p.evaluate(() => ({ hidden: document.getElementById('stage').hidden, pending: !!__kf.G.S.pendingDraft, pulse: document.getElementById('deckBtn').classList.contains('pulse') }));
+  const f1 = await p.evaluate(() => ({ hidden: document.getElementById('stage').hidden, pending: !!__kf.G.S.pendingDraft, pulse: document.getElementById('cardSym').classList.contains('pulse') }));
   check(f1.hidden && f1.pending && f1.pulse, `[${vw}] Kartenbühne: „Später“ klappt ein, Wahl bleibt offen, Stapel pulsiert ${JSON.stringify(f1)}`);
-  await p.click('#deckBtn'); await p.waitForTimeout(80);
+  await p.click('#cardSym'); await p.waitForTimeout(80);
   check((await st()).vis, `[${vw}] Kartenbühne: Klick auf den Stapel öffnet die Bühne wieder`);
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
   await p.keyboard.press('1'); await p.waitForTimeout(80);
@@ -1003,7 +1003,7 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
   await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + 1); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99991, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
   await p.waitForFunction(() => __kf.tab === 'cards', null, { timeout: 3000 }).catch(() => {});
-  const o = await p.evaluate(() => ({ tab: __kf.tab, stage: document.getElementById('stage').hidden, deck: document.getElementById('deckBtn').hidden, box: !document.getElementById('draftBox').hidden }));
+  const o = await p.evaluate(() => ({ tab: __kf.tab, stage: document.getElementById('stage').hidden, deck: document.getElementById('cardSym').hidden, box: !document.getElementById('draftBox').hidden }));
   check(o.tab === 'cards' && o.stage && o.deck && o.box, `Kartenbühne aus: Wahl im Reiter Karten wie in v0.8 ${JSON.stringify(o)}`);
   await ctx.close();
 }
@@ -1013,7 +1013,7 @@ for (const lang of ['de', 'en']){
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if ((m.type() === 'error' || (m.type() === 'warning' && m.text().includes('[i18n]'))) && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
-  await p.goto(base + `index.html?dev=1&tutorial=0&pacing=karten&lang=${lang}&difficulty=easy`); await p.waitForTimeout(400);
+  await p.goto(base + `index.html?dev=1&tutorial=0&pacing=karten&entdecken=0&lang=${lang}&difficulty=easy`); await p.waitForTimeout(400);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.G.S.material = 3000; __kf.selectPlot(1); }); await p.waitForTimeout(250);
   const srcName = id => p.evaluate(id => __kf.t(__kf.G.OPT[id].nameKey), id);
   const buildTxt = await p.evaluate(() => [...document.querySelectorAll('#ctxBuild .pick')].map(x => ({ type: x.dataset.tooltip.split(':')[1], dis: x.getAttribute('aria-disabled'), txt: x.textContent })));
@@ -1078,7 +1078,7 @@ for (const lang of ['de', 'en']){
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
-  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&entdecken=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.unlockKey('bau:universitaet'); G.build('universitaet'); document.querySelector('#hintBox').hidden = true; __kf.selectTab('uni'); }); await p.waitForTimeout(250);
   const u1 = await p.evaluate(() => ({ box: !document.getElementById('resPfad').hidden, groups: [...document.querySelectorAll('#resPfad .res-group:not([hidden])')].map(g => g.textContent), dis: [...document.querySelectorAll('[data-tooltip="res:r_mauerausbau3"]')].map(b => b.getAttribute('aria-disabled')) }));
   check(u1.box && u1.groups.length >= 1 && u1.groups.some(g => g.includes('Befestigungskunde') && g.includes('Öffnet mit: Karte Befestigungskunde')) && u1.groups.length === 4 && u1.dis[0] === 'true', `Universität/karten: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“ ${JSON.stringify(u1.groups)}`);
@@ -1103,7 +1103,7 @@ for (const lang of ['de', 'en']){
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if ((m.type() === 'error' || (m.type() === 'warning' && m.text().includes('[i18n]'))) && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
-  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&entdecken=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.G.S.material = 5000; __kf.selectTab('army'); }); await p.waitForTimeout(250);
   const names = () => p.evaluate(() => [...document.querySelectorAll('#optsUnits .opt')].filter(b => !b.hidden).map(b => b.querySelector('.opt-name span:nth-child(2)').textContent));
   check((await names()).join() === 'Läufer,Werfer,Schildträger,Reiter,Armbrustschütze,Katapult' && await p.evaluate(() => ['werfer', 'schild', 'reiter', 'armbrust', 'katapult'].every(u => document.querySelector(`[data-tooltip="unit:${u}"]`).getAttribute('aria-disabled') === 'true')), `Armee/karten: Läufer frei, alle weiteren Einheiten sichtbar und gesperrt ${JSON.stringify(await names())}`);
