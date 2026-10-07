@@ -40,6 +40,8 @@ const adjacent = i => { const g = C.GRID_SIZE, r = Math.floor(i / g), c = i % g,
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
 const SAVE_VERSION = 8;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+/* Werfer und seine Ersatzeinheiten teilen die Werfer-Karten (Lange Wurfarme …) */
+const isThrower = type => (C.UNITS[type].base || type) === 'werfer';
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
 
 /* Seedbarer Zufallsgenerator (mulberry32). Der Zustand liegt im Spielstand, damit Kopien identisch weiterlaufen. */
@@ -170,7 +172,7 @@ function create(){
   /* Werte einer Einheit nach Typ und Seite (ohne Zufall); makeUnit und der Einheitenersatz nutzen dieselbe Rechnung */
   function unitStats(side, type){
     const spec = C.UNITS[type], p = side === 'p';
-    const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (type === 'werfer' ? mMul('werferHp') : 1) : enemyHpMult());
+    const hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (isThrower(type) ? mMul('werferHp') : 1) : enemyHpMult());
     return { speed: spec.speed, range: unitRange(side, type), ranged: isRangedType(type), hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()), cdMax: spec.cd * (p ? cdMultP() : 1) };
   }
   /* Einheitenersatz: ab jetzt entsteht to statt from; Einheiten in der Warteschlange und auf dem Feld werden aufgewertet, nichts wird gelöscht
@@ -257,7 +259,7 @@ function create(){
   const siegeAnnounced = () => !S.siegeDone && S.siegeAnnouncedAt !== null;
   const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost') * (1 + nbTotal('schmiede'))));
   const spawnX       = () => PBW + mAdd('spawnOffset');
-  const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && type === 'werfer' ? mAdd('werferRange') : 0);
+  const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const xpNeed       = n => xpForLevel(n) * mMul('xpNeed');
   const xpProgress   = () => ({ level: S.level, cur: S.xpTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
@@ -1032,7 +1034,7 @@ function create(){
     const r = RES[id];
     if (!r) return 'unknown';
     if (S.status !== 'running') return 'notRunning';
-    if (r.branch === 'pfad' && S.pacing !== 'karten') return 'notInMode';
+    if ((r.branch === 'pfad' && S.pacing !== 'karten') || (S.pacing === 'karten' && PFAD && (PFAD.entfallen || []).includes(id))) return 'notInMode';
     if (!has('universitaet')) return 'noUni';
     if (!isOpen('forschung:' + id)) return 'closed';
     if (!researchNext(id)) return 'maxed';

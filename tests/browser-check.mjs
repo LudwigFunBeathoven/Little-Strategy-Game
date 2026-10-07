@@ -1081,7 +1081,7 @@ for (const lang of ['de', 'en']){
   await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.unlockKey('bau:universitaet'); G.build('universitaet'); document.querySelector('#hintBox').hidden = true; __kf.selectTab('uni'); }); await p.waitForTimeout(250);
   const u1 = await p.evaluate(() => ({ box: !document.getElementById('resPfad').hidden, groups: [...document.querySelectorAll('#resPfad .res-group:not([hidden])')].map(g => g.textContent), dis: [...document.querySelectorAll('[data-tooltip="res:r_mauerausbau3"]')].map(b => b.getAttribute('aria-disabled')) }));
-  check(u1.box && u1.groups.length >= 1 && u1.groups[0].includes('Befestigungskunde') && u1.groups[0].includes('Öffnet mit: Karte Befestigungskunde') && u1.dis[0] === 'true', `Universität/karten: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“ ${JSON.stringify(u1.groups)}`);
+  check(u1.box && u1.groups.length >= 1 && u1.groups.some(g => g.includes('Befestigungskunde') && g.includes('Öffnet mit: Karte Befestigungskunde')) && u1.groups.length === 3 && u1.dis[0] === 'true', `Universität/karten: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“ ${JSON.stringify(u1.groups)}`);
   await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.pfadFestungsbau = 1; G.S.pendingDraft = { level: 1, options: ['befestigungskunde', 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0); G.startResearch('r_mauerausbau3'); __kf.requestRender(); });
   await p.waitForTimeout(300);
   const u2 = await p.evaluate(() => ({ run: document.getElementById('resActive').textContent, dis: document.querySelector('[data-tooltip="res:r_turmausbau"]').getAttribute('aria-disabled'), txt: document.querySelector('[data-tooltip="res:r_turmausbau"]').textContent }));
@@ -1093,6 +1093,26 @@ for (const lang of ['de', 'en']){
   await p2.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p2.waitForTimeout(300);
   check(await p2.evaluate(() => document.getElementById('resPfad').hidden && [...document.querySelectorAll('[data-tooltip="res:r_mauerausbau3"]')].every(b => b.hidden)), 'Universität/standard: keine Pfadforschung sichtbar');
   await ctx2.close(); await ctx.close();
+}
+
+/* ---------- Armee im Modus karten: neue Einheiten, Einheitenersatz (REQ-KP.05) ---------- */
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if ((m.type() === 'error' || (m.type() === 'warning' && m.text().includes('[i18n]'))) && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.G.S.material = 5000; __kf.selectTab('army'); }); await p.waitForTimeout(250);
+  const names = () => p.evaluate(() => [...document.querySelectorAll('#optsUnits .opt')].filter(b => !b.hidden).map(b => b.querySelector('.opt-name span:nth-child(2)').textContent));
+  check((await names()).join() === 'Läufer,Werfer,Schildträger,Reiter' && await p.evaluate(() => ['werfer', 'schild', 'reiter'].every(u => document.querySelector(`[data-tooltip="unit:${u}"]`).getAttribute('aria-disabled') === 'true')), `Armee/karten: Läufer frei, Werfer, Schildträger und Reiter sichtbar und gesperrt ${JSON.stringify(await names())}`);
+  await p.evaluate(() => { const G = __kf.G; G.unlockKey('einheit:werfer'); G.S.research.done.r_reiter = 1; G.unlockKey('einheit:reiter'); G.S.research.ver++; G.spawn('laeufer'); __kf.requestRender(); }); await p.waitForTimeout(250);
+  const n2 = await names();
+  check(n2.includes('Reiter') && await p.evaluate(() => document.querySelector('[data-tooltip="unit:reiter"]').getAttribute('aria-disabled')) === 'false', `Armee/karten: Reiter nach der Forschung verfügbar ${JSON.stringify(n2)}`);
+  await p.evaluate(() => { const G = __kf.G; G.S.research.done.r_eisenwaffen = 1; G.S.research.ver++; G.replaceUnit('laeufer', 'schwertkaempfer'); G.replaceUnit('werfer', 'bogenschuetze'); __kf.requestRender(); }); await p.waitForTimeout(250);
+  const n3 = await names();
+  check(n3.includes('Schwertkämpfer') && n3.includes('Bogenschütze') && !n3.includes('Läufer'), `Armee/karten: Einheitenersatz benennt die Knöpfe um ${JSON.stringify(n3)}`);
+  check(await p.evaluate(() => __kf.G.S.queue.every(q => q.type === 'schwertkaempfer')), 'Armee/karten: Warteschlange aufgewertet');
+  const a = await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }));
+  check(a.t === 0 && a.e === 0 && errs.length === 0, `Armee/karten: Tooltips, Erklärzeilen, keine Fehler${show(errs)}`);
+  await ctx.close();
 }
 
 await b.close();

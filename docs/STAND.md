@@ -89,6 +89,27 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 - Reiter „Universität“: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“, Fortschrittsbalken und Restzeit je laufender Forschung, Hinweis bei Abschluss (Toast und Marke am Reiter) wie bisher.
 - Tests: `tests/kartenpfad.test.mjs` (Karte öffnet Forschung, Zeit, Plätze, Abriss), `tests/browser-check.mjs` (Universität im Modus karten).
 
+## KP.5
+
+- Neue Technologiekarten: Fortgeschrittene Taktiken (ab Wahl 3, braucht Echtes Militär und Universität; öffnet Reiter und Schildträger), Eiserne Klingen (ab Wahl 4, braucht Metallverarbeitung und Universität; öffnet Eisenwaffen).
+- Neue Einheiten als Datensätze in `C.UNITS` (Werte, Kosten, Farbton): Reiter (schnell), Schwertkämpfer (Ersatz für Läufer), Bogenschütze (Ersatz für Werfer). Schildträger bleibt, gesperrt bis zur Pfadforschung `r_schild` (die alte Forschung `r_schildtraeger` entfällt im Modus karten). Neue Einheiten haben kein neues Verhalten, nur Werte und einen Farbpunkt (`farbton`); Versorgung: jede Einheit zählt 1.
+- Einheitenersatz (Forschung Eisenwaffen): Läufer → Schwertkämpfer, Werfer → Bogenschütze. Warteschlange und Einheiten auf dem Feld werden beim Abschluss aufgewertet (Lebenspunkte im selben Verhältnis), nichts wird gelöscht; Ersatzeinheiten erben die Werfer-Karten.
+- Reiter „Armee“: Reiter und Schildträger sind sichtbar und gesperrt („Forschung: …“), nach der Forschung mit Kosten und Erklärzeile verfügbar; ein Ersatz benennt den Knopf um.
+- Upgrade-Stufen mit genau einer Quelle (Tabelle unten, Übersicht auch im Bericht): Stufe 1 jedes Gebäudes ab dem Bau frei, Stufen ab 2 nach Quelle.
+
+| Upgrade | Stufe 1 (frei) | ab Stufe 2 | Quelle |
+|---|---|---|---|
+| Schmiede: Qualitätsstufe | Kauf 1–3 | Kauf 4 und folgende | Forschung Eisenwaffen |
+| Kaserne: Ausbau | Kaserne selbst (Stufe 1) | Kauf 1 (Stufe 2) und folgende | Forschung Reiter |
+| Mauer: Verstärkung | – | Kauf 1 (Stufe 2) / ab Kauf 2 (Stufe 3) | Karte Festungsbau / Forschung Mauerausbau III |
+| Mauer: Stachelwall, Mörtelkolonne | – | alle Käufe | Karte Festungsbau |
+| Turm: errichten / Kaliber | – | Kauf 1 (errichten) / ab Kauf 2 | Karte Festungsbau / Forschung Turmausbau |
+| Turm: Reichweite, Feuerrate | – | alle Käufe | Forschung Turmausbau |
+| Kontor: Zinseszins | alle Käufe frei | – | – (Kontor selbst über Karte Handel) |
+| Presse (Klickfeld) | alle Käufe frei | – | – |
+
+(Die Quellen stehen nur in `data/kartenpfad.js` bei den Karten und Forschungen als `schaltetFrei`.)
+
 ## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
 
 1. Das Dokument `branch-konzepte-pacing.md` fehlt; der Unterbau folgt allein den Angaben im Anforderungsdokument.
@@ -105,3 +126,5 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 12. Test des Tutorials im Modus karten: Ein bekanntes Zeitverhalten im Tutorial-Test „Abschied 2 nach Klick“ (Blasen laufen nach `greetMs` selbst weiter) ließ einen Lauf unter Last scheitern; der Wiederholungslauf war grün.
 13. Bestehende Forschungen (REQ-KP.04, Zuordnung zur Freigabe): alle 13 Forschungen aus v0.8 bleiben Grundforschung (verfügbar, sobald die Universität steht); eine Zuordnung zu Technologiekarten gibt es nicht, weil sie die Karten- und Forschungsfolge zusätzlich verlängerte (ohnehin nur 3 bis 7 Wahlen je Partie). Ausnahme: „Schildträger“ (alt) entfällt im Modus karten und wird durch die neue Pfadforschung ersetzt (KP.5).
 14. Forschungsplatz: „ein Ausbau öffnet einen zweiten“ ist die bestehende Forschung „Zweiter Platz“; einen eigenen Ausbau der Universität gibt es nicht.
+15. Die Gebäude-Ausbaustufen sind den vorhandenen Upgrades zugeordnet (Tabelle bei KP.5). „Stufe 2“ der Kaserne (Ausbau) und die Schmiede-Stufen ab 4 liegen hinter Forschungen; das hält die Versorgung und die Schmiede lange klein (Risiko, in der Simulation prüfen, Bericht).
+16. Kontor-Zinseszins und Presse bleiben frei: Das Kontor selbst ist über „Handel“ gesperrt, und die Tabelle in KP.05 nennt für beide keine Quelle.

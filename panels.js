@@ -12,7 +12,7 @@ const NewMarks = (() => {
   let seen = new Set(), baseline = true, since = new Map(), touched = new Set();
   const ids = () => [...TABS.filter(tabVisible).map(x => 'tab:' + x),
                      ...C.BUILDINGS.filter(b => G.isBuildable(b) && (b === 'fabrik' || G.introShows('buildings'))).map(b => 'pick:' + b),
-                     ...Object.keys(C.UNITS).filter(u => G.unitUnlocked(u)).map(u => 'unit:' + u)];
+                     ...Object.keys(C.UNITS).filter(u => !C.UNITS[u].replacement && G.unitUnlocked(u)).map(u => 'unit:' + u)];
   return {
     isNew: id => !baseline && !seen.has(id),
     /* Der Inhalt ist gerade zu sehen; nach UI.newSeenMs gilt er als angesehen. */
@@ -155,7 +155,7 @@ function buildPanels(){
     if (to >= 0){ e.preventDefault(); gridEls.forEach((g, k) => { g.btn.tabIndex = k === to ? 0 : -1; }); gridEls[to].btn.focus(); }
   });
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
-  for (const id in C.UNITS) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
+  for (const id in C.UNITS) if (!C.UNITS[id].replacement) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
   ctxRepairOpt = makeOpt($('ctxRepair'), '', 'repair:' + C.GATE_LANE, () => { if (sel && sel.kind === 'section') G.repair(sel.lane); });
   // Forschungsbaum: ein Knopf je Forschung, einmal erzeugt (REQ-5.07)
@@ -302,10 +302,11 @@ function renderOpts(){
     setDis(el.btn, !G.canBuy(id));
   }
   for (const id in C.UNITS){
+    if (C.UNITS[id].replacement) continue;                                     // Ersatzeinheiten haben keinen eigenen Knopf (REQ-KP.05)
     const spec = C.UNITS[id], el = optEls['unit_' + id];
     setHidden(el.btn, !G.unitUnlocked(id) && !(S.pacing === 'karten' && G.unitSource(id)));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
     setHidden(el.kbd, false); setText(el.kbd, spec.key);
-    setText(el.label, t(`unit.${id}.name`));
+    setText(el.label, t(`unit.${G.ownType(id)}.name`));
     const open = G.unitUnlocked(id);                                          // gesperrt sichtbar: keine Marke „neu“, erst nach der Freischaltung
     setText(el.fresh, t('mark.new')); setHidden(el.fresh, el.btn.hidden || !open || !NewMarks.isNew('unit:' + id));
     if (activeTab === 'army' && !el.btn.hidden && open) NewMarks.view('unit:' + id);
@@ -421,7 +422,7 @@ function renderDraftLock(){
 }
 
 /* ---------- Armee: Vorschau je Lane (REQ-14.3) und Ereignisse ---------- */
-const GLYPH = { laeufer: '\u25A0', werfer: '\u25B2', schild: '\u25C6' };
+const GLYPH = { laeufer: '\u25A0', werfer: '\u25B2', schild: '\u25C6', reiter: '\u25C7', schwertkaempfer: '\u25A0', bogenschuetze: '\u25B2' };
 let previewKey = '', lastLogKey = '';
 function countLine(group, lane){
   const n = {};

@@ -200,6 +200,8 @@ function drawUnit(u){
     ctx.beginPath(); ctx.moveTo(p.x + dir * r * 1.2, p.y); ctx.lineTo(p.x - dir * r, p.y - r); ctx.lineTo(p.x - dir * r, p.y + r);   // Fernkämpfer: Dreieck
     ctx.closePath(); ctx.fill();
   }
+  const tone = u.side === 'p' ? C.UNITS[u.type].farbton : null;                                   // Einheiten des Kartenpfads: Farbpunkt statt neuer Grafik (REQ-KP.05)
+  if (tone && COL[tone]){ ctx.fillStyle = u.flash > 0 ? COL.ink : COL[tone]; ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.42, 0, Math.PI * 2); ctx.fill(); }
   if (u.hp < u.maxHp){
     ctx.fillStyle = COL['surface-2']; ctx.fillRect(p.x - r, p.y - r - 4, 2 * r, 2);
     ctx.fillStyle = u.side === 'p' ? COL.steel : COL.rust; ctx.fillRect(p.x - r, p.y - r - 4, 2 * r * Math.max(0, u.hp / u.maxHp), 2);

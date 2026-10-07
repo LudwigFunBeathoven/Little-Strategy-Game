@@ -30,6 +30,12 @@ const KF_PFAD = {
       schaltetFrei: ['bau:kontor'],
       nameKey: 'kp.card.handel.name', descKey: 'kp.card.handel.desc', tiers: [{ effect: [] }] },
     /* ---------- Technologie: öffnet Forschungsoptionen in der Universität (REQ-KP.04) ---------- */
+    { id: 'fortgeschritteneTaktiken', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 3, benoetigt: ['echtesMilitaer', 'gebaut:universitaet'],
+      oeffnetForschung: ['r_reiter', 'r_schild'],
+      nameKey: 'kp.card.fortgeschritteneTaktiken.name', descKey: 'kp.card.fortgeschritteneTaktiken.desc', tiers: [{ effect: [] }] },
+    { id: 'eiserneKlingen', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['metallverarbeitung', 'gebaut:universitaet'],
+      oeffnetForschung: ['r_eisenwaffen'],
+      nameKey: 'kp.card.eiserneKlingen.name', descKey: 'kp.card.eiserneKlingen.desc', tiers: [{ effect: [] }] },
     { id: 'befestigungskunde', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['pfadFestungsbau', 'gebaut:universitaet'],
       oeffnetForschung: ['r_mauerausbau3', 'r_turmausbau'],
       nameKey: 'kp.card.befestigungskunde.name', descKey: 'kp.card.befestigungskunde.desc', tiers: [{ effect: [] }] },
@@ -39,7 +45,15 @@ const KF_PFAD = {
        schaltetFrei   Schlüssel, die der Abschluss öffnet ('einheit:<typ>', 'stufe:<upgrade>:<n>')
        ersetzt        Einheitenersatz { von: nach }
      Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
+  /* Forschungen, die im Modus karten entfallen, weil eine Pfadforschung sie ersetzt (Schildträger) */
+  entfallen: ['r_schildtraeger'],
   forschungen: [
+    { id: 'r_reiter', branch: 'pfad', nameKey: 'kp.res.reiter.name', descKey: 'kp.res.reiter.desc',
+      schaltetFrei: ['einheit:reiter', 'stufe:ausbau:1'], tiers: [{ cost: 320, timeS: 75, effect: [] }] },
+    { id: 'r_schild', branch: 'pfad', nameKey: 'kp.res.schild.name', descKey: 'kp.res.schild.desc',
+      schaltetFrei: ['einheit:schild'], tiers: [{ cost: 320, timeS: 75, effect: [{ stat: 'unlockSchild', add: 1 }] }] },
+    { id: 'r_eisenwaffen', branch: 'pfad', nameKey: 'kp.res.eisenwaffen.name', descKey: 'kp.res.eisenwaffen.desc',
+      schaltetFrei: ['stufe:qualitaet:4'], ersetzt: { laeufer: 'schwertkaempfer', werfer: 'bogenschuetze' }, tiers: [{ cost: 400, timeS: 90, effect: [] }] },
     { id: 'r_mauerausbau3', branch: 'pfad', nameKey: 'kp.res.mauerausbau3.name', descKey: 'kp.res.mauerausbau3.desc',
       schaltetFrei: ['stufe:mauer:2'], tiers: [{ cost: 300, timeS: 60, effect: [] }] },
     { id: 'r_turmausbau', branch: 'pfad', nameKey: 'kp.res.turmausbau.name', descKey: 'kp.res.turmausbau.desc',

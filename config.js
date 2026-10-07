@@ -171,6 +171,11 @@ const KF_CONFIG = {
     werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, range: 105, bounty: 15, speed: 34 },
     // Schildträger (REQ-5.07, Zweig D): viel Lebenspunkte, langsam; bremst die ganze Armee (gewollter Zielkonflikt)
     schild:  { key: '3', cost: 40, hp: 110, dmg: 3, cd: 1.0, range: 14,  bounty: 12, speed: 24, research: 'unlockSchild' },
+    /* Einheiten des Kartenpfads (REQ-KP.05): Datensätze ohne neues Verhalten und ohne neue Grafik. farbton = Farbname aus der Palette (Punkt auf der Figur).
+       replacement: entsteht nur als Ersatz für base (Einheitenersatz, kein eigener Knopf); Werte und Kosten sind Startwerte. Versorgung: jede Einheit zählt 1. */
+    reiter:          { key: '4', cost: 28, hp: 40, dmg: 7, cd: 0.7, range: 14,  bounty: 12, speed: 52, farbton: 'brass' },
+    schwertkaempfer: { cost: 16, hp: 42, dmg: 7, cd: 0.8, range: 14,  bounty: 10, speed: 34, replacement: true, base: 'laeufer', farbton: 'brass' },
+    bogenschuetze:   { cost: 36, hp: 22, dmg: 9, cd: 1.2, range: 120, bounty: 17, speed: 34, replacement: true, base: 'werfer',  farbton: 'brass' },
   },
 
   /* Bauplätze: 3×3-Raster, alle ab Start offen (REQ-16.1).

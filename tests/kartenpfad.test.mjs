@@ -188,3 +188,60 @@ test('Abriss der Universität: Fertiges bleibt wirksam, Laufendes pausiert', () 
   for (let i2 = 0; i2 < 100; i2++) G.tick(0.05);
   assert.ok(a.t > t0, 'mit neuer Universität geht es weiter');
 });
+
+/* ---------- Upgrade-Stufen, Einheitenersatz, neue Einheiten (REQ-KP.05) ---------- */
+test('Jede Upgrade-Stufe ab 2 hat genau eine Quelle; ohne Quelle nicht kaufbar', () => {
+  const { G, C } = game('karten');
+  const q = G.pacingKeys();
+  for (const [up, list] of Object.entries(q.stufen)){
+    assert.ok(C.UPGRADES[up], `Upgrade ${up} existiert`);
+    const abs = list.map(e => e.ab);
+    assert.equal(new Set(abs).size, abs.length, `${up}: jede Stufe genau eine Quelle`);
+    for (const e of list) assert.ok(e.ab >= 1);
+  }
+  G.S.material = 1e7; G.build('fabrik');
+  G.unlockKey('bau:schmiede'); G.unlockKey('bau:kaserne'); G.build('schmiede'); G.build('kaserne');
+  assert.equal(G.buy('ausbau'), false, 'Kaserne-Ausbau 2 braucht Forschung Reiter');
+  for (let i = 0; i < 3; i++) assert.ok(G.buy('qualitaet'), `Schmiede Stufe 1, Kauf ${i + 1}`);
+  assert.equal(G.buy('qualitaet'), false, 'Schmiede-Ausbau 2 braucht Forschung Eisenwaffen');
+  G.S.research.done.r_reiter = 1; G.S.research.done.r_eisenwaffen = 1; G.S.research.ver++;
+  assert.ok(G.buy('ausbau') && G.buy('qualitaet'));
+});
+
+test('Neue Einheiten: Reiter und Schildträger erst nach der Forschung, Karte öffnet sie', () => {
+  const { G } = withUni(); G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; G.unlockKey('bau:kaserne');
+  for (const u of ['reiter', 'schild']) assert.equal(G.unitUnlocked(u), false, u);
+  assert.equal(G.researchBlock('r_reiter'), 'closed');
+  assert.ok(pickCard(G, 'fortgeschritteneTaktiken'));
+  assert.equal(G.researchBlock('r_reiter'), null); assert.equal(G.researchBlock('r_schild'), null);
+  assert.ok(G.startResearch('r_reiter'));
+  for (let i = 0; i < 20 * 80; i++) G.tick(0.05);
+  assert.equal(G.researchTier('r_reiter'), 1);
+  assert.ok(G.unitUnlocked('reiter') && !G.unitUnlocked('schild'));
+  assert.ok(G.spawn('reiter') && G.S.queue.at(-1).type === 'reiter');
+  assert.equal(G.stageSource('ausbau'), null, 'Kaserne-Ausbau 2 durch Forschung Reiter');
+  assert.equal(G.researchBlock('r_schildtraeger'), 'notInMode', 'alte Forschung entfällt im Modus karten');
+});
+
+test('Eisenwaffen: Einheitenersatz wertet Warteschlange und Feld auf, die Zahl bleibt gleich', () => {
+  const { G } = withUni(); G.S.draft.stacks.metallverarbeitung = 1; G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; G.unlockKey('einheit:werfer');
+  assert.ok(pickCard(G, 'eiserneKlingen'));
+  G.spawn('laeufer'); G.spawn('werfer');
+  G.addFormation('p', 1, ['laeufer', 'werfer', 'laeufer'], 120);
+  const before = G.S.units.length + G.S.queue.length;
+  assert.ok(G.startResearch('r_eisenwaffen'));
+  assert.ok(G.rushResearch('r_eisenwaffen'), 'Beschleunigen schließt sofort ab');
+  assert.equal(G.researchTier('r_eisenwaffen'), 1);
+  const own = G.S.units.filter(u => u.side === 'p');
+  assert.ok(!own.some(u => u.type === 'laeufer' || u.type === 'werfer'), 'keine Läufer und Werfer mehr');
+  assert.ok(own.some(u => u.type === 'schwertkaempfer') && own.some(u => u.type === 'bogenschuetze'));
+  assert.ok(G.S.queue.every(q => ['schwertkaempfer', 'bogenschuetze'].includes(q.type)));
+  assert.equal(G.S.units.length + G.S.queue.length, before, 'nichts gelöscht');
+  assert.equal(G.ownType('laeufer'), 'schwertkaempfer');
+  assert.ok(G.unitStats('p', 'bogenschuetze').hp > 0);
+});
+
+test('Ersatzeinheiten erben die Werfer-Karten (Lange Wurfarme)', () => {
+  const { G } = game('karten'); G.S.draft.stacks.langeWurfarme = 1; G.S.draft.ver++;
+  assert.equal(G.unitRange('p', 'bogenschuetze'), game('karten').C.UNITS.bogenschuetze.range + 25);
+});
