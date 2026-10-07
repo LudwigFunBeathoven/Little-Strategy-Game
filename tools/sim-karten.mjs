@@ -58,8 +58,8 @@ if (!isMainThread){
   /* Kennzahlen einer Gruppe von Partien */
   const stat = rs => {
     const won = rs.filter(r => r.status === 'won'), open = rs.filter(r => r.status === 'running');
-    const k6 = rs.filter(r => r.builtAt && r.builtAt.kaserne !== undefined && r.builtAt.kaserne <= 360).length;
-    const s8 = rs.filter(r => r.builtAt && r.builtAt.schmiede !== undefined && r.builtAt.schmiede <= 480).length;
+    const k6 = rs.filter(r => r.builtAt && r.builtAt.kaserne !== undefined && r.builtAt.kaserne <= Math.min(360, r.t)).length;
+    const s8 = rs.filter(r => r.builtAt && r.builtAt.schmiede !== undefined && r.builtAt.schmiede <= Math.min(480, r.t)).length;   // bis Minute 8 oder Partieende
     const delays = [];
     for (const r of rs) for (const p of r.picks || []) if (TECH.includes(p.id)){
       const done = (r.researchTimes || []).filter(x => (UNIT_RES[p.id] || []).includes(x.id) && x.t >= p.t).map(x => x.t);

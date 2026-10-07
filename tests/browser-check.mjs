@@ -1085,7 +1085,7 @@ for (const lang of ['de', 'en']){
   await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.pfadFestungsbau = 1; G.S.pendingDraft = { level: 1, options: ['befestigungskunde', 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0); G.startResearch('r_mauerausbau3'); __kf.requestRender(); });
   await p.waitForTimeout(300);
   const u2 = await p.evaluate(() => ({ run: document.getElementById('resActive').textContent, dis: document.querySelector('[data-tooltip="res:r_turmausbau"]').getAttribute('aria-disabled'), txt: document.querySelector('[data-tooltip="res:r_turmausbau"]').textContent }));
-  check(u2.run.includes('Mauerausbau III') && u2.run.includes('1:00') && !u2.txt.includes('Öffnet mit'), `Universität/karten: laufende Forschung mit Restzeit, zweite Forschung geöffnet ${JSON.stringify([u2.run.slice(0, 40), u2.dis])}`);
+  check(u2.run.includes('Mauerausbau III') && u2.run.includes('0:40') && !u2.txt.includes('Öffnet mit'), `Universität/karten: laufende Forschung mit Restzeit, zweite Forschung geöffnet ${JSON.stringify([u2.run.slice(0, 40), u2.dis])}`);
   const a = await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }));
   check(a.t === 0 && a.e === 0 && errs.length === 0, `Universität/karten: Tooltips, Erklärzeilen, keine Fehler${show(errs)}`);
   // Sammlung mit Pfadübersicht: Status je Pfadkarte und Forschung

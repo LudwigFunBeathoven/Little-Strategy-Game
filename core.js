@@ -211,7 +211,7 @@ function create(){
   const countType = type => S.slots.filter(s => s && s.type === type).length;
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
-  const diffCfg      = () => C.DIFFICULTY[S.diff];
+  const diffCfg      = () => S.pacing === 'karten' && C.KARTEN.basisFaktor !== 1 ? Object.assign({}, C.DIFFICULTY[S.diff], { enemyBaseHp: C.DIFFICULTY[S.diff].enemyBaseHp * C.KARTEN.basisFaktor }) : C.DIFFICULTY[S.diff];   // Modus karten: längere Partien über die gegnerische Basis
   // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Material kommt sonst aus Fabriken (REQ-16.2)
   const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * mMul('clickYield');
   const factoryCount = () => countType('fabrik');
@@ -514,7 +514,7 @@ function create(){
     S.nextEnemySiege = !S.siegeDone && S.nextWave >= S.siegeWaveT;
     // Anlauf (REQ-6.08): bis Minute rampMin steigt die Grundwelle linear von startBase auf waveBase; danach unverändert
     const base = d.rampMin && min < d.rampMin ? d.startBase + (d.waveBase - d.startBase) * min / d.rampMin : d.waveBase;
-    const size = Math.max(1, Math.min(C.ENEMY_WAVE_MAX, Math.round(base + d.waveGrowth * min))) * (S.nextEnemySiege ? C.SIEGE_STRENGTH : 1);   // Belagerungswelle: dreifache Größe (REQ-19.2)
+    const size = Math.max(1, Math.min(C.ENEMY_WAVE_MAX, Math.round((base + d.waveGrowth * min) * (S.pacing === 'karten' ? 1 + (C.KARTEN.wellenFaktor - 1) * Math.min(1, min / C.KARTEN.wellenAnstiegMin) : 1)))) * (S.nextEnemySiege ? C.SIEGE_STRENGTH : 1);   // Belagerungswelle: dreifache Größe (REQ-19.2)
     const out = [];
     for (let i = 0; i < size; i++){
       const type = (min >= d.werferFrom && rnd() < d.werferShare) ? 'werfer' : 'laeufer';
@@ -1261,6 +1261,7 @@ function create(){
   function newGame(diff, seed, opts = {}){
     S = freshState(diff, seed);
     S.pacing = opts.pacing || C.PACING_MODUS || 'standard';
+    if (S.pacing === 'karten') S.enemyBaseHp = diffCfg().enemyBaseHp;
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
     // Schonfrist (REQ-T.03): opts.hold = { maxS, size, bounty } – die erste Gegnerwelle besteht aus size Läufern und rückt erst nach releaseHold() oder nach maxS aus;

@@ -117,6 +117,16 @@ Befund: Im Standardmodus fallen nur 3 bis 7 Kartenwahlen je Partie an. Ein Pfad 
 - Mindesttempo: nach `KARTEN.maxAbstand` (180 s Spielzeit) ohne Wahl wird die nächste fällig (`S.pfad.free`, `log.freeChoice`). Die EP-Schwelle der folgenden Wahl bleibt unverändert (`xpNeed` rechnet die freien Stufen heraus). Im Standardmodus gibt es kein Mindesttempo.
 - Kaserne-Ausbau 2 hat zwei Quellen, die sich gegenseitig ausschließen (Forschung Reiter oder Forschung Armbrustschütze); je Partie bleibt es genau eine (Auslegung 17).
 
+## Balancing nach Simulation (KP.7, auf Vorschlag und mit Zustimmung des PO)
+
+Befund der ersten Serie: Bots gewannen im Modus karten nach etwa 6 min mit 3 Wahlen; der Pfad blieb unerreicht. Zielwerte jetzt: Partie 10–14 min (durchschnitt), mindestens 8 Wahlen. Umgesetzt (alle Werte in `config.js` bzw. `data/kartenpfad.js`):
+- Mehr Wahlen: `KARTEN.xpWachstum` 1,12 (vorher Standard 1,55), `xpFaktor` 0,85, `maxAbstand` 120 s (vorher 180).
+- Forschungsdauer 40–50 s statt 60–90 s (Reiter, Schildträger, Armbrust 45 s, Katapult und Eisenwaffen 50 s, Mauerausbau III und Turmausbau 40 s).
+- Echtes Militär: Versorgung +3 (vorher +2); Gewicht im Angebot 30, Metallverarbeitung 20 (Kaserne und Schmiede früh).
+- Längere Partien über die gegnerische Basis (`basisFaktor` 3,5) und späteres Wachstum der Gegnerwellen (`wellenFaktor` 1,5, linear über 8 min); ein Faktor auf alle Wellen scheiterte (die ersten Wellen entscheiden, 1,4 ließ gierig 9 von 10 Partien verlieren).
+- Kennzahlen: Kaserne und Schmiede zählen bis Minute 6 bzw. 8 oder bis zum Partieende; der Paarvergleich gilt für Technologie und Wagnis (Bau-Karten sind einzige Quelle).
+- Ergebnis (10 bzw. 8 Partien je Strategie, Normal, durchschnitt, Variante militaer): alle Partien gewonnen, Median 9–10 min, 8–9 Wahlen. Abschlussserie mit 50 Partien: siehe Bericht.
+
 ## Auslegungen und Abweichungen (zur Zustimmung durch den PO)
 
 1. Das Dokument `branch-konzepte-pacing.md` fehlt; der Unterbau folgt allein den Angaben im Anforderungsdokument.

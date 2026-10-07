@@ -44,7 +44,7 @@ test('Bau-Karte schaltet genau ihre Inhalte frei', () => {
   assert.ok(G.chooseDraft(0));
   assert.ok(G.isBuildable('kaserne') && G.unitUnlocked('werfer'));
   assert.equal(G.isBuildable('schmiede'), false, 'nur die genannten Inhalte');
-  assert.equal(G.supplyCap(), supply0 + 2, '+2 Versorgung');
+  assert.equal(G.supplyCap(), supply0 + 3, '+3 Versorgung');
   G.S.material = 1e5; assert.ok(G.build('kaserne'));
   const g2 = game('karten').G; g2.S.pendingDraft = { level: 1, options: ['pfadFestungsbau', 'bessereFabriken'], rerolled: 0 }; g2.S.pendingLevels = 1;
   g2.chooseDraft(0);
