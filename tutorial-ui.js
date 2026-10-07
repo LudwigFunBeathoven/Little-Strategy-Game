@@ -261,7 +261,7 @@ const TutUI = (() => {
   function init(){
     G.on((name, data) => {
       const done = Tutorial.event(name, data, G.S.t); if (done.length) onProgress(done);
-      if (name === 'xpBounty') floatNow('xp', data.n);              // Kriegsbeute als schwebende Zahl (REQ-T2.04)
+      if (name === 'xpBounty') floatNow('xp', data.n, t('tut.xpBounty', { n: fmt(data.n) }));   // Erfahrung als schwebende Zahl (REQ-T2.04)
     });
     $('tutSkipBtn').addEventListener('click', skip);
     bubble.addEventListener('click', () => { if (target && target.clickable) advanceBubble(true); });
