@@ -3,7 +3,7 @@
 Branch `exp/kartenpfad`, Stand 07.10.2026. Anforderungen: `docs/anforderungen-kartenpfad-2.md`. Stand je Inkrement und Auslegungen 19–25: `docs/STAND-kartenpfad.md`. Testleitfaden: `docs/testleitfaden-kartenpfad-2.md`.
 
 ## Ergebnis in drei Sätzen
-Die Bildmitte ist außerhalb einer Kartenwahl frei, die Wahl läuft als Ablauf (Austeilen, Aufdecken, Flug zum Wirkort, Rückkehr in den Stapel), und das Spiel zeigt nur noch, was nutzbar ist; alles ist reine Oberfläche, `core.js` und die Spielwerte sind unverändert, der Modus `standard` ohne Schalter ist identisch zu `main` (Golden-Test, Messung). Ein Ziel ist verfehlt: In Minute 1 zeigt der Modus `karten` 22 statt höchstens 14 Bedienelementen (K2.08, ein Drittel von 43); der Abstand hat benannte Ursachen und Stellschrauben (unten). Alle Schalter lassen sich per Adresse setzen; Testbuild und Leitfaden liegen bei.
+Die Bildmitte ist außerhalb einer Kartenwahl frei, die Wahl läuft als Ablauf (Austeilen, Aufdecken, Flug zum Wirkort, Rückkehr in den Stapel), und das Spiel zeigt nur noch, was nutzbar ist; alles ist reine Oberfläche, `core.js` und die Spielwerte sind unverändert, der Modus `standard` ohne Schalter ist identisch zu `main` (Golden-Test, Messung). Ein Ziel ist verfehlt: In Minute 1 zeigt der Modus `karten` 16 statt höchstens 13 Bedienelementen (K2.08, ein Drittel von 39); der Abstand hat benannte Ursachen und Stellschrauben (unten). Alle Schalter lassen sich per Adresse setzen; Testbuild und Leitfaden liegen bei.
 
 ## Ergebnis je Anforderung
 | REQ | Ergebnis |
@@ -23,12 +23,12 @@ Fester Lauf: Seed 424242, Bot „einheiten-zuerst“, Profil „durchschnitt“,
 | Zustand | Minute 1 | Minute 5 | Minute 10 | neu zwischen 1 und 10 |
 |---|---|---|---|---|
 | nach Teil 1, `karten` | 47 | 49 | 49 | 19 |
-| nach Teil 2, `karten` (Entdecken an) | **22** | 35 | 43 | 27 |
+| nach Teil 2, `karten` (Entdecken an), nach den Fehlerbehebungen vom 09.10. | **16** | 28 | 39 | 26 |
 | nach Teil 1, `standard` | 42 | 46 | 46 | 8 |
 | nach Teil 2, `standard` ohne Schalter | 42 | 46 | 46 | 8 |
 | nach Teil 2, `standard` mit `?entdecken=1&buehne=1` | 28 | 32 | 31 | 9 |
 
-Lesart: Minute 1 sinkt im Modus `karten` von 47 auf 22 (−53 %), das Verhältnis zu Minute 10 von 0,96 auf 0,51; das Ziel 0,33 (≤ 14) ist **verfehlt**. Der Bot hat in Minute 1 schon 5 Fabriken gebaut, Einheiten gekauft und drei Wellen geschickt; das öffnet Versorgung, Armee und die fünf Mauer- und Turmoptionen auf einmal (22 = 7 Leistenelemente, Klickfeld mit Presse, 4 Reiter, 5 Mauer- und Turmoptionen, 2 Einheiten, Kaserne). Stellschrauben, falls das Ziel gelten soll (jeweils Entscheidung des PO, nicht umgesetzt): (a) die fünf Mauer- und Turmoptionen erst nach dem ersten Mauerschaden zeigen (Spielregel `REVEAL_AT`), (b) Armee- und Versorgungsanzeige zu einer Anzeige verschmelzen, (c) den Reiter Mauer & Türme erst mit der ersten gegnerischen Welle öffnen. Ein Mensch öffnet in Minute 1 weniger als der Bot.
+Lesart: Minute 1 sinkt im Modus `karten` von 47 auf 16 (−66 %), das Verhältnis zu Minute 10 von 0,96 auf 0,41; das Ziel 0,33 (≤ 13) ist **knapp verfehlt** (vor den Fehlerbehebungen: 22, Verhältnis 0,51; die fünf gesperrten Mauer- und Turmoptionen zählten noch mit). Der Bot hat in Minute 1 schon 5 Fabriken gebaut, Einheiten gekauft und drei Wellen geschickt; das öffnet Versorgung, Armee und die fünf Mauer- und Turmoptionen auf einmal (16 = 7 Leistenelemente, Klickfeld mit Presse, 3 bis 4 Reiter, 2 Einheiten, Kaserne). Stellschrauben, falls das Ziel gelten soll (jeweils Entscheidung des PO, nicht umgesetzt): (a) (erledigt: gesperrte Mauer- und Turmoptionen sind verborgen), (b) Armee- und Versorgungsanzeige zu einer Anzeige verschmelzen, (c) den Reiter Mauer & Türme erst mit der ersten gegnerischen Welle öffnen. Ein Mensch öffnet in Minute 1 weniger als der Bot.
 
 ## Zuordnung K2.04: sichtbar ab
 | Element | sichtbar ab |
@@ -73,3 +73,13 @@ Abbildung in `standard` mit Schaltern: Forschung sichtbar, wenn Voraussetzung er
 1. Ziel K2.08 (Minute 1 ≤ ein Drittel): Stellschraube wählen (a, b oder c) oder Ziel anpassen.
 2. Auslegungen 19–25 bestätigen (`docs/STAND-kartenpfad.md`), besonders 21 (nur erste Wirkung auf der Karte) und 22 (Ausschluss ohne Namen).
 3. Übernahme nach `main` ist nicht Teil dieses Auftrags; Kriterien: Abschnitt 5 der Anforderungen.
+
+## Nachtrag 09.10.: Fehlerbehebung nach dem Spieltest
+| Nr. | Befund | Ursache | Behebung |
+|---|---|---|---|
+| 1 | Bei gewählter Universität erscheint das Fenster „Kontor-Ausbau“ | Der Container der Kontor-Ausbauten hatte `display: flex` und überschrieb das Attribut `hidden`; der Fehler besteht auch in `main` | `.opts[hidden]` verbirgt den Container |
+| 2 | In der Pause erzeugen etwa 6 Klicks Material | Die Spiellogik kennt die Pause nicht; die Klickzeit steht still, so blieb das Klicklimit von 6 je Sekunde bei jeder Pause frei | Klickertrag in Pause und Dialogen gesperrt (Aktion und Knopf); Test; besteht auch in `main` |
+| 3 | Mauer-, Turm- und weitere Ausbauten stehen ausgegraut mit „Nur per Spezialkarte freischaltbar“ da | Bei Entdecken blieb der Ausbau sichtbar, sobald er bezahlbar war, auch wenn die Karte fehlte | Gesperrte Ausbauten verborgen; ein bereits gekaufter Ausbau, dessen Folgestufe gesperrt ist, zeigt „Nächste Stufe noch nicht verfügbar“ (ohne Verweis auf Karte oder Forschung) |
+| 4 | Reiter „Mauer & Türme“ erscheint vor der Karte | Bedingung zählte jeden bezahlbaren Ausbau | Der Reiter erscheint, sobald dort etwas nutzbar ist: ein freigeschalteter Ausbau oder eine Reparatur (Reparaturen sind ohne Karte nutzbar, der Reiter kann daher mit dem ersten Schaden an der Mauer erscheinen) |
+
+Tests: `tests/browser-k2.mjs` (B1–B4); Browser-Prüfung und `npm test` grün.
