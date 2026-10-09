@@ -7,7 +7,7 @@ Stand 09.10.2026. Zusammengestellt aus den jeweils letzten Entwicklungsberichten
 |---|---|---|---|---|
 | `main` | `main` | 0.9.2 | `73e1590` | Basisspiel (v0.8.1: Tutorial, Startbildschirm, ruhigere Sprache, korrigierter Bot) plus Kartenbühne und Entdecken (0.9), Fehlerbehebungen 0.9.1 und 0.9.2 |
 | veröffentlichter MVP | Branch `MVP`, GitHub Pages `https://ludwigfunbeathoven.github.io/Little-Strategy-Game/` | 0.9.2 | `73e1590` | **identisch mit `main`**: `MVP` wird per Fast-Forward auf `main` gesetzt |
-| Kartenbranch | `exp/kartenpfad` | 0.9-kartenpfad | `7b47905` | Experiment „Kartenpfad“: Karten steuern das Pacing (Teil 1) und Darstellung sowie Entdecken (Teil 2); nicht in `main` |
+| Kartenbranch | `exp/kartenpfad` | 0.9-kartenpfad | `b2fb090` | Experiment „Kartenpfad“: Karten steuern das Pacing (Teil 1) und Darstellung sowie Entdecken (Teil 2); nicht in `main` |
 
 Hinweis: `exp/kartenpfad` enthält `main` bis v0.8.1 und eigene Fehlerbehebungen (Kontext-Ausbau, Pause-Klicks, gesperrte Ausbauten). Nur in `main`/`MVP` stehen die Korrekturen 0.9.2 (wirkungslose Upgrades am Versorgungsdeckel, Anzeige „Schmiede-Ausbau“) und die Textsymbole der Karten (0.9.1). Der Anzeigefehler aus 0.9.1 (Absturz bei der zweiten Kartenwahl) entstand beim Übernehmen in `main` und betrifft den Branch nicht. Vor dem nächsten Zusammenführen ist `main` in den Kartenbranch einzumischen.
 
@@ -30,7 +30,7 @@ Arbeitsweise: Der Product Owner (Nick) ist kein Entwickler; Kommunikation auf De
 
 ## 4. Offene Punkte aus den Berichten (Entscheidungen für die Planung)
 1. **Zukunft des Kartenpfads:** Der Modus `karten` ist spielbar, aber ungetestet mit Menschen; Bots gewinnen fast immer (Abschnitt „Auffälligkeiten“ in Anhang C). Spieltest nach `docs/testleitfaden-kartenpfad.md` und `docs/testleitfaden-ui-0.9.md`; danach entscheiden, ob und in welchem Umfang der Pfad nach `main` kommt (Kriterien in `docs/anforderungen-kartenpfad-2.md`, Abschnitt 5).
-2. **Was gehört in `main`?** Nach der Veröffentlichung von 0.9 hat der PO festgehalten: Features, die das Spiel im Kern ändern, bleiben zunächst im Kartenbranch. Die Zuordnung ist offen: Ist „Entdecken“ (Reiter und Anzeigen erscheinen erst, wenn sie nutzbar sind) Kern oder Oberfläche, und bleibt es in `main` voreingestellt an (`UI.entdecken`)? Eine Rücknahme wäre nur eine Voreinstellung, die Schalter bleiben.
+2. **Entschieden (PO, 09.10.2026):** Kartenbühne und Entdecken bleiben in `main` und im MVP voreingestellt an (Schalter `?buehne=0`, `?entdecken=0` für die alte Oberfläche). Grundsatz bleibt: Features, die das Spiel im Kern ändern, entstehen zuerst im Kartenbranch; der Modus `karten` (Karten schalten Inhalte frei) bleibt dort.
 3. **Zielwerte der Messung „sichtbare Bedienelemente“** (Minute 1 höchstens ein Drittel von Minute 10) im Modus `karten`: knapp verfehlt (16 statt 13); Stellschrauben im Bericht (Anhang C, Nachtrag).
 4. **Balancing:** Bots sind stärker als kalibriert (Normal und Schwer deutlich unter den Zielkorridoren, `docs/bericht-mvp-release.md`); Iteration 7 soll gegen den korrigierten Bot und gegen Daten aus Spieltests kalibrieren. Keine globale Neukalibrierung vorher.
 5. **Namensdopplung** „Festungsbau“ (Bonus- und Pfadkarte) im Kartenbranch.
@@ -40,7 +40,7 @@ Arbeitsweise: Der Product Owner (Nick) ist kein Entwickler; Kommunikation auf De
 
 ---
 
-## Anhang A: Bericht `main` – Version 0.9 (Kartenbühne und Entdecken, mit Nachträgen 0.9.1 und 0.9.2)
+## Anhang A: Bericht `main` – Version 0.9 (Kartenbühne und Entdecken, mit Nachträgen 0.9.1 und 0.9.2; „v0.9.0“ im Abschnitt „Offen“ ist durch `v0.9.2` überholt)
 Quelle: `docs/bericht-ui-0.9.md` auf `main`.
 
 ### Klammerfront – Bericht Version 0.9: Kartenbühne und Entdecken
