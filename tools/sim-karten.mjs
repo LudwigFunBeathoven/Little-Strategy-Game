@@ -3,6 +3,7 @@
 //   varianten  Siegquote der drei Pfad-Varianten (militaer, wissen, festung), beide Strategien, Normal, Profil durchschnitt;
 //              Kaserne bis Minute 6, Schmiede bis Minute 8, Zahl und Zeitpunkte der Kartenwahlen, Zeit von der Technologiekarte bis zur fertigen Einheit,
 //              Wahlbreite je Karte (Anteil der Angebote, in denen sie gewählt wurde)
+//   Optionen: --strategy gierig,einheiten-zuerst  --profiles aktiv,durchschnitt,gelegentlich
 //   profile    Siegzeiten und Quoten je Spielertyp (aktiv, durchschnitt, gelegentlich), Partielänge (90. Perzentil), Patt-Quote
 //   paar       Paarvergleich je Pfadkarte: gleicher Seed, Karte gesperrt (gebannt) gegen normal; Soll +3 … +25 pp
 // Gleiche Seeds in allen Feldern. Die Simulation misst Stärke, nicht Spielspaß; Auffälligkeiten werden berichtet, nicht wegbalanciert.
@@ -20,7 +21,8 @@ if (!isMainThread){
   process.env.KF_PACING = 'karten';
   const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
   const RUNS = Number(arg('runs', 50)), SUITE = arg('suite', 'alle'), DIFF = arg('diff', 'normal'), JSON_OUT = arg('json', null);
-  const STRATS = ['gierig', 'einheiten-zuerst'], VARIANTS = ['militaer', 'wissen', 'festung'];
+  const STRATS = arg('strategy', 'gierig,einheiten-zuerst').split(','), VARIANTS = ['militaer', 'wissen', 'festung'];
+  const PROFILES = arg('profiles', 'aktiv,durchschnitt,gelegentlich').split(',');       // „gierig“ mit Vorausschau braucht für „aktiv“ bis zu 2 Minuten je Partie: dafür --strategy einheiten-zuerst oder --profiles durchschnitt,gelegentlich
   const seedOf = (k, r) => (5000 + r * 7919 + k * 104729) >>> 0;
   const { loadCore } = await import('./load-core.mjs');
   const { KF_PFAD } = loadCore();
@@ -30,7 +32,7 @@ if (!isMainThread){
   if (SUITE === 'alle' || SUITE === 'varianten')
     for (const strategy of STRATS) VARIANTS.forEach((variant, vi) => { for (let r = 0; r < RUNS; r++) jobs.push({ ...base, suite: 'varianten', profile: 'durchschnitt', strategy, pfad: variant, variant, seed: seedOf(1, r) }); });
   if (SUITE === 'alle' || SUITE === 'profile')
-    for (const strategy of STRATS) for (const profile of ['aktiv', 'durchschnitt', 'gelegentlich']) for (let r = 0; r < RUNS; r++)
+    for (const strategy of STRATS) for (const profile of PROFILES) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'profile', profile, strategy, pfad: 'militaer', variant: 'militaer', seed: seedOf(2, r) });
   if (SUITE === 'alle' || SUITE === 'paar')
     for (const strategy of STRATS) for (const card of CARDS) for (const arm of ['mit', 'ohne']) for (let r = 0; r < RUNS; r++)
@@ -98,7 +100,7 @@ if (!isMainThread){
     console.log(`PROFILE (${DIFF}, Variante militaer, ${RUNS} Partien je Feld)\n`);
     console.log('Strategie        | Profil       | Siege  | offen | Median Sieg | P90 Sieg | Wahlen | freie Wahlen');
     report.profile = [];
-    for (const st of STRATS) for (const p of ['aktiv', 'durchschnitt', 'gelegentlich']){
+    for (const st of STRATS) for (const p of PROFILES){
       const s = stat(results.filter(r => r.suite === 'profile' && r.strategy === st && r.profile === p));
       report.profile.push({ strategy: st, profil: p, ...s });
       console.log(`${st.padEnd(16)} | ${p.padEnd(12)} | ${pctS(s.siegquote).padStart(6)} | ${pctS(s.patt).padStart(5)} | ${mm(s.medianSiegS).padStart(11)} | ${mm(s.q90SiegS).padStart(8)} | ${String(s.wahlen).padStart(6)} | ${s.freieWahlen}`);
