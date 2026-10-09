@@ -375,7 +375,7 @@ function renderChosen(){
   const ids = Object.keys(st).filter(id => st[id] > 0);
   if (!ids.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('level.none'); box.appendChild(e); return; }
   let lastCat = null;
-  if (Disc.on()) ids.sort((a, b) => C.CARD_CATEGORIES.indexOf(G.OPT[a].category) - C.CATEGORIES.indexOf(G.OPT[b].category));      // REQ-K2.05: Sammlung gruppiert
+  if (Disc.on()) ids.sort((a, b) => C.CARD_CATEGORIES.indexOf(G.OPT[a].category) - C.CARD_CATEGORIES.indexOf(G.OPT[b].category));      // REQ-K2.05: Sammlung gruppiert
   for (const id of ids){
     const o = G.OPT[id], tag = document.createElement('span');
     if (Disc.on() && o.category !== lastCat){ lastCat = o.category; const h = document.createElement('span'); h.className = 'fam-h'; h.textContent = t('draft.cat.' + lastCat); box.appendChild(h); }

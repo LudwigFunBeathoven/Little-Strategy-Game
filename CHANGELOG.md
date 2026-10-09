@@ -1,5 +1,11 @@
 # Änderungen
 
+## v0.9.1 – Korrektur zu 0.9 (09.10.2026)
+Nur Fehlerbehebungen, Spielwerte und Spielstand-Version (7) unverändert.
+- **Behoben: Die Anzeige fror nach der zweiten Kartenwahl ein** (die Kartenwahl blieb offen, das Spiel schien zu hängen, der Quartiermeister des Tutorials verschwand nicht mehr). Ursache: ein Tippfehler in der Sortierung der Sammlung (Reiter „Karten“), der erst ab zwei verschiedenen gewählten Karten auslöste; er brach das Zeichnen der Oberfläche ab. Test `tests/browser-k2.mjs` („Regression“) wählt acht Runden nacheinander.
+- **Behoben:** Das Kartensymbol Armee erschien unter Windows als blaues Emoji; Symbole werden jetzt als Text gezeichnet.
+- Die Entwicklerprüfung `?dev=1` meldete die fliegenden Kartenbilder fälschlich als Knöpfe ohne Tooltip.
+
 ## v0.9.0 – Kartenbühne und Entdecken (Oktober 2026)
 Anforderungen: `docs/anforderungen-kartenpfad-2.md`, Bericht `docs/bericht-ui-0.9.md`. Spielwerte, Spielregeln und Spielstand-Version (7) unverändert; ein vorhandener Spielstand bleibt erhalten.
 Für Tester:

@@ -1,6 +1,6 @@
 {
   "name": "klammerfront",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "description": "Browser-Spiel zwischen Universal Paperclips und Age of War",
   "scripts": {

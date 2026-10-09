@@ -976,6 +976,13 @@ for (const lang of ['de', 'en']){
   await p.click('.kcard >> nth=0'); await p.waitForTimeout(1100);
   const f1 = await tutState(p);
   check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1'), `[${lang}] Tutorial/Vorgabe: Abschied 1 „${f1.narr}“`);
+  // Während des Abschieds folgt eine weitere Wahl (zwei verschiedene Kartentypen in der Sammlung); danach verschwindet der Quartiermeister
+  await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + 1); G.S.xp = G.S.xpTotal; G.S.units.push({ id: 99991, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
+  await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 5000 }).catch(() => {});
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked') || document.getElementById('stage').hidden, null, { timeout: 5000 }).catch(() => {});
+  if (await p.evaluate(() => !document.getElementById('stage').hidden)){ await p.click('.kcard >> nth=1'); await p.waitForTimeout(1100); }
+  const gone = await p.waitForFunction(() => __kf.Tutorial.view().phase === 'off', null, { timeout: 40000 }).then(() => true).catch(() => false);
+  check(gone, `[${lang}] Tutorial/Vorgabe: der Quartiermeister verlässt das Bild (Phase „off“)`);
   check(errs.length === 0, `[${lang}] Tutorial/Vorgabe: keine Fehler${show(errs)}`);
   await ctx.close();
 }

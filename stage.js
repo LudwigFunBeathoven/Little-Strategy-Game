@@ -29,7 +29,7 @@ const Stage = (() => {
     st.setProperty('--k-flip', K.aufdeckMs + 'ms');
     el.stage.classList.toggle('two-rows', w < K.zweiZeilenBisPx);
   }
-  function symbol(o){ return K.symbole[o.category] || K.symbole.bonus; }
+  function symbol(o){ return (K.symbole[o.category] || K.symbole.bonus) + '\uFE0E'; }       // U+FE0E: Textdarstellung, nie als farbiges Emoji
   const hasKey = k => !!(KF_I18N[lang] && KF_I18N[lang][k]);
   /* Eine Wirkungszeile auf der Karte (REQ-K2.03): nur die unmittelbare Wirkung, keine Folgekarten */
   function effLine(o, tier){

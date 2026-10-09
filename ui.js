@@ -366,7 +366,7 @@ const Tip = (() => {
 const DEV = /[?&]dev=1\b/.test(location.search);
 function tooltipAudit(){
   const sel = 'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
-  return [...document.querySelectorAll(sel)].filter(e => !e.dataset.tooltip).map(e => e.outerHTML.slice(0, 100));
+  return [...document.querySelectorAll(sel)].filter(e => !e.dataset.tooltip && !e.closest('#stageFly')).map(e => e.outerHTML.slice(0, 100));       // Flugkopien der Karten (stageFly) sind nur Bild
 }
 /* Jeder sichtbare Knopf trägt eine Erklärzeile (REQ-20.1) */
 function explAudit(){

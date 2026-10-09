@@ -195,6 +195,36 @@ for (const mode of ['', 'intro=0']){
   await ctx.close();
 }
 
+/* ---------- Regression 0.9.1: viele Wahlen hintereinander, Sammlung mit mehreren Karten (Absturz der Anzeige beim zweiten gewählten Kartentyp) ---------- */
+{
+  const { ctx, p, errs } = await open('intro=0');
+  let hang = 0, audit = [];
+  for (let round = 0; round < 8; round++){
+    await levelUp(p, round % 3 === 2 ? 2 : 1);
+    await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 4000 }).catch(() => {});
+    while (await p.evaluate(() => !!__kf.G.S.pendingDraft)){
+      await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked') || document.getElementById('stage').hidden, null, { timeout: 4000 }).catch(() => {});
+      audit.push(...await p.evaluate(() => [...__kf.tooltipAudit(), ...__kf.explAudit()]));
+      await p.evaluate(i => { const c = document.querySelectorAll('.kcard'); c[i % c.length].click(); }, round);
+      const done = await p.waitForFunction(() => !__kf.G.S.pendingDraft || __kf.G.S.pendingLevels < 1 || document.querySelectorAll('#stageFly .kcard').length === 0, null, { timeout: 3000 }).then(() => true).catch(() => false);
+      await settle(p, 900);
+      if (!done) break;
+    }
+    const t1 = await p.evaluate(() => __kf.G.S.t); await settle(p, 300);
+    if (await p.evaluate(t => __kf.G.S.pendingDraft || __kf.G.S.t <= t || !document.getElementById('stage').hidden, t1)) hang++;
+  }
+  check(hang === 0, `Regression: nach jeder der 8 Wahlrunden läuft das Spiel weiter (${hang} hängende Runden)`);
+  check(errs.length === 0, `Regression: keine Seitenfehler bei vielen Wahlen${show(errs)}`);
+  check(audit.length === 0, `Regression: Tooltip und Erklärzeile an jedem Element der Bühne${show(audit)}`);
+  await p.evaluate(() => __kf.selectTab('cards')); await settle(p, 300);
+  const col = await p.evaluate(() => ({ tags: document.querySelectorAll('#chosen .opt-tag').length, heads: document.querySelectorAll('#chosen .fam-h').length }));
+  check(col.tags >= 3 && col.heads >= 2, `Regression: Sammlung mit mehreren Karten und Kategorien ${JSON.stringify(col)}`);
+  // Symbole der Karten als Text, nie als Emoji
+  await levelUp(p, 1); await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
+  check(await p.evaluate(() => [...document.querySelectorAll('.kc-art, .kc-sym')].every(e => e.textContent.endsWith('\uFE0E'))), 'Regression: Kartensymbole in Textdarstellung (U+FE0E), nicht als Emoji');
+  await ctx.close();
+}
+
 /* ---------- B1: Kontext eines Gebäudes zeigt nur dessen eigene Ausbauten ---------- */
 {
   const { ctx, p, errs } = await open('intro=0');
