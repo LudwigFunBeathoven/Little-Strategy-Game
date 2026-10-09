@@ -23,8 +23,8 @@ const server = http.createServer((req, res) => {
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}/`;
 // ?tutorial=0: die bisherigen Abläufe starten über den Startdialog; das Tutorial hat unten eigene Prüfungen (REQ-T.04)
-const url = base + 'index.html?dev=1&tutorial=0';
-const urlTutorial = base + 'index.html?dev=1';   // Tutorial-Prüfungen hängen ?lang= und ?difficulty= an (überspringen den Startbildschirm)
+const url = base + 'index.html?dev=1&tutorial=0&entdecken=0&buehne=0';          // die bisherigen Abläufe (Version 0.8) bleiben per Adresse erreichbar und werden so geprüft
+const urlTutorial = base + 'index.html?dev=1&entdecken=0&buehne=0';   // Tutorial-Prüfungen hängen ?lang= und ?difficulty= an (überspringen den Startbildschirm)
 const b = await chromium.launch();
 let failed = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failed++; };
@@ -934,7 +934,7 @@ for (const stepId of ['begruessung', 'fertigen', 'bauen', 'rekrutieren', 'ausrue
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto(base + 'index.html?debug=1&tutorial=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?debug=1&tutorial=0&lang=de&difficulty=easy&entdecken=0&buehne=0'); await p.waitForTimeout(400);
   const lv = n => p.evaluate(n => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + n); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99900 + n + G.S.level, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); }, n);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; });

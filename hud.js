@@ -44,8 +44,9 @@ function buildHud(){
   for (const id of ['hudSoldiers', 'material', 'rate', 'xpVal', 'xpRate', 'barLvl', 'lvlProg', 'waveIn', 'enemyWaveIn', 'siegeInfo',
                     'hudWaves', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn', 'tutSkipBtn'])
     hudEl[id] = $(id);
+  hudEl.soldItem = hudEl.hudSoldiers.closest('.hud-item'); hudEl.xpItem = hudEl.xpVal.closest('.hud-item'); hudEl.armyItem = hudEl.armyState.closest('.hud-item');
   for (let i = 0; i < C.LANE_COUNT; i++){ hudEl['hpP' + i] = $('hpP' + i); hudEl['barP' + i] = $('barP' + i); }
-  hudEl.draftBtn.addEventListener('click', () => selectTab('cards', true));
+  hudEl.draftBtn.addEventListener('click', () => { if (Stage.on()) Stage.reopen(); else selectTab('cards', true); });
   hudEl.pauseBtn.addEventListener('click', () => setPaused(!paused));
   hudEl.resumeBtn = $('resumeBtn');
   hudEl.resumeBtn.addEventListener('click', () => setPaused(false));
@@ -69,6 +70,7 @@ function hudTip(item){
 }
 function renderHud(){
   const S = G.S, running = S.status === 'running', E = hudEl;
+  setHidden(E.soldItem, !Disc.shows('hud:supply')); setHidden(E.xpItem, !Disc.shows('hud:xp')); setHidden(E.armyItem, !Disc.shows('hud:army'));       // REQ-K2.04
   setText(E.hudSoldiers, `${fmt(G.ownOnField())}/${fmt(G.supplyCap())}`);
   setText(E.material, fmt(S.material));
   // mit Handelskontor: nächster Zinsbetrag und Deckel (REQ-6.07 b)
@@ -82,7 +84,7 @@ function renderHud(){
   setText(E.lvlProg, t('hud.toLevel', { n: x.level + 1, cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
   setWidth(E.barLvl, 100 * Math.max(0, Math.min(1, x.cur / x.need)));
   // Wellen erst mit der ersten Welle (REQ-47); im Tutorial von Anfang an, der Countdown ist Ziel von Schritt 4 (REQ-T.01)
-  setHidden(E.hudWaves, !(G.introShows('waves') || Tutorial.active()));
+  setHidden(E.hudWaves, Disc.on() ? !Disc.shows('hud:waves') : !(G.introShows('waves') || Tutorial.active()));
   setText(E.waveIn, clock(Math.ceil(G.waveIn())));
   setText(E.enemyWaveIn, G.holdActive() ? t('hud.held') : clock(Math.ceil(G.enemyWaveIn())));      // Schonfrist: Gegnerwelle wartet (REQ-T.03)
   const siege = G.siegeAnnounced();
@@ -98,8 +100,8 @@ function renderHud(){
   setText(E.eraLabel, S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) }));
   setText(E.diffLabel, S.status === 'setup' ? '' : t(`diff.${S.diff}.name`));
   // Offene Kartenwahl: auffälliger Hinweis, öffnet den Reiter Karten; kein automatischer Wechsel (REQ-5.03)
-  setHidden(E.draftBtn, !(running && S.pendingDraft));
-  if (S.pendingDraft) setText(E.draftBtn.querySelector('.expl'), t('ex.hud.draft', { n: S.pendingLevels }));
+  setHidden(E.draftBtn, !(running && S.pendingDraft) || Stage.on());
+  if (S.pendingDraft) setText(E.draftBtn.querySelector('.expl'), t(Stage.on() ? 'ex.kp.hud.draft' : 'ex.hud.draft', { n: S.pendingLevels }));
   E.pauseBtn.setAttribute('aria-pressed', String(paused));
   setText(E.pauseBtn.querySelector('.btn-label'), t(paused ? 'menu.resume' : 'menu.pause'));
   setText(E.pauseBtn.querySelector('.expl'), t(paused ? 'ex.menu.resume' : 'ex.menu.pause'));

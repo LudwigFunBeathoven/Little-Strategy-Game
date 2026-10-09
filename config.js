@@ -2,7 +2,7 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.8.1',
+  VERSION: '0.9.0',
   SAVE_KEY: 'klammerfront.save.v7',
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
@@ -85,10 +85,38 @@ const KF_CONFIG = {
     // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
     homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
     draftLockMs: 400,
+    entdecken: true,            // Sichtbarkeitsregel „nur, was jetzt nutzbar ist“ (REQ-K2.04–K2.06): true/false erzwingt, null = nur im Pacing-Modus 'karten'; URL ?entdecken=1|0
+    kartenbuehne: true,         // Kartenwahl als Bühne mit Ablauf (REQ-KP.03, K2.01–K2.03): true/false erzwingt, null = nur im Pacing-Modus 'karten'; URL ?buehne=1|0
     hintAutoMs: 8000,           // ein Erstkontakt-Hinweis schließt sich nach so langer Zeit von selbst (REQ-T.05)
     newSeenMs: 1500,            // Markierung „neu“: so lange muss der Inhalt sichtbar sein, bis er als angesehen gilt (REQ-T.05)
     toastMs: 2500,              // kurzer Hinweis über dem Arbeitsbereich (abgeschlossene Forschung, REQ-6.06)           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
     debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
+  },
+
+  /* Entdecken (REQ-K2.04 – K2.06) */
+  ENTDECKEN: {
+    vorschau: 'keine',          // 'keine' oder 'naechste': höchstens ein Platzhalter „?“ je Bereich (REQ-K2.04, Soll); URL ?vorschau=naechste
+    einblendenMs: 300,          // neues Element blendet so lange ein (höchstens 300)
+    hinweisMs: 8000,            // Erstkontakt-Hinweis zu neuem Inhalt schließt nach so vielen ms (REQ-K2.06)
+  },
+  /* Kartenbühne (REQ-KP.03, K2.02) */
+  KARTENBUEHNE: {
+    zeit: 'pause',              // Spielzeit bei offener Bühne: 'pause' (wie v0.6), 'langsam' (Faktor langsamFaktor) oder 'lauf'
+    langsamFaktor: 0.2,
+    abdunkelung: 0.45,          // Deckkraft des Schleiers über der Spielwelt
+    kartenBreitePct: 16,        // Kartenbreite in Prozent der Fensterbreite (14–18), begrenzt durch:
+    kartenMinPx: 160, kartenMaxPx: 260,
+    zweiZeilenBisPx: 900,       // unter dieser Fensterbreite liegt die Reihe in zwei Zeilen
+    austeilMs: 220,             // Karten fliegen aus dem Symbol der Ressourcenleiste an ihren Platz (REQ-K2.02); Erscheinen + Aufdecken ≤ 800 ms
+    aufdeckMs: 110,             // eine Karte deckt so lange auf (höchstens 120)
+    aufdeckAbstandMs: 100,      // Abstand zwischen zwei Karten (links nach rechts)
+    sperreMinMs: 400,           // Eingabesperre: endet mit der letzten aufgedeckten Karte, frühestens so viele ms nach dem Erscheinen
+    wirkflugMs: 450,            // die gewählte Karte fliegt zu ihrem Wirkort, die übrigen zurück in den Stapel (Wirkung + Abräumen ≤ 700 ms)
+    abraeumenMs: 700,           // Gesamtdauer vom Klick bis zum Ende des Abräumens; die Spielzeit steht bei zeit = pause bis dahin
+    leuchtMs: 1600,             // Wirkort leuchtet nach der Wahl so lange auf
+    faecherGrad: 6,             // äußerste Karten stehen um so viele Grad schief
+    hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
+    symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6' },
   },
 
   /* Tutorial „Erste Schritte“ (REQ-T.01 – T.04): Schritte in data/tutorial-steps.js, Texte in den Sprachdateien */

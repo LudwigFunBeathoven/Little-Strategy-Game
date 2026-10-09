@@ -9,6 +9,10 @@ const G = KlammerCore.create();
 const $ = id => document.getElementById(id);
 /* URL-Parameter für Tests (REQ-T2.01): ?lang=de|en und ?difficulty=easy|normal|hard überspringen den Startbildschirm; ?tutorial=1|0 schaltet das Tutorial */
 const URL_PARAMS = new URLSearchParams(location.search);
+/* Schalter für Spieltests per Adresse (REQ-K2.07): ?zeit=pause|langsam|lauf (Spielzeit bei offener Wahl), ?vorschau=keine|naechste */
+{ const z = URL_PARAMS.get('zeit'), v = URL_PARAMS.get('vorschau');
+  if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z;
+  if (['keine', 'naechste'].includes(v)) C.ENTDECKEN.vorschau = v; }
 const DIFF_ALIAS = { easy: 'leicht', normal: 'normal', hard: 'schwer', leicht: 'leicht', schwer: 'schwer' };
 const LANG_PARAM = KF_CONFIG.LANGUAGES.includes(URL_PARAMS.get('lang')) ? URL_PARAMS.get('lang') : null;
 const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
@@ -233,6 +237,9 @@ function tipContent(id){
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
+    case 'prev': return { title: t('kp.vorschau'), body: t('tip.kp.vorschau') };
+    case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
+    case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'rush': { const act = S.research.active.find(x => x.id === a);
       return { title: t('research.rush'), body: t('tip.research.rush', { name: act ? researchName(G.RES[a], act.tier) : '' }),
                rows: act ? [[t('tip.cost'), costText('material', G.rushCost(a))], [t('research.time'), t('research.seconds', { s: Math.ceil(Math.max(0, act.timeS - act.t)) })]] : [] }; }
@@ -401,7 +408,7 @@ function load(){
     if (!d || d.v !== KlammerCore.SAVE_VERSION || !C.DIFFICULTY[d.diff]){ discardedSave = true; dropStaleSaves([C.SAVE_KEY]); return false; }
     const tut = d.tut, ui = d.ui; delete d.tut; delete d.ui;     // Tutorial-Fortschritt und Anzeigezustand liegen neben dem Spielstand, nicht darin
     G.adopt(d);
-    NewMarks.restore(ui);
+    NewMarks.restore(ui); Disc.reset();
     Tutorial.restore(TUTORIAL_PARAM === '0' ? null : tut);
     // Reines Online-Spiel (REQ-6.03): beim Laden vergeht keine Spielzeit, die Partie beginnt pausiert; im Tutorial läuft sie von selbst weiter (kein „Weiter“-Klick)
     if (G.S.status === 'running' && !Tutorial.active()) setPaused(true);
@@ -430,11 +437,11 @@ function showHint(id){
   renderHint();
 }
 function renderHint(){
-  const box = $('hintBox'), id = Tutorial.active() ? null : hintQueue[0];
+  const box = $('hintBox'), id = Tutorial.active() || Stage.visible() ? null : hintQueue[0];
   setHidden(box, !id);
   if (!id){ clearTimeout(hintTimer); hintShown = null; return; }
   setText($('hintTitle'), t('hint.title'));
-  setText($('hintText'), t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() }));
+  setText($('hintText'), id.startsWith('disc:') ? Disc.hintText(id) : t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() }));
   setText($('hintOk').querySelector('.btn-label'), t('hint.ok'));
   setText($('hintOk').querySelector('.expl'), t('ex.hintOk'));
   if (hintShown !== id){ hintShown = id; clearTimeout(hintTimer); hintTimer = setTimeout(dismissHint, C.UI.hintAutoMs); }
@@ -550,7 +557,7 @@ function startGame(diff, opts = {}){
   discardedSave = false;
   const tut = opts.tutorial === true;
   storageSet(C.DIFFICULTY_KEY, diff);
-  TutUI.reset(); NewMarks.reset();
+  TutUI.reset(); NewMarks.reset(); Disc.reset();
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
     { intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
   if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
@@ -604,7 +611,7 @@ function wireWorldInput(){
     userScroll(Cam.x + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY));
   }, { passive: false });
   document.addEventListener('keydown', e => {
-    if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.target === $('worldScroll')) return;
+    if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.target === $('worldScroll') || Stage.visible()) return;
     if (e.key === 'Escape'){ clearSelection(); return; }
     if (e.target instanceof Element && e.target.closest('[role="tablist"], [role="grid"]')) return;   // Pfeiltasten gehören dort dem Widget
     const k = e.key.toLowerCase();
@@ -630,6 +637,7 @@ function render(){
   const S = G.S;
   renderHud();
   renderPanels();
+  Stage.render();
   renderTutorial();
   Tip.refresh();
   // Erstkontakt-Hinweise: im Moment, in dem ein Inhalt erstmals verfügbar wird (REQ-20.2, REQ-T.05); nicht während des Tutorials
@@ -643,6 +651,7 @@ function render(){
     if (S.slots.some((sl, i) => sl && G.neighborValue(i, sl.type) !== 0)) showHint('neighbors');
     if (G.siegeAnnounced()) showHint('siege');
   }
+  if (S.status === 'running' && !Tutorial.active() && Disc.on()){ const id = Disc.flush(); if (id) showHint(id); }          // REQ-K2.06: ein Hinweis je Entdeckungsmoment
   renderHint();
   if ((S.status === 'won' || S.status === 'lost') && resultShownFor !== S.t && !modalOpen){
     resultShownFor = S.t;
@@ -689,15 +698,17 @@ function boot(){
 
   // Schnittstelle für automatisierte Browser-Tests; nur mit ?dev=1 oder ?debug=1 (im öffentlichen Spiel nicht vorhanden, REQ-R.05)
   if (DEV || DEBUG) window.__kf = { G, C, t, save, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, Tutorial, TutUI,
-                  selectPlot, selectSection, clearSelection, selectTab, setPaused,
+                  selectPlot, selectSection, clearSelection, selectTab, setPaused, Disc, Stage,
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };
 
+  { const rawClick = G.doClick; G.doClick = () => (paused || modalOpen) ? false : rawClick(); }          // Pause und Dialoge: kein Klickertrag (die Klickzeit steht still, sonst blieben je Pause weitere Klicks frei)
   setLang(lang);
   document.documentElement.style.setProperty('--draft-lock', C.UI.draftLockMs + 'ms');
   layoutBands();
   buildHud();
   buildPanels();
+  Stage.init();
   wireWorldInput();
   Session.init();
   TutUI.init();

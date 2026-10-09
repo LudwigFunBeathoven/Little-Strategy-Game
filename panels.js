@@ -12,7 +12,9 @@ const NewMarks = (() => {
   let seen = new Set(), baseline = true, since = new Map(), touched = new Set();
   const ids = () => [...TABS.filter(tabVisible).map(x => 'tab:' + x),
                      ...C.BUILDINGS.filter(b => G.isBuildable(b) && (b === 'fabrik' || G.introShows('buildings'))).map(b => 'pick:' + b),
-                     ...Object.keys(C.UNITS).filter(u => G.unitUnlocked(u)).map(u => 'unit:' + u)];
+                     ...Object.keys(C.UNITS).filter(u => G.unitUnlocked(u)).map(u => 'unit:' + u),
+                     ...Object.keys(C.UPGRADES).filter(u => optEls[u] && !optEls[u].btn.hidden).map(u => 'upg:' + u),
+                     ...G.RESEARCH.filter(r => resEls[r.id] && !resEls[r.id].btn.hidden).map(r => 'res:' + r.id)];
   return {
     isNew: id => !baseline && !seen.has(id),
     /* Der Inhalt ist gerade zu sehen; nach UI.newSeenMs gilt er als angesehen. */
@@ -28,6 +30,8 @@ const NewMarks = (() => {
       touched.clear();
       if (baseline && G.S.status === 'running'){ for (const id of ids()) seen.add(id); baseline = false; }
     },
+    /* Marke „neu“ gezielt setzen (REQ-K2.02/K2.06): der Wirkort einer gewählten Karte trägt sie, bis er gesehen oder benutzt wurde */
+    flag(id){ if (!baseline){ seen.delete(id); since.delete(id); } },
     reset(){ seen = new Set(); baseline = true; since.clear(); touched.clear(); },
     snapshot: () => baseline ? undefined : { seen: [...seen] },
     restore(o){ since.clear(); touched.clear(); if (o && Array.isArray(o.seen)){ seen = new Set(o.seen); baseline = false; } else { seen = new Set(); baseline = true; } },
@@ -46,6 +50,7 @@ function tabForSel(s){
   return sl ? C.UI.homeTab[sl.type] : 'build';
 }
 function tabVisible(id){
+  if (Disc.on()) return Disc.shows('tab:' + id);                           // REQ-K2.04: Reiter erst, wenn etwas darin nutzbar ist; ein Reiter bleibt danach
   if (id === 'smithy') return G.has('schmiede');
   if (id === 'cards') return G.introShows('cards');
   return true;
@@ -77,6 +82,7 @@ let thinkLevel = null, thinkStart = 0;                                  // Beden
 function draftThinkMs(){ return thinkLevel === null ? null : Math.round(performance.now() - thinkStart); }
 function draftLocked(){ return performance.now() - draftOpenedAt < C.UI.draftLockMs; }
 function autoDraft(){
+  if (Stage.on()) return;                                              // die Kartenbühne öffnet sich selbst und wechselt keinen Reiter (REQ-KP.03)
   const S = G.S, d = S.status === 'running' ? S.pendingDraft : null;
   if (d){
     const key = d.level + ':' + d.options.join();
@@ -119,6 +125,7 @@ function buildPanels(){
     bar.appendChild(b);
     tabEls[id] = { btn: b, label: b.children[0], expl: b.children[1], mark: b.children[2], fresh: b.children[3], panel: $('panel-' + id) };
   }
+  const pv = document.createElement('span'); pv.className = 'prev-tab'; pv.id = 'tabPrev'; pv.dataset.tooltip = 'prev'; pv.hidden = true; pv.setAttribute('aria-hidden', 'true'); bar.appendChild(pv);
   bar.addEventListener('keydown', e => {
     const vis = TABS.filter(tabVisible), i = vis.indexOf(activeTab);
     const next = e.key === 'ArrowRight' ? vis[(i + 1) % vis.length] : e.key === 'ArrowLeft' ? vis[(i - 1 + vis.length) % vis.length]
@@ -175,6 +182,7 @@ function buildPanels(){
   $('camFollow').addEventListener('click', () => { Cam.follow = !Cam.follow; Cam.touched = true; requestRender(); });
   document.addEventListener('keydown', e => {
     if (modalOpen || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    if (Stage.visible()) return;                                   // Ziffern gehören der Kartenbühne
     for (const [id, spec] of Object.entries(C.UNITS)) if (e.key === spec.key){ G.spawn(id); requestRender(); }
   });
 }
@@ -266,6 +274,7 @@ function renderContext(){
 
 /* ---------- Kaufknöpfe (Upgrades, Einheiten, Reparatur): nur Inhalt und Zustand ändern sich ---------- */
 let ctxRepairOpt = null;
+const UP_TAB = { fertigung: null, mauer: 'wall', turm_0: 'wall', turm_2: 'wall', schmiede: 'smithy', kaserne: 'army', kontor: 'ctx' };     // Reiter, in dem ein Ausbau zu sehen ist
 const resEls = {};
 function updateOpt(el, kind, a){
   const S = G.S;
@@ -287,6 +296,11 @@ function renderOpts(){
     setText(el.label, baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`));
     setHidden(el.tag, lv === 0);
     if (lv > 0) setText(el.tag, u.max !== undefined ? `${lv}/${u.max}` : String(lv));
+    if (Disc.on()){                                                        // REQ-K2.06: „neu“, bis der Ausbau gesehen oder gekauft wurde
+      const home = UP_TAB[u.group];
+      setText(el.fresh, t('mark.new')); setHidden(el.fresh, lv > 0 || !NewMarks.isNew('upg:' + id));
+      if (lv > 0 || home === null || home === activeTab || (home === 'ctx' && ctxVisible())) NewMarks.view('upg:' + id);
+    }
     setText(el.expl, explUpgrade(id));
     setDis(el.btn, !G.canBuy(id));
   }
@@ -341,14 +355,30 @@ function optLimit(o){
 }
 let chosenKey = '', draftKey = '';
 function renderChosen(){
-  const st = G.S.draft.stacks, key = lang + JSON.stringify(st);
+  const st = G.S.draft.stacks, key = lang + JSON.stringify(st) + JSON.stringify(G.S.research.banned) + Stage.on() + Disc.on();
   if (key === chosenKey) return;
+  // Sammlung (Kartenbühne): Hinweis und gebannte Karten; gewählt wird auf der Bühne (REQ-KP.03)
+  const coll = Stage.on(), banned = G.S.research.banned || [];
+  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll);
+  if (coll){
+    setText($('collHint'), t('kp.collection.hint'));
+    const bl = $('bannedList'); bl.innerHTML = '';
+    if (!banned.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('kp.collection.noneBanned'); bl.appendChild(e); }
+    for (const id of banned){
+      const o = G.OPT[id]; if (!o) continue;
+      const tag = document.createElement('span'); tag.className = 'opt-tag ' + cardClass(o); tag.dataset.tooltip = 'chosen:' + id;
+      const b = document.createElement('b'); b.textContent = t(o.nameKey); tag.appendChild(b); bl.appendChild(tag);
+    }
+  }
   chosenKey = key;
   const box = $('chosen'); box.innerHTML = '';
   const ids = Object.keys(st).filter(id => st[id] > 0);
   if (!ids.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('level.none'); box.appendChild(e); return; }
+  let lastCat = null;
+  if (Disc.on()) ids.sort((a, b) => C.CARD_CATEGORIES.indexOf(G.OPT[a].category) - C.CATEGORIES.indexOf(G.OPT[b].category));      // REQ-K2.05: Sammlung gruppiert
   for (const id of ids){
     const o = G.OPT[id], tag = document.createElement('span');
+    if (Disc.on() && o.category !== lastCat){ lastCat = o.category; const h = document.createElement('span'); h.className = 'fam-h'; h.textContent = t('draft.cat.' + lastCat); box.appendChild(h); }
     tag.className = 'opt-tag ' + cardClass(o); tag.dataset.tooltip = 'chosen:' + id;
     const b = document.createElement('b'); b.textContent = cardName(o, st[id]);
     tag.appendChild(b);
@@ -457,12 +487,22 @@ function renderResearch(){
   const S = G.S;
   for (const r of G.RESEARCH){
     const el = resEls[r.id], n = G.researchTier(r.id), next = G.researchNext(r.id);
+    const vis = !(Disc.on() && G.researchBlock(r.id) === 'requires');       // REQ-K2.04: Forschung erst, wenn ihre Voraussetzung erfüllt ist
+    setHidden(el.btn, !vis);
+    if (!vis) continue;
     setText(el.label, researchName(r, Math.min(n + 1, r.tiers.length)));
     setHidden(el.tag, n === 0);
     if (n > 0) setText(el.tag, `${n}/${r.tiers.length}`);
+    if (Disc.on()){
+      setText(el.fresh, t('mark.new')); setHidden(el.fresh, !NewMarks.isNew('res:' + r.id));
+      if (activeTab === 'uni' || S.research.active.some(a => a.id === r.id)) NewMarks.view('res:' + r.id);
+    }
     setText(el.expl, next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
                           : t('opt.max'));
     setDis(el.btn, !!G.researchBlock(r.id));
+  }
+  if (Disc.on()){                                                          // REQ-K2.04: Spalten ohne sichtbare Forschung entfallen
+    for (const col of document.querySelectorAll('.res-tree > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));
   }
   // Laufende Forschung mit Fortschrittsbalken; Knoten nur neu bei geänderter Liste
   const box = $('resActive'), key = lang + S.research.active.map(a => a.id + a.tier).join();
@@ -490,7 +530,8 @@ function renderResearch(){
   // Rückmeldung bei abgeschlossener Forschung (REQ-6.06): kurzer Hinweis über dem Arbeitsbereich, dazu die Markierung am Reiter
   const done = S.stats.researchDone || [];
   if (done.length !== resDoneSeen){
-    if (done.length > resDoneSeen && resDoneSeen >= 0){ const d = done[done.length - 1]; toast(t('research.doneToast', { name: researchName(G.RES[d.id], d.tier) })); }
+    if (done.length > resDoneSeen && resDoneSeen >= 0){ const d = done[done.length - 1]; toast(t('research.doneToast', { name: researchName(G.RES[d.id], d.tier) }));
+      if (Disc.on()){ NewMarks.flag('res:' + d.id); NewMarks.flag('tab:uni'); Disc.announceDone('done:res:' + d.id, researchName(G.RES[d.id], d.tier)); } }
     resDoneSeen = done.length;
   }
 }
@@ -505,6 +546,12 @@ function toast(text){
 function renderPanels(){
   const S = G.S, running = S.status === 'running';
   autoDraft();
+  document.body.classList.toggle('disc', Disc.on());
+  { // Vorschau (REQ-K2.04, Soll): höchstens ein Platzhalter „?“ je Bereich – Reiterleiste und Einheitenliste
+    const pv = Disc.on() && C.ENTDECKEN.vorschau === 'naechste';
+    const tp = $('tabPrev'); setHidden(tp, !(pv && TABS.some(id => !tabVisible(id)))); setText(tp, t('kp.vorschau'));
+    const up = $('unitPrev'); setHidden(up, !(pv && Object.keys(C.UNITS).some(u => !G.unitUnlocked(u)))); setText(up, t('kp.vorschau'));
+  }
   if (!tabVisible(activeTab)) activeTab = 'build';                      // Reiter verschwunden (Schmiede abgerissen)
   for (const id of TABS){
     const el = tabEls[id], on = id === activeTab;
@@ -520,7 +567,7 @@ function renderPanels(){
     if (on) NewMarks.view('tab:' + id);
   }
   // Markierung: Reiter mit neuem Inhalt (offene Kartenwahl)
-  setHidden(tabEls.cards.mark, !(S.pendingDraft && activeTab !== 'cards'));
+  setHidden(tabEls.cards.mark, !(S.pendingDraft && activeTab !== 'cards' && !Stage.on()));
   setHidden(tabEls.uni.mark, !(S.research.fresh && activeTab !== 'uni'));
 
   // Klickfeld
@@ -528,12 +575,16 @@ function renderPanels(){
   setText($('clickHint'), cpText);
   setText($('clickExpl'), auto > 0 ? t('ex.clickAuto', { n: fmt1(auto) }) : t('ex.click', { n: cpText }));
   setText($('perClick'), t('hud.perClick', { n: cpText }));
-  setDis($('clickBtn'), !running);
+  setDis($('clickBtn'), !running || paused);
   $('clickBtn').classList.toggle('late', G.phase() === 'late');   // REQ-03.5: tritt in Phase Spät zurück
 
   renderOpts();
   renderContext();
   renderDraftLock();
+  if (Disc.on()){                                                          // REQ-K2.04: Abschnitte ohne nutzbaren Inhalt entfallen
+    for (const col of document.querySelectorAll('#panel-wall > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));
+    setHidden($('armyKaserne'), !Disc.shows('army:kaserne'));
+  }
   // Kaserne im Reiter Armee (REQ-6.05)
   const kas = G.has('kaserne');
   setText($('kaserneStatus'), kas ? t('kaserne.status.built', { n: G.kaserneLevel(), m: G.supplyCap() }) : t('kaserne.status.none'));
@@ -575,10 +626,11 @@ function renderPanels(){
   $('camFollow').setAttribute('aria-pressed', String(Cam.follow));
   setText($('camFollowExpl'), t(Cam.follow ? 'ex.cam.followOn' : 'ex.cam.followOff'));
   // Schmiede, Universität, Karten
-  setText($('smithyText'), t('panel.smithy.text', { n: S.lvl.qualitaet }));
+  setText($('smithyText'), Disc.on() && !G.has('schmiede') ? t('panel.smithy.none') : t('panel.smithy.text', { n: S.lvl.qualitaet }));
   setText($('uniInfo'), t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() }) + ' ' + t(G.has('universitaet') ? 'research.intro' : 'research.needUni', { n: G.researchSlots() }));
   renderResearch();
   renderDraft();
   renderChosen();
   NewMarks.endRender();
+  Disc.tick();
 }

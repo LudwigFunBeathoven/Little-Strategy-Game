@@ -4,6 +4,7 @@
    Texte stehen in den Sprachdateien unter 'hint.<id>'. */
 const KF_HINTS = (() => {
 'use strict';
+const DYN = /^disc:[a-z0-9_:.-]+$/i;                                                                            // REQ-K2.06: Hinweise auf neu auftauchende Elemente, je Element einmal
 const IDS = ['buildings', 'research', 'demolish', 'siege', 'wall', 'tower', 'smithy', 'kontor', 'neighbors'];   // Start und erste Welle erklärt das Tutorial (REQ-T.05)
 
 function create(storage, key){
@@ -11,14 +12,14 @@ function create(storage, key){
   function load(){
     try {
       const v = JSON.parse(storage.get(key) || '[]');
-      return new Set(Array.isArray(v) ? v.filter(id => IDS.includes(id)) : []);
+      return new Set(Array.isArray(v) ? v.filter(id => IDS.includes(id) || DYN.test(id)) : []);
     } catch (e) { return new Set(); }
   }
   function save(){ try { storage.set(key, JSON.stringify([...seen])); } catch (e) { /* Speicher nicht verfügbar */ } }
   return {
     /* true, wenn der Hinweis jetzt gezeigt werden soll; danach gilt er als gesehen */
     trigger(id){
-      if (!IDS.includes(id) || seen.has(id)) return false;
+      if (!(IDS.includes(id) || DYN.test(id)) || seen.has(id)) return false;
       seen.add(id); save();
       return true;
     },
