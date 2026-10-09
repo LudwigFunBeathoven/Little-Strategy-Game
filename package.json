@@ -1,11 +1,11 @@
 {
   "name": "klammerfront",
-  "version": "0.8.1",
+  "version": "0.9.2",
   "private": true,
   "description": "Browser-Spiel zwischen Universal Paperclips und Age of War",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "simulate": "node tools/simulate.mjs",
-    "test:browser": "node tests/browser-check.mjs && node tests/browser-k2.mjs"
+    "test:browser": "node tests/browser-check.mjs && node tests/browser-k2.mjs && node tests/browser-k2-standard.mjs"
   }
 }

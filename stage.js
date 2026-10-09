@@ -30,7 +30,7 @@ const Stage = (() => {
     el.stage.classList.toggle('two-rows', w < K.zweiZeilenBisPx);
   }
   const familyOf = o => o.family || 'bonus';
-  function symbol(o){ return K.symbole[o.pfad ? o.family : o.category] || K.symbole.bonus; }
+  function symbol(o){ return (K.symbole[o.pfad ? o.family : o.category] || K.symbole.bonus) + '\uFE0E'; }       // U+FE0E: Textdarstellung, nie als farbiges Emoji (0.9.1)
   /* Inhalte einer Pfadkarte mit Symbol: „Schaltet frei:“, „Öffnet Forschung:“ (REQ-KP.03) */
   const contentSymbol = key => K.inhaltSymbole[key.split(':')[0]] || '';
   function pathLines(o){
@@ -55,7 +55,6 @@ const Stage = (() => {
     return l.length ? l[0] : t(o.descKey, optParams(o, tier));
   }
   const hasDrawback = (o, tier) => !!(o.tiers[Math.min(tier, o.tiers.length) - 1] || {}).drawback;
-  const discOn = () => Disc.on();
   /* Rahmenfarbe = Seltenheit, Band = Familie (Modus karten) bzw. Kategorie (Standard mit Bühne) */
   const bandWord = o => o.pfad ? t('kp.fam.' + o.family) : G.S.pacing === 'karten' ? t('kp.fam.bonus') : t('draft.cat.' + o.category);
 
@@ -66,7 +65,7 @@ const Stage = (() => {
     d.options.forEach((id, i) => {
       const o = G.OPT[id], tier = G.cardTaken(id) + 1;
       const b = document.createElement('button');
-      b.type = 'button'; b.className = ['kcard', cardClass(o), 'fam-' + familyOf(o)].join(' '); b.dataset.tooltip = 'draftopt:' + i; b.dataset.i = String(i);
+      b.type = 'button'; b.className = ['kcard', cardClass(o)].concat(G.S.pacing === 'karten' ? ['fam-' + familyOf(o)] : []).join(' '); b.dataset.tooltip = 'draftopt:' + i; b.dataset.i = String(i);
       const rot = n > 1 ? (-K.faecherGrad + 2 * K.faecherGrad * i / (n - 1)) : 0;
       b.style.setProperty('--rot', rot.toFixed(2) + 'deg');
       b.style.setProperty('--delay', (i * K.aufdeckAbstandMs) + 'ms');

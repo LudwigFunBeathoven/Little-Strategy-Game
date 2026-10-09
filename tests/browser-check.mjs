@@ -23,8 +23,8 @@ const server = http.createServer((req, res) => {
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}/`;
 // ?tutorial=0: die bisherigen Abläufe starten über den Startdialog; das Tutorial hat unten eigene Prüfungen (REQ-T.04)
-const url = base + 'index.html?dev=1&tutorial=0&pacing=standard';
-const urlTutorial = base + 'index.html?dev=1&pacing=standard';   // Tutorial-Prüfungen hängen ?lang= und ?difficulty= an (überspringen den Startbildschirm)
+const url = base + 'index.html?dev=1&tutorial=0&pacing=standard&entdecken=0&buehne=0';          // die bisherigen Abläufe (Version 0.8) bleiben per Adresse erreichbar und werden so geprüft
+const urlTutorial = base + 'index.html?dev=1&pacing=standard&entdecken=0&buehne=0';   // Tutorial-Prüfungen hängen ?lang= und ?difficulty= an (überspringen den Startbildschirm)
 const b = await chromium.launch();
 let failed = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failed++; };
@@ -1124,7 +1124,7 @@ for (const lang of ['de', 'en']){
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto(base + 'index.html?debug=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?debug=1&tutorial=0&lang=de&difficulty=easy&pacing=standard&entdecken=0&buehne=0'); await p.waitForTimeout(400);
   const lv = n => p.evaluate(n => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + n); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99900 + n + G.S.level, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); }, n);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; });
@@ -1139,6 +1139,41 @@ for (const lang of ['de', 'en']){
     && typeof x.thinkMs === 'number' && x.thinkMs >= 400 && x.rerolled === 0 && x.banned === 0 && typeof x.level === 'number' && typeof x.t === 'number');
   check(ok, `Protokoll Format 2: ${d.drafts.length} Kartenwahlen mit Karte, Alternativen, Bedenkzeit, Neu ziehen und Bannen ${JSON.stringify(d.drafts[0])}`);
   check(errs.length === 0, `Protokoll: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
+/* ---------- Tutorial in der Vorgabe (Entdecken und Bühne an): Kartenwahl auf der Bühne (REQ-K2.02, K2.04) ---------- */
+for (const lang of ['de', 'en']){
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+  const p = await ctx.newPage(), errs = [];
+  p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); if (m.type() === 'warning' && m.text().includes('[i18n]')) errs.push(m.text()); });
+  p.on('pageerror', e => errs.push(e.message));
+  await ctx.addInitScript(() => { if (!sessionStorage.getItem('kfInit')){ localStorage.clear(); sessionStorage.setItem('kfInit', '1'); } });
+  await p.goto(base + `index.html?dev=1&pacing=standard&lang=${lang}&difficulty=easy&tutorial=1`); await p.waitForTimeout(400);
+  await endGreeting(p); await waitText(p);
+  // Schritte 1 bis 4 über die Spiellogik erledigen, danach die erste Welle besiegen lassen
+  for (let i = 0; i < 12; i++){ await p.click('#clickBtn'); await p.waitForTimeout(100); }
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 400; G.build('fabrik'); for (let i = 0; i < 3; i++) G.spawn('laeufer'); G.S.sections.forEach(s => { s.hp = 1e6; }); });
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id !== 'fertigen', null, { timeout: 20000 });
+  await p.evaluate(() => { const G = __kf.G; G.rushWave && G.rushWave(); G.releaseHold && G.releaseHold(false); for (let i = 0; i < 20 * 150 && !(__kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte'); i++){ G.S.material = Math.max(G.S.material, 100); G.spawn('laeufer'); G.tick(0.05); } });
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 30000 });
+  await p.waitForTimeout(500);                                  // Blase setzt sich nach dem Austeilen an ihren Platz
+  const s6 = await p.evaluate(() => { const bb = document.querySelector('#tutBubble').getBoundingClientRect(), cr = document.querySelector('#stageCards').getBoundingClientRect();
+    return { stage: !document.querySelector('#stage').hidden, tab: __kf.tab, narr: document.querySelector('#tutBubbleNarr').textContent, task: document.querySelector('#tutBubbleTask').textContent, bubbleBottom: bb.bottom, cardsTop: cr.top }; });
+  check(s6.stage && s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task'), `[${lang}] Tutorial/Vorgabe: erste Kartenwahl auf der Bühne mit Erzählung und Auftrag ${JSON.stringify([s6.stage, s6.tab])}`);
+  check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Tutorial/Vorgabe: Sprechblase sitzt über der Bühne und verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 5000 });
+  await p.click('.kcard >> nth=0'); await p.waitForTimeout(1100);
+  const f1 = await tutState(p);
+  check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1'), `[${lang}] Tutorial/Vorgabe: Abschied 1 „${f1.narr}“`);
+  // Während des Abschieds folgt eine weitere Wahl (zwei verschiedene Kartentypen in der Sammlung); danach verschwindet der Quartiermeister
+  await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + 1); G.S.xp = G.S.xpTotal; G.S.units.push({ id: 99991, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
+  await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 5000 }).catch(() => {});
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked') || document.getElementById('stage').hidden, null, { timeout: 5000 }).catch(() => {});
+  if (await p.evaluate(() => !document.getElementById('stage').hidden)){ await p.click('.kcard >> nth=1'); await p.waitForTimeout(1100); }
+  const gone = await p.waitForFunction(() => __kf.Tutorial.view().phase === 'off', null, { timeout: 40000 }).then(() => true).catch(() => false);
+  check(gone, `[${lang}] Tutorial/Vorgabe: der Quartiermeister verlässt das Bild (Phase „off“)`);
+  check(errs.length === 0, `[${lang}] Tutorial/Vorgabe: keine Fehler${show(errs)}`);
   await ctx.close();
 }
 

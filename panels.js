@@ -287,6 +287,7 @@ function renderContext(){
 
 /* ---------- Kaufknöpfe (Upgrades, Einheiten, Reparatur): nur Inhalt und Zustand ändern sich ---------- */
 let ctxRepairOpt = null;
+const UP_TAB = { fertigung: null, mauer: 'wall', turm_0: 'wall', turm_2: 'wall', schmiede: 'smithy', kaserne: 'army', kontor: 'ctx' };     // Reiter, in dem ein Ausbau zu sehen ist
 const resEls = {}, resGroupsAll = {};
 function updateOpt(el, kind, a){
   const S = G.S;
@@ -299,7 +300,6 @@ function updateOpt(el, kind, a){
     setDis(el.btn, !!repairReason(i));
   }
 }
-const UP_TAB = { fertigung: null, mauer: 'wall', turm_0: 'wall', turm_2: 'wall', schmiede: 'smithy', kaserne: 'army', kontor: 'ctx' };     // Reiter, in dem ein Ausbau zu sehen ist
 function renderOpts(){
   const S = G.S;
   for (const id in C.UPGRADES){
@@ -341,10 +341,12 @@ function renderOpts(){
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const cardName = (o, tier) => o.tiers.length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
 /* Werte für die Kartentexte: Faktoren als Prozent, außer echte Vielfache; Anteile als Prozent */
-const FACTOR_STATS = ['supplyMult', 'ownWaveInterval'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly'];
+const FACTOR_STATS = ['supplyMult', 'ownWaveInterval'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus'];      // Anteile werden in Prozent gezeigt
+/* Anzeigewert einer Wirkung (Karten und Forschungen gleich): Faktor, Prozent, Anteil in Prozentpunkten oder Zahl */
+const effectValue = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
+  : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : e.add % 1 ? fmt2(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
 function optParams(o, tier){
-  const val = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
-    : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
+  const val = effectValue;
   const tr = o.tiers[Math.max(1, tier) - 1], p = {};
   (tr.effect || []).forEach((e, i) => { p['e' + (i + 1)] = val(e); });
   (tr.drawback || []).forEach((e, i) => { p['d' + (i + 1)] = val(e); });
@@ -386,12 +388,12 @@ function pathStatus(){
 const FAMILY_ORDER = ['bau', 'technologie', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
 let chosenKey = '', draftKey = '';
 function renderChosen(){
-  const ps = Stage.on() && !Disc.on() ? pathStatus() : [];
+  const ps = Stage.on() && !Disc.on() && G.S.pacing === 'karten' ? pathStatus() : [];
   const st = G.S.draft.stacks, key = lang + JSON.stringify(st) + JSON.stringify(G.S.research.banned) + Stage.on() + Disc.on() + ps.map(x => x.id + x.st).join();
   if (key === chosenKey) return;
   // Sammlung (Kartenbühne): Hinweis und gebannte Karten; gewählt wird auf der Bühne (REQ-KP.03)
   const coll = Stage.on(), banned = G.S.research.banned || [];
-  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll); setHidden($('pathHead'), !coll || Disc.on()); setHidden($('pathList'), !coll || Disc.on());       // REQ-K2.05: keine Pfadübersicht
+  setHidden($('collHint'), !coll); setHidden($('bannedHead'), !coll); setHidden($('bannedList'), !coll); setHidden($('pathHead'), !coll || Disc.on() || G.S.pacing !== 'karten'); setHidden($('pathList'), !coll || Disc.on() || G.S.pacing !== 'karten');       // REQ-K2.05: keine Pfadübersicht
   if (coll){
     setText($('collHint'), t('kp.collection.hint'));
     const pl = $('pathList'); pl.innerHTML = '';
@@ -413,11 +415,12 @@ function renderChosen(){
   const box = $('chosen'); box.innerHTML = '';
   const ids = Object.keys(st).filter(id => st[id] > 0);
   if (!ids.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('level.none'); box.appendChild(e); return; }
-  let lastFam = null;
-  if (Disc.on()) ids.sort((a, b) => FAMILY_ORDER.indexOf(famOf(G.OPT[a])) - FAMILY_ORDER.indexOf(famOf(G.OPT[b])));      // REQ-K2.05: Sammlung nach Familie
+  let lastGrp = null;
+  const grpOf = o => G.S.pacing === 'karten' ? famOf(o) : o.category, grpOrder = G.S.pacing === 'karten' ? FAMILY_ORDER : C.CARD_CATEGORIES;
+  if (Disc.on()) ids.sort((a, b) => grpOrder.indexOf(grpOf(G.OPT[a])) - grpOrder.indexOf(grpOf(G.OPT[b])));      // REQ-K2.05: Sammlung gruppiert (Familie im Modus karten, sonst Kategorie)
   for (const id of ids){
     const o = G.OPT[id], tag = document.createElement('span');
-    if (Disc.on() && famOf(o) !== lastFam){ lastFam = famOf(o); const h = document.createElement('span'); h.className = 'fam-h fam-' + lastFam; h.textContent = t('kp.fam.' + lastFam); box.appendChild(h); }
+    if (Disc.on() && grpOf(o) !== lastGrp){ lastGrp = grpOf(o); const h = document.createElement('span'); h.className = 'fam-h' + (G.S.pacing === 'karten' ? ' fam-' + lastGrp : ''); h.textContent = t(G.S.pacing === 'karten' ? 'kp.fam.' + lastGrp : 'draft.cat.' + lastGrp); box.appendChild(h); }
     tag.className = 'opt-tag ' + cardClass(o); tag.dataset.tooltip = 'chosen:' + id;
     const b = document.createElement('b'); b.textContent = cardName(o, st[id]);
     tag.appendChild(b);
@@ -506,7 +509,7 @@ function renderLog(){
 const researchName = (r, tier) => r.tiers.length > 1 ? `${t(r.nameKey)} ${ROMAN[tier]}` : t(r.nameKey);
 function researchParams(r, tier){
   const e = (r.tiers[Math.max(1, tier) - 1].effect || [])[0] || {};
-  return { e1: e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? fmtNum(e.add) : '' };
+  return { e1: e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? effectValue({ stat: e.stat, add: e.add }) : '' };
 }
 function researchReason(id){
   const b = G.researchBlock(id), r = G.RES[id];
@@ -518,6 +521,7 @@ function researchReason(id){
     case 'closed': { const src = G.keySource('forschung:' + id); return t('kp.res.opensWith', { name: src && G.OPT[src] ? t(G.OPT[src].nameKey) : '' }); }
     case 'active': return t('research.running');
     case 'busy': return t('research.busy', { n: G.researchSlots() });
+    case 'noEffect': return t('tip.noSupply', { n: C.SUPPLY_CAP_MAX });
     case 'material': return missing('material', G.researchCost(id), G.S.material);
   }
   return null;
@@ -530,7 +534,7 @@ function renderResearch(){
   for (const [cid, g] of Object.entries(resGroupsAll)) setHidden(g.g, S.pacing !== 'karten' || G.cardExcluded(cid));
   for (const r of G.RESEARCH){
     const el = resEls[r.id], n = G.researchTier(r.id), next = G.researchNext(r.id);
-    const vis = inMode(r) && !(Disc.on() && ['closed', 'requires'].includes(G.researchBlock(r.id)));
+    const vis = inMode(r) && !(Disc.on() && ['closed', 'requires'].includes(G.researchBlock(r.id)));       // REQ-K2.04: Forschung erst, wenn geöffnet und ihre Voraussetzung erfüllt ist
     setHidden(el.btn, !vis);
     if (!vis) continue;
     if (el.group) setText(el.group.h, t(G.OPT[el.card].nameKey));
@@ -541,9 +545,10 @@ function renderResearch(){
       setText(el.fresh, t('mark.new')); setHidden(el.fresh, !NewMarks.isNew('res:' + r.id));
       if (activeTab === 'uni' || S.research.active.some(a => a.id === r.id)) NewMarks.view('res:' + r.id);
     }
-    setText(el.expl, G.researchBlock(r.id) === 'closed' ? researchReason(r.id) : next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
+    const blk = G.researchBlock(r.id);
+    setText(el.expl, blk === 'closed' ? researchReason(r.id) : blk === 'noEffect' ? t('opt.noSupply') : next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
                           : t('opt.max'));
-    setDis(el.btn, !!G.researchBlock(r.id));
+    setDis(el.btn, !!blk);
   }
   if (Disc.on()){                                                          // REQ-K2.04: keine leeren Bereiche, Gruppen und Spalten ohne sichtbare Forschung entfallen
     for (const g of Object.values(resGroupsAll)) setHidden(g.g, !g.opts.querySelector('.opt:not([hidden])'));

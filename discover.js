@@ -16,7 +16,7 @@ const Disc = (() => {
     'tab:smithy':  { when: () => G.has('schmiede') },
     'tab:uni':     { when: () => G.has('universitaet') },
     'tab:cards':   { when: S => !!S.pendingDraft || cardsChosen(S) > 0 },
-    'army:kaserne': { when: () => G.isBuildable('kaserne') || G.has('kaserne') },
+    'army:kaserne': { when: () => G.has('kaserne') || (G.isBuildable('kaserne') && G.introShows('buildings')) },       // baubar (bei gestaffelter Einführung erst mit Stufe 2)
     'hud:material': { when: () => true },
     'hud:waves':   { when: () => true },
     'hud:walls':   { when: () => true },

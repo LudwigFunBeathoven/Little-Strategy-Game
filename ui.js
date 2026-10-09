@@ -9,6 +9,10 @@ const G = KlammerCore.create();
 const $ = id => document.getElementById(id);
 /* URL-Parameter für Tests (REQ-T2.01): ?lang=de|en und ?difficulty=easy|normal|hard überspringen den Startbildschirm; ?tutorial=1|0 schaltet das Tutorial */
 const URL_PARAMS = new URLSearchParams(location.search);
+/* Schalter für Spieltests per Adresse (REQ-K2.07): ?zeit=pause|langsam|lauf (Spielzeit bei offener Wahl), ?vorschau=keine|naechste */
+{ const z = URL_PARAMS.get('zeit'), v = URL_PARAMS.get('vorschau');
+  if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z;
+  if (['keine', 'naechste'].includes(v)) C.ENTDECKEN.vorschau = v; }
 const DIFF_ALIAS = { easy: 'leicht', normal: 'normal', hard: 'schwer', leicht: 'leicht', schwer: 'schwer' };
 const LANG_PARAM = KF_CONFIG.LANGUAGES.includes(URL_PARAMS.get('lang')) ? URL_PARAMS.get('lang') : null;
 const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
@@ -29,13 +33,14 @@ function defaultLang(){
   return (navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en';
 }
 let lang = defaultLang();
-let nf, nf1;
+let nf, nf1, nf2;
 function setLang(l){
   lang = C.LANGUAGES.includes(l) ? l : C.FALLBACK_LANG;
   storageSet(C.LANG_KEY, lang);
   const locale = t('meta.locale');
   nf  = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   nf1 = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  nf2 = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
   document.documentElement.lang = lang;
   applyStaticTexts();
 }
@@ -72,6 +77,7 @@ function fmt(n){
   return nf.format(n);
 }
 const fmt1 = n => nf1.format(n);
+const fmt2 = n => nf2.format(n);                      // bis zu zwei Nachkommastellen (z. B. 0,15 EP je Sekunde)
 const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function dur(sec){
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
@@ -129,6 +135,7 @@ function previewUpgrade(id){
 function explUpgrade(id){
   if (G.isMaxed(id)) return t('opt.max');
   if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || lockedText();
+  if (G.noEffect(id)) return t('opt.noSupply');
   const [label, change] = previewUpgrade(id);
   return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
 }
@@ -172,6 +179,7 @@ function upgradeReason(id){
   if (S.status !== 'running') return t('tip.notRunning');
   if (G.isMaxed(id)) return t('tip.maxed');
   if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || lockedText();
+  if (G.noEffect(id)) return t('tip.noSupply', { n: C.SUPPLY_CAP_MAX });
   if (C.BUILDINGS.includes(u.group) && !G.has(u.group)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
   if (u.needs && S.lvl[u.needs] <= 0) return t('tip.needsTower');
   if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);
@@ -264,6 +272,9 @@ function tipContent(id){
     case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
     case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
+    case 'prev': return { title: t('kp.vorschau'), body: t('tip.kp.vorschau') };
+    case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
+    case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'rush': { const act = S.research.active.find(x => x.id === a);
       return { title: t('research.rush'), body: t('tip.research.rush', { name: act ? researchName(G.RES[a], act.tier) : '' }),
                rows: act ? [[t('tip.cost'), costText('material', G.rushCost(a))], [t('research.time'), t('research.seconds', { s: Math.ceil(Math.max(0, act.timeS - act.t)) })]] : [] }; }
@@ -390,7 +401,7 @@ const Tip = (() => {
 const DEV = /[?&]dev=1\b/.test(location.search);
 function tooltipAudit(){
   const sel = 'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
-  return [...document.querySelectorAll(sel)].filter(e => !e.dataset.tooltip).map(e => e.outerHTML.slice(0, 100));
+  return [...document.querySelectorAll(sel)].filter(e => !e.dataset.tooltip && !e.closest('#stageFly')).map(e => e.outerHTML.slice(0, 100));       // Flugkopien der Karten (stageFly) sind nur Bild
 }
 /* Jeder sichtbare Knopf trägt eine Erklärzeile (REQ-20.1) */
 function explAudit(){

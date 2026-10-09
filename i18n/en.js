@@ -446,6 +446,8 @@ KF_I18N.en = {
   'research.seconds': '{s} s',
   'research.requires': 'Requires {name} first.',
   'research.running': 'Currently being researched.',
+  'opt.noSupply': 'Supply limit at maximum',
+  'tip.noSupply': 'The supply limit is at its cap of {n}. More supply adds nothing.',
   'research.busy': 'All {n} research slots busy.',
   'research.runningName': 'Research: {name}',
   'research.intro': 'Research costs material and time; {n} at a time.',
@@ -526,6 +528,8 @@ KF_I18N.en = {
   'tut.bye2': 'Whatever is new is marked. Look after the gate, governor.',
   'tut.xpBounty': '+{n} experience',
   'tut.more': 'Click to read on',
+
+  /* Kartenbühne und Entdecken (Version 0.9) */
   'ex.kp.hud.draft': '{n} open · open stage',
   'ex.kp.card': '{tier} · free',
   'kp.stage.title': 'Level {n} reached – choose a card',

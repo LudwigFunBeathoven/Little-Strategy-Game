@@ -19,6 +19,29 @@ Anforderungen: `docs/anforderungen-kartenpfad.md`, Bericht `docs/bericht-kartenp
 - KP.07 Wagnis-Karten (Glaskanonen, Volle Auslastung) und Exklusivpaar Fortgeschrittene Taktiken / Ballistik.
 - KP.09 Simulation `tools/sim-karten.mjs`, Protokollformat 2 (Karte, Alternativen, Bedenkzeit, Neu ziehen, Bannen, Freischaltungen, Forschungen).
 - `?pacing=standard` zeigt das Verhalten von `main` (Karten im Reiter, nichts gesperrt).
+
+## v0.9.2 – Upgrades ohne Wirkung (09.10.2026)
+Spielstand-Version (7) unverändert, Kennzahlen der Simulation praktisch unverändert (Normal, durchschnitt: 6:55 und 6:13 Minuten wie zuvor).
+- **Behoben: Der Ausbau der Kaserne zeigte „Versorgungslimit 15 → 15“** und ließ sich für 4.000 Material kaufen, obwohl das Limit am harten Deckel von 15 stand (Karten, Forschung und Nachbarschaft liefern oft schon Versorgung). Am Deckel ist der Ausbau jetzt gesperrt („Versorgungslimit am Maximum“) und bucht nichts ab.
+- **Ebenso:** Die Forschung „Logistik“ ist am Deckel gesperrt, und die reinen Versorgungskarten (Aushebung, Große Armee) erscheinen dort nicht mehr im Angebot, denn sie brächten nur ihren Nachteil.
+- **Behoben: „Schmiede-Ausbau“ zeigte „wirkt 0,0 Prozentpunkte stärker“.** Die Forschung wirkte schon (jede Qualitätsstufe +2 statt +5 Prozent mehr Stärke), nur die Anzeige rundete den Wert weg; jetzt steht dort „2 Prozentpunkte“. Das gilt auch für die EP je Sekunde des Hörsaals (0,15 statt 0,2).
+
+## v0.9.1 – Korrektur zu 0.9 (09.10.2026)
+Nur Fehlerbehebungen, Spielwerte und Spielstand-Version (7) unverändert.
+- **Behoben: Die Anzeige fror nach der zweiten Kartenwahl ein** (die Kartenwahl blieb offen, das Spiel schien zu hängen, der Quartiermeister des Tutorials verschwand nicht mehr). Ursache: ein Tippfehler in der Sortierung der Sammlung (Reiter „Karten“), der erst ab zwei verschiedenen gewählten Karten auslöste; er brach das Zeichnen der Oberfläche ab. Test `tests/browser-k2.mjs` („Regression“) wählt acht Runden nacheinander.
+- **Behoben:** Das Kartensymbol Armee erschien unter Windows als blaues Emoji; Symbole werden jetzt als Text gezeichnet.
+- Die Entwicklerprüfung `?dev=1` meldete die fliegenden Kartenbilder fälschlich als Knöpfe ohne Tooltip.
+
+## v0.9.0 – Kartenbühne und Entdecken (Oktober 2026)
+Anforderungen: `docs/anforderungen-kartenpfad-2.md`, Bericht `docs/bericht-ui-0.9.md`. Spielwerte, Spielregeln und Spielstand-Version (7) unverändert; ein vorhandener Spielstand bleibt erhalten.
+Für Tester:
+- **Die Kartenwahl ist ein Ablauf.** Die Karten fliegen aus der Leiste, decken nacheinander auf, die gewählte fliegt zu ihrem Wirkort, der Rest zurück. Jede Karte zeigt eine Zeile zur Wirkung, Stufenpunkte und den Rahmen ihrer Seltenheit; Details stehen unter den Karten. Die Ziffern 1 bis 5 wählen eine Karte. Der Fortschritt zur nächsten Wahl steht als Kartensymbol in der Ressourcenleiste.
+- **Das Spiel zeigt, was jetzt nutzbar ist.** Reiter, Abschnitte und Anzeigen erscheinen erst, wenn sie etwas zu tun geben (z. B. EP nach dem ersten Abschuss, Schmiede mit der Schmiede). Neues blendet ein, trägt „neu“ und meldet sich mit einem Hinweis.
+- **Behoben:** Bei gewählter Universität erschien das Fenster „Kontor-Ausbau“; in der Pause erzeugten etwa sechs Klicks noch Material.
+- Zum Vergleich mit der alten Oberfläche: `?buehne=0&entdecken=0` an die Adresse hängen.
+Für Entwickler:
+- Neu: `stage.js`, `discover.js`; Schalter in `config.js` (`UI.kartenbuehne`, `UI.entdecken`, `ENTDECKEN`, `KARTENBUEHNE`); `core.js` kennt nur `KARTENBUEHNE.zeit`. Messung `tools/sichtbar-mass.mjs`; Tests `tests/k2.test.mjs`, `tests/browser-k2.mjs`.
+
 ## v0.8.1 – MVP zum Teilen (07.10.2026)
 Anforderungen: `docs/anforderungen-mvp-release.md`, Bericht `docs/bericht-mvp-release.md`. Spielwerte und Spielstand-Version (7) unverändert; ein vorhandener Spielstand bleibt erhalten.
 Für Tester:

@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9-kartenpfad',
-  SAVE_KEY: 'klammerfront.save.v8',
+  VERSION: '0.9.2-kartenpfad-3',
+  SAVE_KEY: 'klammerfront.save.v8',          // Branch: eigene, höhere Spielstand-Version als main (7)
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -97,20 +97,21 @@ const KF_CONFIG = {
     // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
     homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
     draftLockMs: 400,
-    entdecken: null,            // Sichtbarkeitsregel „nur, was jetzt nutzbar ist“ (REQ-K2.04–K2.06): null = nach Pacing-Modus (an bei 'karten'), true/false erzwingt; URL ?entdecken=1|0
-    kartenbuehne: null,         // Kartenbühne in der Bildmitte (REQ-KP.03): null = nach Pacing-Modus (an bei 'karten'), true/false erzwingt; URL ?buehne=1|0
+    entdecken: true,            // Sichtbarkeitsregel „nur, was jetzt nutzbar ist“ (REQ-K2.04–K2.06): true/false erzwingt, null = nur im Pacing-Modus 'karten'; URL ?entdecken=1|0
+    kartenbuehne: true,         // Kartenwahl als Bühne mit Ablauf (REQ-KP.03, K2.01–K2.03): true/false erzwingt, null = nur im Pacing-Modus 'karten'; URL ?buehne=1|0
     hintAutoMs: 8000,           // ein Erstkontakt-Hinweis schließt sich nach so langer Zeit von selbst (REQ-T.05)
     newSeenMs: 1500,            // Markierung „neu“: so lange muss der Inhalt sichtbar sein, bis er als angesehen gilt (REQ-T.05)
     toastMs: 2500,              // kurzer Hinweis über dem Arbeitsbereich (abgeschlossene Forschung, REQ-6.06)           // Kartenwahl: Knöpfe nehmen Klicks erst so lange nach dem automatischen Öffnen an und blenden ein (REQ-6.04)
     debugUnitLogS: 15,          // Debug-Protokoll je Einheit (?debug=1): so viele Sekunden Spielzeit werden vorgehalten
   },
 
-  /* Kartenbühne (REQ-KP.03) */
+  /* Entdecken (REQ-K2.04 – K2.06) */
   ENTDECKEN: {
     vorschau: 'keine',          // 'keine' oder 'naechste': höchstens ein Platzhalter „?“ je Bereich (REQ-K2.04, Soll); URL ?vorschau=naechste
     einblendenMs: 300,          // neues Element blendet so lange ein (höchstens 300)
     hinweisMs: 8000,            // Erstkontakt-Hinweis zu neuem Inhalt schließt nach so vielen ms (REQ-K2.06)
   },
+  /* Kartenbühne (REQ-KP.03, K2.02) */
   KARTENBUEHNE: {
     zeit: 'pause',              // Spielzeit bei offener Bühne: 'pause' (wie v0.6), 'langsam' (Faktor langsamFaktor) oder 'lauf'
     langsamFaktor: 0.2,

@@ -446,6 +446,8 @@ KF_I18N.de = {
   'research.seconds': '{s} s',
   'research.requires': 'Braucht zuerst {name}.',
   'research.running': 'Wird gerade erforscht.',
+  'opt.noSupply': 'Versorgungslimit am Maximum',
+  'tip.noSupply': 'Das Versorgungslimit steht am Deckel von {n}. Mehr Versorgung bringt nichts.',
   'research.busy': 'Alle {n} Forschungsplätze belegt.',
   'research.runningName': 'Forschung: {name}',
   'research.intro': 'Forschung kostet Material und Zeit; {n} gleichzeitig.',
@@ -526,6 +528,8 @@ KF_I18N.de = {
   'tut.bye2': 'Was neu ist, ist markiert. Bewahre das Tor, Statthalter.',
   'tut.xpBounty': '+{n} Erfahrung',
   'tut.more': 'Klicken, um weiterzulesen',
+
+  /* Kartenbühne und Entdecken (Version 0.9) */
   'ex.kp.hud.draft': '{n} offen · Bühne öffnen',
   'ex.kp.card': '{tier} · kostenlos',
   'kp.stage.title': 'Stufe {n} erreicht – wähle eine Karte',
