@@ -304,7 +304,7 @@ function renderOpts(){
   const S = G.S;
   for (const id in C.UPGRADES){
     const u = C.UPGRADES[id], el = optEls[id], lv = S.lvl[id];
-    setHidden(el.btn, !(G.isAvailable(id) && (S.revealed[id] || (!Disc.on() && S.pacing === 'karten' && G.stageSource(id)))));
+    setHidden(el.btn, !(G.isAvailable(id) && (S.revealed[id] || (!Disc.on() && S.pacing === 'karten' && G.stageSource(id))) && !(Disc.on() && lv === 0 && G.stageSource(id))));       // Entdecken: Gesperrtes bleibt verborgen, bis die Karte gewählt ist (REQ-K2.04)
     if (el.btn.hidden) continue;
     setText(el.label, baseOf(id) === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${baseOf(id)}.name`));
     setHidden(el.tag, lv === 0);
@@ -621,7 +621,7 @@ function renderPanels(){
   setText($('clickHint'), cpText);
   setText($('clickExpl'), auto > 0 ? t('ex.clickAuto', { n: fmt1(auto) }) : t('ex.click', { n: cpText }));
   setText($('perClick'), t('hud.perClick', { n: cpText }));
-  setDis($('clickBtn'), !running);
+  setDis($('clickBtn'), !running || paused);
   $('clickBtn').classList.toggle('late', G.phase() === 'late');   // REQ-03.5: tritt in Phase Spät zurück
 
   renderOpts();

@@ -586,6 +586,7 @@ KF_I18N.en = {
   'kp.vorschau': '?',
   'tip.kp.vorschau': 'Something more will appear here later.',
   'ex.kp.vorschau': 'not available yet',
+  'kp.stage.next': 'Next level not available yet',
   'kp.deck.count': '{n} cards chosen',
   'ex.kp.deck': '{cur} of {need} XP to the next choice',
   'tip.kp.deck': 'The deck fills with experience. When it is full, a card choice is due. With an open, folded choice a click opens the stage.',

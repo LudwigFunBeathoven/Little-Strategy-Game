@@ -586,6 +586,7 @@ KF_I18N.de = {
   'kp.vorschau': '?',
   'tip.kp.vorschau': 'Hier kommt später noch etwas dazu.',
   'ex.kp.vorschau': 'noch nicht verfügbar',
+  'kp.stage.next': 'Nächste Stufe noch nicht verfügbar',
   'kp.deck.count': '{n} Karten gewählt',
   'ex.kp.deck': '{cur} von {need} EP bis zur nächsten Wahl',
   'tip.kp.deck': 'Der Stapel füllt sich mit Erfahrung. Ist er voll, steht eine Kartenwahl an. Bei einer offenen, eingeklappten Wahl öffnet ein Klick die Bühne.',

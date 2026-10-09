@@ -139,7 +139,16 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   await p.evaluate(() => { __kf.G.unlockKey('bau:kaserne'); __kf.requestRender(); }); await settle(p, 150);
   check(await armyKas(), 'K2.04: Kaserne-Abschnitt sichtbar, sobald die Kaserne baubar ist');
   await p.evaluate(() => { __kf.G.S.material = 100000; __kf.G.tick(0.05); __kf.G.tick(0.05); __kf.requestRender(); }); await settle(p, 150);
-  s = await v(); check(s.wall, `K2.04: Reiter Mauer & Türme erscheint bei der ersten möglichen Handlung ${JSON.stringify(s)}`);
+  check(await p.evaluate(() => [...document.querySelectorAll('#panel-wall .opt')].every(e => e.hidden || e.dataset.tooltip.startsWith('repair'))), 'K2.04/B3: ohne gewählte Karte sind Mauer, Türme, Stachelwall und Mörtelkolonne verborgen (nicht ausgegraut)');
+  s = await v(); check(!s.wall, `K2.04/B4: Reiter Mauer & Türme bleibt verborgen, solange nur gesperrte Ausbauten (Karte nicht gewählt) bereitstehen ${JSON.stringify(s)}`);
+  await p.evaluate(() => { __kf.selectTab('build'); });
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.pfadFestungsbau = 1; G.S.material = 100000; G.tick(0.05); G.tick(0.05); __kf.requestRender(); }); await settle(p, 200);
+  s = await v(); check(s.wall, `K2.04/B4: Reiter Mauer & Türme erscheint, sobald die Karte gewählt (Ausbau freigeschaltet) ist ${JSON.stringify(s)}`);
+  await p.evaluate(() => __kf.selectTab('wall')); await settle(p, 200);
+  const wallOpts = await p.evaluate(() => { __kf.G.S.lvl.mauer = 1; __kf.requestRender(); return 0; }); await settle(p, 200);
+  const wallTxt = await p.evaluate(() => [...document.querySelectorAll('#panel-wall .opt')].filter(e => e.checkVisibility()).map(e => e.dataset.tooltip + '|' + e.textContent));
+  check(wallTxt.length >= 1 && wallTxt.every(x => !/Spezialkarte|freischaltbar/.test(x)) && wallTxt.some(x => x.startsWith('upg:mauer') && x.includes('Nächste Stufe noch nicht verfügbar')), `K2.04/B3: eine gesperrte Folgestufe nennt weder Karte noch Quelle ${JSON.stringify(wallTxt)}`);
+  await p.evaluate(() => { __kf.selectTab('build'); });
   await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = 3; G.S.xp = 3; __kf.requestRender(); }); await settle(p, 150);
   s = await v(); check(s.xp && s.sym, 'K2.04: EP und Kartensymbol ab dem ersten EP-Gewinn');
   await p.evaluate(() => { __kf.G.S.material = 100000; __kf.G.spawn('laeufer'); __kf.requestRender(); }); await settle(p, 150);
@@ -193,7 +202,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   const hints = () => p.evaluate(() => JSON.parse(localStorage.getItem(__kf.C.HINTS_KEY) || '[]').filter(x => x.startsWith('disc:')));
   check((await hints()).length === 0, 'K2.06: vor dem Moment kein Entdeckungshinweis');
   // drei gleichzeitige Freischaltungen: Reiter Mauer & Türme, Kaserne-Abschnitt, EP/Kartensymbol – in einem Bild
-  await p.evaluate(() => { const G = __kf.G; G.unlockKey('bau:kaserne'); G.S.xpTotal = 3; G.S.xp = 3; G.S.material = 100000; G.tick(0.05); G.tick(0.05); __kf.requestRender(); }); await settle(p, 500);
+  await p.evaluate(() => { const G = __kf.G; G.unlockKey('bau:kaserne'); G.S.draft.stacks.pfadFestungsbau = 1; G.S.xpTotal = 3; G.S.xp = 3; G.S.material = 100000; G.tick(0.05); G.tick(0.05); __kf.requestRender(); }); await settle(p, 500);
   const h1 = await hints();
   check(h1.length === 1, `K2.06: drei gleichzeitige Freischaltungen lösen genau einen Hinweis aus ${JSON.stringify(h1)}`);
   check(await vis(p, '#tab-wall i.new'), 'K2.06: neuer Reiter trägt die Marke „neu“ am Reiterknopf');
@@ -202,6 +211,34 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   await p.evaluate(() => __kf.selectTab('wall')); await settle(p, (await p.evaluate(() => __kf.C.UI.newSeenMs)) + 600);
   await p.evaluate(() => __kf.selectTab('build')); await settle(p, 200);
   check(!(await vis(p, '#tab-wall i.new')), 'K2.06: die Marke verschwindet, nachdem der Reiter angesehen wurde');
+  await ctx.close();
+}
+
+/* ---------- B1: Kontext eines Gebäudes zeigt nur dessen eigene Ausbauten ---------- */
+{
+  const { ctx, p, errs } = await open('pacing=standard&entdecken=1');
+  await p.evaluate(() => { const G = __kf.G; G.S.intro = false; G.S.material = 1e6; G.build('universitaet'); G.build('kontor'); G.S.revealed.zinseszins = true; G.S.lvl.zinseszins = 2; __kf.requestRender(); });
+  const iU = await p.evaluate(() => __kf.G.S.slots.findIndex(x => x && x.type === 'universitaet')), iK = await p.evaluate(() => __kf.G.S.slots.findIndex(x => x && x.type === 'kontor'));
+  await p.evaluate(i => __kf.selectPlot(i), iU); await settle(p, 250);
+  check(!(await vis(p, '#optsKontor')) && !(await vis(p, '[data-tooltip="upg:zinseszins"]')), 'B1: Universität gewählt: kein Kontor-Ausbau im Kontextkopf');
+  await p.evaluate(i => __kf.selectPlot(i), iK); await settle(p, 250);
+  check(await vis(p, '[data-tooltip="upg:zinseszins"]'), 'B1: Handelskontor gewählt: Kontor-Ausbau sichtbar');
+  check(errs.length === 0, `B1: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
+/* ---------- B2: In der Pause erzeugen Klicks nichts ---------- */
+{
+  const { ctx, p } = await open('pacing=standard');
+  await p.evaluate(() => { __kf.setPaused(true); }); await settle(p, 200);
+  const m0 = await p.evaluate(() => __kf.G.S.materialTotal);
+  for (let i = 0; i < 10; i++){ await p.evaluate(() => document.getElementById('clickBtn').dispatchEvent(new PointerEvent('pointerdown', { button: 0, isPrimary: true, bubbles: true }))); }
+  await p.evaluate(() => document.getElementById('clickBtn').click());
+  const r = await p.evaluate(() => ({ m: __kf.G.S.materialTotal, direct: __kf.G.doClick(), clicks: __kf.G.S.clickTimes.length, dis: document.getElementById('clickBtn').getAttribute('aria-disabled') }));
+  check(r.m === m0 && r.direct === false && r.clicks === 0 && r.dis === 'true', `B2: Pause: Klickfeld gesperrt, kein Ertrag ${JSON.stringify(r)}`);
+  await p.evaluate(() => __kf.setPaused(false)); await settle(p, 200);
+  const r2 = await p.evaluate(() => { const a = __kf.G.S.materialTotal; __kf.G.doClick(); return __kf.G.S.materialTotal > a; });
+  check(r2, 'B2: nach „Weiter“ zählen Klicks wieder');
   await ctx.close();
 }
 

@@ -96,6 +96,7 @@
 
 
   .opts{display:flex; flex-direction:column; gap:7px;}
+  .opts[hidden]{display:none;}               /* verborgener Container (z. B. Kontor-Ausbau bei anderen Gebäuden) */
   .opt{
     display:grid; grid-template-columns:1fr auto; gap:1px 10px; text-align:left;
     background:var(--surface); border:1px solid var(--rule-strong); border-radius:5px; padding:8px 11px; cursor:pointer;

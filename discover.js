@@ -12,7 +12,7 @@ const Disc = (() => {
   const VIS = {
     'tab:build':   { when: () => true },
     'tab:army':    { when: () => true },
-    'tab:wall':    { when: S => C.LANE_COUNT > 0 && (Object.keys(S.revealed).some(k => S.revealed[k] && (k.startsWith('repair_') || wallUpgrade(k)))) },
+    'tab:wall':    { when: S => Object.keys(S.revealed).some(k => S.revealed[k] && (k.startsWith('repair_') || (wallUpgrade(k) && G.isAvailable(k) && !G.stageSource(k)))) },       // nutzbar: Reparatur oder ein freigeschalteter Ausbau
     'tab:smithy':  { when: () => G.has('schmiede') },
     'tab:uni':     { when: () => G.has('universitaet') },
     'tab:cards':   { when: S => !!S.pendingDraft || cardsChosen(S) > 0 },

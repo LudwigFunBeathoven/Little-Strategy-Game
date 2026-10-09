@@ -128,18 +128,19 @@ function previewUpgrade(id){
 /* Erklärzeile unter jedem Kaufknopf: Wirkung · Kosten (REQ-20.1) */
 function explUpgrade(id){
   if (G.isMaxed(id)) return t('opt.max');
-  if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || t('build.reason.locked');
+  if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || lockedText();
   const [label, change] = previewUpgrade(id);
   return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
 }
 function explUnit(id){
-  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src) || t('build.reason.locked'); }
+  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src) || lockedText(); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: G.S.queue.length, max: G.supplyCap() });   // Grund der Sperre (REQ-14.2)
   const own = G.ownType(id), hp = G.unitStats('p', own).hp;
   return t('ex.unit', { role: t(G.unitRange('p', own) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitCost(own)) });
 }
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
 /* Wer einen gesperrten Inhalt öffnet: Karte oder Forschung (REQ-KP.01); id = Karten- oder Forschungs-Id */
+const lockedText = () => t(Disc.on() ? 'kp.stage.next' : 'build.reason.locked');       // bei Entdecken ohne Verweis auf Karten
 function sourceLabel(id){
   if (Disc.on()) return null;                                              // REQ-K2.05: nie Gesperrtes benennen
   if (Array.isArray(id)) return id.map(sourceLabel).filter(Boolean).join(' / ');
@@ -160,7 +161,7 @@ function buildReason(block, cost, type){
   switch (block){
     case null: return null;
     case 'notRunning': return t('tip.notRunning');
-    case 'locked': { const src = type ? G.keySource('bau:' + type) : null; return (src && sourceLabel(src)) || t('build.reason.locked'); }
+    case 'locked': { const src = type ? G.keySource('bau:' + type) : null; return (src && sourceLabel(src)) || lockedText(); }
     case 'standing': return t('build.reason.standing');
     case 'material': return missing('material', cost, G.S.material);
   }
@@ -170,7 +171,7 @@ function upgradeReason(id){
   const S = G.S, u = C.UPGRADES[id];
   if (S.status !== 'running') return t('tip.notRunning');
   if (G.isMaxed(id)) return t('tip.maxed');
-  if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || t('build.reason.locked');
+  if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || lockedText();
   if (C.BUILDINGS.includes(u.group) && !G.has(u.group)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
   if (u.needs && S.lvl[u.needs] <= 0) return t('tip.needsTower');
   if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);
@@ -187,7 +188,7 @@ function repairReason(i){
 function unitReason(id){
   const S = G.S, c = G.unitCost(G.ownType(id));
   if (S.status !== 'running') return t('tip.notRunning');
-  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); return (src && sourceLabel(src)) || t('build.reason.locked'); }
+  if (!G.unitUnlocked(id)){ const src = G.unitSource(id); return (src && sourceLabel(src)) || lockedText(); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: S.queue.length, max: G.supplyCap() });
   if (S.material < c) return missing('material', c, S.material);
   return null;
@@ -725,6 +726,7 @@ function boot(){
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };
 
+  { const rawClick = G.doClick; G.doClick = () => (paused || modalOpen) ? false : rawClick(); }          // Pause und Dialoge: kein Klickertrag (die Klickzeit steht still, sonst blieben je Pause weitere Klicks frei)
   setLang(lang);
   document.documentElement.style.setProperty('--draft-lock', C.UI.draftLockMs + 'ms');
   layoutBands();
