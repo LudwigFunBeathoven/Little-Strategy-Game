@@ -586,4 +586,5 @@ KF_I18N.de = {
   'tip.kp.deck': 'Der Stapel füllt sich mit Erfahrung. Ist er voll, steht eine Kartenwahl an. Bei einer offenen, eingeklappten Wahl öffnet ein Klick die Bühne.',
   'kp.collection.hint': 'Sammlung: gewählte und gebannte Karten. Die Wahl findet auf der Kartenbühne statt.',
   'kp.collection.noneBanned': 'Keine Karte gebannt.',
+  'kp.collection.banned': 'Gebannt',
 };

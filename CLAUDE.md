@@ -6,7 +6,7 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.8.1 (MVP-Veröffentlichung: `docs/anforderungen-mvp-release.md`, `docs/bericht-mvp-release.md`; Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
+Stand: v0.9.0 (Kartenbühne und Entdecken: `docs/anforderungen-kartenpfad-2.md`, `docs/bericht-ui-0.9.md`, Testleitfaden `docs/testleitfaden-ui-0.9.md`). Vorher v0.8.1 (MVP-Veröffentlichung: `docs/anforderungen-mvp-release.md`, `docs/bericht-mvp-release.md`; Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
 Vorher v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`.
 
 ## Der Nutzer
@@ -30,6 +30,8 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `render.js` | Spielwelt: Canvas, Kamera, Zeichnen, `screenToWorld`. |
 | `hud.js` | Ressourcenleiste (oberes Band). |
 | `panels.js` | Arbeitsbereich (unteres Band): Klickfeld, Reiter, Kontextkopf, Kartenwahl, Forschung. |
+| `discover.js` | Sichtbarkeitsregel „nur, was jetzt nutzbar ist“ (`Disc`): Tabelle „sichtbar ab“, Einblenden, Hinweise je Entdeckungsmoment. Reine Anzeige. |
+| `stage.js` | Kartenwahl als Bühne (`Stage`): Austeilen, Aufdecken, Flug zum Wirkort, Kartensymbol in der Leiste. Reine Anzeige. |
 | `tutorial-ui.js` | Anzeige des Tutorials: Quartiermeister im Canvas, pulsierender Rahmen, Sprechblase, Randpfeil, Überspringen, Kamera. |
 | `session.js` | Sitzungsprotokoll für Spieltests (`?debug=1`), mit Tutorial-Feldern. |
 | `i18n/de.js`, `i18n/en.js` | Alle sichtbaren Texte. Schlüssel müssen identisch sein. |
@@ -100,6 +102,13 @@ Keine globale Neukalibrierung vor Iteration 7.
 - Entfernt in I4.2 (Simulation ohne sie: 0–2 % Patts): Belagerung als Stärke je Einheit, Nachskalieren der Gegner im Feld.
 - Vorrang der Mitte im Armeemodell (I5.7): Einheiten in der Mitte helfen einer äußeren Lane nur, wo eigene Einheiten schon kämpfen;
   die Lage einer Lane zählt auch Einheiten, die gerade in sie wechseln. Ohne das tauschen zwei Armeen endlos die Lanes (Patt).
+
+## Kartenbühne und Entdecken (Version 0.9, REQ-K2.01 – K2.08)
+Zwei Schalter in `config.js` (`UI.kartenbuehne`, `UI.entdecken`, beide `true`), per Adresse `?buehne=1|0`, `?entdecken=1|0`; dazu `?vorschau=naechste` (ein „?“ je Bereich) und `?zeit=pause|langsam|lauf` (Spielzeit bei offener Wahl).
+Mit beiden `0` läuft die Oberfläche von Version 0.8 (Wahl im Reiter Karten, alle Reiter sichtbar); die Browser-Prüfung nutzt das für die bisherigen Abläufe.
+Regeln: Außerhalb einer Wahl liegt nichts von der Bühne in der Bildmitte (Kartensymbol mit Füllstand in der Leiste); jede Karte zeigt eine Wirkungszeile `kp.eff.<id>` (höchstens 44 Zeichen, Test `tests/k2.test.mjs`)
+und nennt keine andere Karte; ein Element wird erst sichtbar, wenn es nutzbar ist (Tabelle in `discover.js`, bleibt danach); ein Klick im Pausenzustand erzeugt nichts; `core.js` kennt davon nur `KARTENBUEHNE.zeit`.
+Neue Karten brauchen eine Zeile `kp.eff.<id>` in beiden Sprachdateien (der Test prüft es).
 
 ## Tutorial (REQ-T.01 – T.07)
 Vor jeder neuen Partie erscheint der Startbildschirm (Sprache, Schwierigkeitsgrad, Schalter Tutorial; erste Partie: Leicht „empfohlen“ und Tutorial an, Merker `TUTORIAL_KEY`,

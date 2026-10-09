@@ -586,4 +586,5 @@ KF_I18N.en = {
   'tip.kp.deck': 'The deck fills with experience. When it is full, a card choice is due. With an open, folded choice a click opens the stage.',
   'kp.collection.hint': 'Collection: chosen and banned cards. The choice itself is made on the card stage.',
   'kp.collection.noneBanned': 'No card banned.',
+  'kp.collection.banned': 'Banned',
 };

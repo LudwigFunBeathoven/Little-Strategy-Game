@@ -952,6 +952,34 @@ for (const stepId of ['begruessung', 'fertigen', 'bauen', 'rekrutieren', 'ausrue
   await ctx.close();
 }
 
+/* ---------- Tutorial in der Vorgabe (Entdecken und Bühne an): Kartenwahl auf der Bühne (REQ-K2.02, K2.04) ---------- */
+for (const lang of ['de', 'en']){
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+  const p = await ctx.newPage(), errs = [];
+  p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); if (m.type() === 'warning' && m.text().includes('[i18n]')) errs.push(m.text()); });
+  p.on('pageerror', e => errs.push(e.message));
+  await ctx.addInitScript(() => { if (!sessionStorage.getItem('kfInit')){ localStorage.clear(); sessionStorage.setItem('kfInit', '1'); } });
+  await p.goto(base + `index.html?dev=1&lang=${lang}&difficulty=easy&tutorial=1`); await p.waitForTimeout(400);
+  await endGreeting(p); await waitText(p);
+  // Schritte 1 bis 4 über die Spiellogik erledigen, danach die erste Welle besiegen lassen
+  for (let i = 0; i < 12; i++){ await p.click('#clickBtn'); await p.waitForTimeout(100); }
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 400; G.build('fabrik'); for (let i = 0; i < 3; i++) G.spawn('laeufer'); G.S.sections.forEach(s => { s.hp = 1e6; }); });
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id !== 'fertigen', null, { timeout: 20000 });
+  await p.evaluate(() => { const G = __kf.G; G.rushWave && G.rushWave(); G.releaseHold && G.releaseHold(false); for (let i = 0; i < 20 * 150 && !(__kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte'); i++){ G.S.material = Math.max(G.S.material, 100); G.spawn('laeufer'); G.tick(0.05); } });
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 30000 });
+  await p.waitForTimeout(500);                                  // Blase setzt sich nach dem Austeilen an ihren Platz
+  const s6 = await p.evaluate(() => { const bb = document.querySelector('#tutBubble').getBoundingClientRect(), cr = document.querySelector('#stageCards').getBoundingClientRect();
+    return { stage: !document.querySelector('#stage').hidden, tab: __kf.tab, narr: document.querySelector('#tutBubbleNarr').textContent, task: document.querySelector('#tutBubbleTask').textContent, bubbleBottom: bb.bottom, cardsTop: cr.top }; });
+  check(s6.stage && s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task'), `[${lang}] Tutorial/Vorgabe: erste Kartenwahl auf der Bühne mit Erzählung und Auftrag ${JSON.stringify([s6.stage, s6.tab])}`);
+  check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Tutorial/Vorgabe: Sprechblase sitzt über der Bühne und verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
+  await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 5000 });
+  await p.click('.kcard >> nth=0'); await p.waitForTimeout(1100);
+  const f1 = await tutState(p);
+  check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1'), `[${lang}] Tutorial/Vorgabe: Abschied 1 „${f1.narr}“`);
+  check(errs.length === 0, `[${lang}] Tutorial/Vorgabe: keine Fehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- Prüfliste vor dem Teilen (REQ-R.05): öffentliche Fassung ohne Parameter ---------- */
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });

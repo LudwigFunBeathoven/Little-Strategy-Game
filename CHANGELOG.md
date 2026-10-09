@@ -1,5 +1,15 @@
 # Änderungen
 
+## v0.9.0 – Kartenbühne und Entdecken (Oktober 2026)
+Anforderungen: `docs/anforderungen-kartenpfad-2.md`, Bericht `docs/bericht-ui-0.9.md`. Spielwerte, Spielregeln und Spielstand-Version (7) unverändert; ein vorhandener Spielstand bleibt erhalten.
+Für Tester:
+- **Die Kartenwahl ist ein Ablauf.** Die Karten fliegen aus der Leiste, decken nacheinander auf, die gewählte fliegt zu ihrem Wirkort, der Rest zurück. Jede Karte zeigt eine Zeile zur Wirkung, Stufenpunkte und den Rahmen ihrer Seltenheit; Details stehen unter den Karten. Die Ziffern 1 bis 5 wählen eine Karte. Der Fortschritt zur nächsten Wahl steht als Kartensymbol in der Ressourcenleiste.
+- **Das Spiel zeigt, was jetzt nutzbar ist.** Reiter, Abschnitte und Anzeigen erscheinen erst, wenn sie etwas zu tun geben (z. B. EP nach dem ersten Abschuss, Schmiede mit der Schmiede). Neues blendet ein, trägt „neu“ und meldet sich mit einem Hinweis.
+- **Behoben:** Bei gewählter Universität erschien das Fenster „Kontor-Ausbau“; in der Pause erzeugten etwa sechs Klicks noch Material.
+- Zum Vergleich mit der alten Oberfläche: `?buehne=0&entdecken=0` an die Adresse hängen.
+Für Entwickler:
+- Neu: `stage.js`, `discover.js`; Schalter in `config.js` (`UI.kartenbuehne`, `UI.entdecken`, `ENTDECKEN`, `KARTENBUEHNE`); `core.js` kennt nur `KARTENBUEHNE.zeit`. Messung `tools/sichtbar-mass.mjs`; Tests `tests/k2.test.mjs`, `tests/browser-k2.mjs`.
+
 ## v0.8.1 – MVP zum Teilen (07.10.2026)
 Anforderungen: `docs/anforderungen-mvp-release.md`, Bericht `docs/bericht-mvp-release.md`. Spielwerte und Spielstand-Version (7) unverändert; ein vorhandener Spielstand bleibt erhalten.
 Für Tester:
