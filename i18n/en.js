@@ -446,6 +446,8 @@ KF_I18N.en = {
   'research.seconds': '{s} s',
   'research.requires': 'Requires {name} first.',
   'research.running': 'Currently being researched.',
+  'opt.noSupply': 'Supply limit at maximum',
+  'tip.noSupply': 'The supply limit is at its cap of {n}. More supply adds nothing.',
   'research.busy': 'All {n} research slots busy.',
   'research.runningName': 'Research: {name}',
   'research.intro': 'Research costs material and time; {n} at a time.',

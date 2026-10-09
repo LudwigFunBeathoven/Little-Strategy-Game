@@ -27,13 +27,14 @@ function defaultLang(){
   return (navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en';
 }
 let lang = defaultLang();
-let nf, nf1;
+let nf, nf1, nf2;
 function setLang(l){
   lang = C.LANGUAGES.includes(l) ? l : C.FALLBACK_LANG;
   storageSet(C.LANG_KEY, lang);
   const locale = t('meta.locale');
   nf  = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   nf1 = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  nf2 = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
   document.documentElement.lang = lang;
   applyStaticTexts();
 }
@@ -70,6 +71,7 @@ function fmt(n){
   return nf.format(n);
 }
 const fmt1 = n => nf1.format(n);
+const fmt2 = n => nf2.format(n);                      // bis zu zwei Nachkommastellen (z. B. 0,15 EP je Sekunde)
 const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function dur(sec){
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
@@ -126,6 +128,7 @@ function previewUpgrade(id){
 /* Erklärzeile unter jedem Kaufknopf: Wirkung · Kosten (REQ-20.1) */
 function explUpgrade(id){
   if (G.isMaxed(id)) return t('opt.max');
+  if (G.noEffect(id)) return t('opt.noSupply');
   const [label, change] = previewUpgrade(id);
   return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
 }
@@ -149,6 +152,7 @@ function upgradeReason(id){
   const S = G.S, u = C.UPGRADES[id];
   if (S.status !== 'running') return t('tip.notRunning');
   if (G.isMaxed(id)) return t('tip.maxed');
+  if (G.noEffect(id)) return t('tip.noSupply', { n: C.SUPPLY_CAP_MAX });
   if (C.BUILDINGS.includes(u.group) && !G.has(u.group)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
   if (u.needs && S.lvl[u.needs] <= 0) return t('tip.needsTower');
   if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);

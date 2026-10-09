@@ -326,10 +326,12 @@ function renderOpts(){
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const cardName = (o, tier) => o.tiers.length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
 /* Werte für die Kartentexte: Faktoren als Prozent, außer echte Vielfache; Anteile als Prozent */
-const FACTOR_STATS = ['supplyMult', 'ownWaveInterval'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly'];
+const FACTOR_STATS = ['supplyMult', 'ownWaveInterval'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus'];      // Anteile werden in Prozent gezeigt
+/* Anzeigewert einer Wirkung (Karten und Forschungen gleich): Faktor, Prozent, Anteil in Prozentpunkten oder Zahl */
+const effectValue = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
+  : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : e.add % 1 ? fmt2(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
 function optParams(o, tier){
-  const val = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
-    : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
+  const val = effectValue;
   const tr = o.tiers[Math.max(1, tier) - 1], p = {};
   (tr.effect || []).forEach((e, i) => { p['e' + (i + 1)] = val(e); });
   (tr.drawback || []).forEach((e, i) => { p['d' + (i + 1)] = val(e); });
@@ -467,7 +469,7 @@ function renderLog(){
 const researchName = (r, tier) => r.tiers.length > 1 ? `${t(r.nameKey)} ${ROMAN[tier]}` : t(r.nameKey);
 function researchParams(r, tier){
   const e = (r.tiers[Math.max(1, tier) - 1].effect || [])[0] || {};
-  return { e1: e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? fmtNum(e.add) : '' };
+  return { e1: e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? effectValue({ stat: e.stat, add: e.add }) : '' };
 }
 function researchReason(id){
   const b = G.researchBlock(id), r = G.RES[id];
@@ -478,6 +480,7 @@ function researchReason(id){
     case 'requires': return t('research.requires', { name: researchName(G.RES[r.requires.research], r.requires.tier) });
     case 'active': return t('research.running');
     case 'busy': return t('research.busy', { n: G.researchSlots() });
+    case 'noEffect': return t('tip.noSupply', { n: C.SUPPLY_CAP_MAX });
     case 'material': return missing('material', G.researchCost(id), G.S.material);
   }
   return null;
@@ -497,7 +500,7 @@ function renderResearch(){
       setText(el.fresh, t('mark.new')); setHidden(el.fresh, !NewMarks.isNew('res:' + r.id));
       if (activeTab === 'uni' || S.research.active.some(a => a.id === r.id)) NewMarks.view('res:' + r.id);
     }
-    setText(el.expl, next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
+    setText(el.expl, G.researchBlock(r.id) === 'noEffect' ? t('opt.noSupply') : next ? t('research.expl', { effect: t(r.descKey, researchParams(r, n + 1)), cost: costText('material', next.cost), s: next.timeS })
                           : t('opt.max'));
     setDis(el.btn, !!G.researchBlock(r.id));
   }

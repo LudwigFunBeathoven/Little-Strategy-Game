@@ -251,13 +251,17 @@ function create(){
     return Math.ceil(c);
   }
   const isMaxed = id => C.UPGRADES[id].max !== undefined && S.lvl[id] >= C.UPGRADES[id].max;
+  /* Wirkungslos (Patch 0.9.2): Das Versorgungslimit steht schon am harten Deckel; weitere Versorgung (Kaserne-Ausbau, Forschung, Karten) bringt nichts mehr */
+  const supplyCapped = () => supplyCap() >= C.SUPPLY_CAP_MAX;
+  const supplyOnly = effects => effects.length > 0 && effects.every(e => e.stat === 'supply' || e.stat === 'supplyMult');
+  const noEffect = id => C.UPGRADES[id].group === 'kaserne' && supplyCapped();
   function isAvailable(id){
     const u = C.UPGRADES[id];
     if (C.BUILDINGS.includes(u.group) && !has(u.group)) return false;
     if (u.needs && S.lvl[u.needs] <= 0) return false;
     return true;
   }
-  const canBuy = id => S.status === 'running' && isAvailable(id) && !stageSource(id) && !isMaxed(id) && S[C.UPGRADES[id].cur] >= upCost(id);
+  const canBuy = id => S.status === 'running' && isAvailable(id) && !stageSource(id) && !isMaxed(id) && !noEffect(id) && S[C.UPGRADES[id].cur] >= upCost(id);
   const builtCount = () => S.slots.filter(Boolean).length;
   /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
   // Die erste Fabrik ist gratis (REQ-44)
@@ -893,6 +897,7 @@ function create(){
       if (o.requires.building && !has(o.requires.building)) return false;
     }
     for (const e of o.tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
+    if (supplyCapped() && supplyOnly(o.tiers[n].effect || [])) return false;       // Versorgung am Deckel: die Karte brächte nur ihren Nachteil
     return true;
   }
   /* Glücksgriff (REQ-5.07): verschiebt Ziehgewicht von gewöhnlichen zu seltenen Karten */
@@ -967,6 +972,7 @@ function create(){
     if (S.research.locked && S.research.locked.includes(id)) return 'locked';   // nur Simulation: Paarvergleich gesperrt (REQ-6.06)
     if (r.requires && researchTier(r.requires.research) < r.requires.tier) return 'requires';
     if (S.research.active.some(a => a.id === id)) return 'active';
+    if (supplyCapped() && supplyOnly(researchNext(id).effect || [])) return 'noEffect';
     if (S.research.active.length >= researchSlots()) return 'busy';
     if (S.material < researchCost(id)) return 'material';
     return null;
@@ -1191,7 +1197,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    canBuy, isAvailable, isMaxed, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     isOpen, unlockKey, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,

@@ -225,6 +225,22 @@ for (const mode of ['', 'intro=0']){
   await ctx.close();
 }
 
+/* ---------- Patch 0.9.2: Upgrades ohne Wirkung ---------- */
+{
+  const { ctx, p, errs } = await open('intro=0');
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e7; G.build('kaserne'); G.build('universitaet'); G.S.research.done.r_metallurgie = 1; G.S.draft.stacks.aushebung = 2; G.S.research.ver++; G.S.draft.ver++; for (let i = 0; i < 10 && G.canBuy('ausbau') && !G.noEffect('ausbau'); i++) G.buy('ausbau'); G.S.revealed.ausbau = true; __kf.selectTab('uni'); __kf.requestRender(); });
+  await settle(p, 300);
+  const se = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="res:r_schmiedeausbau"]'); return e ? e.textContent : null; });
+  check(se && /2 Prozentpunkte/.test(se) && !/0,0/.test(se), `Schmiede-Ausbau nennt seine Wirkung (2 Prozentpunkte, nicht 0,0) ${JSON.stringify(se)}`);
+  const lg = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="res:r_logistik"]'); return e ? { txt: e.textContent, dis: e.getAttribute('aria-disabled') } : null; });
+  check(lg && lg.dis === 'true' && /am Maximum/.test(lg.txt), `Logistik am Versorgungsdeckel gesperrt mit Hinweis ${JSON.stringify(lg)}`);
+  await p.evaluate(() => { __kf.selectTab('army'); }); await settle(p, 200);
+  const au = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="upg:ausbau"]'); return e ? { txt: e.textContent, dis: e.getAttribute('aria-disabled'), vis: e.checkVisibility() } : null; });
+  check(au && au.vis && au.dis === 'true' && /am Maximum/.test(au.txt) && !/15 → 15/.test(au.txt), `Kaserne-Ausbau am Deckel: gesperrt, kein „15 → 15“ ${JSON.stringify(au)}`);
+  check(errs.length === 0, `keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- B1: Kontext eines Gebäudes zeigt nur dessen eigene Ausbauten ---------- */
 {
   const { ctx, p, errs } = await open('intro=0');

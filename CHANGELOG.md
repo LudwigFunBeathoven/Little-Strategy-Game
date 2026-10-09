@@ -1,5 +1,11 @@
 # Änderungen
 
+## v0.9.2 – Upgrades ohne Wirkung (09.10.2026)
+Spielstand-Version (7) unverändert, Kennzahlen der Simulation praktisch unverändert (Normal, durchschnitt: 6:55 und 6:13 Minuten wie zuvor).
+- **Behoben: Der Ausbau der Kaserne zeigte „Versorgungslimit 15 → 15“** und ließ sich für 4.000 Material kaufen, obwohl das Limit am harten Deckel von 15 stand (Karten, Forschung und Nachbarschaft liefern oft schon Versorgung). Am Deckel ist der Ausbau jetzt gesperrt („Versorgungslimit am Maximum“) und bucht nichts ab.
+- **Ebenso:** Die Forschung „Logistik“ ist am Deckel gesperrt, und die reinen Versorgungskarten (Aushebung, Große Armee) erscheinen dort nicht mehr im Angebot, denn sie brächten nur ihren Nachteil.
+- **Behoben: „Schmiede-Ausbau“ zeigte „wirkt 0,0 Prozentpunkte stärker“.** Die Forschung wirkte schon (jede Qualitätsstufe +2 statt +5 Prozent mehr Stärke), nur die Anzeige rundete den Wert weg; jetzt steht dort „2 Prozentpunkte“. Das gilt auch für die EP je Sekunde des Hörsaals (0,15 statt 0,2).
+
 ## v0.9.1 – Korrektur zu 0.9 (09.10.2026)
 Nur Fehlerbehebungen, Spielwerte und Spielstand-Version (7) unverändert.
 - **Behoben: Die Anzeige fror nach der zweiten Kartenwahl ein** (die Kartenwahl blieb offen, das Spiel schien zu hängen, der Quartiermeister des Tutorials verschwand nicht mehr). Ursache: ein Tippfehler in der Sortierung der Sammlung (Reiter „Karten“), der erst ab zwei verschiedenen gewählten Karten auslöste; er brach das Zeichnen der Oberfläche ab. Test `tests/browser-k2.mjs` („Regression“) wählt acht Runden nacheinander.

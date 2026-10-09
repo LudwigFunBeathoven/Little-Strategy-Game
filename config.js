@@ -2,7 +2,7 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.1',
+  VERSION: '0.9.2',
   SAVE_KEY: 'klammerfront.save.v7',
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',

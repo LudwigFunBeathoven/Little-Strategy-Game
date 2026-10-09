@@ -56,3 +56,11 @@ Minute 1 sinkt um 43 %. Die Zeile „0.9 mit Schaltern aus“ liegt drei unter 0
 1. Release `v0.9.0` auf `MVP` auf GitHub anlegen (Tags lassen sich von hier nicht setzen).
 2. Öffentlichen Link in einem privaten Fenster öffnen und eine Partie mit Tutorial spielen.
 3. Spieltest nach `docs/testleitfaden-ui-0.9.md`; der Branch `exp/kartenpfad` (Modus `karten`) bleibt für die Kartenpfad-Entscheidung bestehen.
+
+## Nachträge nach der Veröffentlichung
+| Version | Datum | Inhalt |
+|---|---|---|
+| 0.9.1 | 09.10.2026 | **Behoben: Absturz der Anzeige nach der zweiten Kartenwahl.** Ein Tippfehler in der Sortierung der Sammlung brach das Zeichnen ab, sobald zwei verschiedene Karten gewählt waren (Kartenwahl blieb stehen, Tutorial-Figur verschwand nicht). Test: acht Wahlrunden hintereinander. Außerdem: Kartensymbole als Text statt als Emoji (⚔ erschien unter Windows blau), Entwicklerprüfung ohne falsche Meldung. |
+| 0.9.2 | 09.10.2026 | **Wirkungslose Upgrades:** Kaserne-Ausbau, Forschung „Logistik“ und reine Versorgungskarten (Aushebung, Große Armee) entfallen am harten Deckel des Versorgungslimits von 15 („Versorgungslimit am Maximum“, kein Abbuchen); „Schmiede-Ausbau“ zeigt seine Wirkung („2 Prozentpunkte“ statt „0,0“); Anzeige der EP je Sekunde des Hörsaals mit zwei Nachkommastellen. Kennzahlen der Simulation praktisch unverändert (Normal, durchschnitt: 6:55 und 6:13 Minuten). Test `tests/noeffect.test.mjs`. |
+
+Ein Audit aller Upgrades, Forschungen und Karten (Kennzahlen vor und nach dem Kauf in einem späten Zustand) fand keine weiteren wirkungslosen Käufe außerhalb des Kampfes; die Wirkung von Kampfwerten (Türme, Mauer, Schaden) lässt sich so nicht messen und ist nicht geprüft.
