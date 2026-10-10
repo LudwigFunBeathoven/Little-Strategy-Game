@@ -958,6 +958,7 @@ function create(){
     if (!(k.benoetigt || []).every(requirementMet)) return false;
     if (k.familie === 'technologie' && !has('universitaet')) return false;
     if ((k.exklusivMit || []).some(id => cardTaken(id) > 0)) return false;
+    if (supplyCapped() && supplyOnly(o.tiers[0].effect || [])) return false;       // Versorgung am Deckel (Wagnis „Volle Auslastung“): nur der Nachteil bliebe
     return true;
   }
   /* Nach der höchsten Stufe erscheint eine Karte nicht mehr; sonst liegt genau die nächste Stufe im Pool (REQ-18.2) */
