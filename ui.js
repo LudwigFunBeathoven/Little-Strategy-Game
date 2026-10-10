@@ -45,6 +45,9 @@ function setLang(l){
   applyStaticTexts();
 }
 function t(key, params){
+  // Text je Pacing-Modus überschreibbar: Schlüssel mit Modus-Suffix (z. B. „….name.karten“) gelten nur in diesem Modus (REQ-T2.05, REQ-P.05)
+  const mode = typeof G !== 'undefined' && G.S ? G.S.pacing : null;
+  if (mode && mode !== 'standard' && KF_I18N[lang] && KF_I18N[lang][key + '.' + mode] !== undefined) key = key + '.' + mode;
   let s = KF_I18N[lang] && KF_I18N[lang][key];
   if (s === undefined){
     console.warn(`[i18n] Schlüssel fehlt in "${lang}": ${key}`);

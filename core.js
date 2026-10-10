@@ -274,6 +274,7 @@ function create(){
   const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost') * (1 + nbTotal('schmiede'))));
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
+  const PHASES       = ['early', 'mid', 'late'];
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const freeLevels   = () => (S.pfad && S.pfad.free) || 0;       // Stufen aus dem Mindesttempo: sie verschieben die EP-Schwellen nicht (REQ-KP.06)
   /* Modus karten: Wahl-Fahrplan (REQ-P.02). Die EP-Schwelle der Wahl n steht als Schritt in KARTEN.fahrplan.schwellen (Referenzlauf, tools/referenzlauf.mjs);
@@ -975,9 +976,18 @@ function create(){
     if (S.research.banned.includes(o.id)) return false;
     if (n >= Math.min(o.tiers.length, C.CARD_MAX_TIER)) return false;
     if (o.requires){
-      if (o.requires.upgrade && !Object.keys(C.UPGRADES).some(id => (C.UPGRADES[id].base || id) === o.requires.upgrade && S.lvl[id] > 0)) return false;
-      if (o.requires.building && !has(o.requires.building)) return false;
-      if (o.requires.unit && !isOpen('einheit:' + o.requires.unit)) return false;
+      const r = o.requires;
+      if (r.upgrade && !Object.keys(C.UPGRADES).some(id => (C.UPGRADES[id].base || id) === r.upgrade && S.lvl[id] > 0)) return false;
+      if (r.building && !has(r.building)) return false;
+      if (r.unit && !isOpen('einheit:' + r.unit)) return false;
+    }
+    if (o.wirkt && S.pacing === 'karten'){                                      // Angebotsbedingungen aus der Wirkung (REQ-P.05); der Standardmodus bleibt wie main
+      const w = o.wirkt;
+      if (w.building && !has(w.building)) return false;
+      if (w.phase && PHASES.indexOf(phase()) < PHASES.indexOf(w.phase)) return false;
+      if (w.freeSlot && !S.slots.some(x => !x)) return false;
+      if (w.supply && supplyCap() < w.supply) return false;
+      if (w.ranged && !Object.keys(C.UNITS).some(ty => !C.UNITS[ty].base && unitUnlocked(ty) && isRangedType(ownType(ty)))) return false;       // eigene Grundtypen (Ersatztypen tragen base)
     }
     for (const e of o.tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
     if (supplyCapped() && supplyOnly(o.tiers[n].effect || [])) return false;       // Versorgung am Deckel: die Karte brächte nur ihren Nachteil

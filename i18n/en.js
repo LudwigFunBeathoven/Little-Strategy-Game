@@ -296,6 +296,7 @@ KF_I18N.en = {
   'draft.zinnen.desc': 'All sections +{e1}% hit points.',
   'draft.festungsbau.name': 'Fortification',
   'draft.festungsbau.desc': 'All sections +{syn}% hit points per chosen base card (this one included).',
+  'draft.festungsbau.name.karten': 'Masonry',        // Modus karten: der Name „Festungsbau“ gehört der Pfadkarte (REQ-P.05)
   'draft.instandhaltung.name': 'Maintenance',
   'draft.instandhaltung.desc': 'Sections below {c1}% are repaired automatically at {e1}% of the cost.',
   'draft.fliessband.name': 'Assembly line',

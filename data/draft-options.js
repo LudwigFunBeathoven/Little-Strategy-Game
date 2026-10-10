@@ -11,22 +11,26 @@
                 effect/drawback: Liste von { stat, mul } | { stat, add } | { unlock } | { grant, seconds }
      synergy    optional: { stat, perCard } – Wirkung × (1 + perCard × Zahl gewählter Karten der eigenen Kategorie, sie selbst eingeschlossen)
      condition  optional: wann die Wirkung greift ({ type, value })
-     requires   optional: Voraussetzung für das Angebot ({ upgrade } | { building })
+     requires   optional: Voraussetzung für das Angebot ({ upgrade } | { building } | { unit }); gilt in allen Modi
+     wirkt      optional, nur Modus 'karten' (REQ-P.05): Voraussetzung, damit die Wirkung im Spielstand größer als null ist; die Karte erscheint sonst nicht.
+                { building } das Gebäude steht   { phase: 'mid'|'late' } Phase der Partie erreicht   { freeSlot: true } ein Bauplatz ist frei
+                { supply: n } Versorgungslimit ≥ n (Gruppen dieser Größe)   { ranged: true } eine Fernkampfeinheit ist verfügbar
+                Karten ohne Eintrag wirken ab Spielbeginn (Drill, Kriegsanleihe, Zinnen …).
    Werte sind Vorgaben, Kalibrierung in I4.8. */
 const KF_DRAFT_OPTIONS = [
   /* ---------- Wirtschaft ---------- */
-  { id: 'bessereFabriken', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.bessereFabriken.name', descKey: 'draft.bessereFabriken.desc',
+  { id: 'bessereFabriken', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.bessereFabriken.name', descKey: 'draft.bessereFabriken.desc', wirkt: { building: 'fabrik' },
     tiers: [{ effect: [{ stat: 'factoryYield', mul: 1.25 }] }, { effect: [{ stat: 'factoryYield', mul: 1.6 }] }, { effect: [{ stat: 'factoryYield', mul: 2.2 }] }] },
-  { id: 'schwerePressen', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.schwerePressen.name', descKey: 'draft.schwerePressen.desc',
+  { id: 'schwerePressen', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.schwerePressen.name', descKey: 'draft.schwerePressen.desc', wirkt: { building: 'fabrik' },
     tiers: [{ effect: [{ stat: 'autoProd', mul: 1.4 }],  drawback: [{ stat: 'wallHp', mul: 0.85 }] },
             { effect: [{ stat: 'autoProd', mul: 1.75 }], drawback: [{ stat: 'wallHp', mul: 0.7 }] },
             { effect: [{ stat: 'autoProd', mul: 2.2 }],  drawback: [{ stat: 'wallHp', mul: 0.55 }] }] },
-  { id: 'serienbau', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.serienbau.name', descKey: 'draft.serienbau.desc',
+  { id: 'serienbau', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.serienbau.name', descKey: 'draft.serienbau.desc', wirkt: { freeSlot: true },
     tiers: [{ effect: [{ stat: 'factoryCost', mul: 0.85 }] }, { effect: [{ stat: 'factoryCost', mul: 0.7 }] }] },
-  { id: 'doppelschicht', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.doppelschicht.name', descKey: 'draft.doppelschicht.desc',
+  { id: 'doppelschicht', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.doppelschicht.name', descKey: 'draft.doppelschicht.desc', wirkt: { building: 'fabrik' },
     tiers: [{ effect: [{ stat: 'autoProd', mul: 1.25 }], drawback: [{ stat: 'clickYield', mul: 0.5 }] },
             { effect: [{ stat: 'autoProd', mul: 1.5 }],  drawback: [{ stat: 'clickYield', mul: 0.25 }] }] },
-  { id: 'nachtschicht', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.nachtschicht.name', descKey: 'draft.nachtschicht.desc',
+  { id: 'nachtschicht', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.nachtschicht.name', descKey: 'draft.nachtschicht.desc', wirkt: { phase: 'late' },
     tiers: [{ effect: [{ stat: 'lateYield', mul: 1.25 }] }, { effect: [{ stat: 'lateYield', mul: 1.5 }] }] },   // I6.3: Online-Wirkung ersetzt die frühere Wirkung außerhalb der Partie
   { id: 'kriegserfahrung', category: 'wirtschaft', rarity: 'common', nameKey: 'draft.kriegserfahrung.name', descKey: 'draft.kriegserfahrung.desc',
     tiers: [{ effect: [{ stat: 'xpGain', mul: 1.3 }] }, { effect: [{ stat: 'xpGain', mul: 1.6 }] }] },
@@ -36,17 +40,17 @@ const KF_DRAFT_OPTIONS = [
             { effect: [{ grant: 'production', seconds: 120 }], drawback: [{ stat: 'enemyHp', mul: 1.25 }] }] },
   { id: 'handelskontor', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.handelskontor.name', descKey: 'draft.handelskontor.desc',
     requires: { building: 'kontor' }, tiers: [{ effect: [{ stat: 'kontorCap', mul: 1.5 }] }] },   // I6.8: Kontor ist Startgebäude; Karte hebt den Zinsdeckel
-  { id: 'grossauftrag', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.grossauftrag.name', descKey: 'draft.grossauftrag.desc',
+  { id: 'grossauftrag', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.grossauftrag.name', descKey: 'draft.grossauftrag.desc', wirkt: { building: 'fabrik' },
     synergy: { stat: 'factoryYield', perCard: 0.06 }, tiers: [{ effect: [] }] },
 
   /* ---------- Armee ---------- */
   { id: 'aushebung', category: 'armee', rarity: 'common', nameKey: 'draft.aushebung.name', descKey: 'draft.aushebung.desc',
     tiers: [{ effect: [{ stat: 'supply', add: 1 }], drawback: [{ stat: 'unitHp', mul: 0.9 }] },
             { effect: [{ stat: 'supply', add: 2 }], drawback: [{ stat: 'unitHp', mul: 0.8 }] }] },
-  { id: 'kriegstrommeln', category: 'armee', rarity: 'common', nameKey: 'draft.kriegstrommeln.name', descKey: 'draft.kriegstrommeln.desc',
+  { id: 'kriegstrommeln', category: 'armee', rarity: 'common', nameKey: 'draft.kriegstrommeln.name', descKey: 'draft.kriegstrommeln.desc', wirkt: { supply: 5 },
     condition: { type: 'formationSize', value: 5 },
     tiers: [{ effect: [{ stat: 'drumsDmg', mul: 1.15 }] }, { effect: [{ stat: 'drumsDmg', mul: 1.25 }] }, { effect: [{ stat: 'drumsDmg', mul: 1.4 }] }] },
-  { id: 'schildwall', category: 'armee', rarity: 'common', nameKey: 'draft.schildwall.name', descKey: 'draft.schildwall.desc',
+  { id: 'schildwall', category: 'armee', rarity: 'common', nameKey: 'draft.schildwall.name', descKey: 'draft.schildwall.desc', wirkt: { supply: 5 },
     condition: { type: 'fullMeleeRow' },
     tiers: [{ effect: [{ stat: 'shieldHp', mul: 1.2 }] }, { effect: [{ stat: 'shieldHp', mul: 1.35 }] }] },
   { id: 'drill', category: 'armee', rarity: 'common', nameKey: 'draft.drill.name', descKey: 'draft.drill.desc',
@@ -59,7 +63,7 @@ const KF_DRAFT_OPTIONS = [
             { effect: [{ stat: 'werferRange', add: 50 }], drawback: [{ stat: 'werferHp', mul: 0.7 }] }] },
   { id: 'vorposten', category: 'armee', rarity: 'common', nameKey: 'draft.vorposten.name', descKey: 'draft.vorposten.desc',
     tiers: [{ effect: [{ stat: 'spawnOffset', add: 150 }], drawback: [{ stat: 'wallHp', mul: 0.85 }] }] },
-  { id: 'weitschuss', category: 'armee', rarity: 'rare', nameKey: 'draft.weitschuss.name', descKey: 'draft.weitschuss.desc',
+  { id: 'weitschuss', category: 'armee', rarity: 'rare', nameKey: 'draft.weitschuss.name', descKey: 'draft.weitschuss.desc', wirkt: { ranged: true },
     tiers: [{ effect: [{ stat: 'rangedDmg', mul: 1.2 }] }] },
   { id: 'sappeure', category: 'armee', rarity: 'rare', nameKey: 'draft.sappeure.name', descKey: 'draft.sappeure.desc',
     condition: { type: 'enemyHalf' }, tiers: [{ effect: [{ stat: 'siegeDps', add: 2 }] }, { effect: [{ stat: 'siegeDps', add: 5 }] }] },
@@ -98,13 +102,13 @@ const KF_DRAFT_OPTIONS = [
     tiers: [{ effect: [{ stat: 'standingOrder', add: 1 }] }] },
   { id: 'werkmeister', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.werkmeister.name', descKey: 'draft.werkmeister.desc',
     requires: { building: 'schmiede' }, tiers: [{ effect: [{ stat: 'autoSmith', add: 2 }] }] },
-  { id: 'bauleitung', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.bauleitung.name', descKey: 'draft.bauleitung.desc',
+  { id: 'bauleitung', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.bauleitung.name', descKey: 'draft.bauleitung.desc', wirkt: { freeSlot: true },
     tiers: [{ effect: [{ stat: 'autoFactory', add: 2 }] }] },
   { id: 'zeugmeister', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.zeugmeister.name', descKey: 'draft.zeugmeister.desc',
     requires: { upgrade: 'turm' }, tiers: [{ effect: [{ stat: 'autoTower', add: 3 }] }] },
-  { id: 'rationalisierung', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.rationalisierung.name', descKey: 'draft.rationalisierung.desc',
+  { id: 'rationalisierung', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.rationalisierung.name', descKey: 'draft.rationalisierung.desc', wirkt: { building: 'fabrik' },
     synergy: { stat: 'factoryYield', perCard: 0.05 }, tiers: [{ effect: [] }] },
-  { id: 'selbstlaeufer', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.selbstlaeufer.name', descKey: 'draft.selbstlaeufer.desc',
+  { id: 'selbstlaeufer', category: 'automatisierung', rarity: 'rare', nameKey: 'draft.selbstlaeufer.name', descKey: 'draft.selbstlaeufer.desc', wirkt: { phase: 'mid' },
     synergy: { stat: 'autoPress', perCard: 0.10 }, tiers: [{ effect: [] }] },
 
   /* ---------- Sonderregel ---------- */

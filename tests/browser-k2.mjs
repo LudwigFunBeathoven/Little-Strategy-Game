@@ -116,6 +116,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   await levelUp(p, 2); await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
   await p.evaluate(() => document.querySelectorAll('.kcard')[0].click()); await settle(p, 150);
+  await p.evaluate(() => { __kf.G.S.pfad.lastPickT = __kf.G.S.t - 100; });       // Mindestabstand (REQ-P.02) erfüllt: die zweite Wahl soll sofort folgen
   const mid = await p.evaluate(() => ({ fades: [...document.querySelectorAll('#stageFly .kcard')].length }));
   await p.waitForFunction(() => __kf.G.S.pendingLevels === 1, null, { timeout: 2000 });
   await settle(p, 120);

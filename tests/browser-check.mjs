@@ -372,7 +372,7 @@ for (const dsf of [1, 2]){
   check(held === 'army' && after.tab === 'cards' && after.clicks === clicks0 + 1, `Kartenwahl bei gehaltenem Klick: Reiter erst nach dem Loslassen (${held} → ${after.tab}), Klick gezählt (${after.clicks - clicks0})`);
   await p.waitForTimeout(450); await p.click('#draftOffer .card-pick'); await p.waitForTimeout(120);
   // Kaserne im Reiter Armee: ohne Kaserne Status und Knopf „Kaserne bauen“ → Reiter Bauen, Kaserne vorausgewählt
-  await p.evaluate(() => { __kf.G.S.material = 1e5; __kf.selectTab('army'); }); await p.waitForTimeout(100);
+  await p.evaluate(() => { delete __kf.G.S.draft.stacks.bauleitung; __kf.G.S.draft.ver++; __kf.G.S.material = 1e5; __kf.selectTab('army'); }); await p.waitForTimeout(100);       // Bauleitung baute sonst selbst Fabriken auf den gewählten Platz
   const k0 = await p.evaluate(() => ({ status: document.querySelector('#kaserneStatus').textContent, btn: !document.querySelector('[data-tooltip="kaserneBuild"]').hidden }));
   await p.click('[data-tooltip="kaserneBuild"]'); await p.waitForTimeout(150);
   const k1 = await p.evaluate(() => ({ tab: __kf.tab, sel: __kf.sel, pre: document.activeElement?.dataset.tooltip || '', cls: document.activeElement?.classList.contains('preselected'),

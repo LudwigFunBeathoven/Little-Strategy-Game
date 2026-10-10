@@ -296,6 +296,7 @@ KF_I18N.de = {
   'draft.zinnen.desc': 'Alle Abschnitte +{e1} % Lebenspunkte.',
   'draft.festungsbau.name': 'Festungsbau',
   'draft.festungsbau.desc': 'Alle Abschnitte +{syn} % Lebenspunkte je gewählter Basiskarte (diese eingeschlossen).',
+  'draft.festungsbau.name.karten': 'Mauerwerk',        // Modus karten: der Name „Festungsbau“ gehört der Pfadkarte (REQ-P.05)
   'draft.instandhaltung.name': 'Instandhaltung',
   'draft.instandhaltung.desc': 'Abschnitte unter {c1} % werden automatisch repariert, zu {e1} % der Kosten.',
   'draft.fliessband.name': 'Fließband',
