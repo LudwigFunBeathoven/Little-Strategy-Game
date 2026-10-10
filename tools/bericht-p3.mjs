@@ -59,25 +59,35 @@ function rateTable(title, m){
 }
 rateTable('Wahlrate je Karte (einheiten-zuerst, Normal, alle Profile)', R.karten.ez);
 if (R.karten.gierig && Object.keys(R.karten.gierig).length) rateTable('Wahlrate je Karte („gierig“ mit Vorausschau, Normal)', R.karten.gierig);
+
+/* Bewertung der Bonuskarten durch Vorausschau (reports/kartenpfad3-bonuskarten.json, tools/sim-p3.mjs --suite bonus) */
+try {
+  const B = JSON.parse(readFileSync('reports/kartenpfad3-bonuskarten.json', 'utf8')).bonus;
+  out.push('\n### Bonuskarten: Anteil der Angebote mit mindestens zwei Bonuskarten, in denen die Karte nach 45 s Vorausschau am besten abschnitt\n');
+  out.push('| Karte | angeboten | Vergleiche | Anteil „beste Bonuskarte“ |');
+  out.push('|---|---|---|---|');
+  for (const [id, x] of Object.entries(B).sort((a, b) => (a[1].bester / Math.max(1, a[1].vergleiche)) - (b[1].bester / Math.max(1, b[1].vergleiche))))
+    out.push(`| ${id} | ${x.angeboten} | ${x.vergleiche} | ${x.vergleiche ? (100 * x.bester / x.vergleiche).toFixed(0) + ' %' : '–'} |`);
+} catch (e) { /* ohne Datei keine Tabelle */ }
 console.log(out.join('\n'));
 
 /* ---------- Grafik: Zeit je Wahl und Abweichung zum Fahrplan, Normal ---------- */
-const PROF = [['aktiv', 'aktiv', 0], ['durchschnitt', 'durchschnitt', 1], ['gelegentlich', 'gelegentlich', 2]];
-const feld = p => R.felder.find(f => f.diff === 'normal' && f.profile === p);
-const N = 10, W = 760, H = 640, L = 64, Rr = 130, T1 = 40, B1 = 300, T2 = 372, B2 = 560;
+const PROF = [['normal/aktiv', 'Normal · aktiv', 0], ['normal/durchschnitt', 'Normal · durchschnitt', 1], ['normal/gelegentlich', 'Normal · gelegentlich', 2], ['schwer/durchschnitt', 'Schwer · durchschnitt', 3]];
+const feld = p => { const [d, pr] = p.split('/'); return R.felder.find(f => f.diff === d && f.profile === pr); };
+const N = 10, W = 990, H = 640, L = 64, Rr = 170, T1 = 40, B1 = 300, T2 = 372, B2 = 560;
 const x = k => L + (k - 1) * (W - L - Rr) / (N - 1);
 const maxT = 13 * 60, y1 = t => B1 - (B1 - T1) * t / maxT;
-const dev = 80, y2 = d => (T2 + B2) / 2 - (B2 - T2) / 2 * d / dev;       // ±80 s
+const dev = 100, y2 = d => (T2 + B2) / 2 - (B2 - T2) / 2 * d / dev;       // ±100 s
 const ticks1 = [0, 2, 4, 6, 8, 10, 12];
 let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="t d" font-family="system-ui, sans-serif" font-size="12">
 <title id="t">Kartenwahlen: Fahrplan gegen gemessenen Median (Normal)</title>
 <desc id="d">Oben die Zeit der Wahlen 1 bis 10 in Minuten, unten die Abweichung des Medians vom Fahrplan in Sekunden, für die Profile aktiv, durchschnitt und gelegentlich.</desc>
 <style>
-  :root{ --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --grid:#e3e2de; --band:#e9eef7; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; }
-  @media (prefers-color-scheme: dark){ :root{ --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --grid:#33322f; --band:#222a38; --s1:#3987e5; --s2:#d95926; --s3:#199e70; } }
+  :root{ --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --grid:#e3e2de; --band:#e9eef7; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; }
+  @media (prefers-color-scheme: dark){ :root{ --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --grid:#33322f; --band:#222a38; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; } }
   .bg{fill:var(--surface)} .tx{fill:var(--ink)} .tx2{fill:var(--ink2)} .gr{stroke:var(--grid);stroke-width:1} .bd{fill:var(--band)}
   .fp{stroke:var(--ink2);stroke-width:2;stroke-dasharray:6 4;fill:none}
-  .l1{stroke:var(--s1)} .l2{stroke:var(--s2)} .l3{stroke:var(--s3)} .f1{fill:var(--s1)} .f2{fill:var(--s2)} .f3{fill:var(--s3)}
+  .l1{stroke:var(--s1)} .l2{stroke:var(--s2)} .l3{stroke:var(--s3)} .l4{stroke:var(--s4)} .f1{fill:var(--s1)} .f2{fill:var(--s2)} .f3{fill:var(--s3)} .f4{fill:var(--s4)}
   .ln{stroke-width:2;fill:none} .mk{stroke:var(--surface);stroke-width:2}
 </style>
 <rect class="bg" width="${W}" height="${H}"/>
@@ -86,7 +96,7 @@ let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role=
 for (const tk of ticks1) svg += `<line class="gr" x1="${L}" x2="${W - Rr}" y1="${y1(tk * 60)}" y2="${y1(tk * 60)}"/><text class="tx2" x="${L - 8}" y="${y1(tk * 60) + 4}" text-anchor="end">${tk}</text>\n`;
 for (let k = 1; k <= N; k++) svg += `<text class="tx2" x="${x(k)}" y="${B1 + 18}" text-anchor="middle">${k}</text>\n`;
 svg += `<text class="tx2" x="${(L + W - Rr) / 2}" y="${B1 + 36}" text-anchor="middle">Wahl</text>\n`;
-svg += `<polyline class="fp" points="${R.ziele.slice(0, N).map((z, i) => `${x(i + 1)},${y1(z)}`).join(' ')}"/>\n<text class="tx2" x="${W - Rr + 8}" y="${y1(R.ziele[N - 1]) + 4}">Fahrplan</text>\n`;
+svg += `<polyline class="fp" points="${R.ziele.slice(0, N).map((z, i) => `${x(i + 1)},${y1(z)}`).join(' ')}"/>\n<text class="tx2" x="${W - Rr + 8}" y="${y1(R.ziele[N - 1]) + 4}">Fahrplan (gestrichelt)</text>\n`;
 for (const [p, label, i] of PROF){
   const f = feld(p); if (!f) continue;
   const pts = f.wahl.slice(0, N).map((w, k) => w.median == null ? null : [x(k + 1), y1(w.median)]).filter(Boolean);
@@ -95,7 +105,7 @@ for (const [p, label, i] of PROF){
 }
 svg += `<text class="tx" x="${L}" y="${T2 - 16}" font-weight="600">Abweichung vom Fahrplan in Sekunden (Toleranz ±20 s)</text>\n`;
 svg += `<rect class="bd" x="${L}" y="${y2(20)}" width="${W - Rr - L}" height="${y2(-20) - y2(20)}"/>\n`;
-for (const d of [-80, -40, 0, 40, 80]) svg += `<line class="gr" x1="${L}" x2="${W - Rr}" y1="${y2(d)}" y2="${y2(d)}"/><text class="tx2" x="${L - 8}" y="${y2(d) + 4}" text-anchor="end">${d > 0 ? '+' : ''}${d}</text>\n`;
+for (const d of [-100, -50, 0, 50, 100]) svg += `<line class="gr" x1="${L}" x2="${W - Rr}" y1="${y2(d)}" y2="${y2(d)}"/><text class="tx2" x="${L - 8}" y="${y2(d) + 4}" text-anchor="end">${d > 0 ? '+' : ''}${d}</text>\n`;
 for (let k = 1; k <= N; k++) svg += `<text class="tx2" x="${x(k)}" y="${B2 + 18}" text-anchor="middle">${k}</text>\n`;
 svg += `<text class="tx2" x="${(L + W - Rr) / 2}" y="${B2 + 36}" text-anchor="middle">Wahl</text>\n`;
 let labelY = [];
@@ -107,7 +117,7 @@ for (const [p, label, i] of PROF){
 }
 // Legende (Linienstück plus Text in Textfarbe), unabhängig von der Farbe lesbar
 PROF.forEach(([p, label, i], j) => {
-  const yy = 74 + j * 22;
+  const yy = 200 + j * 22;
   svg += `<line class="ln l${i + 1}" x1="${W - Rr + 8}" x2="${W - Rr + 34}" y1="${yy}" y2="${yy}"/><circle class="mk f${i + 1}" cx="${W - Rr + 21}" cy="${yy}" r="4"/><text class="tx" x="${W - Rr + 42}" y="${yy + 4}">${label}</text>\n`;
 });
 svg += `</svg>\n`;
