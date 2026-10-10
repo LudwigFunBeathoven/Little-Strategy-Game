@@ -200,18 +200,18 @@ const KF_CONFIG = {
   TOWER_LANES: [0, 2],          // Turm oben auf der Mauer oben, Turm unten auf der Mauer unten
 
   /* Einheiten */
-  UNITS: {
-    laeufer: { key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, range: 14,  bounty: 8,  speed: 34 },   // speed: Marschtempo; die Armee geht im Tempo der langsamsten Einheit
-    werfer:  { key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, range: 105, bounty: 15, speed: 34 },
+  UNITS: {            // symbol: Zeichen in der Wellenvorschau (Armee-Reiter); jede Einheit braucht eines (tests/einheitentexte.test.mjs)
+    laeufer: { symbol: '\u25A0', key: '1', cost: 12, hp: 30, dmg: 5, cd: 0.8, range: 14,  bounty: 8,  speed: 34 },   // speed: Marschtempo; die Armee geht im Tempo der langsamsten Einheit
+    werfer:  { symbol: '\u25B2', key: '2', cost: 30, hp: 18, dmg: 7, cd: 1.3, range: 105, bounty: 15, speed: 34 },
     // Schildträger (REQ-5.07, Zweig D): viel Lebenspunkte, langsam; bremst die ganze Armee (gewollter Zielkonflikt)
-    schild:  { key: '3', cost: 40, hp: 110, dmg: 3, cd: 1.0, range: 14,  bounty: 12, speed: 24, research: 'unlockSchild' },
+    schild:  { symbol: '\u25C6', key: '3', cost: 40, hp: 110, dmg: 3, cd: 1.0, range: 14,  bounty: 12, speed: 24, research: 'unlockSchild' },
     /* Einheiten des Kartenpfads (REQ-KP.05): Datensätze ohne neues Verhalten und ohne neue Grafik. farbton = Farbname aus der Palette (Punkt auf der Figur).
        replacement: entsteht nur als Ersatz für base (Einheitenersatz, kein eigener Knopf); Werte und Kosten sind Startwerte. Versorgung: jede Einheit zählt 1. */
-    reiter:          { key: '4', cost: 28, hp: 40, dmg: 7, cd: 0.7, range: 14,  bounty: 12, speed: 52, farbton: 'brass' },
-    schwertkaempfer: { cost: 16, hp: 42, dmg: 7, cd: 0.8, range: 14,  bounty: 10, speed: 34, replacement: true, base: 'laeufer', farbton: 'brass' },
-    armbrust:        { key: '5', cost: 44, hp: 24, dmg: 12, cd: 1.8, range: 140, bounty: 20, speed: 34, farbton: 'rust' },
-    katapult:        { key: '6', cost: 70, hp: 40, dmg: 22, cd: 3.0, range: 170, bounty: 28, speed: 24, farbton: 'rust' },
-    bogenschuetze:   { cost: 36, hp: 22, dmg: 9, cd: 1.2, range: 120, bounty: 17, speed: 34, replacement: true, base: 'werfer',  farbton: 'brass' },
+    reiter:          { symbol: '\u25C7', key: '4', cost: 28, hp: 40, dmg: 7, cd: 0.7, range: 14,  bounty: 12, speed: 52, farbton: 'brass' },
+    schwertkaempfer: { symbol: '\u25A0', cost: 16, hp: 42, dmg: 7, cd: 0.8, range: 14,  bounty: 10, speed: 34, replacement: true, base: 'laeufer', farbton: 'brass' },
+    armbrust:        { symbol: '\u25B3', key: '5', cost: 44, hp: 24, dmg: 12, cd: 1.8, range: 140, bounty: 20, speed: 34, farbton: 'rust' },
+    katapult:        { symbol: '\u25CF', key: '6', cost: 70, hp: 40, dmg: 22, cd: 3.0, range: 170, bounty: 28, speed: 24, farbton: 'rust' },
+    bogenschuetze:   { symbol: '\u25B2', cost: 36, hp: 22, dmg: 9, cd: 1.2, range: 120, bounty: 17, speed: 34, replacement: true, base: 'werfer',  farbton: 'brass' },
   },
 
   /* Bauplätze: 3×3-Raster, alle ab Start offen (REQ-16.1).

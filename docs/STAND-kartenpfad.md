@@ -193,3 +193,17 @@ Befund der ersten Serie: Bots gewannen im Modus karten nach etwa 6 min mit 3 Wah
 
 ## Auslegungen und Abweichungen Teil 3 (zur Zustimmung durch den PO)
 Siehe Bericht, Abschnitt „Auslegungen und Abweichungen“.
+
+
+# Teil 4: Strategielinien, Gebäude-Aufwertung und Kartenpool (`docs/anforderungen-kartenpfad-4.md`, Bericht `docs/bericht-kartenpfad-4.md`)
+
+## Umsetzung
+| Inkrement | Inhalt |
+|---|---|
+| L.0 | S.01: Fehler „undefined“ in der Wellenvorschau (Reiter Armee) behoben, siehe unten. Basismessung vor allen Änderungen (S.09): `reports/kartenpfad4-basis-*.json`. |
+
+## S.01: Ursache des Fehlers „undefined“
+Die Wellenvorschau im Reiter Armee (`renderPreview` in `panels.js`) setzte je Einheit ein Zeichen aus einer lokalen Tabelle `GLYPH`. Mit dem Einmischen von `main` 0.9.1 (Textsymbole statt Bilder) kamen die Zeichen für Läufer, Werfer und Schildträger aus `main`; im Branch ergänzt wurden Reiter, Schwertkämpfer und Bogenschütze, **nicht** aber Armbrustschütze und Katapult. `GLYPH['armbrust']` und `GLYPH['katapult']` waren `undefined`, die Zeile lautete „undefined×1“.
+Behebung: Das Symbol steht jetzt je Einheit in `config.js` (`UNITS[...].symbol`), eine zweite Tabelle gibt es nicht mehr; fehlt es einer künftigen Einheit, zeigt die Vorschau den ersten Buchstaben des Kurznamens statt „undefined“. Neu: Kurznamen `unit.<id>.short` (de, en); sie stehen als Hinweistext (`title`) an jeder Zelle der Vorschau. Test: `tests/einheitentexte.test.mjs` (jede Einheit beider Modi hat Name, Kurzname und Symbol in beiden Sprachen; die Vorschau enthält für jede Einheit keinen Text mit „undefined“). Bildschirmfoto: `docs/bilder/kartenpfad4-warteschlange.png`.
+`main` ist **nicht** betroffen: Dort gibt es nur Läufer, Werfer und Schildträger, alle haben ein Zeichen in `GLYPH`. Eine Behebung auf `main` entfällt; der Test dort wäre erst nötig, wenn `main` weitere Einheiten bekommt.
+Auslegung zur Bestätigung: „Kurzname“ gab es im Code bisher nicht. Ich lege ihn als kurze Bezeichnung (z. B. „Armbrust“ für Armbrustschütze) an und verwende ihn im Hinweistext der Vorschau.

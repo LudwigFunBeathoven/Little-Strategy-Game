@@ -468,22 +468,24 @@ function renderDraftLock(){
 }
 
 /* ---------- Armee: Vorschau je Lane (REQ-14.3) und Ereignisse ---------- */
-const GLYPH = { laeufer: '\u25A0', werfer: '\u25B2', schild: '\u25C6', reiter: '\u25C7', schwertkaempfer: '\u25A0', bogenschuetze: '\u25B2' };
+const unitSymbol = k => (C.UNITS[k] && C.UNITS[k].symbol) || (t(`unit.${k}.short`) || '?').charAt(0);
 let previewKey = '', lastLogKey = '';
-function countLine(group, lane){
+function countUnits(group, lane){
   const n = {};
   for (const q of group) if (q.lane === lane) n[q.type] = (n[q.type] || 0) + 1;
-  return Object.keys(C.UNITS).filter(k => n[k]).map(k => `${GLYPH[k]}×${n[k]}`).join(' ') || '–';
+  return Object.keys(C.UNITS).filter(k => n[k]).map(k => [k, n[k]]);
 }
+const countLine = (group, lane) => countUnits(group, lane).map(([k, c]) => `${unitSymbol(k)}×${c}`).join(' ') || '–';
+const countTitle = (group, lane) => countUnits(group, lane).map(([k, c]) => `${t(`unit.${k}.short`)} ×${c}`).join(', ');
 function renderPreview(){
   const S = G.S, enemy = S.nextEnemy || [], own = G.assignLanes(S.queue.map(q => q.type), G.strongerLane(enemy));
   const key = lang + JSON.stringify(enemy) + JSON.stringify(own);
   if (key === previewKey) return;
   previewKey = key;
   const box = $('wavePreview'); box.innerHTML = '';
-  const cell = (cls, text) => { const e = document.createElement('span'); if (cls) e.className = cls; e.textContent = text; box.appendChild(e); };
+  const cell = (cls, text, title) => { const e = document.createElement('span'); if (cls) e.className = cls; e.textContent = text; if (title) e.title = title; box.appendChild(e); };
   cell('', ''); cell('p', t('preview.own')); cell('e', t('preview.enemy'));
-  for (let l = 0; l < C.LANE_COUNT; l++){ cell('', t('lane.' + l)); cell('p', countLine(own, l)); cell('e', countLine(enemy, l)); }
+  for (let l = 0; l < C.LANE_COUNT; l++){ cell('', t('lane.' + l)); cell('p', countLine(own, l), countTitle(own, l)); cell('e', countLine(enemy, l), countTitle(enemy, l)); }
 }
 function logParams(entry){
   const p = Object.assign({}, entry.params);
