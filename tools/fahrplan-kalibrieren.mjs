@@ -57,13 +57,15 @@ if (!isMainThread){
   /* Wiedergabe der Wahlregeln über einen EP-Verlauf: Zeiten der Wahlen 1..N (Infinity = nicht mehr erreicht) */
   const cumOf = steps => m => { let s = 0; for (let k = 1; k <= m; k++) s += steps[Math.min(k, steps.length) - 1]; return s; };
   function replay(game, cumFn){
-    const D = []; let last = Math.max(0, zielFahrplan[0] - MAXG), free = 0;       // wie im Spiel: die erste Wahl ist spätestens zur Zielzeit 1 fällig
+    const D = []; let last = 0, free = 0;
     for (let k = 1; k <= N; k++){
       const need = cumFn(k - free);
       let c = 0; if (need > 0){ c = Infinity; const xp = game.xp; let lo = 0, hi = xp.length - 1; if (xp[hi] >= need){ while (lo < hi){ const mid = (lo + hi) >> 1; if (xp[mid] >= need) hi = mid; else lo = mid + 1; } c = lo + 1; } }
-      const earliest = last + MING;
+      const minT = k === 1 ? 0 : last + MING;                               // vor der ersten Wahl kein Mindestabstand
+      const due = Math.max(Math.min(zielFahrplan[k - 1], last + MAXG), minT);   // Zielzeit, Höchstabstand, Mindestabstand (wie dueTime() im Spiel)
+      const ep = Math.max(c, minT);
       let d;
-      if (c === Infinity || Math.max(c, earliest) > last + MAXG){ d = last + MAXG; free++; } else d = Math.max(c, earliest);
+      if (ep <= due) d = ep; else { d = due; free++; }
       if (d > game.t) { for (let j = k; j <= N; j++) D.push(Infinity); break; }
       D.push(d); last = d;
     }

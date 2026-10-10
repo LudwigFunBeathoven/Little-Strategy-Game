@@ -65,19 +65,39 @@ test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühesten
   assert.ok(G.S.pendingDraft, 'zweite Wahl nach weiteren minAbstand Sekunden');
 });
 
-test('Höchstabstand: ohne EP-Ertrag ist die erste Wahl zur ersten Zielzeit fällig, danach jeweils maxAbstand nach der letzten', () => {
+test('Fälligkeit ohne EP: jede Wahl zur Zielzeit des Fahrplans, nie später als maxAbstand nach der letzten', () => {
   const { G, C } = game('karten');
-  const max = C.KARTEN.maxAbstand, z1 = C.KARTEN.fahrplan.ziele[0];
-  run(G, z1 + 2, () => G.S.pendingDraft);
-  assert.ok(G.S.pendingDraft, 'erste Wahl fällig');
-  assert.ok(G.S.t >= z1 - 0.1 && G.S.t < z1 + 1, `erste Wahl nach ${G.S.t} s, Zielzeit ${z1}`);
-  assert.equal(G.S.pfad.free, 1);
+  const f = C.KARTEN.fahrplan, max = C.KARTEN.maxAbstand;
+  assert.equal(max, 100, 'Höchstabstand 100 s');
+  const times = [];
+  for (let n = 1; n <= 4; n++){
+    run(G, 200, () => G.S.pendingDraft);
+    assert.ok(G.S.pendingDraft, `Wahl ${n} fällig`);
+    times.push(G.S.t);
+    G.chooseDraft(0); immortal(G);
+  }
+  for (let n = 1; n <= 4; n++) assert.ok(Math.abs(times[n - 1] - f.ziele[n - 1]) < 1, `Wahl ${n} zur Zielzeit ${f.ziele[n - 1]} s (war ${times[n - 1].toFixed(1)} s)`);
+  assert.equal(G.S.pfad.free, 4, 'alle vier ohne EP');
+});
+
+test('Fälligkeit: wer vor dem Fahrplan liegt, wird nicht vorgezogen; wer dahinter liegt, wartet höchstens maxAbstand', () => {
+  const { G, C } = game('karten');
+  const f = C.KARTEN.fahrplan;
+  // erste Wahl mit EP früh (kein Mindestabstand), die zweite bleibt bei ihrer Zielzeit (Höchstabstand 100 s reicht darüber hinaus)
+  run(G, 70);
+  G.gainXp(G.xpNeed(1) - G.S.xpTotal + 1);
+  assert.ok(G.S.pendingDraft); const t1 = G.S.t; G.chooseDraft(0); immortal(G);
+  run(G, 300, () => G.S.pendingDraft);
+  assert.ok(Math.abs(G.S.t - f.ziele[1]) < 1, `zweite Wahl zur Zielzeit ${f.ziele[1]} (war ${G.S.t.toFixed(1)}), obwohl die erste schon bei ${t1.toFixed(1)} lag`);
+  // Spielstand weit hinter dem Fahrplan: nach der letzten Wahl höchstens maxAbstand
   G.chooseDraft(0); immortal(G);
-  const t1 = G.S.t;
-  run(G, max - 5);
-  assert.equal(G.S.pendingDraft, null, 'bis maxAbstand nichts');
-  run(G, 10, () => G.S.pendingDraft);
-  assert.ok(G.S.pendingDraft); assert.ok(G.S.t - t1 >= max - 0.1 && G.S.t - t1 < max + 1);
+  G.S.t += 1000; G.S.pfad.lastPickT = G.S.t;                         // Zielzeiten längst vorbei
+  const base = G.S.t;
+  run(G, C.KARTEN.fahrplan.minAbstand - 1);
+  assert.equal(G.S.pendingDraft, null, 'nicht vor dem Mindestabstand');
+  run(G, 3, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft, 'nach dem Mindestabstand fällig');
+  assert.ok(G.S.t - base < f.minAbstand + 2);
 });
 
 test('Protokoll je Wahl: Zielzeit des Fahrplans, Erscheinen und Wahl', () => {

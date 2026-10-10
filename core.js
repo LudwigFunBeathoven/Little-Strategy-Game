@@ -211,7 +211,8 @@ function create(){
   const countType = type => S.slots.filter(s => s && s.type === type).length;
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
-  const diffCfg      = () => S.pacing === 'karten' && C.KARTEN.basisFaktor !== 1 ? Object.assign({}, C.DIFFICULTY[S.diff], { enemyBaseHp: C.DIFFICULTY[S.diff].enemyBaseHp * C.KARTEN.basisFaktor }) : C.DIFFICULTY[S.diff];   // Modus karten: längere Partien über die gegnerische Basis
+  const baseFactor   = () => { const b = C.KARTEN.basisFaktor; return typeof b === 'object' ? b[S.diff] ?? 1 : b; };       // Zahl oder Tabelle je Schwierigkeitsgrad
+  const diffCfg      = () => S.pacing === 'karten' && baseFactor() !== 1 ? Object.assign({}, C.DIFFICULTY[S.diff], { enemyBaseHp: C.DIFFICULTY[S.diff].enemyBaseHp * baseFactor() }) : C.DIFFICULTY[S.diff];   // Modus karten: längere Partien über die gegnerische Basis
   // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Material kommt sonst aus Fabriken (REQ-16.2)
   const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * mMul('clickYield');
   const factoryCount = () => countType('fabrik');
@@ -294,17 +295,24 @@ function create(){
   }
   /* Mindestabstand (REQ-P.02): eine fällige Wahl erscheint frühestens minAbstand Sekunden nach der letzten; die EP darüber bleiben erhalten */
   const draftReady = () => { const f = fahrplan(); return !f || !S.stats.wahlen || S.t - S.pfad.lastPickT >= f.minAbstand; };      // vor der ersten Wahl gibt es keinen Mindestabstand
+  /* Fälligkeit der nächsten Wahl ohne EP (Mindesttempo): spätestens zur Zielzeit des Fahrplans, spätestens maxAbstand nach der letzten Wahl, frühestens minAbstand nach ihr */
+  function dueTime(){
+    const f = fahrplan(); if (!f) return null;
+    const due = Math.min(sollZeit(S.level + 1), S.pfad.lastPickT + C.KARTEN.maxAbstand);
+    return S.stats.wahlen ? Math.max(due, S.pfad.lastPickT + f.minAbstand) : due;
+  }
   const xpNeed       = n => xpSum(n - freeLevels()) * mMul('xpNeed');
   /* Fortschritt zur nächsten Kartenwahl. Standard: EP-Anteil. Modus karten (REQ-P.02): das Kartensymbol füllt sich nach EP oder nach Zeit, je nachdem, was weiter ist;
-     etaS = Sekunden bis zur spätestens fälligen Wahl (Höchstabstand), bei aufgeschobener Wahl bis zum Mindestabstand. */
+     etaS = Sekunden bis zur spätestens fälligen Wahl (Fahrplan), bei aufgeschobener Wahl bis zum Mindestabstand. */
   const xpProgress   = () => {
     const need = xpNeed(S.level + 1) - xpNeed(S.level), cur = S.xpTotal - xpNeed(S.level);
     const f = fahrplan();
     if (!f) return { level: S.level, cur, need, frac: Math.max(0, Math.min(1, cur / need)), etaS: null, timed: false };
     const waiting = S.pendingLevels > 0 && !S.pendingDraft;               // Wahl fällig, aber durch den Mindestabstand aufgeschoben
-    const timeFrac = (S.t - S.pfad.lastPickT) / C.KARTEN.maxAbstand;
+    const due = dueTime(), start = S.stats.wahlen ? S.pfad.lastPickT : 0;
+    const timeFrac = (S.t - start) / Math.max(1, due - start);
     const frac = waiting ? 1 : Math.max(0, Math.min(1, Math.max(cur / need, timeFrac)));
-    const etaS = waiting ? Math.max(0, S.pfad.lastPickT + f.minAbstand - S.t) : Math.max(0, S.pfad.lastPickT + C.KARTEN.maxAbstand - S.t);
+    const etaS = waiting ? Math.max(0, S.pfad.lastPickT + f.minAbstand - S.t) : Math.max(0, due - S.t);
     return { level: S.level, cur: waiting ? need : cur, need, frac, etaS, timed: true };
   };
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
@@ -1229,8 +1237,8 @@ function create(){
     S.stats.prod[phase()].time += dt;
     // Aufgeschobene Wahl (Mindestabstand, REQ-P.02) erscheint, sobald der Abstand erreicht ist
     if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
-    // Höchstabstand (REQ-KP.06, P.02): nach maxAbstand Sekunden ohne Wahl wird die nächste fällig; die EP-Schwellen der folgenden Wahlen bleiben unverändert
-    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels === 0 && S.t - S.pfad.lastPickT >= C.KARTEN.maxAbstand){
+    // Mindesttempo (REQ-KP.06, P.02): ist die Wahl nach dem Fahrplan fällig (Zielzeit oder Höchstabstand), erscheint sie ohne EP; die EP-Schwellen der folgenden Wahlen bleiben unverändert
+    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels === 0 && S.t >= dueTime()){
       S.level++; S.pfad.free++; S.pendingLevels++; S.stats.freeChoices = (S.stats.freeChoices || 0) + 1;
       log('log.freeChoice', { n: S.level });
       offerDraft();
@@ -1310,7 +1318,6 @@ function create(){
   function newGame(diff, seed, opts = {}){
     S = freshState(diff, seed);
     S.pacing = opts.pacing || C.PACING_MODUS || 'standard';
-    if (S.pacing === 'karten') S.pfad.lastPickT = Math.max(0, C.KARTEN.fahrplan.ziele[0] - C.KARTEN.maxAbstand);       // die erste Wahl ist spätestens zur ersten Zielzeit fällig
     if (S.pacing === 'karten') S.enemyBaseHp = diffCfg().enemyBaseHp;
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();

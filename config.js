@@ -19,23 +19,24 @@ const KF_CONFIG = {
   KARTEN: {
     rueckstandPlus: 0.5,        // Gewichtszuschlag je Wahl, in der eine ziehbare Bau-Karte nicht im Angebot erschien (Faktor auf das Grundgewicht)
     /* Wahl-Fahrplan (REQ-P.02): Zielzeit je Wahl in Sekunden Spielzeit (Profil „durchschnitt“, Normal); ab Wahl 11 je takt Sekunden später.
-       Eine Wahl wird fällig, wenn die EP-Schwelle erreicht ist (schwellen: EP-Schritt je Wahl; über das Tabellenende gilt der letzte Schritt) oder maxAbstand nach der letzten Wahl
-       vergangen ist; frühestens minAbstand nach der letzten Wahl, die EP darüber bleiben erhalten. Gleich auf allen Schwierigkeitsgraden.
-       Kalibrierung: node tools/fahrplan-kalibrieren.mjs --profile aktiv,durchschnitt --modus obergrenze --x1 43 (Messung und Ableitung im Bericht kartenpfad-3).
-       Wahl 1: 43 EP (die erste Karte muss auf Schwer vor der ersten großen Welle kommen); ab Wahl 2: größter EP-Stand aller Referenzpartien zur Zielzeit. Die Mitte der Partie
-       bringt kaum EP (die Belagerung hält die Gegnerwellen auf), darum bestimmt dort die Zeit den Takt; die EP belohnen Spiel, das über das Referenzniveau hinausgeht. */
+       Eine Wahl wird fällig, sobald die EP-Schwelle erreicht ist (schwellen: EP-Schritt je Wahl; über das Tabellenende gilt der letzte Schritt), spätestens zur Zielzeit der Wahl,
+       spätestens maxAbstand nach der letzten Wahl; frühestens minAbstand nach der letzten Wahl (die EP darüber bleiben erhalten). Gleich auf allen Schwierigkeitsgraden.
+       Warum die Zielzeit zugleich die späteste Fälligkeit ist: Die Mitte der Partie bringt kaum EP (die Belagerung hält die Gegnerwellen auf); allein nach EP und Höchstabstand
+       verfehlten die Wahlen ab Nr. 8 den Fahrplan um bis zu 100 s (Bericht kartenpfad-3). Die EP belohnen Spiel über dem Referenzniveau, die Zeit sichert den Takt.
+       Kalibrierung: node tools/fahrplan-kalibrieren.mjs --profile aktiv,durchschnitt --modus obergrenze --x1 43.
+       Wahl 1: 43 EP (die erste Karte muss auf Schwer vor der ersten großen Welle kommen); ab Wahl 2: größter EP-Stand aller Referenzpartien (200 Partien, aktiv und durchschnitt) zur Zielzeit. */
     fahrplan: {
       ziele: [90, 160, 225, 290, 355, 420, 485, 550, 615, 680],
       takt: 65,
       minAbstand: 45,
-      schwellen: [43, 177, 210, 200, 255, 285, 430, 435, 455, 485, 690, 250],
+      schwellen: [43, 187, 205, 200, 255, 315, 485, 435, 500, 415, 625, 495],
     },
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,
-    basisFaktor: 4.5,            // Modus karten: Lebenspunkte der gegnerischen Basis × basisFaktor (längere Partien, ohne die frühen Wellen zu verschärfen); REQ-P.03: 3,5 → 4,5 (Median Normal/durchschnitt 11:50 statt 10:30)
+    basisFaktor: { leicht: 4.5, normal: 4.5, schwer: 3.0 },   // Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer; eine Zahl gilt für alle Grade).
+                                // Vorher 3,5 für alle: Normal/durchschnitt 10:30 → jetzt 11:40; Schwer 3,0, damit das 90. Perzentil der Dauer unter 20 min bleibt (mit 4,5: 22:30)
     gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
-    maxAbstand: 65,             // Höchstabstand (Mindesttempo): steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06, P.02); vor der ersten Wahl zählt fahrplan.ziele[0] − maxAbstand als „letzte Wahl“.
-                                // Anforderung: 100 s. Gemessen: ohne EP-Ertrag in der Mitte der Partie (Belagerung) verfehlt 100 s die Zielzeiten ab Wahl 8 um bis zu 100 s; 65 s = takt (Abweichung, zur Bestätigung)
+    maxAbstand: 100,            // Höchstabstand: steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06, P.02)
     angebot: { basis: 3, universitaet: 4 },   // Karten je Angebot im Modus karten (REQ-P.04); Standard: DRAFT_OPTIONS_BASE / _UNIVERSITY
     pfadPlaetze: 2,             // Plätze für Pfadkarten (Bau, Technologie) je Angebot, wenn so viele ziehbar sind; der Rest sind Bonusplätze (REQ-P.04)
     maxWarten: 3,               // eine ziehbare Bau-Karte erscheint spätestens in der n-ten Wahl nach ihrer Freigabe (harte Grenze)
