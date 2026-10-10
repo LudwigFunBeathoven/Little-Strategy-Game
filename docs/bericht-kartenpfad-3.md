@@ -10,7 +10,7 @@ Die Anforderung ließ sich an einer Stelle nicht wörtlich umsetzen: Die EP trag
 ## Abnahmekriterien
 | REQ | Kriterium | Ergebnis |
 |---|---|---|
-| P.01 | `npm test`, `npm run test:browser`, `tests/browser-k2.mjs` grün | `npm test`: 283 grün (in `main` 221 plus 62 neue). Browser: siehe Abschnitt „Prüfstand“. |
+| P.01 | `npm test`, `npm run test:browser`, `tests/browser-k2.mjs` grün | `npm test`: 283 Tests grün. Browser: siehe Abschnitt „Prüfstand“. |
 | P.01 | Golden-Test: `standard` im Branch identisch zu `main` 0.9.2 | grün (`tests/unveraendert.test.mjs`; alle neuen Regeln gelten nur im Modus `karten`). |
 | P.01 | Kurzsimulation `karten` ohne offene Partien | erfüllt: offen 0 % in allen neun Feldern der Endmessung. |
 | P.01 | Konfliktliste | Abschnitt „Konfliktliste“. |
@@ -45,7 +45,7 @@ Die Anforderung ließ sich an einer Stelle nicht wörtlich umsetzen: Die EP trag
 4. **Erste Wahl ohne Mindestabstand; im Tutorial nie nach Zeit.** Vor der ersten Wahl gibt es keine „letzte Wahl“. Solange Schonfrist oder Kriegsbeute des Tutorials laufen, kommt die erste Wahl über die Kriegsbeute (die EP-Garantie bleibt); danach gilt der Fahrplan.
 5. **Angebot mit 3 Karten, mit Universität 4.** Die Tabelle in REQ-P.04 und die Anforderung Teil 1 („Standard 3 Karten, Universität +1“) setzen drei und vier Karten voraus. Die Umsetzung aus Teil 1 gab es nur mit zwei und drei Karten (Wert aus `main`). Im Modus `karten` gilt jetzt `KARTEN.angebot` = 3 und 4; der Modus `standard` bleibt bei 2 und 3. Mit der Karte „Glücksritter“ erscheinen bis zu fünf Karten; sie passen auf der Bühne ab 1024 px Fensterbreite.
 6. **Gleiches Gewicht aller Bau-Karten.** Echtes Militär (30) und Metallverarbeitung (20) hatten mehr Gewicht als Festungsbau, Gelehrte und Handel (je 10). Jetzt gilt überall 10.
-7. **Basis-HP je Schwierigkeitsgrad (einzige Stellschraube, REQ-P.03).** `KARTEN.basisFaktor`: Leicht 5,5, Normal 5,5, Schwer 3,0 (vorher 3,5 für alle). Mit einer Zahl für alle Grade (5,5) hätte „gelegentlich“ auf Schwer 40 % gewonnen und das 90. Perzentil der Dauer 23:57 erreicht (Soll ≤ 20 min).
+7. **Basis-HP je Schwierigkeitsgrad (einzige Stellschraube, REQ-P.03).** `KARTEN.basisFaktor`: Leicht 5,5, Normal 5,5, Schwer 3,0 (vorher 3,5 für alle). Höhere Faktoren auf Schwer verfehlen das Ziel: Mit 3,5 gewinnt „gelegentlich“ 60 % bei einem 90. Perzentil der Dauer von 23:05, mit 4,0 gewinnen 40 % bei 23:57 (Soll ≤ 20 min); mit 3,0 sind es 66 % bei 14:52.
 8. **Bann tauscht nur Bonusplätze.** Sonst hätte der Ersatz einer gebannten Karte die Zahl der Pfadplätze verändert (REQ-P.04: Neu ziehen und Bann halten die Zahl).
 9. **Angebotsbedingungen im neuen Feld `wirkt`**, nur im Modus `karten` ausgewertet. Das vorhandene Feld `requires` gilt in beiden Modi; „Fabrik steht“ dort einzutragen hätte den Modus `standard` verändert (Golden-Test). Wirkung null ist dynamisch gelesen: Eine Karte erscheint nicht, wenn ihr Gegenstand fehlt (Fabrik, freier Bauplatz, Fernkämpfer, Versorgungsgruppe ab 5, Phase der Partie). Bedingte Wirkungen, die später eintreten können (Sappeure ab halber gegnerischer Basis, Notreserve bei fast gefallenem Tor), zählen als Wirkung.
 10. **Korrektur am schnellen Bot, nicht am Spiel.** Der Bot füllte das Raster mit Fabriken, solange die Kaserne gesperrt war, und konnte sie später nicht mehr bauen; „Festung zuerst“ gewann deshalb nur 40 % (`reports/kartenpfad3-zwischenstand-bot-ohne-abriss.json`). Der Bot reißt im Modus `karten` jetzt eine Fabrik ab, wenn ein freigeschaltetes Gebäude fehlt (der Bot „gierig“ tat das schon und gewann mit allen Varianten 100 %). Dieselbe Falle trifft Menschen, die vor der ersten Kaserne alle neun Plätze bebauen (Auffälligkeit 4).
@@ -110,7 +110,7 @@ Grafik: Fahrplan gegen gemessenen Median (Normal, drei Profile; dazu Schwer · d
 | schwer/durchschnitt | 71.6 % | 49 s |
 | schwer/gelegentlich | 71.7 % | 68 s |
 
-Auf Schwer erscheinen sieben von zehn Wahlen vor der Zielzeit, auf Normal und Leicht gut jede siebte bis fünfte. Auf Normal sind das die Wahlen von Partien mit ungewöhnlich hohem EP-Ertrag; auf Schwer liegt der EP-Ertrag über dem Referenzniveau, weil die Gegnerwellen zahlreicher und stärker sind. Die Schwellen sind nach Vorgabe für alle Grade gleich; die Abweichung ist berichtet (REQ-P.02).
+Auf Schwer erscheinen sieben von zehn Wahlen vor der Zielzeit, auf Leicht 17 bis 25 %, auf Normal 11 bis 16 %. Auf Normal sind das die Wahlen von Partien mit ungewöhnlich hohem EP-Ertrag; auf Schwer liegt der EP-Ertrag über dem Referenzniveau, weil die Gegnerwellen zahlreicher und stärker sind. Die Schwellen sind nach Vorgabe für alle Grade gleich; die Abweichung ist berichtet (REQ-P.02).
 
 #### Zeitpunkte der Gebäude (Median, Anteil der Partien mit dem Gebäude)
 
@@ -150,7 +150,7 @@ Bonuskarten, die in unter 5 % der Angebote gewählt werden. Ausgangsdaten: Wahlr
 |---|---|---|---|
 | Serienbau | 0 % / 0 % / nie im Vergleich | Wirkung zu schwach: Fabrikkosten −15 / −30 % wirken nur auf künftige Fabriken, und die Karte erscheint nur bei freiem Bauplatz (Bedingung), also früh | Wirkung auf alle Gebäudekosten (`buildCost`) ausweiten, sonst im Modus `karten` aus dem Pool |
 | Bauleitung | 0 % / 0 % / nie im Vergleich | Wirkung zu schwach: baut nur Fabriken, die der Spieler ohnehin baut; erscheint nur bei freiem Bauplatz | im Modus `karten` aus dem Pool, oder baut alle freigeschalteten Gebäude |
-| Große Armee (legendär) | 6 % / 0 % / nie im Vergleich | selten angeboten (16 und 1 Mal in 150 Partien): legendär, am Versorgungsdeckel gefiltert; der Nachteil (Wellenabstand × 2) wiegt schwer | behalten, Seltenheit ist gewollt |
+| Große Armee (legendär) | 6 % / 0 % / nie im Vergleich | selten angeboten (16 Mal in 150 Partien, 1 Mal in 120): legendär, am Versorgungsdeckel gefiltert; der Nachteil (Wellenabstand × 2) wiegt schwer | behalten, Seltenheit ist gewollt |
 | Zeugmeister | 17 % / 0 % (21 Angebote) / 15 % | Bot-abhängig: Auto-Kauf von Turm-Upgrades ist für den Vorausschau-Bot ohne Gewinn in 45 s | behalten, im Spieltest prüfen |
 | Handelskontor | 13 % / 0 % (8 Angebote) / 11 % | Bedingung fehlt: der höhere Zinsdeckel wirkt erst, wenn der Deckel erreicht ist, und das Kontor steht selten früh (Handel-Pfadkarte ab Wahl 4) | Bedingung ergänzen: erst anbieten, wenn der Zinsdeckel erreicht ist |
 | Notreserve | 18 % / 4 % / 19 % | Einmalwirkung bei Tor unter 25 %; die Bots reparieren vorher | behalten (Versicherung), im Spieltest prüfen |
@@ -346,7 +346,11 @@ Wirkungsprüfung im Modus `karten`: Der Test aus 0.9.2 läuft jetzt in beiden Mo
 8. **Leicht und Normal unterscheiden sich kaum** (gleiche Faktoren und Schwellen; die Gegnerstärke trägt den Unterschied).
 
 ## Prüfstand
-BROWSERPRUEFUNG
+- `npm test`: 283 Tests grün (neu: `fahrplan`, `angebot`, erweiterte `kartenpfad`, `noeffect` in beiden Modi).
+- `tests/browser-check.mjs`: grün (Tutorial im Modus `karten` eingeschlossen). `tests/browser-k2.mjs` (Modus `karten`): 62 Prüfungen grün, darunter das Protokoll je Wahl mit Zielzeit und tatsächlicher Zeit. `tests/browser-k2-standard.mjs` (aus `main`, Modus `standard`): grün.
+- Angepasst wurden Annahmen der Tests, nicht Prüfungen: Die Schalter `entdecken` und `buehne` sind jetzt voreingestellt an (wie `main`), also setzen die Prüfungen des alten Standardmodus sie ausdrücklich auf 0; die zweite Wahl folgt nach dem Mindestabstand (der Test hebt ihn für diese Prüfung auf); die Prüfung „Kaserne bauen“ entfernt die Karte Bauleitung, die sonst Fabriken auf den gewählten Platz setzt (zufälliges Angebot, in 0.9.2 nur selten aufgefallen).
+- Bühne mit fünf Karten (Glücksritter plus Universität) geprüft bei 1280 und 1024 px Breite: alle Karten im Bild; bei 800 px nicht (Teil-2-Grenze der Bühne, nicht Teil dieser Anforderung).
+- Testbuild (privat, Protokoll fest an): öffnet ohne Konsolenfehler mit Startdialog.
 
 ## Offene Punkte für den PO
 - **Bestätigung der Abweichungen 1 bis 3** (Fälligkeit nach Fahrplan, Schwellen aus der Obergrenze, erste Schwelle 43 EP). Wörtliche Fassung nach Anforderung per Schalter möglich, verfehlt aber die Zeittreue (Abweichung 1).

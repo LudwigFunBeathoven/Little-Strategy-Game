@@ -277,7 +277,8 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   for (let k = 1; k <= 2; k++){
     await p.evaluate(() => { const G = __kf.G; G.S.t = Math.max(G.S.t, G.sollZeit(G.S.level + 1) - 0.02); });
     await p.waitForFunction(() => !!__kf.G.S.pendingDraft, null, { timeout: 4000 });
-    await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
+    await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 4000 });
+    await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked') && document.querySelectorAll('.kcard').length > 0, null, { timeout: 4000 });
     await p.evaluate(() => document.querySelectorAll('.kcard')[0].click());
     await p.waitForFunction(() => !__kf.G.S.pendingDraft, null, { timeout: 2000 });
     await settle(p, 300);
