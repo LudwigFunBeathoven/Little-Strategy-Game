@@ -205,8 +205,11 @@ function onLangChange(){ ctxKey = ''; draftKey = ''; chosenKey = ''; previewKey 
 /* ---------- Nachbarschaft (REQ-6.07 a): Texte für Regel, Vorschau und Raster ---------- */
 const nbFmt = (rule, v) => (v > 0 ? '+' : v < 0 ? '−' : '') + (rule.stat === 'supplyAdj' ? fmtNum(Math.abs(v)) : t('nb.pct', { v: pct(Math.abs(v)) }));
 const nbRuleText = rule => t(rule.nameKey, { v: nbFmt(rule, rule.per), max: fmtNum(rule.max) });
+/* K2.05: Bei Entdecken nennt die Vorschau keinen Partner, der noch gesperrt ist und nicht steht (z. B. „Kaserne neben Schmiede“ vor der Metallverarbeitung) */
+const nbKnown = type => !Disc.on() || G.has(type) || G.isBuildable(type);
 function nbPreviewText(i, type){
   const p = G.neighborPreview(i, type), parts = [];
+  if (p.gets && !nbKnown(p.gets.rule.with)) p.gets = null;
   if (p.gets) parts.push(p.gets.n > 0 ? t('nb.gets', { rule: nbRuleText(p.gets.rule), n: p.gets.n, total: nbFmt(p.gets.rule, p.gets.value) })
                                       : t('nb.getsNone', { rule: nbRuleText(p.gets.rule) }));
   for (const g of p.gives) parts.push(t('nb.gives', { name: t(`bld.${g.type}.name`), slot: g.slot + 1, delta: nbFmt(g.rule, g.delta) }));
