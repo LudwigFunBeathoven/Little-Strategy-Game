@@ -627,7 +627,7 @@ async function freshTutorialPage(lang = 'de', query = '&difficulty=easy', locale
   p.on('pageerror', e => errs.push(e.message));
   // Der Spielstand wird beim Verlassen der Seite geschrieben; „kfDropSave“ löscht ihn erst nach dem Neuladen (zweiter Start im selben Browser)
   await ctx.addInitScript(() => { if (!sessionStorage.getItem('kfInit')){ localStorage.clear(); sessionStorage.setItem('kfInit', '1'); }
-    if (sessionStorage.getItem('kfDropSave')){ localStorage.removeItem('klammerfront.save.v8'); sessionStorage.removeItem('kfDropSave'); } });
+    if (sessionStorage.getItem('kfDropSave')){ localStorage.removeItem('klammerfront.save.v9'); sessionStorage.removeItem('kfDropSave'); } });
   // query: null = nur ?dev=1 (Startbildschirm); „!…“ = Parameter unverändert; sonst wird ?lang= ergänzt
   const q = query === null ? '' : query.startsWith('!') ? query.slice(1) : (query.includes('lang=') ? '' : `&lang=${lang}`) + query;
   await p.goto(urlTutorial + q); await p.waitForTimeout(300);
@@ -1017,8 +1017,9 @@ for (const lang of ['de', 'en']){
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.G.S.material = 3000; __kf.selectPlot(1); }); await p.waitForTimeout(250);
   const srcName = id => p.evaluate(id => __kf.t(__kf.G.OPT[id].nameKey), id);
   const buildTxt = await p.evaluate(() => [...document.querySelectorAll('#ctxBuild .pick')].map(x => ({ type: x.dataset.tooltip.split(':')[1], dis: x.getAttribute('aria-disabled'), txt: x.textContent })));
-  const kas = buildTxt.find(x => x.type === 'kaserne'), fab = buildTxt.find(x => x.type === 'fabrik');
-  check(kas && kas.dis === 'true' && kas.txt.includes(await srcName('echtesMilitaer')) && fab && fab.dis !== 'true', `[${lang}] Karten: Kaserne gesperrt mit Quelle „${kas && kas.txt.slice(-40)}“, Fabrik frei`);
+  const kas = buildTxt.find(x => x.type === 'kaserne'), sch = buildTxt.find(x => x.type === 'schmiede'), fab = buildTxt.find(x => x.type === 'fabrik');
+  // Teil 4 (REQ-S.02 C4): Die Kaserne ist ab Start baubar; die Schmiede bleibt gesperrt und nennt Metallverarbeitung
+  check(kas && kas.dis !== 'true' && sch && sch.dis === 'true' && sch.txt.includes(await srcName('metallverarbeitung')) && fab && fab.dis !== 'true', `[${lang}] Karten: Kaserne baubar, Schmiede gesperrt mit Quelle „${sch && sch.txt.slice(-40)}“, Fabrik frei`);
   await p.evaluate(() => __kf.selectTab('army')); await p.waitForTimeout(150);
   const werfer = await p.evaluate(() => { const b = document.querySelector('[data-tooltip="unit:werfer"]'); return { vis: b && !b.hidden, dis: b && b.getAttribute('aria-disabled'), txt: b ? b.textContent : '', fresh: b ? !b.querySelector('i.new').hidden : null }; });
   check(werfer.vis && werfer.dis === 'true' && werfer.txt.includes(await srcName('echtesMilitaer')) && werfer.fresh === false, `[${lang}] Karten: Werfer sichtbar, gesperrt, nennt die Karte, ohne Marke „neu“`);
@@ -1042,7 +1043,8 @@ for (const lang of ['de', 'en']){
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
   const pickedId = await p.evaluate(() => { const d = __kf.G.S.pendingDraft; const i = d.options.findIndex(id => __kf.G.OPT[id].pfad); __kf.G.chooseDraft(i); return d.options[i]; });
   const opened = await p.evaluate(id => ({ card: id, kaserne: __kf.G.isBuildable('kaserne'), werfer: __kf.G.unitUnlocked('werfer'), mauer: !__kf.G.stageSource('mauer'), schmiede: __kf.G.isBuildable('schmiede') }), pickedId);
-  check((opened.card === 'echtesMilitaer' && opened.kaserne && opened.werfer && !opened.schmiede) || (opened.card === 'pfadFestungsbau' && opened.mauer && !opened.kaserne) || (!['echtesMilitaer', 'pfadFestungsbau'].includes(opened.card) && !opened.kaserne), `[${lang}] Karten: gewählte Pfadkarte schaltet genau ihre Inhalte frei ${JSON.stringify(opened)}`);
+  const okOpen = { echtesMilitaer: o => o.werfer && !o.schmiede && !o.mauer, pfadFestungsbau: o => o.mauer && !o.werfer && !o.schmiede, metallverarbeitung: o => o.schmiede && !o.werfer && !o.mauer };
+  check(opened.kaserne && (okOpen[opened.card] ? okOpen[opened.card](opened) : !opened.werfer && !opened.schmiede), `[${lang}] Karten: gewählte Pfadkarte schaltet genau ihre Inhalte frei (Kaserne ab Start) ${JSON.stringify(opened)}`);
   check(errs.length === 0, `[${lang}] Karten: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }

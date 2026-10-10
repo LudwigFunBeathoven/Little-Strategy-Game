@@ -7,7 +7,7 @@
 'use strict';
 function KF_BROWSER_BOT(G, profile, hooks){
   const C = KF_CONFIG, o = Object.assign({ cps: 1.5, every: 1, cap: 22, useWall: true }, profile), h = hooks || {};
-  const pickFirst = () => { if (h.draft) h.draft(G); const i = KF_BROWSER_BOT.pfadPick(G, G.S.pendingDraft.options, o.pfad); G.chooseDraft(i === null ? 0 : i); };
+  const pickFirst = () => { if (h.draft) h.draft(G); const i = KF_BROWSER_BOT.pfadPick(G, G.S.pendingDraft.options, o.pfad, o.linie); G.chooseDraft(i === null ? 0 : i); };
   const build = (slot, type) => { if (G.buildAt(slot, type) && h.built) h.built(type); };
   let clickAcc = 0, actAcc = 0, mix = 0;
   const PRIO = ['presse', 'ausbau', 'qualitaet', 'turm_0', 'turm_2', 'mauer'];
@@ -30,6 +30,7 @@ function KF_BROWSER_BOT(G, profile, hooks){
       const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
+    if (o.linie && G.pacing() === 'karten') KF_BROWSER_BOT.aufwerten(G, o.linie, h);       // Linien-Bot (Teil 4): Gebäude zu Varianten seiner Linie aufwerten
     if (!o.noUpgrades){
       for (const id of PRIO) if (C.UPGRADES[id] && (o.useWall || !/^(turm|mauer)/.test(id))) G.buy(id);
       const pr = KF_BROWSER_BOT.pfadResearch(G), r = pr ? G.RES[pr] : G.RESEARCH.find(x => G.researchBlock(x.id) === null);
@@ -70,10 +71,31 @@ KF_BROWSER_BOT.pfadResearch = function(G){
   if (G.pacing() !== 'karten') return null;
   return KF_BROWSER_BOT.PFAD_RESEARCH.find(id => G.RES[id] && G.researchBlock(id) === null) || null;
 };
-KF_BROWSER_BOT.pfadPick = function(G, offer, variant){
+KF_BROWSER_BOT.pfadPick = function(G, offer, variant, linie){
   if (G.pacing() !== 'karten') return null;
+  if (linie){                                                              // Linien-Bot (Teil 4, REQ-S.09): zuerst die Karte mit den meisten Zeichen der eigenen Linie
+    let bestI = null, score = 0;
+    offer.forEach((id, i) => { const s = G.cardSigns(id).filter(l => l === linie).length; if (s > score){ score = s; bestI = i; } });
+    if (bestI !== null) return bestI;
+  }
   const order = KF_BROWSER_BOT.PFAD_ORDER[variant || 'militaer'] || KF_BROWSER_BOT.PFAD_ORDER.militaer;
   let best = null, rank = Infinity;
   offer.forEach((id, i) => { const r = order.indexOf(id); if (r >= 0 && r < rank){ rank = r; best = i; } });
   return best;
+};
+
+/* Gebäude-Aufwertung (Teil 4, REQ-S.05): Der Linien-Bot wertet jedes Gebäude, für das seine Linie eine Variante hat, auf, sobald das Material mit Rücklage reicht.
+   Fabriken werden nur zur Manufaktur mehrfach aufgewertet (Ertrag je Gebäude); jede andere Variante wirkt einmal, ein zweites Gebäude brächte nichts. */
+KF_BROWSER_BOT.LINIEN_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Linien-Bots
+KF_BROWSER_BOT.aufwerten = function(G, linie, hooks){
+  const S = G.S;
+  for (let i = 0; i < S.slots.length; i++){
+    const sl = S.slots[i];
+    if (!sl || sl.variant || sl.upg) continue;
+    const v = G.variantsOf(sl.type).find(x => x.linie === linie);
+    if (!v) continue;
+    if (v.id !== 'manufaktur' && S.slots.some(x => x && (x.variant === v.id || (x.upg && x.upg.to === v.id)))) continue;
+    if (G.variantBlock(i, v.id) !== null || S.material < G.variantCost(v.id) * 1.5) continue;
+    if (G.upgradeBuilding(i, v.id) && hooks && hooks.variant) hooks.variant(v.id);
+  }
 };

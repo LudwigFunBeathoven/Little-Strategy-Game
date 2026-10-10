@@ -104,7 +104,18 @@ function drawRealm(){
     if (!sl) ctx.setLineDash([4, 4]);
     ctx.strokeRect(px + 0.5, py + 0.5, cell - 1, cell - 1);
     ctx.setLineDash([]);
-    if (sl) drawBuilding(sl.type, px + cell / 2, py + cell * 0.72, cell / 34);
+    if (sl){
+      if (sl.upg) ctx.globalAlpha = 0.45;                                                   // Aufwertung läuft: das Gebäude ruht (Teil 4, REQ-S.05)
+      drawBuilding(sl.type, px + cell / 2, py + cell * 0.72, cell / 34);
+      ctx.globalAlpha = 1;
+      if (sl.upg){ const f = Math.min(1, sl.upg.t / C.LINIEN.aufwertung.dauerS); ctx.fillStyle = COL['surface-2']; ctx.fillRect(px + 4, py + cell - 9, cell - 8, 5); ctx.fillStyle = COL.brass; ctx.fillRect(px + 4, py + cell - 9, (cell - 8) * f, 5); }
+      // Zeichen der Variante (Linienfarbe) erst, nachdem die erste Linienstufe erreicht wurde (REQ-S.04)
+      else if (sl.variant && G.VAR[sl.variant] && Disc.shows('hud:lines')){
+        const col = { militaer: COL.rust, wirtschaft: COL.brass, verteidigung: COL.steel }[G.VAR[sl.variant].linie], r = Math.max(4, cell * 0.09);
+        ctx.fillStyle = COL.bg; ctx.beginPath(); ctx.arc(px + cell - r - 3, py + r + 3, r + 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px + cell - r - 3, py + r + 3, r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
     else {
       ctx.fillStyle = COL['ink-faint'];
       const k = cell * 0.18, t2 = Math.max(2, cell * 0.04);

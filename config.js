@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.2-kartenpfad-3',
-  SAVE_KEY: 'klammerfront.save.v8',          // Branch: eigene, höhere Spielstand-Version als main (7)
+  VERSION: '0.9.2-kartenpfad-4',
+  SAVE_KEY: 'klammerfront.save.v9',          // Branch: eigene, höhere Spielstand-Version als main (7); 9 mit Teil 4 (Strategielinien, Gebäude-Varianten): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -54,6 +54,34 @@ const KF_CONFIG = {
        −40/−36/−40/−7 s (Wahl 1–4), danach 0 (vorher −40/−65/−84/−52/−17). Faktor 1,6 ließ Wahl 3 bei −62 s, Faktor 1,8 bei −50 s (Bericht kartenpfad-4). */
     schwellenGrad: { schwer: [43, 374, 410, 380, 500, 620, 890, 920, 1080, 1070, 1000] },
   },
+  /* Teil 4 (REQ-S.04, S.05): Strategielinien (Militär, Wirtschaft, Verteidigung) und Gebäude-Aufwertung, nur im Modus karten.
+     Jede Karte und jede Gebäude-Variante trägt null, ein oder zwei Zeichen (data/linien.js); es zählen gewählte Karten und stehende, fertige Varianten (je Variantentyp einmal).
+     Stufe n einer Linie gilt ab zeichenStufen[n − 1] Zeichen; die Boni der Stufen 1 bis n wirken zusammen. maxStufe 2: eine dritte Stufe (6 Zeichen) nur, wenn die Simulation
+     zeigt, dass Stufe 2 in der Mehrzahl der Partien vor Minute 8 erreicht wird. Eine Wirkung steht wie bei den Karten als { stat, mul | add }; neue Größen:
+       unitDmg (Schaden eigener Einheiten ×), extraUnit (zusätzliche Einheiten je eigener Welle, braucht die Kaserne), kontorYield (Zinsen des Kontors ×),
+       upgradeCost (Kosten der Ausbauten ×), variantCost (Kosten der Gebäude-Aufwertung ×), towerKillMaterial (Material je EP-Wert eines Turm-Abschusses),
+       counterWave (nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus), counterBoost (Stärkezuschlag dieser Welle). */
+  LINIEN: {
+    zeichenStufen: [2, 4, 6],
+    maxStufe: 2,
+    stufen: {
+      militaer:     [[{ stat: 'unitDmg', mul: 1.1 }],
+                     [{ stat: 'extraUnit', add: 1 }, { stat: 'unitHp', mul: 1.1 }],
+                     []],
+      wirtschaft:   [[{ stat: 'materialYield', mul: 1.1 }],
+                     [{ stat: 'kontorYield', mul: 1.5 }, { stat: 'upgradeCost', mul: 0.8 }, { stat: 'variantCost', mul: 0.8 }],
+                     []],
+      verteidigung: [[{ stat: 'turretDmg', mul: 1.2 }, { stat: 'wallHp', mul: 1.15 }],
+                     [{ stat: 'towerKillMaterial', add: 1.5 }, { stat: 'counterWave', add: 1 }],
+                     []],
+    },
+    /* Gebäude-Aufwertung: Kosten = kostenFaktor × Baukosten des Grundgebäudes (Fabrik: FACTORY_BASE_COST), Dauer in Sekunden Spielzeit (das Gebäude wirkt währenddessen nicht),
+       sichtbar ab Minute abMinute, sobald ein Gebäude des Typs steht */
+    aufwertung: { kostenFaktor: 2, dauerS: 10, abMinute: 3 },
+  },
+  /* Teil 4 (REQ-S.08): Testschalter ?druck=hoch (Standard aus). Verstärkt die regulären Gegnerwellen ab Minute abMinute um faktor (Zahl der Einheiten); die Druckkurve selbst
+     bleibt unverändert, bis der Spieltest Daten liefert (Entscheidung B4). Die Belagerungswelle bleibt unberührt. */
+  DRUCK: { hoch: { abMinute: 4, faktor: 1.3 } },
   LANGUAGES: ['de', 'en'],
   FALLBACK_LANG: 'en',
 

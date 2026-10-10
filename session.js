@@ -26,13 +26,13 @@ const Session = (() => {
     if (k) unitLog = unitLog.slice(k);
     if (lastPos.size > 4 * S.units.length + 50){ const ids = new Set(S.units.map(u => u.id)); for (const id of lastPos.keys()) if (!ids.has(id)) lastPos.delete(id); }
   }
-  const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption'];
+  const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption', 'upgradeBuilding'];
   function reset(){
     const S = G.S;
-    P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, stage: Stage.on(), startedAt: new Date().toISOString(),
+    P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
-          switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit }, visible: [], discovered: {},
-          actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
+          switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit, pressure: S.druck || 'aus' }, visible: [], discovered: {},
+          lines: {}, variants: [], wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
     visibleAt = new Map(); discoveredAt = new Map();
     lastSample = S.t; lastPhase = G.phase(); draftActs = { rerolled: 0, banned: 0 }; doneSeen = 0; unlockSeen = new Set();
   }
@@ -50,6 +50,15 @@ const Session = (() => {
     // abgeschlossene Forschungen mit Zeitpunkt (Kartenpfad, REQ-KP.09)
     const done = S.stats.researchDone || [];
     while (doneSeen < done.length){ P.researchDone.push({ t: done[doneSeen].t, id: done[doneSeen].id, tier: done[doneSeen].tier }); doneSeen++; }
+    // Teil 4: Strategielinien (Zeichen, Stufe, Zeitpunkt der Stufen), Gebäude-Varianten, verlorene Lebenspunkte der Mauer
+    if (S.pacing === 'karten'){
+      const ls = G.lineState();
+      for (const l in ls){ const x = P.lines[l] || (P.lines[l] = { signs: 0, stage: 0, t1: null, t2: null, t3: null }); x.signs = ls[l].signs; x.stage = ls[l].stage; for (let k = 1; k <= 3; k++) if (x['t' + k] === null && ls[l].stage >= k) x['t' + k] = +S.t.toFixed(1); }
+      P.variants = (S.stats.variants || []).slice();
+      const hp = S.sections.map(s => s.hp);
+      if (P.wallPrev) hp.forEach((v, i) => { if (v < P.wallPrev[i]) P.wallHpLost += P.wallPrev[i] - v; });
+      P.wallPrev = hp;
+    }
     P.durationS = +S.t.toFixed(1); P.result = S.status; P.kills = S.kills; P.losses = S.losses; P.diff = S.diff; P.lang = lang;
   }
   function wrap(){

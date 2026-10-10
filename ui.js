@@ -22,6 +22,8 @@ const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
   if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z;
   if (['keine', 'naechste'].includes(v)) C.ENTDECKEN.vorschau = v; }
 const PACING_PARAM = ['standard', 'karten'].includes(URL_PARAMS.get('pacing')) ? URL_PARAMS.get('pacing') : null;
+/* ?druck=hoch (Teil 4, REQ-S.08): Testschalter, verstärkt die regulären Gegnerwellen ab Minute 4; sonst aus */
+const DRUCK_PARAM = URL_PARAMS.get('druck') === 'hoch' ? 'hoch' : null;
 
 /* ================= Sprache ================= */
 function storageGet(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -242,6 +244,12 @@ function tipContent(id){
       const nbText = nbPreviewText(Number(b), a);
       return { title: t(`bld.${a}.name`), body: t('tip.pick.body', { desc: t(`bld.${a}.desc`), n: Number(b) + 1 }) + (nbText ? ' ' + nbText : ''),
                rows: [[t('tip.cost'), costText('material', cost)]], reason: buildReason(block, cost, a) };
+    }
+    case 'variant': {
+      const i = Number(a), v = G.VAR[b];
+      const rows = [[t('tip.cost'), costText('material', G.variantCost(b))], [t('tip.variant.dur'), `${C.LINIEN.aufwertung.dauerS} s`]];
+      if (Disc.shows('hud:lines')) rows.push([t('tip.variant.line'), t(`line.${v.linie}.name`)]);
+      return { title: t(v.nameKey), body: t(v.descKey, variantParams(v)) + ' ' + t('variant.once'), rows, reason: variantReason(G.variantBlock(i, b), b) };
     }
     case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
     case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: refundText(G.refundFor(Number(a))) }) };
@@ -479,7 +487,7 @@ function renderHint(){
   setHidden(box, !id);
   if (!id){ clearTimeout(hintTimer); hintShown = null; return; }
   setText($('hintTitle'), t('hint.title'));
-  setText($('hintText'), id.startsWith('disc:') ? Disc.hintText(id) : t('hint.' + id, { x: C.SIEGE_STRENGTH, cap: G.supplyCap() }));
+  setText($('hintText'), id.startsWith('disc:') ? Disc.hintText(id) : t('hint.' + id, Object.assign({ x: C.SIEGE_STRENGTH, cap: G.supplyCap() }, id.startsWith('linie_') ? lineParams(id.slice(6), 1) : {})));
   setText($('hintOk').querySelector('.btn-label'), t('hint.ok'));
   setText($('hintOk').querySelector('.expl'), t('ex.hintOk'));
   if (hintShown !== id){ hintShown = id; clearTimeout(hintTimer); hintTimer = setTimeout(dismissHint, C.UI.hintAutoMs); }
@@ -597,7 +605,7 @@ function startGame(diff, opts = {}){
   storageSet(C.DIFFICULTY_KEY, diff);
   TutUI.reset(); NewMarks.reset(); Disc.reset();
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
-    { pacing: PACING_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
+    { pacing: PACING_PARAM || undefined, druck: DRUCK_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
   if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
   resultShownFor = null;
   save();

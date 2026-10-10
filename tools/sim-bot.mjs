@@ -33,8 +33,8 @@ function baseHealth(G){
 function botRng(seed){ let s = (seed ^ 0x9e3779b9) >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 /* Bots spielen wie ein neuer Spieler mit gestaffelter Einführung (REQ-47); KF_SKIP_INTRO=1 schaltet sie ab */
-export function newGame(diff, seed, pacing){
-  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { intro: process.env.KF_SKIP_INTRO !== '1', pacing });
+export function newGame(diff, seed, pacing, druck){
+  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { intro: process.env.KF_SKIP_INTRO !== '1', pacing, druck });
   return G;
 }
 function forkGame(G){
@@ -283,11 +283,12 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan }){
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, linie, druck }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
-  const G = newGame(diff, seed, pacing);
+  if (linie){ prof.linie = linie; prof.pfad = prof.pfad && pfad ? prof.pfad : KF_BROWSER_BOT.LINIEN_PFAD[linie]; }       // Linien-Bot (Teil 4, REQ-S.09): bevorzugt Karten und Varianten seiner Linie
+  const G = newGame(diff, seed, pacing, druck);
   if (noRush) G.rushWave = () => false;                                   // Paarvergleich: ohne „Welle vorziehen“ (REQ-6.07 c)
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {}, scan: [] };
   // Handlungen in den ersten SIM_STYLE_WINDOW_S Sekunden: Anteil der Einheitenkäufe (Merkmal der Strategie für compare-human)
@@ -307,7 +308,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
       const offer = F.S.pendingDraft.options;
       if (bonusScan) scanBonus(F, stats, prof, bonusScan);
       for (const id of offer) stats.offered[id] = (stats.offered[id] || 0) + 1;
-      const pi = KF_BROWSER_BOT.pfadPick(F, offer, prof.pfad), ci = pi === null ? 0 : pi;
+      const pi = KF_BROWSER_BOT.pfadPick(F, offer, prof.pfad, prof.linie), ci = pi === null ? 0 : pi;
       stats.picked[offer[ci]] = (stats.picked[offer[ci]] || 0) + 1;
       stats.draftTimes.push({ t: F.S.t, level: F.S.pendingDraft.level });
       offer.forEach((oid, i) => stats.offers.push({ id: oid, tier: F.cardTaken(oid) + 1, chosen: i === ci }));
@@ -323,6 +324,8 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
   const dirs = directionTracker({ lateralOf: G.lateralOf });
   const xpAt = sampleXp ? sampleXp.map(() => null) : null;                  // Referenzlauf (REQ-P.02): EP-Stand zu festen Zeitpunkten
   let wallFall = null, sx = 0;
+  const lineT = {};                                                          // Teil 4: Zeitpunkt, zu dem eine Linie Stufe 1 bzw. 2 erreicht
+  for (const l of ['militaer', 'wirtschaft', 'verteidigung']) lineT[l] = [null, null, null];
   // Teil 4 (REQ-S.09): Belegung des Rasters zu festen Zeitpunkten und Lebenspunkte, die die Mauer insgesamt verliert (Abnahme je Schritt, Reparatur zählt nicht)
   const GRID_AT = [120, 300, 600], grid = {}, wallPrev = G.S.sections.map(x => x.hp);
   let wallLost = 0, gi = 0;
@@ -339,10 +342,13 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     if (xpAt) while (sx < sampleXp.length && G.S.t >= sampleXp[sx]) xpAt[sx++] = G.S.xpTotal;
     if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
     G.S.sections.forEach((x, k) => { if (x.hp < wallPrev[k]) wallLost += wallPrev[k] - x.hp; wallPrev[k] = x.hp; });
+    if (G.S.pacing === 'karten'){ const ls = G.lines(); for (const l in lineT) for (let st = 1; st <= 2; st++) if (lineT[l][st] === null && ls[l] && ls[l].stage >= st) lineT[l][st] = Math.round(G.S.t); }
     while (gi < GRID_AT.length && G.S.t >= GRID_AT[gi]){
       const types = G.S.slots.filter(Boolean).map(x => x.type), n = {};
       for (const ty of types) n[ty] = (n[ty] || 0) + 1;
-      grid[GRID_AT[gi++]] = { total: types.length, types: n };
+      const vars = {};
+      for (const x of G.S.slots) if (x && x.variant) vars[x.variant] = (vars[x.variant] || 0) + 1;
+      grid[GRID_AT[gi++]] = { total: types.length, types: n, variants: vars };
     }
   }
   const S = G.S;
@@ -360,6 +366,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
-    grid, wallLost: Math.round(wallLost), xpAt, wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
+    grid, wallLost: Math.round(wallLost), lineT, signs: Object.fromEntries(Object.entries(G.lineState()).map(([l, v]) => [l, v.signs])), variants: S.stats.variants || [],
+    towerKills: S.stats.towerKills || 0, towerMaterial: Math.round(S.stats.towerMaterial || 0), counterWaves: S.stats.counterWaves || 0, wavesRepelled: S.stats.wavesRepelled || 0, xpAt, wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
 }

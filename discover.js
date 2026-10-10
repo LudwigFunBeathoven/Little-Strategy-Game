@@ -28,6 +28,7 @@ const Disc = (() => {
     'hud:army':    { when: S => S.ownWaveNo >= 1 },
     'hud:interest': { when: () => G.has('kontor') },
     'hud:neighbor': { when: S => S.slots.filter(Boolean).length >= 2 },
+    'hud:lines':   { when: () => Object.values(G.lineState()).some(l => l.stage >= 1) },        // Teil 4 (REQ-S.04): eine Linie erscheint erst mit ihrer Stufe 1; Zeichen an Karten und Varianten erst danach
   };
   let latch = new Map(), latchFor = null;
   function shows(key){

@@ -15,6 +15,18 @@ function xpRate(){
 }
 
 const hudEl = {};
+/* Linien (Teil 4, REQ-S.04): Werte der Wirkungen einer Stufe für die Texte e1, e2 … (Prozent, Zahl oder Faktor wie bei den Karten) */
+function lineParams(l, stage){
+  const p = {};
+  (C.LINIEN.stufen[l][stage - 1] || []).forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); });
+  return p;
+}
+const lineEffect = (l, stage) => t(`line.eff.${l}.${stage}`, lineParams(l, stage));
+/* Zeichen bis zur nächsten Stufe: { n, need } oder null auf der Höchststufe */
+function lineNext(st){
+  const th = C.LINIEN.zeichenStufen, top = Math.min(C.LINIEN.maxStufe, th.length);
+  return st.stage >= top ? null : { n: st.signs, need: th[st.stage] };
+}
 /* Schwebende Zahlen (REQ-5.10): Material- und EP-Gewinn der letzten Sekunde, höchstens eine je Quelle und Sekunde */
 const floatLast = { t: null, mat: 0, xp: 0 };
 function floatGain(){
@@ -44,6 +56,12 @@ function buildHud(){
   for (const id of ['hudSoldiers', 'material', 'rate', 'xpVal', 'xpRate', 'barLvl', 'lvlProg', 'waveIn', 'enemyWaveIn', 'siegeInfo',
                     'hudWaves', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn', 'tutSkipBtn'])
     hudEl[id] = $(id);
+  hudEl.lineItem = $('hudLines'); hudEl.lineChips = {};
+  for (const l of KF_LINIEN.linien){                                                 // je Linie ein Anzeigefeld, nur mit Stufe 1 sichtbar
+    const c = document.createElement('span'); c.className = 'lc'; c.dataset.line = l; c.hidden = true;
+    const b = document.createElement('b'), i = document.createElement('i'); c.append(b, i);
+    $('lineRow').appendChild(c); hudEl.lineChips[l] = { c, b, i };
+  }
   hudEl.soldItem = hudEl.hudSoldiers.closest('.hud-item'); hudEl.xpItem = hudEl.xpVal.closest('.hud-item'); hudEl.armyItem = hudEl.armyState.closest('.hud-item');
   for (let i = 0; i < C.LANE_COUNT; i++){ hudEl['hpP' + i] = $('hpP' + i); hudEl['barP' + i] = $('barP' + i); }
   hudEl.draftBtn.addEventListener('click', () => { if (Stage.on()) Stage.reopen(); else selectTab('cards', true); });
@@ -65,11 +83,32 @@ function hudTip(item){
     case 'walls': return { title: t('hud.walls'), body: t('tip.hud.walls') };
     case 'army': return { title: t('hud.army'), body: t('tip.hud.army') };
     case 'time': return { title: t('hdr.clock'), body: t('tip.hud.time') };
+    case 'lines': {
+      const rows = [], st = G.lineState(), th = C.LINIEN.zeichenStufen;
+      for (const l of KF_LINIEN.linien){
+        if (st[l].stage < 1) continue;
+        const nx = lineNext(st[l]);
+        rows.push([`${t(`line.${l}.name`)} ${st[l].stage}`, nx ? t('line.hud.next', nx) : t('line.hud.max')]);
+        for (let k = 1; k <= st[l].stage; k++) rows.push([t('tip.line.stage', { stage: k }), lineEffect(l, k)]);
+      }
+      return { title: t('hud.lines'), body: t('tip.hud.lines', { a: th[0], b: th[1] }), rows };
+    }
   }
   return { title: item };
 }
 function renderHud(){
   const S = G.S, running = S.status === 'running', E = hudEl;
+  // Strategielinien (Teil 4): erst mit Stufe 1 einer Linie sichtbar; je aktive Linie Name, Stufe und Zeichen bis zur nächsten Stufe
+  const lst = G.lineState(), showLines = S.pacing === 'karten' && Disc.shows('hud:lines');
+  setHidden(E.lineItem, !showLines);
+  if (showLines) for (const l of KF_LINIEN.linien){
+    const ch = E.lineChips[l], st = lst[l], nx = lineNext(st);
+    setHidden(ch.c, st.stage < 1);
+    if (st.stage < 1) continue;
+    setText(ch.b, t('line.hud.stage', { name: t(`line.${l}.name`), stage: st.stage }));
+    setText(ch.i, nx ? t('line.hud.next', nx) : t('line.hud.max'));
+  }
+  for (const l of KF_LINIEN.linien) if (lst[l].stage >= 1 && S.pacing === 'karten') showHint('linie_' + l);       // Hinweis „Linie Stufe 1“ einmal je Linie
   setHidden(E.soldItem, !Disc.shows('hud:supply')); setHidden(E.xpItem, !Disc.shows('hud:xp')); setHidden(E.armyItem, !Disc.shows('hud:army'));       // REQ-K2.04
   setText(E.hudSoldiers, `${fmt(G.ownOnField())}/${fmt(G.supplyCap())}`);
   setText(E.material, fmt(S.material));

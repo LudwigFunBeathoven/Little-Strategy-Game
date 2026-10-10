@@ -216,6 +216,30 @@ function nbPreviewText(i, type){
   return parts.join(' · ');
 }
 
+/* ---------- Gebäude-Aufwertung (Teil 4, REQ-S.05): Namen, Werte, Aktionen am Gebäude ---------- */
+const variantParams = v => { const p = {}; v.effect.forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); }); return p; };
+/* Anzeigename eines Platzes: Variante, sonst Grundgebäude */
+const slotName = sl => sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(`bld.${sl.type}.name`);
+const variantTarget = sl => sl.upg && G.VAR[sl.upg.to] ? G.VAR[sl.upg.to] : null;
+let vpicks = [];
+function variantReason(block, vid){
+  switch (block){
+    case 'notRunning': return t('tip.notRunning');
+    case 'upgrading': return t('variant.reason.upgrading');
+    case 'done': return t('variant.reason.done');
+    case 'material': return missing('material', G.variantCost(vid), G.S.material);
+  }
+  return null;
+}
+function updateVariantPicks(){
+  for (const p of vpicks){
+    const block = G.variantBlock(p.i, p.vid), v = G.VAR[p.vid], why = variantReason(block, p.vid);
+    setText(p.ex, t('ex.variant', { effect: t(`var.${p.vid}.eff`, variantParams(v)), cost: costText('material', G.variantCost(p.vid)), s: C.LINIEN.aufwertung.dauerS }));
+    setText(p.w, why || ''); setHidden(p.w, !why);
+    setDis(p.b, !!block);
+  }
+}
+
 /* ---------- Kontextkopf: ausgewähltes Objekt mit seinen Aktionen ---------- */
 function updatePicks(){
   for (const p of picks){
@@ -243,20 +267,40 @@ function renderContext(){
     setText($('ctxTitle'), t('slot.label', { n: sel.i + 1 }));
     setText($('ctxText'), t('slot.dialogText'));
   } else if (sl){
-    setText($('ctxTitle'), t('ctx.building', { name: t(`bld.${sl.type}.name`), n: sel.i + 1 }));
-    setText($('ctxText'), `${t(`bld.${sl.type}.desc`)} ${bldEffect(sl.type, true)}.`);
+    const vt = variantTarget(sl), vd = sl.variant && G.VAR[sl.variant];
+    setText($('ctxTitle'), t('ctx.building', { name: slotName(sl), n: sel.i + 1 }));
+    setText($('ctxText'), vt ? t('variant.progress', { name: t(vt.nameKey), s: Math.max(0, Math.ceil(C.LINIEN.aufwertung.dauerS - sl.upg.t)) })
+      : `${t(`bld.${sl.type}.desc`)} ${bldEffect(sl.type, true)}.` + (vd ? ' ' + t(vd.descKey, variantParams(vd)) : ''));
   } else if (sec !== null){
     setText($('ctxTitle'), t('repair.' + sec));
     setText($('ctxText'), t(sec === C.GATE_LANE ? 'tip.repair.gate' : 'tip.repair.wall'));
     updateOpt(ctxRepairOpt, 'repair', sec);
   }
   // Knöpfe nur bei geänderter Auswahl oder Optionsmenge neu bauen, nie wegen Material oder Zeit (REQ-5.01)
-  const key = [lang, show, JSON.stringify(sel), JSON.stringify(S.slots), demolishArmed, S.status, JSON.stringify(S.unlocked),
-               C.BUILDINGS.map(b => plot && !sl ? ['hidden', 'standing'].includes(G.buildBlock(sel.i, b)) : 0).join()].join('|');
-  if (key === ctxKey){ updatePicks(); return; }
+  const key = [lang, show, JSON.stringify(sel), JSON.stringify(S.slots.map(x => x && [x.type, x.paid, x.variant || 0, x.upg ? x.upg.to : 0])), demolishArmed, S.status, JSON.stringify(S.unlocked),
+               C.BUILDINGS.map(b => plot && !sl ? ['hidden', 'standing'].includes(G.buildBlock(sel.i, b)) : 0).join(), sl ? G.variantVisible(sl.type) : 0].join('|');
+  if (key === ctxKey){ updatePicks(); updateVariantPicks(); return; }
   ctxKey = key;
-  const build = $('ctxBuild'), dem = $('ctxDemolish');
-  build.innerHTML = ''; dem.innerHTML = ''; picks = [];
+  const build = $('ctxBuild'), dem = $('ctxDemolish'), vbox = $('ctxVariants');
+  build.innerHTML = ''; dem.innerHTML = ''; vbox.innerHTML = ''; picks = []; vpicks = [];
+  // Aufwertung zu einer Variante: Aktion am Gebäude, sobald sie sichtbar ist (REQ-S.05); ein fertiges oder laufendes Gebäude bietet sie nicht mehr an
+  if (sl && !sl.variant && !sl.upg && G.variantVisible(sl.type)){
+    for (const v of G.variantsOf(sl.type)){
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `variant:${sel.i}:${v.id}`;
+      const nm = document.createElement('b'); nm.textContent = t('variant.pick', { name: t(v.nameKey) });
+      const c = document.createElement('span'); c.className = 'c'; c.textContent = costText('material', G.variantCost(v.id));
+      const d = document.createElement('span'); d.className = 'd'; d.textContent = t(v.descKey, variantParams(v));
+      const ex = document.createElement('span'); ex.className = 'expl';
+      const w = document.createElement('span'); w.className = 'w';
+      b.append(nm, c, d, ex, w);
+      const i = sel.i;
+      b.addEventListener('click', () => { if (!isDis(b) && G.upgradeBuilding(i, v.id)){ ctxKey = ''; requestRender(); } });
+      vbox.appendChild(b);
+      vpicks.push({ i, vid: v.id, b, ex, w });
+    }
+    updateVariantPicks();
+  }
   if (plot && !sl){
     const i = sel.i;
     for (const type of C.BUILDINGS){
@@ -344,7 +388,7 @@ function renderOpts(){
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const cardName = (o, tier) => G.tiersOf(o).length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
 /* Werte für die Kartentexte: Faktoren als Prozent, außer echte Vielfache; Anteile als Prozent */
-const FACTOR_STATS = ['supplyMult', 'ownWaveInterval'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus'];      // Anteile werden in Prozent gezeigt
+const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus', 'variantYield'];      // Anteile werden in Prozent gezeigt
 /* Anzeigewert einer Wirkung (Karten und Forschungen gleich): Faktor, Prozent, Anteil in Prozentpunkten oder Zahl */
 const effectValue = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
   : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : e.add % 1 ? fmt2(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
@@ -360,8 +404,15 @@ function optParams(o, tier){
 }
 const fmtNum = n => n % 1 ? fmt1(n) : fmt(n);
 /* Zeilen für Kartentooltips: Kategorie, Seltenheit, aktuelle Synergie */
+/* Zeichen einer Karte als Text („◆◆ Militär“); leer ohne Zeichen oder solange keine Linie Stufe 1 erreicht hat (Teil 4, REQ-S.04) */
+function signLabel(id){
+  const s = G.cardSigns(id);
+  if (!s.length || G.S.pacing !== 'karten' || !Disc.shows('hud:lines')) return '';
+  return '\u25C6'.repeat(s.length) + ' ' + t(`line.${s[0]}.name`);
+}
 function cardRows(o, extra){
   const rows = [[t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.rarity'), t('draft.rarity.' + o.rarity)], ...extra];
+  if (signLabel(o.id)) rows.push([t('tip.variant.line'), signLabel(o.id)]);
   if (o.synergy){
     const n = G.categoryCount(o.category) + (G.cardTaken(o.id) ? 0 : 1);
     rows.push([t('tip.draft.synergy'), '+' + pct(o.synergy.perCard * n) + ' %']);
@@ -641,10 +692,12 @@ function renderPanels(){
     for (const col of document.querySelectorAll('#panel-wall > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));
     setHidden($('armyKaserne'), !Disc.shows('army:kaserne'));
   }
+  // Gebäude-Aufwertung (Teil 4): Erstkontakt-Hinweis, sobald die Aktion am Gebäude erscheint
+  if (['fabrik', 'kaserne', 'schmiede'].some(b => G.variantVisible(b))) showHint('variante');
   // Kaserne im Reiter Armee (REQ-6.05)
-  const kas = G.has('kaserne');
-  setText($('kaserneStatus'), kas ? t('kaserne.status.built', { n: G.kaserneLevel(), m: G.supplyCap() }) : t('kaserne.status.none'));
-  setHidden(kaserneBuildBtn, kas);
+  const kas = G.has('kaserne'), kasStands = S.slots.some(sl => sl && sl.type === 'kaserne');       // steht, wirkt aber nicht, solange sie aufgewertet wird (Teil 4)
+  setText($('kaserneStatus'), kas ? t('kaserne.status.built', { n: G.kaserneLevel(), m: G.supplyCap() }) : kasStands ? t('kaserne.status.upgrading') : t('kaserne.status.none'));
+  setHidden(kaserneBuildBtn, kas || kasStands);
   setText(kaserneBuildBtn.querySelector('.btn-label'), t('kaserne.build'));
   setText(kaserneBuildBtn.querySelector('.expl'), t('ex.kaserne.build', { cost: costText('material', G.buildCost('kaserne')) }));
   setDis(kaserneBuildBtn, !running);
@@ -667,7 +720,7 @@ function renderPanels(){
     setText(g.label, t('grid.cell', { n: i + 1 }));
     // Raster: Gebäude mit ihrem aktuellen Nachbarschaftsbonus (REQ-6.07 a)
     const nbv = sl ? G.neighborValue(i, sl.type) : 0, rule = sl ? G.NEIGHBORS.find(r => r.building === sl.type) : null;
-    setText(g.expl, sl ? t(`bld.${sl.type}.name`) + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') : t('grid.free'));
+    setText(g.expl, sl ? slotName(sl) + (sl.upg ? ' · ' + t('variant.cell', { s: Math.max(0, Math.ceil(C.LINIEN.aufwertung.dauerS - sl.upg.t)) }) : '') + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') : t('grid.free'));
     g.btn.classList.toggle('built', !!sl);
     g.btn.setAttribute('aria-selected', String(!!sel && sel.kind === 'plot' && sel.i === i));
   }

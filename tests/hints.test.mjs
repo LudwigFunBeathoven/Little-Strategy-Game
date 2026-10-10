@@ -27,8 +27,8 @@ test('Jeder Hinweis erscheint pro Browser nur einmal; nach dem Zurücksetzen wie
   for (const id of H.IDS) assert.equal(c.trigger(id), true, `${id} nach dem Zurücksetzen wieder`);
 });
 
-test('Betroffene Systeme: Gebäude, Forschung, Abriss, Belagerung, Mauer, Türme, Schmiede, Kontor, Nachbarschaft (Start und erste Welle erklärt das Tutorial)', () => {
-  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'demolish', 'kontor', 'neighbors', 'research', 'siege', 'smithy', 'tower', 'wall']);
+test('Betroffene Systeme: Gebäude, Forschung, Abriss, Belagerung, Mauer, Türme, Schmiede, Kontor, Nachbarschaft, Gebäude-Aufwertung, Linien (Start und erste Welle erklärt das Tutorial)', () => {
+  assert.deepEqual(Array.from(loadHints().IDS).sort(), ['buildings', 'demolish', 'kontor', 'linie_militaer', 'linie_verteidigung', 'linie_wirtschaft', 'neighbors', 'research', 'siege', 'smithy', 'tower', 'variante', 'wall']);
 });
 
 test('Nicht verfügbarer oder kaputter Speicher bricht nichts', () => {

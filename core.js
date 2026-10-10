@@ -12,6 +12,10 @@ const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [
 const PFAD = (typeof KF_PFAD !== 'undefined') ? KF_PFAD : null;
 const PFAD_OPTIONS = PFAD ? PFAD.karten.map(k => ({ id: k.id, category: k.familie, family: k.familie, rarity: k.rarity || 'common', nameKey: k.nameKey, descKey: k.descKey, tiers: k.tiers, pfad: k })) : [];
 const ALL_OPTIONS = [...OPTIONS, ...PFAD_OPTIONS];
+/* Strategielinien und Gebäude-Varianten (Teil 4, REQ-S.04, S.05): Zeichen und Varianten aus data/linien.js, nur im Modus karten */
+const LINIEN = (typeof KF_LINIEN !== 'undefined') ? KF_LINIEN : null;
+const VARIANTS = LINIEN ? LINIEN.varianten : [];
+const VAR = Object.fromEntries(VARIANTS.map(v => [v.id, v]));
 const OPT = Object.fromEntries(ALL_OPTIONS.map(o => [o.id, o]));
 const PACING_DERIVED = (() => {
   if (!PFAD) return null;
@@ -43,7 +47,7 @@ const adjacent = i => { const g = C.GRID_SIZE, r = Math.floor(i / g), c = i % g,
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 8;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+const SAVE_VERSION = 9;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 /* Werfer und seine Ersatzeinheiten teilen die Werfer-Karten (Lange Wurfarme …) */
 const isThrower = type => (C.UNITS[type].base || type) === 'werfer';
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
@@ -77,12 +81,13 @@ function freshState(diff, seed){
     v: SAVE_VERSION, diff: diff || C.DEFAULT_DIFFICULTY, status: diff ? 'running' : 'setup', t: 0,
     rng: (seed >>> 0) || 1,
     material: 0, materialTotal: 0, xp: 0, xpTotal: 0,
-    lvl, slots: new Array(SLOTS).fill(null), unlocked: {}, revealed: {}, kontorT: 0, intro: false,
+    lvl, slots: new Array(SLOTS).fill(null), slotVer: 0, unlocked: {}, revealed: {}, kontorT: 0, intro: false,
     sections: C.SECTION_HP.map(hp => ({ hp, lastHit: -1e9, repairCd: 0 })), enemyBaseHp: d.enemyBaseHp,
     nextWave: C.WAVE_INTERVAL_S, waveNo: 0, nextOwnWave: C.WAVE_INTERVAL_S, ownWaveNo: 0, lastOrder: null, nextEnemy: [], nextEnemySiege: false, forms: [],
     // Belagerungswelle: die erste reguläre Welle ab Minute SIEGE_MINUTE (REQ-19.2)
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
+    druck: null,                      // Testschalter ?druck=hoch (Teil 4, REQ-S.08): null | 'hoch'; verstärkt die regulären Gegnerwellen ab C.DRUCK.hoch.abMinute
     pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, wait: {}, seen: {}, free: 0, lastPickT: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
@@ -112,11 +117,15 @@ function create(){
   let foesPresent = false;                       // für enemyWaveDefeated; nicht im Spielstand
 
   /* ---------- Draft-Modifikatoren (zwischengespeichert, bis sich die Wahl ändert) ---------- */
-  let modCache = { ver: -1, key: null, mul: {}, add: {} };
+  let modCache = { ver: -1, key: null, mul: {}, add: {}, lines: null };
   function mods(){
-    const key = S.draft, ver = S.draft.ver + ':' + S.research.ver;
+    const key = S.draft, ver = S.draft.ver + ':' + S.research.ver + ':' + (S.slotVer || 0);
     if (modCache.key === key && modCache.ver === ver) return modCache;
     const mul = {}, add = {};
+    const apply = e => {
+      if (e.mul !== undefined) mul[e.stat] = (mul[e.stat] ?? 1) * e.mul;
+      if (e.add !== undefined) add[e.stat] = (add[e.stat] ?? 0) + e.add;
+    };
     // Forschung wirkt über dieselbe Pipeline wie Karten (REQ-5.07); es zählt die höchste erforschte Stufe
     for (const [id, n] of Object.entries(S.research.done)){
       const tier = RES[id] && n > 0 ? RES[id].tiers[Math.min(n, RES[id].tiers.length) - 1] : null;
@@ -138,9 +147,27 @@ function create(){
       const syn = OPT[id].synergy;
       if (syn) mul[syn.stat] = (mul[syn.stat] ?? 1) * (1 + synergyValue(id));
     }
-    modCache = { ver, key, mul, add };
+    // Strategielinien (REQ-S.04): Boni der erreichten Stufen; Gebäude-Varianten (REQ-S.05): Wirkung je Variantentyp einmal (variantYield gilt je Gebäude, siehe matRate)
+    const lines = lineState();
+    for (const l of LINIEN ? LINIEN.linien : []) for (let k = 0; k < lines[l].stage; k++) for (const e of C.LINIEN.stufen[l][k] || []) apply(e);
+    for (const vid of standingVariants()) for (const e of VAR[vid].effect) if (e.stat !== 'variantYield') apply(e);
+    modCache = { ver, key, mul, add, lines };
     return modCache;
   }
+  /* Zeichen je Linie: gewählte Karten (je Karte ihre Zeichen) plus stehende, fertige Varianten (je Variantentyp eines); nur im Modus karten */
+  const cardSigns = id => { const z = LINIEN && LINIEN.zeichen[id]; return z ? [].concat(z) : []; };
+  const standingVariants = () => S.pacing !== 'karten' ? [] : [...new Set(S.slots.filter(sl => sl && sl.variant && !sl.upg && VAR[sl.variant]).map(sl => sl.variant))];
+  function lineState(){
+    const out = {};
+    for (const l of LINIEN ? LINIEN.linien : []) out[l] = { signs: 0, stage: 0 };
+    if (S.pacing !== 'karten' || !LINIEN) return out;
+    for (const [id, n] of Object.entries(S.draft.stacks)) if (n > 0) for (const l of cardSigns(id)) out[l].signs++;
+    for (const vid of standingVariants()) out[VAR[vid].linie].signs++;
+    const th = C.LINIEN.zeichenStufen, top = Math.min(C.LINIEN.maxStufe, th.length);
+    for (const l in out) for (let k = 0; k < top; k++) if (out[l].signs >= th[k]) out[l].stage = k + 1;
+    return out;
+  }
+  const lines = () => mods().lines;
   const mMul = stat => mods().mul[stat] ?? 1;
   /* Stufe n (1-basiert) einer Karte; null, wenn es sie nicht gibt */
   function cardTier(id, n){ const o = OPT[id]; if (!o || n <= 0) return null; const tiers = tiersOf(o); return tiers[Math.min(n, tiers.length) - 1]; }
@@ -209,8 +236,9 @@ function create(){
   }
 
   /* ---------- abgeleitete Werte ---------- */
-  const has = b => S.slots.some(s => s && s.type === b);
-  const countType = type => S.slots.filter(s => s && s.type === type).length;
+  const has = b => S.slots.some(s => s && s.type === b && !s.upg);                     // ein Gebäude in Aufwertung wirkt nicht (REQ-S.05)
+  const countType = type => S.slots.filter(s => s && s.type === type && !s.upg).length;
+  const standingCount = type => S.slots.filter(s => s && s.type === type).length;       // auch Gebäude in Aufwertung: sie belegen den Platz
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
   const baseFactor   = () => { const b = C.KARTEN.basisFaktor; return typeof b === 'object' ? b[S.diff] ?? 1 : b; };       // Zahl oder Tabelle je Schwierigkeitsgrad
@@ -225,12 +253,12 @@ function create(){
   function neighborCount(i, type, slots = S.slots){
     const rule = NB_RULE[type];
     if (!rule) return 0;
-    let n = 0; for (const j of adjacent(i)) if (slots[j] && slots[j].type === rule.with) n++;
+    let n = 0; for (const j of adjacent(i)) if (slots[j] && slots[j].type === rule.with && !slots[j].upg) n++;
     return Math.min(rule.max, n);
   }
   const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) : 0; };
   /* Summe der Regelwerte aller Gebäude eines Typs (Schmiede, Kaserne, Universität, Kontor gibt es je einmal) */
-  const nbTotal = type => S.slots.reduce((a, sl, i) => a + (sl && sl.type === type ? neighborValue(i, type) : 0), 0);
+  const nbTotal = type => S.slots.reduce((a, sl, i) => a + (sl && sl.type === type && !sl.upg ? neighborValue(i, type) : 0), 0);
   /* Vorschau für Platz i und Typ: was das Gebäude dort erhielte und welchen Nachbarn es etwas gäbe */
   function neighborPreview(i, type){
     const slots = S.slots.slice(); slots[i] = { type };
@@ -250,12 +278,13 @@ function create(){
     return (p.gets ? p.gets.value * sgn(p.gets.rule) : 0) + p.gives.reduce((a, g) => a + g.delta * sgn(g.rule), 0);
   }
   // Fabriken einzeln: jede mit ihrem Nachbarschaftsbonus (Fabrik neben Fabrik)
-  const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' ? 1 + neighborValue(i, 'fabrik') : 0), 0);
+  const variantYield = sl => sl.variant && !sl.upg && S.pacing === 'karten' && VAR[sl.variant] ? VAR[sl.variant].effect.reduce((a, e) => a + (e.stat === 'variantYield' ? e.add : 0), 0) : 0;
+  const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
-  const qualityMult  = () => Math.pow(1 + C.FX_QUALITAET + mAdd('qualityBonus'), lv('qualitaet'));
+  const qualityMult  = () => Math.pow(1 + (C.FX_QUALITAET + mAdd('qualityBonus')) * mMul('smithEffect'), lv('qualitaet'));       // smithEffect: Waffenschmiede (Teil 4)
   const hpMultP      = () => levelStrength() * qualityMult() * mMul('unitStrength');
-  const dmgMultP     = () => levelStrength() * qualityMult() * mMul('unitStrength');
+  const dmgMultP     = () => levelStrength() * qualityMult() * mMul('unitStrength') * mMul('unitDmg');
   const cdMultP      = () => mMul('attackCd');
   const bountyMult   = () => mMul('xpGain');
   /* Abschnitte der Basis (REQ-13): 0 = Mauer oben, 1 = Tor, 2 = Mauer unten */
@@ -322,11 +351,12 @@ function create(){
   const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));
   /* Handelskontor (REQ-6.07 b): Deckel und nächster Zinsbetrag */
   const kontorCap = () => Math.round((C.KONTOR.capBase + C.KONTOR.capPerLevel * lv('zinseszins')) * (1 + nbTotal('kontor')) * mMul('kontorCap'));
-  const kontorNext = () => Math.min(kontorCap(), Math.floor(Math.max(0, S.material) / C.KONTOR.perN) * C.KONTOR.amount);
+  const kontorRaw = () => Math.min(kontorCap(), Math.floor(Math.max(0, S.material) / C.KONTOR.perN) * C.KONTOR.amount);
+  const kontorNext = () => Math.floor(kontorRaw() * mMul('kontorYield'));         // kontorYield: Linie Wirtschaft, Stufe 2 (Teil 4)
 
   function upCost(id){
     const u = C.UPGRADES[id];
-    let c = u.baseCost * Math.pow(u.growth, S.lvl[id]);
+    let c = u.baseCost * Math.pow(u.growth, S.lvl[id]) * mMul('upgradeCost');       // upgradeCost: Linie Wirtschaft, Stufe 2 (Teil 4)
     return Math.ceil(c);
   }
   const isMaxed = id => C.UPGRADES[id].max !== undefined && S.lvl[id] >= C.UPGRADES[id].max;
@@ -354,7 +384,7 @@ function create(){
     if (!C.BUILDINGS.includes(type)) return 'unknown';
     if (!introShows('buildings') && type !== 'fabrik') return 'hidden';
     if (!isBuildable(type)) return 'locked';
-    if (type !== 'fabrik' && countType(type) >= C.MAX_PER_TYPE) return 'standing';
+    if (type !== 'fabrik' && standingCount(type) >= C.MAX_PER_TYPE) return 'standing';
     if (i < 0 || i >= SLOTS || S.slots[i]) return 'occupied';
     if (S.material < buildCost(type)) return 'material';
     return null;
@@ -399,7 +429,7 @@ function create(){
     if (buildBlock(i, type)) return false;
     const cost = buildCost(type);
     S.material -= cost;
-    S.slots[i] = { type, paid: cost };
+    S.slots[i] = { type, paid: cost }; S.slotVer++;
     log('log.built', { building: '@bld.' + type + '.name', slot: i + 1 });
     emit('buildingBuilt', { type, slot: i });
     return true;
@@ -414,12 +444,55 @@ function create(){
     if (S.status !== 'running' || !S.slots[i]) return false;
     const refund = refundFor(i), type = S.slots[i].type;
     S.material += refund;
-    S.slots[i] = null;
+    S.slots[i] = null; S.slotVer++;                                        // eine abgerissene Variante verliert ihr Zeichen (REQ-S.04)
     clampSections();
     log('log.demolished', { building: '@bld.' + type + '.name', slot: i + 1, amount: refund });
     return true;
   }
   function unlockBuilding(type){ S.unlocked[type] = true; }
+  /* ---------- Gebäude-Aufwertung (Teil 4, REQ-S.05) ----------
+     Ein Grundgebäude lässt sich einmal in eine Variante aufwerten (je eine pro Linie). Der Platz behält Typ, Ausbaustufen und Nachbarschaftsregeln (slot.type bleibt der des Grundgebäudes);
+     die Variante steht als slot.variant. Während der Aufwertung (slot.upg) wirkt das Gebäude nicht. Kosten: kostenFaktor × Baukosten des Grundgebäudes, nach einem Abriss gibt es
+     die halbe Summe zurück wie bei jedem Gebäude (slot.paid). */
+  const variantsOf = type => VARIANTS.filter(v => v.basis === type);
+  const variantBase = type => type === 'fabrik' ? C.FACTORY_BASE_COST : C.BUILDING_COST[type];
+  const variantCost = vid => Math.ceil(variantBase(VAR[vid].basis) * C.LINIEN.aufwertung.kostenFaktor * mMul('variantCost'));
+  /* Die Aufwertung eines Typs ist sichtbar, sobald ein Gebäude des Typs steht und die Partie Minute abMinute erreicht hat */
+  const variantVisible = type => S.pacing === 'karten' && variantsOf(type).length > 0 && S.t >= C.LINIEN.aufwertung.abMinute * 60 && S.slots.some(sl => sl && sl.type === type);
+  function variantBlock(i, vid){
+    const v = VAR[vid], sl = S.slots[i];
+    if (!v) return 'unknown';
+    if (S.status !== 'running') return 'notRunning';
+    if (S.pacing !== 'karten') return 'notInMode';
+    if (!sl || sl.type !== v.basis) return 'noBuilding';
+    if (sl.variant) return 'done';
+    if (sl.upg) return 'upgrading';
+    if (!variantVisible(v.basis)) return 'hidden';
+    if (S.material < variantCost(vid)) return 'material';
+    return null;
+  }
+  function upgradeBuilding(i, vid){
+    if (variantBlock(i, vid)) return false;
+    const cost = variantCost(vid), sl = S.slots[i];
+    S.material -= cost; sl.paid = (sl.paid || 0) + cost;
+    sl.upg = { to: vid, t: 0 }; S.slotVer++;
+    S.stats.variantsStarted = (S.stats.variantsStarted || 0) + 1;
+    log('log.variantStart', { building: '@bld.' + sl.type + '.name', slot: i + 1, name: '@' + VAR[vid].nameKey });
+    emit('buildingUpgrade', { type: sl.type, slot: i, variant: vid });
+    return true;
+  }
+  function progressVariants(dt){
+    S.slots.forEach((sl, i) => {
+      if (!sl || !sl.upg) return;
+      sl.upg.t += dt;
+      if (sl.upg.t < C.LINIEN.aufwertung.dauerS) return;
+      const vid = sl.upg.to;
+      delete sl.upg; sl.variant = vid; S.slotVer++;
+      (S.stats.variants = S.stats.variants || []).push({ id: vid, t: +S.t.toFixed(1) });
+      log('log.variantDone', { building: '@bld.' + sl.type + '.name', slot: i + 1, name: '@' + VAR[vid].nameKey });
+      emit('buildingVariant', { type: sl.type, slot: i, variant: vid });
+    });
+  }
   const repairCost = () => Math.ceil(C.REPAIR_COST * mMul('repairCost'));
   /* Reparatur je Abschnitt (REQ-13.6). Ein gefallener Abschnitt steht danach wieder, sein Turm feuert wieder. */
   function repair(i, factor = 1){
@@ -439,6 +512,7 @@ function create(){
   const baseX = side => side === 'p' ? W - EBW : PBW;
   function makeUnit(side, type, lane, x, form){
     const p = side === 'p', s = unitStats(side, type);
+    if (p && lane === GATE && mMul('gateUnitHp') !== 1){ s.hp *= mMul('gateUnitHp'); }         // Garnison (Teil 4): Einheiten der Mitte am Tor mit mehr Lebenspunkten
     const u = {
       id: S.nextId++, side, type, lane, laneF: lane, home: lane, x: x ?? (p ? spawnX() : W - EBW), form: form ?? null, speed: s.speed,
       range: s.range, ranged: s.ranged,
@@ -545,12 +619,18 @@ function create(){
 
   /* ---------- Wellen ---------- */
   /* Nächste Gegnerwelle: Zusammensetzung und Lanes entstehen zu Beginn des Countdowns über den Spielzufall (REQ-14.3) */
+  /* Größe der regulären bzw. der Belagerungswelle, die in Minute min der Spielzeit ausrückt */
+  function enemyWaveSize(min, siege){
+    const d = diffCfg();
+    // Anlauf (REQ-6.08): bis Minute rampMin steigt die Grundwelle linear von startBase auf waveBase; danach unverändert
+    const base = d.rampMin && min < d.rampMin ? d.startBase + (d.waveBase - d.startBase) * min / d.rampMin : d.waveBase;
+    const druck = S.druck === 'hoch' && !siege && min >= C.DRUCK.hoch.abMinute ? C.DRUCK.hoch.faktor : 1;       // Testschalter hoher Druck (Teil 4, REQ-S.08)
+    return Math.max(1, Math.min(Math.round(C.ENEMY_WAVE_MAX * druck), Math.round((base + d.waveGrowth * min) * (S.pacing === 'karten' ? 1 + (C.KARTEN.wellenFaktor - 1) * Math.min(1, min / C.KARTEN.wellenAnstiegMin) : 1) * druck))) * (siege ? C.SIEGE_STRENGTH : 1);   // Belagerungswelle: dreifache Größe (REQ-19.2)
+  }
   function rollEnemyWave(){
     const d = diffCfg(), min = S.nextWave / 60;
     S.nextEnemySiege = !S.siegeDone && S.nextWave >= S.siegeWaveT;
-    // Anlauf (REQ-6.08): bis Minute rampMin steigt die Grundwelle linear von startBase auf waveBase; danach unverändert
-    const base = d.rampMin && min < d.rampMin ? d.startBase + (d.waveBase - d.startBase) * min / d.rampMin : d.waveBase;
-    const size = Math.max(1, Math.min(C.ENEMY_WAVE_MAX, Math.round((base + d.waveGrowth * min) * (S.pacing === 'karten' ? 1 + (C.KARTEN.wellenFaktor - 1) * Math.min(1, min / C.KARTEN.wellenAnstiegMin) : 1)))) * (S.nextEnemySiege ? C.SIEGE_STRENGTH : 1);   // Belagerungswelle: dreifache Größe (REQ-19.2)
+    const size = enemyWaveSize(min, S.nextEnemySiege);
     const out = [];
     for (let i = 0; i < size; i++){
       const type = (min >= d.werferFrom && rnd() < d.werferShare) ? 'werfer' : 'laeufer';
@@ -570,16 +650,19 @@ function create(){
   }
   /* Eigene Welle; der eigene Takt kann durch Karten vom Takt der Gegnerwellen abweichen (Große Armee, Blitzkrieg) */
   const ownWaveInterval = () => C.WAVE_INTERVAL_S * mMul('ownWaveInterval');
-  function launchOwnWave(){
+  function launchOwnWave(opts = {}){
     if (S.queue.length){
       // Kennzahl: Anteil der Wellen am Versorgungslimit (REQ-21.2)
       S.stats.waves = (S.stats.waves || 0) + 1;
       if (S.queue.length >= supplyCap()) S.stats.wavesFull = (S.stats.wavesFull || 0) + 1;
-      const types = S.queue.map(q => q.type);
+      const bought = S.queue.map(q => q.type);
+      // Linie Militär, Stufe 2 (Teil 4): die Kaserne bildet je Welle zusätzliche Einheiten aus (Läufer, ohne Kosten, außerhalb des Versorgungslimits)
+      const types = bought.concat(has('kaserne') ? new Array(Math.floor(mAdd('extraUnit'))).fill(ownType('laeufer')) : []);
       // eine Gruppe über alle Lanes: Armee, falls es keine gibt, sonst Nachschub (REQ-5.06)
-      addGroup('p', assignLanes(types, strongerLane(S.nextEnemy)), deployX());
+      const g = addGroup('p', assignLanes(types, strongerLane(S.nextEnemy)), deployX());
+      if (opts.boost > 0) for (const u of S.units) if (u.form === g.id){ u.hp *= 1 + opts.boost; u.maxHp *= 1 + opts.boost; u.dmg *= 1 + opts.boost; }       // Gegenstoß: stärkere Welle
       S.queue = [];
-      S.lastOrder = types;
+      S.lastOrder = bought;
       S.stats.maxArmy = Math.max(S.stats.maxArmy || 0, S.units.filter(u => u.side === 'p').length);
       emit('waveDeparted', { side: 'p', size: types.length });
     }
@@ -598,13 +681,27 @@ function create(){
     const now = [];
     for (const q of enemy){
       if (siege || (field < diffCfg().maxField && !gateBlocked(q.lane))){ now.push(q); field++; }
-      else S.enemyQueue.push({ type: q.type, lane: q.lane, at: S.t });
+      else S.enemyQueue.push({ type: q.type, lane: q.lane, at: S.t, wave: S.waveNo + 1 });
     }
-    if (now.length){ addGroup('e', now, W - EBW); emit('waveDeparted', { side: 'e', size: now.length }); }   // gespiegelte Armeelogik für den Gegner (REQ-5.06)
+    if (now.length){ const g = addGroup('e', now, W - EBW); for (const u of S.units) if (u.form === g.id) u.wave = S.waveNo + 1; emit('waveDeparted', { side: 'e', size: now.length }); }   // gespiegelte Armeelogik für den Gegner (REQ-5.06); wave: Nummer der Welle (Teil 4)
     if (!S.firstWaveSeen){ S.firstWaveSeen = true; log('log.firstWave'); }
     S.waveNo++;
     S.nextWave += C.WAVE_INTERVAL_S;
     S.nextEnemy = rollEnemyWave();
+  }
+  /* Gegenstoß (Teil 4, Linie Verteidigung Stufe 2 und Schlüsselkarte): nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus (ohne Kosten, Takt beginnt neu) */
+  function counterWave(){
+    if (!S.queue.length) return false;
+    launchOwnWave({ boost: mAdd('counterBoost') });
+    S.nextOwnWave = S.t + ownWaveInterval();
+    S.stats.counterWaves = (S.stats.counterWaves || 0) + 1;
+    return true;
+  }
+  function onWaveRepelled(w){
+    if (S.pacing !== 'karten') return;
+    S.stats.wavesRepelled = (S.stats.wavesRepelled || 0) + 1;
+    if (mAdd('counterWave') > 0 && !S.hold) counterWave();
+    emit('waveRepelled', { wave: w });
   }
   /* Welle vorziehen (REQ-6.07 c): die Warteschlange rückt sofort als Welle aus; der Wellentakt beginnt neu. Braucht die Kaserne. */
   const waveRushCost = () => C.WAVE_RUSH.cost + C.WAVE_RUSH.perUnit * S.queue.length;
@@ -772,7 +869,9 @@ function create(){
     // 2. Alle Angriffe gemeinsam anwenden; überschüssiger Schaden verfällt
     for (const a of attacks){
       if (a.turret !== undefined){
+        const alive = a.tg.hp > 0;
         a.tg.hp -= a.dmg; a.tg.flash = 0.12;
+        if (alive && a.tg.hp <= 0 && a.turret !== 'e') a.tg.towerKill = true;                 // Abschuss durch einen eigenen Turm (Teil 4: Material, EP)
         shot(a.turret === 'e' ? { x0: W - EBW / 2, lane0: GATE, x1: a.tg.x, lane: a.tg.laneF, t: 0, dur: 0.18, turret: true }
                               : { x0: PBW - 9, lane0: a.turret, x1: a.tg.x, lane: a.tg.laneF, t: 0, dur: 0.18, turret: true });
       } else if (a.base) hitBase(a.u);
@@ -922,22 +1021,30 @@ function create(){
     if (relayout) layoutAll();
     resolveCombat(dt);                                                  // Lane-Index nach der Bewegung, einmal je Tick
     // Gruppen, die in diesem Schritt eine Einheit der Mitte verloren haben (für die Ausnahme Mitte)
-    const lostMid = new Set();
+    const lostMid = new Set(), repelledCheck = new Set();
     for (const u of S.units){
       if (u.hp > 0 || u.dead) continue;
       u.dead = true;
       if (u.home === GATE) lostMid.add(u.form);
       if (u.side === 'e'){
-        const xp = C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult;
+        const xp = C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult * (u.towerKill ? mMul('towerKillXp') : 1);
         S.stats.xpKill = (S.stats.xpKill || 0) + xp;
         gainXp(xp);
         S.kills++;
+        if (u.towerKill && S.pacing === 'karten'){                                            // Turm-Abschuss (Teil 4): Zähler, Material der Linie Verteidigung
+          S.stats.towerKills = (S.stats.towerKills || 0) + 1;
+          const k = mAdd('towerKillMaterial');
+          if (k > 0){ const m = C.UNITS[u.type].bounty * k; addMaterial(m, 'kill'); S.stats.towerMaterial = (S.stats.towerMaterial || 0) + m; }
+        }
+        if (u.wave) repelledCheck.add(u.wave);
       } else S.losses++;
       if (FX.on) FX.fx.push({ x: u.x, lane: u.laneF, t: 0, side: u.side, type: u.type });
     }
     const before = S.units.length;
     S.units = S.units.filter(u => !u.dead);
     const died = S.units.length !== before;
+    // vollständig abgewehrte Gegnerwelle (Teil 4): keine Einheit und kein wartender Nachzügler der Welle mehr
+    for (const w of repelledCheck) if (!S.units.some(x => x.side === 'e' && x.wave === w) && !S.enemyQueue.some(q => q.wave === w)) onWaveRepelled(w);
     // Ausnahme Mitte: die letzte Einheit der Mitte ist gefallen (Vorrang vor allen anderen Regeln)
     for (const g of S.forms) if (g.main && lostMid.has(g.id)){ const m = formMembers(g); if (m.length && !m.some(u => u.home === GATE)) refillMid(g); }
     // Kennzahl: Zeitanteil der eigenen Armee im Kampf (REQ-5.08)
@@ -1225,7 +1332,8 @@ function create(){
       if (q.at > S.t) continue;
       if (spawnBlocked(q.lane)) continue;
       if (!q.alarm && (gateBlocked(q.lane) || field >= diffCfg().maxField)) continue;
-      addFormation('e', q.lane, [q.type], W - EBW);
+      const g = addFormation('e', q.lane, [q.type], W - EBW);
+      if (q.wave) for (const u of S.units) if (u.form === g.id) u.wave = q.wave;
       S.enemyQueue.splice(i, 1); i--; field++;
     }
   }
@@ -1257,17 +1365,21 @@ function create(){
     if (wallRegen > 0) S.sections.forEach((s, i) => {
       if (i !== GATE && s.hp > 0 && S.t - s.lastHit >= C.WALL_REGEN_DELAY_S) s.hp = Math.min(sectionMax(i), s.hp + sectionMax(i) * wallRegen * dt);
     });
+    // Garnison (Teil 4): stehende Mauerabschnitte heilen x Lebenspunkte je Sekunde, ohne Wartezeit; das Tor nie (wie die Maurerkolonne)
+    const wallFlat = mAdd('wallRegenFlat');
+    if (wallFlat > 0) S.sections.forEach((s, i) => { if (i !== GATE && s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + wallFlat * dt); });
     // Handelskontor: Zinsen auf den Materialbestand, gedeckelt
     if (has('kontor')){
       S.kontorT += dt;
       if (S.kontorT >= C.KONTOR.intervalS){
         S.kontorT -= C.KONTOR.intervalS;
-        const pay = kontorNext();
+        const pay = kontorNext(), raw = kontorRaw();
         if (pay > 0){ addMaterial(pay); S.stats.interest = (S.stats.interest || 0) + pay; }
-        if (S.pacing === 'karten' && pay > 0 && pay >= kontorCap()) S.stats.zinsDeckel = (S.stats.zinsDeckel || 0) + 1;       // Zinsdeckel erreicht (Angebotsbedingung Handelskontor, Teil 4)
+        if (S.pacing === 'karten' && raw > 0 && raw >= kontorCap()) S.stats.zinsDeckel = (S.stats.zinsDeckel || 0) + 1;       // Zinsdeckel erreicht (Angebotsbedingung Handelskontor, Teil 4)
       }
     }
     progressResearch(dt);
+    progressVariants(dt);
     // Hörsaal: passiver EP-Ertrag (REQ-5.07, Zweig A); Kennzahl Anteil am EP-Ertrag (REQ-5.08)
     const xpPassive = mAdd('xpPassive') * dt;
     if (xpPassive > 0){ S.stats.xpPassive = (S.stats.xpPassive || 0) + xpPassive; gainXp(xpPassive); }
@@ -1323,6 +1435,7 @@ function create(){
   function newGame(diff, seed, opts = {}){
     S = freshState(diff, seed);
     S.pacing = opts.pacing || C.PACING_MODUS || 'standard';
+    S.druck = opts.druck === 'hoch' ? 'hoch' : null;
     if (S.pacing === 'karten') S.enemyBaseHp = diffCfg().enemyBaseHp;
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
@@ -1371,7 +1484,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    tiersOf, drawOptionsKarten, drawOptions, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
