@@ -54,7 +54,7 @@ const Stage = (() => {
     const l = pathLines(o);
     return l.length ? l[0] : t(o.descKey, optParams(o, tier));
   }
-  const hasDrawback = (o, tier) => !!(o.tiers[Math.min(tier, o.tiers.length) - 1] || {}).drawback;
+  const hasDrawback = (o, tier) => { const tiers = G.tiersOf(o); return !!(tiers[Math.min(tier, tiers.length) - 1] || {}).drawback; };
   /* Rahmenfarbe = Seltenheit, Band = Familie (Modus karten) bzw. Kategorie (Standard mit Bühne) */
   const bandWord = o => o.pfad ? t('kp.fam.' + o.family) : G.S.pacing === 'karten' ? t('kp.fam.bonus') : t('draft.cat.' + o.category);
 
@@ -80,7 +80,7 @@ const Stage = (() => {
       const ds = document.createElement('span'); ds.className = 'kc-desc'; ds.textContent = effLine(o, tier);
       const foot = document.createElement('span'); foot.className = 'kc-foot';
       const dots = document.createElement('span'); dots.className = 'kc-tier'; dots.setAttribute('aria-hidden', 'true');
-      dots.textContent = '●'.repeat(tier) + '○'.repeat(o.tiers.length - tier);
+      dots.textContent = '●'.repeat(tier) + '○'.repeat(G.tiersOf(o).length - tier);
       foot.append(dots);
       if (hasDrawback(o, tier)){ const r = document.createElement('span'); r.className = 'kc-risk'; r.textContent = t('kp.card.drawback'); foot.appendChild(r); }
       const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.kp.card', { tier: optLimit(o) });

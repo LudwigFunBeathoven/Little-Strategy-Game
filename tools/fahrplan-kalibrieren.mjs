@@ -1,6 +1,8 @@
 // Klammerfront – Kalibrierung des Wahl-Fahrplans (REQ-P.02): KARTEN.fahrplan.schwellen aus Referenzläufen.
 // Aufruf:  node tools/fahrplan-kalibrieren.mjs [--runs 50] [--iter 3] [--max 100] [--apply] [--json reports/…json]
 //          [--strategy einheiten-zuerst] [--profile durchschnitt] [--diff normal] [--pfad militaer] [--wahlen 14]
+//          [--vorlauf 35]  Zielzeiten der Kalibrierung um so viele Sekunden früher (ab Wahl 2; Teil 4, REQ-S.02 C3: Schwer bewusst nicht ganz auf den Fahrplan angleichen)
+//          [--grad schwer] mit --apply: die Tabelle geht nach KARTEN.schwellenGrad.<grad> statt nach KARTEN.fahrplan.schwellen (Messung läuft mit --diff <grad>)
 // Ablauf je Durchgang: (1) Partien mit den aktuellen Schwellen spielen und den EP-Stand jede Sekunde festhalten, die tatsächlichen Wahlzeiten messen;
 // (2) die Schwellen neu bestimmen: für Wahl n die kleinste kumulierte EP-Schwelle, bei der die Hälfte der Partien (Median) die Wahl zur Zielzeit n erreicht –
 // gerechnet mit denselben Regeln wie das Spiel (Mindestabstand, Höchstabstand, freie Wahlen verschieben den Index der Tabelle), über die aufgezeichneten EP-Verläufe.
@@ -32,7 +34,8 @@ if (!isMainThread){
   const RESERVE = Number(arg('reserve', 5)), MODUS = arg('modus', 'median'), Q = Number(arg('q', 1));          // obergrenze: Q = Quantil (1 = Maximum)
   const ZF = Number(arg('zielfaktor', 1));                                    // Zielzeiten der Kalibrierung × Faktor (z. B. 0,9 für „aktiv“: 10 % früher)
   const zielFahrplan = Array.from({ length: N }, (_, i) => i < f0.ziele.length ? f0.ziele[i] : f0.ziele[f0.ziele.length - 1] + (i + 1 - f0.ziele.length) * f0.takt);
-  const ziele = zielFahrplan.map(z => z * ZF);
+  const VOR = Number(arg('vorlauf', 0)), GRAD = arg('grad', null);
+  const ziele = zielFahrplan.map((z, i) => i === 0 ? z * ZF : Math.max(zielFahrplan[0] * ZF, z * ZF - VOR));
   const seedOf = r => (9000 + r * 7919) >>> 0;
   const PROFILES = PROFILE.split(',');                                        // mehrere Profile: die Partien beider Profile gehen gemeinsam in die Kalibrierung
   const jobs = PROFILES.flatMap(profile => Array.from({ length: RUNS }, (_, r) => ({ pacing: 'karten', diff: DIFF, profile, strategy: STRATEGY, pfad: PFAD, seed: seedOf(r) })));
@@ -40,7 +43,7 @@ if (!isMainThread){
 
   const play = async steps => {
     const o = process.env.KF_OVERRIDE ? JSON.parse(process.env.KF_OVERRIDE) : {};              // Versuchswerte von außen (z. B. KARTEN.basisFaktor) bleiben erhalten
-    o.KARTEN = { ...(o.KARTEN || {}), maxAbstand: MAXG, fahrplan: { ...((o.KARTEN || {}).fahrplan || {}), minAbstand: MING, schwellen: steps } };
+    o.KARTEN = { ...(o.KARTEN || {}), maxAbstand: MAXG, fahrplan: { ...((o.KARTEN || {}).fahrplan || {}), minAbstand: MING, schwellen: steps }, schwellenGrad: GRAD ? { [GRAD]: steps } : (o.KARTEN || {}).schwellenGrad };
     const env = { ...process.env, KF_OVERRIDE: JSON.stringify(o) };
     const chunks = Array.from({ length: n }, () => []);
     jobs.forEach((j, i) => chunks[i % n].push(j));
@@ -92,13 +95,13 @@ if (!isMainThread){
     const steps = X.map((x, i) => Math.max(1, Math.round(x - (i ? X[i - 1] : 0))));
     return steps;
   }
-  /* Modus „obergrenze“: Schwelle der Wahl n = größter EP-Stand aller Referenzpartien zur Zielzeit n (+ Reserve). Kein Bot erreicht sie vor der Zielzeit; die Zeit (Höchstabstand)
+  /* Modus „obergrenze“ (mit --q 0.5 und --vorlauf: Median statt Maximum, Teil 4 REQ-S.02 C3): Schwelle der Wahl n = größter EP-Stand aller Referenzpartien zur Zielzeit n (+ Reserve). Kein Bot erreicht sie vor der Zielzeit; die Zeit (Höchstabstand)
      bestimmt den Takt, die EP belohnen nur Spiel, das über das Referenzniveau hinausgeht (Mindestabstand begrenzt den Vorsprung). Wahl 1 bleibt bei --x1. */
   function obergrenze(games){
     const X = [];
     for (let k = 1; k <= N; k++){
       if (k === 1 && X1 != null){ X.push(X1); continue; }
-      const idx = Math.max(0, Math.round(zielFahrplan[k - 1]) - 1);
+      const idx = Math.max(0, Math.round(ziele[k - 1]) - 1);                // ziele = Zielzeiten der Kalibrierung (Fahrplan × zielfaktor, ab Wahl 2 um vorlauf früher)
       const xs = games.filter(g => g.xp.length > idx).map(g => g.xp[idx]);
       const best = Q >= 1 ? Math.max(0, ...xs) : (qn(xs, Q) || 0);
       X.push(Math.max((X[k - 2] || 0) + 1, Math.ceil((best + RESERVE) / 5) * 5));
@@ -141,7 +144,7 @@ if (!isMainThread){
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ runs: RUNS, strategy: STRATEGY, profile: PROFILE, diff: DIFF, pfad: PFAD, maxAbstand: MAXG, minAbstand: MING, ziele, schwellen: steps, ergebnis: last }, null, 2));
   if (has('apply')){
     const src = readFileSync(new URL('../config.js', import.meta.url), 'utf8');
-    const out = src.replace(/(schwellen: )\[[^\]]*\](,)/, `$1[${steps.join(', ')}]$2`);
+    const out = GRAD ? src.replace(new RegExp(`(schwellenGrad: \\{[^}]*?)(?:${GRAD}: \\[[^\\]]*\\],? ?)?\\}`), (m, a) => `${a.replace(/\{\s*$/, '{ ')}${GRAD}: [${steps.join(', ')}] }`) : src.replace(/(schwellen: )\[[^\]]*\](,)/, `$1[${steps.join(', ')}]$2`);
     if (out === src) console.log('config.js unverändert (Zeile nicht gefunden)'); else { writeFileSync(new URL('../config.js', import.meta.url), out); console.log('config.js aktualisiert'); }
   }
 }

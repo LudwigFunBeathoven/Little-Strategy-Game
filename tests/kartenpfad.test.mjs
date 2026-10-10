@@ -24,7 +24,8 @@ function newOffer(G){
 test('Startzustand karten: nur Fabrik und Läufer, alles Weitere gesperrt, Quelle bekannt', () => {
   const { G, P } = game('karten');
   G.S.material = 1e5;
-  for (const b of ['kaserne', 'schmiede', 'universitaet', 'kontor']){ assert.equal(G.isBuildable(b), false, b); assert.equal(G.build(b), false); assert.ok(G.keySource('bau:' + b), `Quelle für ${b}`); }
+  for (const b of ['schmiede', 'universitaet', 'kontor']){ assert.equal(G.isBuildable(b), false, b); assert.equal(G.build(b), false); assert.ok(G.keySource('bau:' + b), `Quelle für ${b}`); }
+  assert.equal(G.isBuildable('kaserne'), true, 'Teil 4 (REQ-S.02 C4): Kaserne ab Start baubar'); assert.equal(G.keySource('bau:kaserne'), null);
   assert.ok(G.build('fabrik')); assert.ok(G.spawn('laeufer'));
   assert.equal(G.unitUnlocked('werfer'), false); assert.ok(G.unitSource('werfer'));
   for (const id of ['turm_0', 'turm_2', 'mauer', 'stacheln', 'moertel']) assert.ok(G.stageSource(id), `Stufe ${id} gesperrt`);
@@ -45,12 +46,12 @@ test('Bau-Karte schaltet genau ihre Inhalte frei', () => {
   assert.ok(G.chooseDraft(0));
   assert.ok(G.isBuildable('kaserne') && G.unitUnlocked('werfer'));
   assert.equal(G.isBuildable('schmiede'), false, 'nur die genannten Inhalte');
-  assert.equal(G.supplyCap(), supply0 + 3, '+3 Versorgung');
+  assert.equal(G.supplyCap(), supply0 + 2, '+2 Versorgung (Teil 4)');
   G.S.material = 1e5; assert.ok(G.build('kaserne'));
   const g2 = game('karten').G; g2.S.pendingDraft = { level: 1, options: ['pfadFestungsbau', 'bessereFabriken'], rerolled: 0 }; g2.S.pendingLevels = 1;
   g2.chooseDraft(0);
   assert.equal(g2.stageSource('mauer'), null); assert.equal(g2.stageSource('turm_0'), null);
-  assert.equal(g2.isBuildable('kaserne'), false);
+  assert.equal(g2.isBuildable('schmiede'), false);
 });
 
 test('Graphtest: jeder gesperrte Inhalt hat eine Quelle, Voraussetzungsketten sind auflösbar und ohne Zyklus', () => {

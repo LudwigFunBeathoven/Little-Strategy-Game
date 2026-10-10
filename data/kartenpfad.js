@@ -14,16 +14,17 @@
 const KF_PFAD = {
   karten: [
     /* ---------- Bau: schaltet Gebäude oder Ausbaustufen sofort frei ---------- */
+    /* Teil 4 (REQ-S.02 C4): Die Kaserne ist ab Spielstart baubar (Läufer, Grundausbau); „Echtes Militär“ schaltet nur noch den Werfer frei und gibt +2 Versorgung. */
     { id: 'echtesMilitaer', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
-      schaltetFrei: ['bau:kaserne', 'einheit:werfer'],
-      nameKey: 'kp.card.echtesMilitaer.name', descKey: 'kp.card.echtesMilitaer.desc', tiers: [{ effect: [{ stat: 'supply', add: 3 }] }] },
+      schaltetFrei: ['einheit:werfer'],
+      nameKey: 'kp.card.echtesMilitaer.name', descKey: 'kp.card.echtesMilitaer.desc', tiers: [{ effect: [{ stat: 'supply', add: 2 }] }] },
     { id: 'pfadFestungsbau', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
       schaltetFrei: ['stufe:turm_0:1', 'stufe:turm_2:1', 'stufe:mauer:1', 'stufe:stacheln:1', 'stufe:moertel:1'],
       nameKey: 'kp.card.festungsbau.name', descKey: 'kp.card.festungsbau.desc', tiers: [{ effect: [] }] },
-    { id: 'metallverarbeitung', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 2, benoetigt: [],
+    { id: 'metallverarbeitung', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
       schaltetFrei: ['bau:schmiede'],
       nameKey: 'kp.card.metallverarbeitung.name', descKey: 'kp.card.metallverarbeitung.desc', tiers: [{ effect: [] }] },
-    { id: 'gelehrte', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 2, benoetigt: [],
+    { id: 'gelehrte', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
       schaltetFrei: ['bau:universitaet'],
       nameKey: 'kp.card.gelehrte.name', descKey: 'kp.card.gelehrte.desc', tiers: [{ effect: [] }] },
     { id: 'handel', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['gelehrte'],
@@ -55,8 +56,11 @@ const KF_PFAD = {
        schaltetFrei   Schlüssel, die der Abschluss öffnet ('einheit:<typ>', 'stufe:<upgrade>:<n>')
        ersetzt        Einheitenersatz { von: nach }
      Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
-  /* Forschungen, die im Modus karten entfallen, weil eine Pfadforschung sie ersetzt (Schildträger) */
-  entfallen: ['r_schildtraeger'],
+  /* Forschungen, die im Modus karten entfallen: Schildträger (eine Pfadforschung ersetzt sie) und Ingenieurskunst (Teil 4, REQ-S.03: nur Baukosten) */
+  entfallen: ['r_schildtraeger', 'r_ingenieur'],
+  /* Karten, die im Modus karten nicht im Pool sind (Teil 4): Kriegserfahrung (REQ-S.02 C2, EP-Beschleunigung); Serienbau und Bauleitung (REQ-S.03:
+     einzige Wirkung verbilligt bzw. beschleunigt das Bauen). Im Modus standard bleiben sie unverändert. */
+  entfallenKarten: ['kriegserfahrung', 'serienbau', 'bauleitung'],
   forschungen: [
     { id: 'r_reiter', branch: 'pfad', nameKey: 'kp.res.reiter.name', descKey: 'kp.res.reiter.desc',
       schaltetFrei: ['einheit:reiter', 'stufe:ausbau:1'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },

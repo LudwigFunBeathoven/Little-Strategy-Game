@@ -143,7 +143,9 @@ function create(){
   }
   const mMul = stat => mods().mul[stat] ?? 1;
   /* Stufe n (1-basiert) einer Karte; null, wenn es sie nicht gibt */
-  function cardTier(id, n){ const o = OPT[id]; return o && n > 0 ? o.tiers[Math.min(n, o.tiers.length) - 1] : null; }
+  function cardTier(id, n){ const o = OPT[id]; if (!o || n <= 0) return null; const tiers = tiersOf(o); return tiers[Math.min(n, tiers.length) - 1]; }
+  /* Stufen einer Karte im laufenden Modus: im Modus karten können sie in C.KARTEN.kartenTiers abweichen (Teil 4, REQ-S.02 C2, S.03) */
+  const tiersOf = o => (S && S.pacing === 'karten' && C.KARTEN.kartenTiers && C.KARTEN.kartenTiers[o.id]) || o.tiers;
   const cardTaken = id => S.draft.stacks[id] || 0;
   const categoryCount = cat => Object.keys(S.draft.stacks).filter(id => S.draft.stacks[id] > 0 && OPT[id] && OPT[id].category === cat).length;
   const synergyValue = id => { const o = OPT[id]; return o && o.synergy && cardTaken(id) > 0 ? o.synergy.perCard * categoryCount(o.category) : 0; };
@@ -284,7 +286,7 @@ function create(){
   function xpSum(n){
     const f = fahrplan();
     if (!f) return xpForLevel(n);
-    const st = f.schwellen; let s = 0;
+    const st = (C.KARTEN.schwellenGrad && C.KARTEN.schwellenGrad[S.diff]) || f.schwellen; let s = 0;
     for (let k = 1; k <= n; k++) s += st[Math.min(k, st.length) - 1];
     return s;
   }
@@ -974,15 +976,16 @@ function create(){
     if (!(k.benoetigt || []).every(requirementMet)) return false;
     if (k.familie === 'technologie' && !has('universitaet')) return false;
     if ((k.exklusivMit || []).some(id => cardTaken(id) > 0)) return false;
-    if (supplyCapped() && supplyOnly(o.tiers[0].effect || [])) return false;       // Versorgung am Deckel (Wagnis „Volle Auslastung“): nur der Nachteil bliebe
+    if (supplyCapped() && supplyOnly(tiersOf(o)[0].effect || [])) return false;       // Versorgung am Deckel (Wagnis „Volle Auslastung“): nur der Nachteil bliebe
     return true;
   }
   /* Nach der höchsten Stufe erscheint eine Karte nicht mehr; sonst liegt genau die nächste Stufe im Pool (REQ-18.2) */
   function optionAvailable(o){
     if (o.pfad) return pfadAvailable(o);
-    const n = cardTaken(o.id);
+    const n = cardTaken(o.id), tiers = tiersOf(o);
     if (S.research.banned.includes(o.id)) return false;
-    if (n >= Math.min(o.tiers.length, C.CARD_MAX_TIER)) return false;
+    if (S.pacing === 'karten' && PFAD && (PFAD.entfallenKarten || []).includes(o.id)) return false;       // Teil 4: aus dem Pool des Modus karten gestrichen (REQ-S.02 C2, S.03)
+    if (n >= Math.min(tiers.length, C.CARD_MAX_TIER)) return false;
     if (o.requires){
       const r = o.requires;
       if (r.upgrade && !Object.keys(C.UPGRADES).some(id => (C.UPGRADES[id].base || id) === r.upgrade && S.lvl[id] > 0)) return false;
@@ -995,10 +998,11 @@ function create(){
       if (w.phase && PHASES.indexOf(phase()) < PHASES.indexOf(w.phase)) return false;
       if (w.freeSlot && !S.slots.some(x => !x)) return false;
       if (w.supply && supplyCap() < w.supply) return false;
+      if (w.zinsdeckel && !(S.stats.zinsDeckel > 0)) return false;                  // Handelskontor: erst anbieten, wenn der Zinsdeckel erreicht wurde (Teil 4, REQ-S.03)
       if (w.ranged && !Object.keys(C.UNITS).some(ty => !C.UNITS[ty].base && unitUnlocked(ty) && isRangedType(ownType(ty)))) return false;       // eigene Grundtypen (Ersatztypen tragen base)
     }
-    for (const e of o.tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
-    if (supplyCapped() && supplyOnly(o.tiers[n].effect || [])) return false;       // Versorgung am Deckel: die Karte brächte nur ihren Nachteil
+    for (const e of tiers[n].effect || []) if (e.unlock && (S.unlocked[e.unlock] || C.START_BUILDINGS.includes(e.unlock))) return false;
+    if (supplyCapped() && supplyOnly(tiers[n].effect || [])) return false;       // Versorgung am Deckel: die Karte brächte nur ihren Nachteil
     return true;
   }
   /* Glücksgriff (REQ-5.07): verschiebt Ziehgewicht von gewöhnlichen zu seltenen Karten */
@@ -1260,6 +1264,7 @@ function create(){
         S.kontorT -= C.KONTOR.intervalS;
         const pay = kontorNext();
         if (pay > 0){ addMaterial(pay); S.stats.interest = (S.stats.interest || 0) + pay; }
+        if (S.pacing === 'karten' && pay > 0 && pay >= kontorCap()) S.stats.zinsDeckel = (S.stats.zinsDeckel || 0) + 1;       // Zinsdeckel erreicht (Angebotsbedingung Handelskontor, Teil 4)
       }
     }
     progressResearch(dt);
@@ -1366,7 +1371,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    tiersOf, drawOptionsKarten, drawOptions, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,

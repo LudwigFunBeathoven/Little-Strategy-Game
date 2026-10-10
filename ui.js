@@ -255,7 +255,7 @@ function tipContent(id){
     }
     case 'chosen': {
       const o = G.OPT[a], tier = G.cardTaken(a);
-      const rows = tier < o.tiers.length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
+      const rows = tier < G.tiersOf(o).length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
       return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)), rows: cardRows(o, rows) };
     }
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };

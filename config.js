@@ -41,6 +41,18 @@ const KF_CONFIG = {
     angebot: { basis: 3, universitaet: 4 },   // Karten je Angebot im Modus karten (REQ-P.04); Standard: DRAFT_OPTIONS_BASE / _UNIVERSITY
     pfadPlaetze: 2,             // Plätze für Pfadkarten (Bau, Technologie) je Angebot, wenn so viele ziehbar sind; der Rest sind Bonusplätze (REQ-P.04)
     maxWarten: 3,               // eine ziehbare Bau-Karte erscheint spätestens in der n-ten Wahl nach ihrer Freigabe (harte Grenze)
+    /* Teil 4 (REQ-S.02 C2, REQ-S.03): Stufen einzelner Karten im Modus karten; sie ersetzen dort die Stufen aus data/draft-options.js (Modus standard unverändert).
+       Glücksritter: Nachteil „Abstand der eigenen Wellen +25 %“ statt „Stufen kosten 15 % mehr EP“ (die EP-Schwellen bleiben unberührt).
+       Söldnerheer: Nachteil abgeschwächt, Produktion × 0,8 statt × 0,6. Texte: Schlüssel mit Suffix .karten (draft.<id>.desc.karten). */
+    kartenTiers: {
+      gluecksritter: [{ effect: [{ stat: 'draftSize', add: 1 }], drawback: [{ stat: 'ownWaveInterval', mul: 1.25 }] }],
+      soeldnerheer:  [{ effect: [{ stat: 'unitCost', mul: 0 }], drawback: [{ stat: 'autoProd', mul: 0.8 }] }],
+    },
+    /* Teil 4 (REQ-S.02 C3): eigene EP-Schwellen je Schwierigkeitsgrad (ersetzen fahrplan.schwellen; Zielzeiten und Abstände gelten für alle). Leicht und Normal ohne Eintrag. */
+    /* Schwer: Schritte ab Wahl 2 = Schritte des Fahrplans × 2 (Wahl 1 unverändert, 43 EP: die erste Karte muss vor der ersten großen Welle kommen). Auf Schwer zählt jeder Abschuss
+       1,8-fach (DIFFICULTY.schwer.xpMult, Normal 1,0), darum kamen die Wahlen 2 bis 4 bis zu 84 s vor ihrer Zielzeit. Messung Schwer/durchschnitt, 60 Partien: Abweichung des Medians
+       −40/−36/−40/−7 s (Wahl 1–4), danach 0 (vorher −40/−65/−84/−52/−17). Faktor 1,6 ließ Wahl 3 bei −62 s, Faktor 1,8 bei −50 s (Bericht kartenpfad-4). */
+    schwellenGrad: { schwer: [43, 374, 410, 380, 500, 620, 890, 920, 1080, 1070, 1000] },
   },
   LANGUAGES: ['de', 'en'],
   FALLBACK_LANG: 'en',

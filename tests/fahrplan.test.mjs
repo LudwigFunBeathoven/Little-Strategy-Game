@@ -26,13 +26,12 @@ test('Fahrplan: der Standardmodus behält die EP-Stufen von main', () => {
   assert.ok(C.XP_GROWTH > 1.5);
 });
 
-test('Fahrplan: Schwellen und Zielzeiten sind gleich auf allen Schwierigkeitsgraden', () => {
+test('Fahrplan: Schwellen und Zielzeiten sind gleich auf Leicht und Normal; Schwer hat ab Wahl 2 eigene, höhere Schwellen (Teil 4, REQ-S.02 C3)', () => {
   const { KlammerCore } = loadCore();
-  for (const diff of ['leicht', 'normal', 'schwer']){
-    const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, 3, { pacing: 'karten' });
-    assert.equal(Math.round(G.xpNeed(1)), Math.round(game('karten').G.xpNeed(1)), diff);
-    assert.equal(Math.round(G.xpNeed(6)), Math.round(game('karten').G.xpNeed(6)), diff);
-  }
+  const at = (diff, n) => { const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, 3, { pacing: 'karten' }); return Math.round(G.xpNeed(n)); };
+  for (const diff of ['leicht', 'normal']){ assert.equal(at(diff, 1), at('normal', 1), diff); assert.equal(at(diff, 6), at('normal', 6), diff); }
+  assert.equal(at('schwer', 1), at('normal', 1), 'Wahl 1 auf Schwer unverändert');
+  assert.ok(at('schwer', 2) > at('normal', 2) && at('schwer', 6) > at('normal', 6), 'ab Wahl 2 höher');
 });
 
 test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühestens minAbstand nach der letzten, die EP bleiben erhalten', () => {

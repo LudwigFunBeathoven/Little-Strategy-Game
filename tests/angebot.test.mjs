@@ -25,12 +25,12 @@ const CASES = {
   doppelschicht:   { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
   grossauftrag:    { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
   rationalisierung:{ off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
-  serienbau:       { off: G => { for (let i = 0; i < G.S.slots.length; i++) if (!G.S.slots[i]) G.S.slots[i] = { type: 'fabrik' }; } },
-  bauleitung:      { off: G => { for (let i = 0; i < G.S.slots.length; i++) if (!G.S.slots[i]) G.S.slots[i] = { type: 'fabrik' }; } },
+  serienbau:       { entfaellt: true },                                  // Teil 4 (REQ-S.03): im Modus karten gestrichen, siehe tests/pool4.test.mjs
+  bauleitung:      { entfaellt: true },
   nachtschicht:    { off: G => { G.S.level = 1; }, on: G => { G.S.level = 6; } },
   selbstlaeufer:   { off: G => { G.S.level = 1; }, on: G => { G.S.level = 3; } },
-  handelskontor:   { off: G => {}, on: G => { open(G, 'bau:kontor'); G.build('kontor'); }, base: G => { G.S.level = 3; } },
-  kriegserfahrung: {}, kriegsanleihe: {},
+  handelskontor:   { off: G => {}, on: G => { open(G, 'bau:kontor'); G.build('kontor'); G.S.stats.zinsDeckel = 1; }, base: G => { G.S.level = 3; } },   // Teil 4: erst, wenn der Zinsdeckel erreicht wurde
+  kriegserfahrung: { entfaellt: true }, kriegsanleihe: {},
   // Armee
   aushebung:       { off: CAPPED },
   grosseArmee:     { off: CAPPED },
@@ -60,6 +60,7 @@ test('Jede Bonuskarte ist in der Fallliste erfasst', () => {
 
 for (const [id, c] of Object.entries(CASES)){
   test(`Angebotsbedingung ${id}: bei Wirkung null nicht angeboten, mit Wirkung angeboten`, () => {
+    if (c.entfaellt){ const { G } = game(11, 6); assert.equal(offered(G, id), false, `${id}: im Modus karten gestrichen`); return; }
     // angeboten: Grundzustand (Fabrik steht, Platz frei), Stufe der Partie hoch genug
     { const { G } = game(11, 6); if (c.base) c.base(G); if (c.on) c.on(G);
       assert.equal(offered(G, id), true, `${id}: mit Wirkung angeboten`); }

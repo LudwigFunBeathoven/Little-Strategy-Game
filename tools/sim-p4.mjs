@@ -1,5 +1,6 @@
 // Klammerfront – Messung für Kartenpfad Teil 4 (REQ-S.09).
 // Aufruf:  node tools/sim-p4.mjs --suite basis [--runs 50] [--gierigRuns 20] [--json reports/kartenpfad4-basis.json]
+//   Filter: --diffs leicht,normal,schwer  --profiles aktiv,durchschnitt,gelegentlich  --strategy einheiten-zuerst|gierig
 //   basis  Ausgangslage vor allen Änderungen von Teil 4: Fabrikanteil im Raster (Minute 2/5/10), seltene und legendäre Karten je Partie
 //          (angeboten, gewählt), verlorene Mauer-Lebenspunkte je Partie, Siegquoten und Wahlzeiten; 3 Grade × 3 Profile (schneller Bot), dazu „gierig“ (Normal, durchschnitt)
 // Gleiche Seeds in allen Feldern. Die Simulation misst Stärke, nicht Spielspaß.
@@ -21,7 +22,7 @@ if (!isMainThread){
   const { loadCore } = await import('./load-core.mjs');
   const core = loadCore(), C = core.KF_CONFIG;
   const rarity = Object.fromEntries(core.KF_DRAFT_OPTIONS.map(o => [o.id, o.rarity || 'common']));
-  const DIFFS = ['leicht', 'normal', 'schwer'], PROFILES = ['aktiv', 'durchschnitt', 'gelegentlich'];
+  const DIFFS = arg('diffs', 'leicht,normal,schwer').split(','), PROFILES = arg('profiles', 'aktiv,durchschnitt,gelegentlich').split(',');
   const base = { pacing: 'karten' };
   const jobs = [];
   if (SUITE === 'basis'){
@@ -84,6 +85,6 @@ if (!isMainThread){
     console.log(`\ngierig (Normal, durchschnitt, ${g.length} Partien): Siege ${report.gierig.siegquote} %, Fabriken Min 2/5/10 ${[120, 300, 600].map(t => report.gierig.fabrikenMedian[t] ?? '–').join('/')}, selten ${f1(report.gierig.seltenAngeboten)}/${f1(report.gierig.seltenGewaehlt)}, legendär ${f1(report.gierig.legendaerAngeboten)}/${f1(report.gierig.legendaerGewaehlt)}, Mauer-Verlust ${report.gierig.mauerVerlustMedian}`);
   }
   const nd = report.felder.filter(f => f.diff === 'normal' && f.profile === 'durchschnitt')[0];
-  console.log(`\nNormal/durchschnitt: Fabriken im Mittel Min 2/5/10: ${[120, 300, 600].map(t => f1(nd.fabrikenMittel[t])).join(' / ')} von 9 Plätzen`);
+  if (nd) console.log(`\nNormal/durchschnitt: Fabriken im Mittel Min 2/5/10: ${[120, 300, 600].map(t => f1(nd.fabrikenMittel[t])).join(' / ')} von 9 Plätzen`);
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, variant: r.variant, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10, grid: r.grid, wallLost: r.wallLost, built: r.built, picks: r.picks, offers: r.offers, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })) })) }));
 }

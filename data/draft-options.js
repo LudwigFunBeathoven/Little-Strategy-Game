@@ -15,6 +15,7 @@
      wirkt      optional, nur Modus 'karten' (REQ-P.05): Voraussetzung, damit die Wirkung im Spielstand größer als null ist; die Karte erscheint sonst nicht.
                 { building } das Gebäude steht   { phase: 'mid'|'late' } Phase der Partie erreicht   { freeSlot: true } ein Bauplatz ist frei
                 { supply: n } Versorgungslimit ≥ n (Gruppen dieser Größe)   { ranged: true } eine Fernkampfeinheit ist verfügbar
+                { zinsdeckel: true } der Zinsdeckel des Kontors wurde erreicht (Teil 4)
                 Karten ohne Eintrag wirken ab Spielbeginn (Drill, Kriegsanleihe, Zinnen …).
    Werte sind Vorgaben, Kalibrierung in I4.8. */
 const KF_DRAFT_OPTIONS = [
@@ -39,7 +40,7 @@ const KF_DRAFT_OPTIONS = [
             { effect: [{ grant: 'production', seconds: 90 }],  drawback: [{ stat: 'enemyHp', mul: 1.16 }] },
             { effect: [{ grant: 'production', seconds: 120 }], drawback: [{ stat: 'enemyHp', mul: 1.25 }] }] },
   { id: 'handelskontor', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.handelskontor.name', descKey: 'draft.handelskontor.desc',
-    requires: { building: 'kontor' }, tiers: [{ effect: [{ stat: 'kontorCap', mul: 1.5 }] }] },   // I6.8: Kontor ist Startgebäude; Karte hebt den Zinsdeckel
+    requires: { building: 'kontor' }, wirkt: { zinsdeckel: true }, tiers: [{ effect: [{ stat: 'kontorCap', mul: 1.5 }] }] },   // I6.8: Kontor ist Startgebäude; Karte hebt den Zinsdeckel
   { id: 'grossauftrag', category: 'wirtschaft', rarity: 'rare', nameKey: 'draft.grossauftrag.name', descKey: 'draft.grossauftrag.desc', wirkt: { building: 'fabrik' },
     synergy: { stat: 'factoryYield', perCard: 0.06 }, tiers: [{ effect: [] }] },
 
