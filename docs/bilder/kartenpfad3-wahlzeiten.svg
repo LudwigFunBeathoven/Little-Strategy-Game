@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 640" role="img" aria-labelledby="t d" font-family="system-ui, sans-serif" font-size="12">
+<title id="t">Kartenwahlen: Fahrplan gegen gemessenen Median (Normal)</title>
+<desc id="d">Oben die Zeit der Wahlen 1 bis 10 in Minuten, unten die Abweichung des Medians vom Fahrplan in Sekunden, für die Profile aktiv, durchschnitt und gelegentlich.</desc>
+<style>
+  :root{ --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --grid:#e3e2de; --band:#e9eef7; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; }
+  @media (prefers-color-scheme: dark){ :root{ --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --grid:#33322f; --band:#222a38; --s1:#3987e5; --s2:#d95926; --s3:#199e70; } }
+  .bg{fill:var(--surface)} .tx{fill:var(--ink)} .tx2{fill:var(--ink2)} .gr{stroke:var(--grid);stroke-width:1} .bd{fill:var(--band)}
+  .fp{stroke:var(--ink2);stroke-width:2;stroke-dasharray:6 4;fill:none}
+  .l1{stroke:var(--s1)} .l2{stroke:var(--s2)} .l3{stroke:var(--s3)} .f1{fill:var(--s1)} .f2{fill:var(--s2)} .f3{fill:var(--s3)}
+  .ln{stroke-width:2;fill:none} .mk{stroke:var(--surface);stroke-width:2}
+</style>
+<rect class="bg" width="760" height="640"/>
+<text class="tx" x="64" y="22" font-weight="600">Zeit der Wahl in Minuten (Median)</text>
+<line class="gr" x1="64" x2="630" y1="300" y2="300"/><text class="tx2" x="56" y="304" text-anchor="end">0</text>
+<line class="gr" x1="64" x2="630" y1="260" y2="260"/><text class="tx2" x="56" y="264" text-anchor="end">2</text>
+<line class="gr" x1="64" x2="630" y1="220" y2="220"/><text class="tx2" x="56" y="224" text-anchor="end">4</text>
+<line class="gr" x1="64" x2="630" y1="180" y2="180"/><text class="tx2" x="56" y="184" text-anchor="end">6</text>
+<line class="gr" x1="64" x2="630" y1="140" y2="140"/><text class="tx2" x="56" y="144" text-anchor="end">8</text>
+<line class="gr" x1="64" x2="630" y1="100" y2="100"/><text class="tx2" x="56" y="104" text-anchor="end">10</text>
+<line class="gr" x1="64" x2="630" y1="60" y2="60"/><text class="tx2" x="56" y="64" text-anchor="end">12</text>
+<text class="tx2" x="64" y="318" text-anchor="middle">1</text>
+<text class="tx2" x="126.88888888888889" y="318" text-anchor="middle">2</text>
+<text class="tx2" x="189.77777777777777" y="318" text-anchor="middle">3</text>
+<text class="tx2" x="252.66666666666666" y="318" text-anchor="middle">4</text>
+<text class="tx2" x="315.55555555555554" y="318" text-anchor="middle">5</text>
+<text class="tx2" x="378.44444444444446" y="318" text-anchor="middle">6</text>
+<text class="tx2" x="441.3333333333333" y="318" text-anchor="middle">7</text>
+<text class="tx2" x="504.22222222222223" y="318" text-anchor="middle">8</text>
+<text class="tx2" x="567.1111111111111" y="318" text-anchor="middle">9</text>
+<text class="tx2" x="630" y="318" text-anchor="middle">10</text>
+<text class="tx2" x="347" y="336" text-anchor="middle">Wahl</text>
+<polyline class="fp" points="64,270 126.88888888888889,246.66666666666666 189.77777777777777,225 252.66666666666666,203.33333333333331 315.55555555555554,181.66666666666669 378.44444444444446,160 441.3333333333333,138.33333333333334 504.22222222222223,116.66666666666666 567.1111111111111,95 630,73.33333333333334"/>
+<text class="tx2" x="638" y="77.33333333333334">Fahrplan</text>
+<polyline class="ln l1" points="64,274.76666666666665 126.88888888888889,246.66666666666666 189.77777777777777,225 252.66666666666666,203.33333333333331 315.55555555555554,181.66666666666669 378.44444444444446,163.5 441.3333333333333,138.33333333333334 504.22222222222223,116.66666666666666 567.1111111111111,95 630,74"/>
+<circle class="mk f1" cx="64" cy="274.76666666666665" r="4"/>
+<circle class="mk f1" cx="126.88888888888889" cy="246.66666666666666" r="4"/>
+<circle class="mk f1" cx="189.77777777777777" cy="225" r="4"/>
+<circle class="mk f1" cx="252.66666666666666" cy="203.33333333333331" r="4"/>
+<circle class="mk f1" cx="315.55555555555554" cy="181.66666666666669" r="4"/>
+<circle class="mk f1" cx="378.44444444444446" cy="163.5" r="4"/>
+<circle class="mk f1" cx="441.3333333333333" cy="138.33333333333334" r="4"/>
+<circle class="mk f1" cx="504.22222222222223" cy="116.66666666666666" r="4"/>
+<circle class="mk f1" cx="567.1111111111111" cy="95" r="4"/>
+<circle class="mk f1" cx="630" cy="74" r="4"/>
+<polyline class="ln l2" points="64,274.76666666666665 126.88888888888889,246.66666666666666 189.77777777777777,225 252.66666666666666,203.33333333333331 315.55555555555554,181.66666666666669 378.44444444444446,160 441.3333333333333,140.63333333333333 504.22222222222223,116.66666666666666 567.1111111111111,95 630,73.33333333333334"/>
+<circle class="mk f2" cx="64" cy="274.76666666666665" r="4"/>
+<circle class="mk f2" cx="126.88888888888889" cy="246.66666666666666" r="4"/>
+<circle class="mk f2" cx="189.77777777777777" cy="225" r="4"/>
+<circle class="mk f2" cx="252.66666666666666" cy="203.33333333333331" r="4"/>
+<circle class="mk f2" cx="315.55555555555554" cy="181.66666666666669" r="4"/>
+<circle class="mk f2" cx="378.44444444444446" cy="160" r="4"/>
+<circle class="mk f2" cx="441.3333333333333" cy="140.63333333333333" r="4"/>
+<circle class="mk f2" cx="504.22222222222223" cy="116.66666666666666" r="4"/>
+<circle class="mk f2" cx="567.1111111111111" cy="95" r="4"/>
+<circle class="mk f2" cx="630" cy="73.33333333333334" r="4"/>
+<polyline class="ln l3" points="64,274.76666666666665 126.88888888888889,246.66666666666666 189.77777777777777,225 252.66666666666666,203.33333333333331 315.55555555555554,181.66666666666669 378.44444444444446,160 441.3333333333333,138.33333333333334 504.22222222222223,116.66666666666666 567.1111111111111,95 630,73.33333333333334"/>
+<circle class="mk f3" cx="64" cy="274.76666666666665" r="4"/>
+<circle class="mk f3" cx="126.88888888888889" cy="246.66666666666666" r="4"/>
+<circle class="mk f3" cx="189.77777777777777" cy="225" r="4"/>
+<circle class="mk f3" cx="252.66666666666666" cy="203.33333333333331" r="4"/>
+<circle class="mk f3" cx="315.55555555555554" cy="181.66666666666669" r="4"/>
+<circle class="mk f3" cx="378.44444444444446" cy="160" r="4"/>
+<circle class="mk f3" cx="441.3333333333333" cy="138.33333333333334" r="4"/>
+<circle class="mk f3" cx="504.22222222222223" cy="116.66666666666666" r="4"/>
+<circle class="mk f3" cx="567.1111111111111" cy="95" r="4"/>
+<circle class="mk f3" cx="630" cy="73.33333333333334" r="4"/>
+<text class="tx" x="64" y="356" font-weight="600">Abweichung vom Fahrplan in Sekunden (Toleranz ±20 s)</text>
+<rect class="bd" x="64" y="442.5" width="566" height="47"/>
+<line class="gr" x1="64" x2="630" y1="560" y2="560"/><text class="tx2" x="56" y="564" text-anchor="end">-80</text>
+<line class="gr" x1="64" x2="630" y1="513" y2="513"/><text class="tx2" x="56" y="517" text-anchor="end">-40</text>
+<line class="gr" x1="64" x2="630" y1="466" y2="466"/><text class="tx2" x="56" y="470" text-anchor="end">0</text>
+<line class="gr" x1="64" x2="630" y1="419" y2="419"/><text class="tx2" x="56" y="423" text-anchor="end">+40</text>
+<line class="gr" x1="64" x2="630" y1="372" y2="372"/><text class="tx2" x="56" y="376" text-anchor="end">+80</text>
+<text class="tx2" x="64" y="578" text-anchor="middle">1</text>
+<text class="tx2" x="126.88888888888889" y="578" text-anchor="middle">2</text>
+<text class="tx2" x="189.77777777777777" y="578" text-anchor="middle">3</text>
+<text class="tx2" x="252.66666666666666" y="578" text-anchor="middle">4</text>
+<text class="tx2" x="315.55555555555554" y="578" text-anchor="middle">5</text>
+<text class="tx2" x="378.44444444444446" y="578" text-anchor="middle">6</text>
+<text class="tx2" x="441.3333333333333" y="578" text-anchor="middle">7</text>
+<text class="tx2" x="504.22222222222223" y="578" text-anchor="middle">8</text>
+<text class="tx2" x="567.1111111111111" y="578" text-anchor="middle">9</text>
+<text class="tx2" x="630" y="578" text-anchor="middle">10</text>
+<text class="tx2" x="347" y="596" text-anchor="middle">Wahl</text>
+<polyline class="ln l1" points="64,482.8025 126.88888888888889,466 189.77777777777777,466 252.66666666666666,466 315.55555555555554,466 378.44444444444446,478.3375 441.3333333333333,466 504.22222222222223,466 567.1111111111111,466 630,468.35"/>
+<circle class="mk f1" cx="64" cy="482.8025" r="4"/>
+<circle class="mk f1" cx="126.88888888888889" cy="466" r="4"/>
+<circle class="mk f1" cx="189.77777777777777" cy="466" r="4"/>
+<circle class="mk f1" cx="252.66666666666666" cy="466" r="4"/>
+<circle class="mk f1" cx="315.55555555555554" cy="466" r="4"/>
+<circle class="mk f1" cx="378.44444444444446" cy="478.3375" r="4"/>
+<circle class="mk f1" cx="441.3333333333333" cy="466" r="4"/>
+<circle class="mk f1" cx="504.22222222222223" cy="466" r="4"/>
+<circle class="mk f1" cx="567.1111111111111" cy="466" r="4"/>
+<circle class="mk f1" cx="630" cy="468.35" r="4"/>
+<polyline class="ln l2" points="64,482.8025 126.88888888888889,466 189.77777777777777,466 252.66666666666666,466 315.55555555555554,466 378.44444444444446,466 441.3333333333333,474.10749999999996 504.22222222222223,466 567.1111111111111,466 630,466"/>
+<circle class="mk f2" cx="64" cy="482.8025" r="4"/>
+<circle class="mk f2" cx="126.88888888888889" cy="466" r="4"/>
+<circle class="mk f2" cx="189.77777777777777" cy="466" r="4"/>
+<circle class="mk f2" cx="252.66666666666666" cy="466" r="4"/>
+<circle class="mk f2" cx="315.55555555555554" cy="466" r="4"/>
+<circle class="mk f2" cx="378.44444444444446" cy="466" r="4"/>
+<circle class="mk f2" cx="441.3333333333333" cy="474.10749999999996" r="4"/>
+<circle class="mk f2" cx="504.22222222222223" cy="466" r="4"/>
+<circle class="mk f2" cx="567.1111111111111" cy="466" r="4"/>
+<circle class="mk f2" cx="630" cy="466" r="4"/>
+<polyline class="ln l3" points="64,482.8025 126.88888888888889,466 189.77777777777777,466 252.66666666666666,466 315.55555555555554,466 378.44444444444446,466 441.3333333333333,466 504.22222222222223,466 567.1111111111111,466 630,466"/>
+<circle class="mk f3" cx="64" cy="482.8025" r="4"/>
+<circle class="mk f3" cx="126.88888888888889" cy="466" r="4"/>
+<circle class="mk f3" cx="189.77777777777777" cy="466" r="4"/>
+<circle class="mk f3" cx="252.66666666666666" cy="466" r="4"/>
+<circle class="mk f3" cx="315.55555555555554" cy="466" r="4"/>
+<circle class="mk f3" cx="378.44444444444446" cy="466" r="4"/>
+<circle class="mk f3" cx="441.3333333333333" cy="466" r="4"/>
+<circle class="mk f3" cx="504.22222222222223" cy="466" r="4"/>
+<circle class="mk f3" cx="567.1111111111111" cy="466" r="4"/>
+<circle class="mk f3" cx="630" cy="466" r="4"/>
+<line class="ln l1" x1="638" x2="664" y1="74" y2="74"/><circle class="mk f1" cx="651" cy="74" r="4"/><text class="tx" x="672" y="78">aktiv</text>
+<line class="ln l2" x1="638" x2="664" y1="96" y2="96"/><circle class="mk f2" cx="651" cy="96" r="4"/><text class="tx" x="672" y="100">durchschnitt</text>
+<line class="ln l3" x1="638" x2="664" y1="118" y2="118"/><circle class="mk f3" cx="651" cy="118" r="4"/><text class="tx" x="672" y="122">gelegentlich</text>
+</svg>

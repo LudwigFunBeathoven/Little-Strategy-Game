@@ -116,16 +116,24 @@ if (!isMainThread){
   }
 
   if (SUITE === 'bonus'){
+    // Je Angebot mit mindestens zwei Bonuskarten gewinnt die Karte mit dem höchsten Wert nach 45 s; bei Gleichstand teilen sich die gleichen Karten den Sieg.
+    // Stände mit Sieg oder Niederlage im Prüfzeitraum (|Wert| > 1e5) zählen als ±1.000 über oder unter dem Rest, damit sie die Mittelwerte nicht beherrschen.
     const m = {};
+    const clip = v => Math.abs(v) > 1e5 ? Math.sign(v) * 1000 : v;
     for (const r of results) for (const e of r.scan || []){
-      const ids = Object.keys(e.sc), mean = ids.reduce((a, id) => a + e.sc[id], 0) / ids.length, best = ids.reduce((a, id) => e.sc[id] > e.sc[a] ? id : a, ids[0]);
-      for (const id of ids){ const x = m[id] || (m[id] = { angeboten: 0, vergleiche: 0, bester: 0, vorsprung: 0 }); x.angeboten++; if (ids.length >= 2){ x.vergleiche++; x.vorsprung += e.sc[id] - mean; if (id === best) x.bester++; } }
+      const ids = Object.keys(e.sc), v = Object.fromEntries(ids.map(id => [id, clip(e.sc[id])])), mean = ids.reduce((a, id) => a + v[id], 0) / ids.length, top = Math.max(...ids.map(id => v[id]));
+      const tied = ids.filter(id => Math.abs(v[id] - top) < 0.5);
+      for (const id of ids){
+        const x = m[id] || (m[id] = { angeboten: 0, vergleiche: 0, bester: 0, vorsprung: 0 });
+        x.angeboten++;
+        if (ids.length >= 2){ x.vergleiche++; x.vorsprung += v[id] - mean; if (tied.includes(id)) x.bester += 1 / tied.length; }
+      }
     }
     report.bonus = m;
     console.log(`BONUSKARTEN – Bewertung durch Vorausschau (45 s), ${RUNS} Partien Normal/durchschnitt\n`);
     console.log('Karte                  | angeboten | in Vergleichen (≥ 2 Bonuskarten) | beste Bonuskarte | Anteil | mittlerer Vorsprung');
     for (const [id, x] of Object.entries(m).sort((a, b) => (a[1].bester / Math.max(1, a[1].vergleiche)) - (b[1].bester / Math.max(1, b[1].vergleiche))))
-      console.log(`${id.padEnd(22)} | ${String(x.angeboten).padStart(9)} | ${String(x.vergleiche).padStart(32)} | ${String(x.bester).padStart(16)} | ${(100 * x.bester / Math.max(1, x.vergleiche)).toFixed(0).padStart(5)} % | ${(x.vorsprung / Math.max(1, x.vergleiche)).toFixed(1).padStart(8)}`);
+      console.log(`${id.padEnd(22)} | ${String(x.angeboten).padStart(9)} | ${String(x.vergleiche).padStart(32)} | ${x.bester.toFixed(1).padStart(16)} | ${(100 * x.bester / Math.max(1, x.vergleiche)).toFixed(0).padStart(5)} % | ${(x.vorsprung / Math.max(1, x.vergleiche)).toFixed(1).padStart(8)}`);
   }
 
   /* Wahlraten der Karten (Anteil der Angebote, in denen die Karte gewählt wurde), Bonus- und Technologiekarten */
@@ -136,5 +144,5 @@ if (!isMainThread){
   };
   report.karten.ez = rate(results.filter(r => r.strategy === EZ && r.diff === 'normal'));
   report.karten.gierig = rate(results.filter(r => r.strategy === 'gierig'));
-  if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, variant: r.variant, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10, wahlen: r.wahlen, picks: r.picks, builtAt: r.builtAt, freeChoices: r.freeChoices })) }));
+  if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, variant: r.variant, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10, wahlen: r.wahlen, picks: r.picks, builtAt: r.builtAt, freeChoices: r.freeChoices, scan: r.scan && r.scan.length ? r.scan.map(e => ({ t: Math.round(e.t), level: e.level, sc: Object.fromEntries(Object.entries(e.sc).map(([k, v]) => [k, Math.round(v)])) })) : undefined })) }));
 }
