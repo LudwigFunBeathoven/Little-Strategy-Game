@@ -84,7 +84,7 @@ const Session = (() => {
       const d = G.S.pendingDraft, id = d && d.options[i];
       const ok = choose(i);
       // Kartenpfad (REQ-KP.09): gewählte Karte mit Alternativen, Bedenkzeit (ms seit dem ersten Öffnen der Bühne dieser Wahl), Neu ziehen und Bannen
-      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, chosen: id, offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, hover: Stage.on() ? Stage.takeHover() : null, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
+      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, sollS: G.sollZeit ? G.sollZeit(d.level) : null, erschienenS: (((G.S.stats.wahlen || []).find(x => x.n === d.level)) || {}).t ?? null, chosen: id, offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, hover: Stage.on() ? Stage.takeHover() : null, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
       return ok;
     };
     const tick = G.tick;

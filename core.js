@@ -298,7 +298,7 @@ function create(){
   /* Fälligkeit der nächsten Wahl ohne EP (Mindesttempo): spätestens zur Zielzeit des Fahrplans, spätestens maxAbstand nach der letzten Wahl, frühestens minAbstand nach ihr */
   function dueTime(){
     const f = fahrplan(); if (!f) return null;
-    const due = Math.min(sollZeit(S.level + 1), S.pfad.lastPickT + C.KARTEN.maxAbstand);
+    const due = Math.min(f.zielzeitIstFrist === false ? Infinity : sollZeit(S.level + 1), S.pfad.lastPickT + C.KARTEN.maxAbstand);
     return S.stats.wahlen ? Math.max(due, S.pfad.lastPickT + f.minAbstand) : due;
   }
   const xpNeed       = n => xpSum(n - freeLevels()) * mMul('xpNeed');
@@ -1238,7 +1238,7 @@ function create(){
     // Aufgeschobene Wahl (Mindestabstand, REQ-P.02) erscheint, sobald der Abstand erreicht ist
     if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
     // Mindesttempo (REQ-KP.06, P.02): ist die Wahl nach dem Fahrplan fällig (Zielzeit oder Höchstabstand), erscheint sie ohne EP; die EP-Schwellen der folgenden Wahlen bleiben unverändert
-    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels === 0 && S.t >= dueTime()){
+    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels === 0 && !S.hold && !S.firstBounty && S.t >= dueTime()){          // im Tutorial (Schonfrist, Kriegsbeute) kommt die erste Wahl über die Kriegsbeute
       S.level++; S.pfad.free++; S.pendingLevels++; S.stats.freeChoices = (S.stats.freeChoices || 0) + 1;
       log('log.freeChoice', { n: S.level });
       offerDraft();

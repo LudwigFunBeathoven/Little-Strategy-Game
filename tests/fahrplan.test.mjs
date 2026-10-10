@@ -122,3 +122,23 @@ test('Standardmodus: kein Mindestabstand, kein Protokoll der Wahlzeiten', () => 
   assert.ok(G.S.pendingDraft, 'sofort');
   assert.equal(G.S.stats.wahlen, undefined);
 });
+
+test('Tutorial: während Schonfrist und Kriegsbeute kommt keine Wahl nach Zeit; danach gilt der Fahrplan', () => {
+  const { KlammerCore } = loadCore();
+  const G = KlammerCore.create(); G.FX.on = false;
+  G.newGame('normal', 11, { pacing: 'karten', hold: { maxS: 400, size: 1, bounty: true } });
+  G.S.sections.forEach(s => { s.hp = 1e9; });
+  run(G, 200);
+  assert.equal(G.S.pendingDraft, null, 'bis zur ersten besiegten Welle keine Wahl nach Zeit');
+  G.releaseHold(true);                                             // Überspringen: keine Kriegsbeute mehr, der Fahrplan gilt
+  run(G, 5, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft, 'nach dem Überspringen ist die erste Wahl überfällig und erscheint');
+});
+
+test('Schalter zielzeitIstFrist = false: Fälligkeit nur nach Höchstabstand (Vergleich mit REQ-P.02 wörtlich)', () => {
+  const { G, C } = game('karten');
+  C.KARTEN.fahrplan.zielzeitIstFrist = false;
+  run(G, C.KARTEN.maxAbstand + 2, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft);
+  assert.ok(Math.abs(G.S.t - C.KARTEN.maxAbstand) < 1, `erste Wahl nach ${G.S.t} s`);
+});

@@ -1,7 +1,8 @@
 // Klammerfront – Messung für Kartenpfad Teil 3 (REQ-P.06): Wahlzeiten, Abstände, Partiedauer, Siegquoten, Pfad-Varianten, Wahlraten der Karten.
-// Aufruf:  node tools/sim-p3.mjs [--runs 50] [--suite felder|varianten|gierig|alle] [--json reports/kartenpfad3-nach.json] [--strategy einheiten-zuerst]
+// Aufruf:  node tools/sim-p3.mjs [--runs 50] [--suite felder|varianten|gierig|bonus|alle] [--json reports/kartenpfad3-nach.json] [--strategy einheiten-zuerst]
 //   felder     Leicht/Normal/Schwer × aktiv/durchschnitt/gelegentlich mit dem schnellen Bot („einheiten-zuerst“)
 //   varianten  die drei Pfad-Varianten (militaer, wissen, festung) auf Normal, Profil durchschnitt
+//   bonus      Bewertung der angebotenen Bonuskarten durch Vorausschau (45 s) in Partien von „einheiten-zuerst“, Normal, durchschnitt (Inventar REQ-P.05)
 //   gierig     Bot mit Vorausschau („gierig“), Normal, durchschnitt und gelegentlich (aktiv braucht je Partie über drei Minuten und entfällt)
 // Gleiche Seeds in allen Feldern. Die Simulation misst Stärke, nicht Spielspaß.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -11,7 +12,7 @@ import { writeFileSync } from 'node:fs';
 // Pfadkarten der Familien Bau und Technologie (für die Verteilung der ersten und zweiten Pfadkarte)
 const G_PATH = new Set(['echtesMilitaer', 'pfadFestungsbau', 'metallverarbeitung', 'gelehrte', 'handel', 'fortgeschritteneTaktiken', 'ballistik', 'eiserneKlingen', 'befestigungskunde']);
 const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, picks: r.picks, builtAt: r.builtAt,
-  freeChoices: r.freeChoices, wahlen: r.wahlen || [], offers: r.offers, built: r.built, maxArmy: r.maxArmy, cards: r.cards });
+  freeChoices: r.freeChoices, wahlen: r.wahlen || [], offers: r.offers, scan: r.scan, built: r.built, maxArmy: r.maxArmy, cards: r.cards });
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
@@ -37,6 +38,8 @@ if (!isMainThread){
     for (const profile of ['durchschnitt', 'gelegentlich']) for (const variant of VARIANTS) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'gierig', diff: 'normal', profile, strategy: 'gierig', pfad: variant, variant, seed: seedOf(3, r) });
 
+  if (SUITE === 'bonus')
+    for (let r = 0; r < RUNS; r++) jobs.push({ ...base, suite: 'bonus', diff: 'normal', profile: 'durchschnitt', strategy: EZ, pfad: 'militaer', variant: 'militaer', seed: seedOf(4, r), bonusScan: 45 });
   const n = Math.max(1, Math.min(availableParallelism(), 8));
   const sorted = jobs.map((j, i) => ({ j, i })).sort((a, b) => (b.j.strategy === 'gierig') - (a.j.strategy === 'gierig'));     // langsame zuerst: bessere Auslastung
   const chunks = Array.from({ length: n }, () => []);
@@ -70,7 +73,7 @@ if (!isMainThread){
       wahl, kaserneS: median(built('kaserne')), schmiedeS: median(built('schmiede')), universitaetS: median(built('universitaet')),
       kaserneAnteil: pc(built('kaserne').length, rs.length), schmiedeAnteil: pc(built('schmiede').length, rs.length), universitaetAnteil: pc(built('universitaet').length, rs.length) };
   };
-  const report = { runs: RUNS, ziele: ZIELE, fahrplan: F, maxAbstand: C.KARTEN.maxAbstand, basisFaktor: C.KARTEN.basisFaktor, felder: [], varianten: [], gierig: [], karten: {} };
+  const report = { pfadIds: core.KF_PFAD.karten.map(k => k.id), runs: RUNS, ziele: ZIELE, fahrplan: F, maxAbstand: C.KARTEN.maxAbstand, basisFaktor: C.KARTEN.basisFaktor, felder: [], varianten: [], gierig: [], karten: {} };
 
   if (SUITE === 'alle' || SUITE === 'felder'){
     console.log(`FELDER (${EZ}, ${RUNS} Partien je Feld)\n`);
@@ -110,6 +113,19 @@ if (!isMainThread){
       const rs = results.filter(r => r.suite === 'gierig' && r.variant === v && r.profile === 'durchschnitt');
       console.log(`  ${v.padEnd(9)} durchschnitt: Siege ${pc(rs.filter(r => r.status === 'won').length, rs.length)} %`);
     }
+  }
+
+  if (SUITE === 'bonus'){
+    const m = {};
+    for (const r of results) for (const e of r.scan || []){
+      const ids = Object.keys(e.sc), mean = ids.reduce((a, id) => a + e.sc[id], 0) / ids.length, best = ids.reduce((a, id) => e.sc[id] > e.sc[a] ? id : a, ids[0]);
+      for (const id of ids){ const x = m[id] || (m[id] = { angeboten: 0, vergleiche: 0, bester: 0, vorsprung: 0 }); x.angeboten++; if (ids.length >= 2){ x.vergleiche++; x.vorsprung += e.sc[id] - mean; if (id === best) x.bester++; } }
+    }
+    report.bonus = m;
+    console.log(`BONUSKARTEN – Bewertung durch Vorausschau (45 s), ${RUNS} Partien Normal/durchschnitt\n`);
+    console.log('Karte                  | angeboten | in Vergleichen (≥ 2 Bonuskarten) | beste Bonuskarte | Anteil | mittlerer Vorsprung');
+    for (const [id, x] of Object.entries(m).sort((a, b) => (a[1].bester / Math.max(1, a[1].vergleiche)) - (b[1].bester / Math.max(1, b[1].vergleiche))))
+      console.log(`${id.padEnd(22)} | ${String(x.angeboten).padStart(9)} | ${String(x.vergleiche).padStart(32)} | ${String(x.bester).padStart(16)} | ${(100 * x.bester / Math.max(1, x.vergleiche)).toFixed(0).padStart(5)} % | ${(x.vorsprung / Math.max(1, x.vergleiche)).toFixed(1).padStart(8)}`);
   }
 
   /* Wahlraten der Karten (Anteil der Angebote, in denen die Karte gewählt wurde), Bonus- und Technologiekarten */

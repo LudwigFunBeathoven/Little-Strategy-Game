@@ -177,3 +177,19 @@ Befund der ersten Serie: Bots gewannen im Modus karten nach etwa 6 min mit 3 Wah
 23. Fund beim Messen: Knöpfe mit Klassenregeln (`.btn-ghost`) blieben trotz `hidden` sichtbar (z. B. „Welle vorziehen“ ohne Kaserne). Bei Entdecken behoben (`body.disc button[hidden]`); im Standardmodus ohne Entdecken unverändert, um `main` nicht zu verändern. Vorschlag: eine allgemeine Regel auch für `main` (Patch).
 24. Leistenelement Wellen: nach K2.04 von Anfang an sichtbar (bisher erst mit der ersten Welle, wenn die gestaffelte Einführung lief); im Modus `karten` ohne Einführung war das schon so.
 25. Kennzahl „sichtbare Bedienelemente“ (K2.08): Knöpfe und Reiter sowie Leistenelemente, alle Reiter aufgeklappt gezählt, ohne den Rahmen (Menü, Kamera, Raster-Plätze, Hinweisknopf); der Rahmen wird getrennt ausgewiesen. Ziel „Minute 1 ≤ ein Drittel von Minute 10“: siehe Bericht.
+
+
+# Teil 3: Pacing und Qualität der Kartenwahl (`docs/anforderungen-kartenpfad-3.md`, Bericht `docs/bericht-kartenpfad-3.md`)
+
+## Umsetzung
+| Inkrement | Inhalt |
+|---|---|
+| P.0 | `main` 0.9.2 eingemischt (Konfliktliste im Bericht). Die Wirkungsprüfung läuft auch im Modus `karten` (`tests/noeffect.test.mjs` in beiden Modi); Fund: Die Wagnis-Karte „Volle Auslastung“ (Versorgung × 2) erschien auch am Versorgungsdeckel und brachte dort nur ihren Nachteil, behoben in `pfadAvailable`. Die Browser-Prüfungen gelten für beide Modi (`browser-k2.mjs` Modus `karten`, `browser-k2-standard.mjs` aus `main`). |
+| P.1/P.2 | Wahl-Fahrplan: `KARTEN.fahrplan` (Zielzeiten, EP-Schwellen, Mindestabstand 45 s), `KARTEN.maxAbstand` 100 s. Fällig wird die nächste Wahl bei erreichter EP-Schwelle, spätestens zur Zielzeit, spätestens 100 s nach der letzten Wahl, frühestens 45 s nach ihr (`dueTime`, `draftReady`). Der Wachstumsfaktor 1,12 und `xpFaktor` entfallen. Im Tutorial gilt die Kriegsbeute (`S.hold`, `S.firstBounty`), die erste Wahl kommt dort nie nach Zeit. Kartensymbol und Leiste zeigen Zeit oder EP, je nachdem, was weiter ist (`xpProgress`: `frac`, `etaS`). Protokoll je Wahl: `S.stats.wahlen` und `drafts[].sollS/erschienenS`. |
+| P.3 | Partiedauer über `KARTEN.basisFaktor` (Lebenspunkte der gegnerischen Basis): 4,5 auf Leicht und Normal, 3,0 auf Schwer (vorher 3,5 für alle). |
+| P.4 | Angebot mit zwei Pfadplätzen: 3 Karten, mit Universität 4 (`KARTEN.angebot`; vorher 2 und 3 wie in `main`), Pfadplätze = min(2, ziehbare Pfadkarten), höchstens eine Wagnis-Karte; alle Bau-Karten gleiches Gewicht. Bann tauscht nur Bonusplätze. |
+| P.5 | Angebotsbedingungen aus der Wirkung: Feld `wirkt` an zwölf Bonuskarten (`data/draft-options.js`, nur Modus `karten`). Bonuskarte „Festungsbau“ heißt im Modus `karten` „Mauerwerk“ (Schlüssel `draft.festungsbau.name.karten`; `t()` wertet Modus-Suffixe allgemein aus). |
+| P.6 | `tools/sim-p3.mjs`, `tools/bericht-p3.mjs`, `tools/fahrplan-kalibrieren.mjs`, `tools/referenzlauf.mjs`; Bericht, Testleitfaden `docs/testleitfaden-kartenpfad-3.md`, privater Testbuild. |
+
+## Auslegungen und Abweichungen Teil 3 (zur Zustimmung durch den PO)
+Siehe Bericht, Abschnitt „Auslegungen und Abweichungen“.

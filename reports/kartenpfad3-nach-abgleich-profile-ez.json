@@ -1,0 +1,54 @@
+{
+ "runs": 50,
+ "diff": "normal",
+ "profile": [
+  {
+   "strategy": "einheiten-zuerst",
+   "profil": "aktiv",
+   "n": 50,
+   "siegquote": 100,
+   "patt": 0,
+   "medianSiegS": 541.3500000000554,
+   "q90SiegS": 592.0500000000093,
+   "kaserne6": 86,
+   "schmiede8": 0,
+   "wahlen": 8,
+   "freieWahlen": 1,
+   "ersteWahlS": 68.49999999999825,
+   "techBisForschungS": 46.7999999999617,
+   "techForschungen": 68
+  },
+  {
+   "strategy": "einheiten-zuerst",
+   "profil": "durchschnitt",
+   "n": 50,
+   "siegquote": 100,
+   "patt": 0,
+   "medianSiegS": 624.8499999999794,
+   "q90SiegS": 720.1999999998927,
+   "kaserne6": 100,
+   "schmiede8": 12,
+   "wahlen": 9,
+   "freieWahlen": 2,
+   "ersteWahlS": 68.49999999999825,
+   "techBisForschungS": 52.849999999931754,
+   "techForschungen": 73
+  },
+  {
+   "strategy": "einheiten-zuerst",
+   "profil": "gelegentlich",
+   "n": 50,
+   "siegquote": 96,
+   "patt": 0,
+   "medianSiegS": 753.7499999998622,
+   "q90SiegS": 878.5999999997487,
+   "kaserne6": 100,
+   "schmiede8": 20,
+   "wahlen": 11,
+   "freieWahlen": 3,
+   "ersteWahlS": 68.49999999999825,
+   "techBisForschungS": 53.199999999978814,
+   "techForschungen": 92
+  }
+ ]
+}

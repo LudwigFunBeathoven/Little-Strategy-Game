@@ -1,5 +1,13 @@
 # Änderungen
 
+## v0.9.2-kartenpfad-3 – Branch `exp/kartenpfad`, Teil 3 (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad-3.md`, Bericht `docs/bericht-kartenpfad-3.md`, Testleitfaden `docs/testleitfaden-kartenpfad-3.md`. `main` 0.9.2 ist eingemischt. Spielstand-Version (8) unverändert; der Modus `standard` ist identisch zu `main` 0.9.2.
+- **Wahl-Fahrplan:** zehn Kartenwahlen in gut elf Minuten (Zielzeiten 1:30, 2:40, 3:45 … 11:20, danach alle 65 s). Eine Wahl wird fällig, sobald die EP-Schwelle erreicht ist, spätestens zur Zielzeit, frühestens 45 s nach der letzten. Das Kartensymbol zeigt die Zeit bis zur nächsten Wahl. Protokoll je Wahl mit Zielzeit und tatsächlicher Zeit.
+- **Partiedauer:** die gegnerische Basis hat mehr Lebenspunkte (Leicht und Normal × 4,5, Schwer × 3,0): Normal, durchschnitt endet im Median nach 11:40.
+- **Angebot mit zwei Wegen:** 3 Karten (mit Universität 4); bis zu zwei davon sind Pfadkarten, der Rest Bonuskarten (höchstens eine Wagnis-Karte). Alle Bau-Karten haben gleiches Gewicht.
+- **Keine wirkungslosen Karten:** Bonuskarten erscheinen nur, wenn ihre Wirkung im Spielstand etwas bewirkt (Fabrik, freier Bauplatz, Phase, Versorgung, Fernkämpfer). Die Wagnis-Karte „Volle Auslastung“ erscheint am Versorgungsdeckel nicht mehr.
+- **Mauerwerk:** die Bonuskarte „Festungsbau“ heißt im Modus `karten` „Mauerwerk“, die Pfadkarte behält den Namen.
+
 ## v0.9-kartenpfad-2 – Branch `exp/kartenpfad`, Teil 2 (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-2.md`, Bericht `docs/bericht-kartenpfad-2.md`, Testleitfaden `docs/testleitfaden-kartenpfad-2.md`. Spielwerte und Spielstand-Version (8) unverändert.
 - Kein Dauerstapel mehr in der Bildmitte: Fortschritt zur nächsten Wahl als Kartensymbol mit Füllstand in der Ressourcenleiste.

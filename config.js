@@ -29,6 +29,7 @@ const KF_CONFIG = {
       ziele: [90, 160, 225, 290, 355, 420, 485, 550, 615, 680],
       takt: 65,
       minAbstand: 45,
+      zielzeitIstFrist: true,     // false = Fälligkeit allein nach EP-Schwelle und Höchstabstand, wie in REQ-P.02 beschrieben (Vergleichsmessung im Bericht)
       schwellen: [43, 187, 205, 200, 255, 315, 485, 435, 500, 415, 625, 495],
     },
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)

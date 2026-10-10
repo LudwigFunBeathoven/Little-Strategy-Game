@@ -261,6 +261,21 @@ export class Bot {
   }
 }
 
+
+/* Bewertung der angebotenen Bonuskarten (REQ-P.05, Inventar): je Karte Stand kopieren, Karte wählen, horizon Sekunden mit dem Zufalls-Bot spielen und den Spielstand bewerten.
+   Alle Zweige starten vom selben Stand mit demselben Zufallsstrom; Unterschiede gehen auf die Karte zurück. */
+function scanBonus(G, stats, prof, horizon){
+  const offer = G.S.pendingDraft.options, sc = {};
+  offer.forEach((id, i) => {
+    if (G.OPT[id].pfad) return;
+    const F = forkGame(G); F.chooseDraft(i);
+    const sub = new Bot(Object.assign({}, prof, { lookahead: false, strategy: 'zufall', seed: 77 }));
+    for (let t = 0; t < horizon / DT && F.S.status === 'running'; t++) sub.step(F, null);
+    sc[id] = score(F);
+  });
+  if (Object.keys(sc).length) stats.scan.push({ t: G.S.t, level: G.S.pendingDraft.level, sc });
+}
+
 /* Eine vollständige Partie. Liefert Kennzahlen für den Bericht. */
 /* Paarvergleich der Nachbarschaftsregeln (REQ-6.07 a): nbOff = Gebäudetyp, dessen Regel in dieser Partie ausgeschaltet ist */
 export function playGame(job){
@@ -268,13 +283,13 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp }){
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
   const G = newGame(diff, seed, pacing);
   if (noRush) G.rushWave = () => false;                                   // Paarvergleich: ohne „Welle vorziehen“ (REQ-6.07 c)
-  const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {} };
+  const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {}, scan: [] };
   // Handlungen in den ersten SIM_STYLE_WINDOW_S Sekunden: Anteil der Einheitenkäufe (Merkmal der Strategie für compare-human)
   const acts = { units: 0, other: 0 };
   const picks = [], builtAt = {};                                            // Kartenpfad (REQ-KP.09): gewählte Karten mit Zeit, erste Bauzeit je Gebäude
@@ -290,6 +305,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
   if (strategy === 'einheiten-zuerst'){
     const recordDraft = F => {
       const offer = F.S.pendingDraft.options;
+      if (bonusScan) scanBonus(F, stats, prof, bonusScan);
       for (const id of offer) stats.offered[id] = (stats.offered[id] || 0) + 1;
       const pi = KF_BROWSER_BOT.pfadPick(F, offer, prof.pfad), ci = pi === null ? 0 : pi;
       stats.picked[offer[ci]] = (stats.picked[offer[ci]] || 0) + 1;
@@ -335,6 +351,6 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
-    xpAt, wahlen: S.stats.wahlen || null, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
+    xpAt, wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
 }

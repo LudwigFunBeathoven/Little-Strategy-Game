@@ -6,7 +6,7 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Branch `exp/kartenpfad` (Experiment, nicht auf `main`/`MVP`): v0.9-kartenpfad, Karten steuern das Pacing (Abschnitt „Kartenpfad“ unten, `docs/anforderungen-kartenpfad.md`, `docs/anforderungen-kartenpfad-2.md`, `docs/STAND-kartenpfad.md`).
+Branch `exp/kartenpfad` (Experiment, nicht auf `main`/`MVP`): v0.9-kartenpfad-3, Karten steuern das Pacing (Abschnitt „Kartenpfad“ unten, `docs/anforderungen-kartenpfad.md`, `-2.md`, `-3.md`, `docs/STAND-kartenpfad.md`, Bericht Teil 3: `docs/bericht-kartenpfad-3.md`). `main` 0.9.2 ist eingemischt.
 Stand der Linie `main`: v0.9.2 (Kartenbühne und Entdecken: `docs/anforderungen-kartenpfad-2.md`, `docs/bericht-ui-0.9.md`, Testleitfaden `docs/testleitfaden-ui-0.9.md`). Vorher v0.8.1 (MVP-Veröffentlichung: `docs/anforderungen-mvp-release.md`, `docs/bericht-mvp-release.md`; Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
 Vorher v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`.
 
@@ -44,6 +44,9 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `tools/compare-human.mjs` | Ordnet Sitzungsprotokolle von Menschen dem nächstliegenden Bot-Profil zu. |
 | `tools/browser-bot.js` | Bot „Einheiten zuerst“: Durchlauftest, Protokollprüfung und zweite Simulationsstrategie (REQ-6.09). |
 | `tools/sim-karten.mjs` | Kurzsimulation des Branches Kartenpfad (Pfad-Varianten, Profile, Paarvergleich je Pfadkarte). |
+| `tools/sim-p3.mjs` | Branch Kartenpfad, Teil 3: Wahlzeiten, Abstände, Partiedauer, Siegquoten je Feld (3 Grade × 3 Profile), Pfad-Varianten, `gierig`. |
+| `tools/fahrplan-kalibrieren.mjs` | Branch Kartenpfad: EP-Schwellen des Wahl-Fahrplans aus Referenzläufen ableiten und prüfen (`--modus obergrenze`, `--apply`). |
+| `tools/referenzlauf.mjs` | Branch Kartenpfad: EP-Stand zu den Zielzeiten des Fahrplans (Median) und tatsächliche Wahlzeiten. |
 | `tools/sprachliste.mjs` | Wortliste des Sprach-Audits (`tests/sprache.test.mjs`, Schlüssel mit Präfix `tut.`). |
 | `tools/vergleichsbasis.mjs` | Vergleichsbasis der Simulation: Siegquote, Dauer, Kartenwahlen je Feld (50 Partien, beide Strategien). |
 | `tools/bench-tick.mjs` | Tick-Zeit mit 2 × 60 Einheiten. |
@@ -162,11 +165,17 @@ Er enthält immer genau die neueste Release-Version, nichts dazwischen.
 ## Bekannte offene Punkte
 Siehe Abschnitt „Offen“ in `docs/bericht-tutorial.md` und `docs/bericht-iteration-6.md`.
 
-## Kartenpfad (Branch `exp/kartenpfad`, REQ-KP.01 – KP.09)
+## Kartenpfad (Branch `exp/kartenpfad`, REQ-KP.01 – KP.09, REQ-P.01 – P.06)
 - Schalter `PACING_MODUS` (`config.js`; auf dem Branch `karten`, auf `main` `standard`), im Spielstand `S.pacing`; `?pacing=standard|karten`. Im Modus `standard` ist nichts gesperrt und das Ergebnis der Simulation mit gleichem Seed identisch zu `main`
   (`tests/unveraendert.test.mjs`). `tools/load-core.mjs` lädt im Standardmodus, außer `KF_PACING=karten`.
 - Freischaltlogik in `core.js`: Schlüssel `bau:<gebäude>`, `einheit:<typ>`, `forschung:<id>` (`isOpen`, `unlockKey`), Upgrade-Stufen mit Quelle (`stageSource`), Einheitenersatz (`replaceUnit`, `ownType`). Die Quelle steht nur an der Karte oder Forschung
   (`schaltetFrei` in `data/kartenpfad.js`); es gibt keine zweite Liste. Neue Pfadkarten und Forschungen nur dort ergänzen (Texte `kp.card.*`, `kp.res.*`).
-- Angebot im Modus karten: `drawOptionsKarten` (Meilenstein-Platz, mindestens eine Bonuskarte, höchstens eine Wagnis-Karte, Rückstandsgewicht, harte Grenze `KARTEN.maxWarten`), Mindesttempo `KARTEN.maxAbstand`. Zahlen in `config.js` (`KARTEN`).
-- Kartenbühne (`stage.js`): `UI.kartenbuehne` (`null` = nach Modus), URL `?buehne=1|0`; `KARTENBUEHNE.zeit` (`pause` Standard). Sprach-Audit: Schlüssel mit Präfix `tut.` und `kp.` dürfen die Wörter aus `tools/sprachliste.mjs` nicht enthalten.
+- Angebot im Modus karten (REQ-P.04): `drawOptionsKarten` – 3 Karten, mit Universität 4 (`KARTEN.angebot`); Pfadplätze = min(`KARTEN.pfadPlaetze` = 2, ziehbare Pfadkarten), der Rest sind Bonusplätze (Bonus- und Wagnis-Karten, höchstens eine Wagnis-Karte);
+  harte Grenze `KARTEN.maxWarten` bestimmt, welche Pfadkarten erscheinen; sonst Gewicht (alle Bau-Karten gleich); Neu ziehen und Bann halten die Zahl der Pfadplätze. Bonuskarten tragen im Feld `wirkt` (`data/draft-options.js`) die Bedingung, unter der ihre Wirkung > 0 ist (REQ-P.05, nur Modus karten).
+  Textschlüssel mit Modus-Suffix (`….name.karten`) überschreiben im Modus karten den Standardtext (`t()` in `ui.js`), so heißt die Bonuskarte „Festungsbau“ dort „Mauerwerk“.
+- Wahl-Fahrplan (REQ-P.02, `KARTEN.fahrplan`): Zielzeit je Wahl (`ziele`, ab Wahl 11 je `takt`), EP-Schwellen (`schwellen`), `minAbstand` 45 s, `KARTEN.maxAbstand` 100 s. Fällig wird die nächste Wahl bei erreichter EP-Schwelle, spätestens zur Zielzeit
+  oder `maxAbstand` nach der letzten Wahl (`dueTime`), frühestens `minAbstand` nach der letzten (vor der ersten Wahl kein Mindestabstand). Protokoll je Wahl: `S.stats.wahlen` und `drafts[].sollS/erschienenS`. Schwellen neu ableiten:
+  `node tools/fahrplan-kalibrieren.mjs --profile aktiv,durchschnitt --modus obergrenze --x1 43 --runs 100 --iter 2 --apply`. Die Mitte der Partie bringt kaum EP (Belagerung), darum sichert die Zeit den Takt (Bericht Teil 3).
+- Partiedauer (REQ-P.03): einzige Stellschraube `KARTEN.basisFaktor` (Lebenspunkte der gegnerischen Basis, Zahl oder Tabelle je Grad).
+- Kartenbühne (`stage.js`): `UI.kartenbuehne`, `UI.entdecken` (beide `true`, wie `main` 0.9.2), URL `?buehne=1|0`, `?entdecken=1|0`; `KARTENBUEHNE.zeit` (`pause` Standard). Sprach-Audit: Schlüssel mit Präfix `tut.` und `kp.` dürfen die Wörter aus `tools/sprachliste.mjs` nicht enthalten.
 - Bots wählen Pfadkarten und Pfadforschung (`KF_BROWSER_BOT.pfadPick`, `pfadResearch`); `node tools/sim-karten.mjs --runs 50 --suite varianten|profile|paar` (Rohdaten unter `reports/kartenpfad-*`). Die Bot-Korrektur bei vollem Raster (kein Material zurückhalten, REQ-R.03) kommt aus `main`.

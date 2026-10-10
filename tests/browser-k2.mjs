@@ -270,5 +270,23 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   await d.ctx.close();
 }
 
+/* ---------- P.06: Protokoll je Wahl mit Zielzeit des Fahrplans und tatsächlicher Zeit ---------- */
+{
+  const { ctx, p, errs } = await open('pacing=karten&debug=1');
+  await p.evaluate(() => { __kf.sessionReset(); });
+  for (let k = 1; k <= 2; k++){
+    await p.evaluate(() => { const G = __kf.G; G.S.t = Math.max(G.S.t, G.sollZeit(G.S.level + 1) - 0.02); });
+    await p.waitForFunction(() => !!__kf.G.S.pendingDraft, null, { timeout: 4000 });
+    await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
+    await p.evaluate(() => document.querySelectorAll('.kcard')[0].click());
+    await p.waitForFunction(() => !__kf.G.S.pendingDraft, null, { timeout: 2000 });
+    await settle(p, 300);
+  }
+  const d = await p.evaluate(() => __kf.session().drafts.map(x => ({ level: x.level, sollS: x.sollS, erschienenS: x.erschienenS, t: x.t })));
+  check(d.length === 2 && d[0].sollS === 90 && d[1].sollS === 160 && d.every(x => x.erschienenS != null && Math.abs(x.erschienenS - x.sollS) < 1.5), `P.06: Protokoll nennt Zielzeit und tatsächliche Zeit je Wahl ${JSON.stringify(d)}`);
+  check(errs.length === 0, `P.06: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 await b.close(); server.close();
 process.exit(failed ? 1 : 0);
