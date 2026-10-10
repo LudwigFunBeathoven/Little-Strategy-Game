@@ -268,7 +268,7 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards }){
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
@@ -305,7 +305,8 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     bot = { step: () => b.step(G, stats) };
   }
   const dirs = directionTracker({ lateralOf: G.lateralOf });
-  let wallFall = null;
+  const xpAt = sampleXp ? sampleXp.map(() => null) : null;                  // Referenzlauf (REQ-P.02): EP-Stand zu festen Zeitpunkten
+  let wallFall = null, sx = 0;
   const steps = maxMin * 60 / DT;
   // Paarvergleich (REQ-6.06): Forschung gesperrt bzw. zum Zeitpunkt forceResearch.at in Stufe 1 geschenkt
   if (lockResearch || forceResearch) G.S.research.locked = [lockResearch || forceResearch.id];
@@ -316,6 +317,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     }
     bot.step();
     dirs.sample(G.S, DT);
+    if (xpAt) while (sx < sampleXp.length && G.S.t >= sampleXp[sx]) xpAt[sx++] = G.S.xpTotal;
     if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
   }
   const S = G.S;
@@ -333,6 +335,6 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
-    picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
+    xpAt, wahlen: S.stats.wahlen || null, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
 }

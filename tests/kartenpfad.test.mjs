@@ -14,6 +14,7 @@ const draw = G => { G.S.pendingLevels = 1; G.S.pendingDraft = null; G.S.level++;
 // Angebot direkt über den Kern anstoßen: Stufe anheben und EP setzen
 function newOffer(G){
   G.S.level = G.S.level + 1; G.S.pendingLevels = 1; G.S.pendingDraft = null;
+  if (G.S.pacing === 'karten') G.S.pfad.lastPickT = G.S.t - 1000;          // Mindestabstand (REQ-P.02) erfüllt: die Wahl soll sofort erscheinen
   G.S.xpTotal = G.xpNeed(G.S.level); G.S.xp = G.S.xpTotal;
   G.S.units.push({ id: 90000 + G.S.nextId++, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 });
   for (let i = 0; i < 5 && !G.S.pendingDraft; i++) G.tick(0.05);

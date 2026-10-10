@@ -18,13 +18,20 @@ const KF_CONFIG = {
   /* Kartenpfad (REQ-KP.02, KP.06): Angebot im Modus 'karten'; Startwerte, per Simulation zu kalibrieren */
   KARTEN: {
     rueckstandPlus: 0.5,        // Gewichtszuschlag je Wahl, in der eine ziehbare Bau-Karte nicht im Angebot erschien (Faktor auf das Grundgewicht)
-    xpFaktor: 0.85,             // Modus karten: EP-Stufen × xpFaktor (1 = wie Standard); Simulation KP.7: 0,85 gibt die erste Wahl nach rund 75 s
-    xpWachstum: 1.12,           // Modus karten: Wachstum der EP-Stufen (null = XP_GROWTH 1,55); kleiner heißt mehr Wahlen je Partie (Ziel: mindestens 8 je Partie)
+    /* Wahl-Fahrplan (REQ-P.02): Zielzeit je Wahl in Sekunden Spielzeit (Profil „durchschnitt“, Normal); ab Wahl 11 je takt Sekunden später.
+       schwellen: EP-Schritt je Wahl (Median-Ertrag des Referenzlaufs zwischen zwei Zielzeiten, tools/referenzlauf.mjs); über das Tabellenende gilt der letzte Schritt.
+       Gleich auf allen Schwierigkeitsgraden. minAbstand: frühestens so viele Sekunden nach der letzten Wahl; die EP darüber bleiben erhalten. */
+    fahrplan: {
+      ziele: [90, 160, 225, 290, 355, 420, 485, 550, 615, 680],
+      takt: 65,
+      minAbstand: 45,
+      schwellen: [60, 80, 100, 120, 140, 160, 180, 200, 220, 240],      // vorläufig; Kalibrierung P.2
+    },
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,
     basisFaktor: 3.5,            // Modus karten: Lebenspunkte der gegnerischen Basis × basisFaktor (längere Partien, ohne die frühen Wellen zu verschärfen)
     gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
-    maxAbstand: 120,            // Mindesttempo: steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06)
+    maxAbstand: 100,            // Höchstabstand (Mindesttempo): steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06, P.02)
     maxWarten: 3,               // eine ziehbare Bau-Karte erscheint spätestens in der n-ten Wahl nach ihrer Freigabe (harte Grenze)
   },
   LANGUAGES: ['de', 'en'],

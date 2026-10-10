@@ -12,7 +12,7 @@ import { availableParallelism } from 'node:os';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
 const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, picks: r.picks, builtAt: r.builtAt, built: r.built,
-  researchTimes: r.researchTimes, freeChoices: r.freeChoices, draftTimes: r.draftTimes, offered: r.offered, picked: r.picked, maxArmy: r.maxArmy, cards: r.cards });
+  researchTimes: r.researchTimes, freeChoices: r.freeChoices, wahlen: r.wahlen, draftTimes: r.draftTimes, offered: r.offered, picked: r.picked, maxArmy: r.maxArmy, cards: r.cards });
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');

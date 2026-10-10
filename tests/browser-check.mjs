@@ -935,7 +935,7 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
   const ctx = await b.newContext({ viewport: { width: vw, height: vh } });
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
-  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&buehne=1&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&buehne=1&entdecken=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   const lv = n => p.evaluate(n => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + n); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99990 + n, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); }, n);
   const st = () => p.evaluate(() => { const g = id => document.getElementById(id), r = g('stageCards').getBoundingClientRect(), cs = [...g('stageCards').children];
@@ -999,7 +999,7 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
 {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage();
-  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p.waitForTimeout(400);
+  await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&buehne=0&entdecken=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = G.xpNeed(G.S.level + 1); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99991, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
   await p.waitForFunction(() => __kf.tab === 'cards', null, { timeout: 3000 }).catch(() => {});

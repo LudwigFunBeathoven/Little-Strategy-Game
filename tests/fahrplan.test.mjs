@@ -1,0 +1,104 @@
+// Tests Kartenpfad Teil 3, REQ-P.02: Wahl-Fahrplan (Schwellen aus der Tabelle, Mindest- und Höchstabstand, Protokoll je Wahl).
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { loadCore } from '../tools/load-core.mjs';
+
+function game(pacing = 'karten', seed = 11){
+  const { KlammerCore, KF_CONFIG } = loadCore();
+  const G = KlammerCore.create(); G.FX.on = false; G.newGame('normal', seed, { pacing });
+  G.S.sections.forEach(s => { s.hp = 1e9; });                       // keine Niederlage während der Zeitprüfung
+  return { G, C: KF_CONFIG };
+}
+const immortal = G => G.S.sections.forEach(s => { s.hp = 1e9; });        // chooseDraft kappt die Lebenspunkte wieder auf das Maximum
+const run = (G, seconds, stop = () => false) => { for (let i = 0; i < 20 * seconds && !stop(); i++) G.tick(0.05); };
+
+test('Fahrplan: die Schwelle der Wahl n ist die Summe der Tabelle, über das Ende hinaus gilt der letzte Schritt', () => {
+  const { G, C } = game('karten');
+  const st = C.KARTEN.fahrplan.schwellen;
+  let sum = 0;
+  for (let n = 1; n <= st.length + 3; n++){ sum += st[Math.min(n, st.length) - 1]; assert.equal(Math.round(G.xpNeed(n)), Math.round(sum), `Wahl ${n}`); }
+});
+
+test('Fahrplan: der Standardmodus behält die EP-Stufen von main', () => {
+  const { G, C } = game('standard');
+  const { KlammerCore } = loadCore();
+  for (let n = 1; n <= 8; n++) assert.equal(Math.round(G.xpNeed(n)), Math.round(KlammerCore.xpForLevel(n)), `Stufe ${n}`);
+  assert.ok(C.XP_GROWTH > 1.5);
+});
+
+test('Fahrplan: Schwellen und Zielzeiten sind gleich auf allen Schwierigkeitsgraden', () => {
+  const { KlammerCore } = loadCore();
+  for (const diff of ['leicht', 'normal', 'schwer']){
+    const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, 3, { pacing: 'karten' });
+    assert.equal(Math.round(G.xpNeed(1)), Math.round(game('karten').G.xpNeed(1)), diff);
+    assert.equal(Math.round(G.xpNeed(6)), Math.round(game('karten').G.xpNeed(6)), diff);
+  }
+});
+
+test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühestens minAbstand nach der letzten, die EP bleiben erhalten', () => {
+  const { G, C } = game('karten');
+  const min = C.KARTEN.fahrplan.minAbstand;
+  run(G, 5);
+  G.S.pfad.lastPickT = G.S.t;                                      // soeben gewählt
+  G.S.pendingDraft = null; G.S.pendingLevels = 0;
+  const level = G.S.level;
+  G.gainXp(G.xpNeed(level + 3) - G.S.xpTotal + 1);                  // drei Schwellen auf einmal
+  assert.equal(G.S.pendingLevels, 3);
+  assert.equal(G.S.pendingDraft, null, 'aufgeschoben: Mindestabstand nicht erreicht');
+  const xp = G.S.xpTotal;
+  const p = G.xpProgress(); assert.equal(p.cur, p.need, 'Balken steht voll, solange die Wahl aufgeschoben ist');
+  const t0 = G.S.t;
+  run(G, min - 1);
+  assert.equal(G.S.pendingDraft, null, 'nach minAbstand − 1 s noch nichts');
+  run(G, 2, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft, 'nach minAbstand erscheint die Wahl');
+  assert.ok(G.S.t - t0 >= min - 0.1 && G.S.t - t0 < min + 1, `Erscheinen nach ${G.S.t - t0} s`);
+  assert.ok(G.S.xpTotal >= xp, 'EP gehen nicht verloren');
+  // die zweite der drei fälligen Wahlen folgt wieder erst nach dem Mindestabstand
+  G.chooseDraft(0); immortal(G);
+  assert.equal(G.S.pendingDraft, null);
+  assert.equal(G.S.pendingLevels, 2);
+  run(G, min - 1);
+  assert.equal(G.S.pendingDraft, null);
+  run(G, 2, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft, 'zweite Wahl nach weiteren minAbstand Sekunden');
+});
+
+test('Höchstabstand: ohne EP-Ertrag wird die Wahl nach maxAbstand fällig, danach wieder nach maxAbstand', () => {
+  const { G, C } = game('karten');
+  const max = C.KARTEN.maxAbstand;
+  assert.equal(max, 100, 'Fahrplan: Höchstabstand 100 s');
+  run(G, max + 2, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft, 'fällig');
+  assert.ok(G.S.t >= max && G.S.t < max + 1);
+  assert.equal(G.S.pfad.free, 1);
+  G.chooseDraft(0); immortal(G);
+  const t1 = G.S.t;
+  run(G, max - 5);
+  assert.equal(G.S.pendingDraft, null, 'bis maxAbstand nichts');
+  run(G, 10, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft); assert.ok(G.S.t - t1 >= max - 0.1);
+});
+
+test('Protokoll je Wahl: Zielzeit des Fahrplans, Erscheinen und Wahl', () => {
+  const { G, C } = game('karten');
+  const f = C.KARTEN.fahrplan;
+  run(G, C.KARTEN.maxAbstand + 2, () => G.S.pendingDraft);
+  G.S.sections.forEach(s => { s.hp = 1e9; });
+  const t = G.S.t; G.chooseDraft(0);
+  const w = G.S.stats.wahlen;
+  assert.equal(w.length, 1);
+  assert.equal(w[0].n, 1); assert.equal(w[0].soll, f.ziele[0]);
+  assert.ok(Math.abs(w[0].t - t) < 0.2); assert.ok(w[0].tp >= w[0].t);
+  // ab dem Ende der Tabelle je takt Sekunden später
+  assert.equal(G.sollZeit(f.ziele.length + 2), f.ziele[f.ziele.length - 1] + 2 * f.takt);
+});
+
+test('Standardmodus: kein Mindestabstand, kein Protokoll der Wahlzeiten', () => {
+  const { G } = game('standard');
+  run(G, 5);
+  G.S.pendingDraft = null; G.S.pendingLevels = 0; G.S.pfad.lastPickT = G.S.t;
+  G.gainXp(G.xpNeed(G.S.level + 1) - G.S.xpTotal + 1);
+  assert.ok(G.S.pendingDraft, 'sofort');
+  assert.equal(G.S.stats.wahlen, undefined);
+});

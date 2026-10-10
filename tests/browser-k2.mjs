@@ -244,7 +244,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
 
 /* ---------- K2.07: standard mit Schaltern, standard ohne Schalter ---------- */
 {
-  const a = await open('pacing=standard');
+  const a = await open('pacing=standard&entdecken=0&buehne=0');
   const sa = await a.p.evaluate(() => ({ tabs: [...document.querySelectorAll('[role=tab]')].filter(e => e.checkVisibility()).map(e => e.id), sym: document.getElementById('cardSym').checkVisibility(), stage: document.getElementById('stage').hidden, hud: [...document.querySelectorAll('.hud-item')].filter(e => e.checkVisibility()).length }));
   check(sa.tabs.includes('tab-wall') && sa.tabs.includes('tab-uni') && !sa.sym && sa.stage, `K2.07: standard ohne Schalter wie main (alle Reiter, kein Kartensymbol) ${JSON.stringify(sa)}`);
   await a.ctx.close();

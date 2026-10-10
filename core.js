@@ -276,15 +276,29 @@ function create(){
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   const freeLevels   = () => (S.pfad && S.pfad.free) || 0;       // Stufen aus dem Mindesttempo: sie verschieben die EP-Schwellen nicht (REQ-KP.06)
-  /* Modus karten: eigene EP-Stufen (KARTEN.xpFaktor, xpWachstum), damit der Pfad genug Wahlen je Partie bietet; Standard unverändert */
+  /* Modus karten: Wahl-Fahrplan (REQ-P.02). Die EP-Schwelle der Wahl n steht als Schritt in KARTEN.fahrplan.schwellen (Referenzlauf, tools/referenzlauf.mjs);
+     über das Ende der Tabelle hinaus gilt der letzte Schritt weiter. Standard unverändert. */
+  const fahrplan = () => S.pacing === 'karten' ? C.KARTEN.fahrplan : null;
   function xpSum(n){
-    if (S.pacing !== 'karten' || (C.KARTEN.xpFaktor === 1 && !C.KARTEN.xpWachstum)) return xpForLevel(n);
-    const g = C.KARTEN.xpWachstum || C.XP_GROWTH;
-    let s = 0; for (let k = 1; k <= n; k++) s += C.XP_BASE * C.KARTEN.xpFaktor * Math.pow(g, k - 1);
+    const f = fahrplan();
+    if (!f) return xpForLevel(n);
+    const st = f.schwellen; let s = 0;
+    for (let k = 1; k <= n; k++) s += st[Math.min(k, st.length) - 1];
     return s;
   }
+  /* Zielzeit der Wahl n in Sekunden Spielzeit (Fahrplan; ab dem Ende der Tabelle je takt Sekunden später) */
+  function sollZeit(n){
+    const f = fahrplan(); if (!f) return null;
+    return n <= f.ziele.length ? f.ziele[n - 1] : f.ziele[f.ziele.length - 1] + (n - f.ziele.length) * f.takt;
+  }
+  /* Mindestabstand (REQ-P.02): eine fällige Wahl erscheint frühestens minAbstand Sekunden nach der letzten; die EP darüber bleiben erhalten */
+  const draftReady = () => { const f = fahrplan(); return !f || S.t - S.pfad.lastPickT >= f.minAbstand; };
   const xpNeed       = n => xpSum(n - freeLevels()) * mMul('xpNeed');
-  const xpProgress   = () => ({ level: S.level, cur: S.xpTotal - xpNeed(S.level), need: xpNeed(S.level + 1) - xpNeed(S.level) });
+  const xpProgress   = () => {
+    const need = xpNeed(S.level + 1) - xpNeed(S.level);
+    // Wahl fällig, aber durch den Mindestabstand aufgeschoben: der Balken steht voll (die nächste Schwelle liegt hinter dieser Wahl)
+    return { level: S.level, cur: S.pacing === 'karten' && S.pendingLevels > 0 && !S.pendingDraft ? need : S.xpTotal - xpNeed(S.level), need };
+  };
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
   const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));
@@ -932,7 +946,7 @@ function create(){
       S.level++; S.pendingLevels++;
       log('log.levelUp', { n: S.level });
     }
-    if (!S.pendingDraft && S.pendingLevels > 0) offerDraft();
+    if (!S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
   }
   /* Pfadkarten (Modus 'karten'): ziehbar ab der abWahl-ten Wahl, wenn ihre Voraussetzungen stehen und keine Exklusivkarte gewählt ist (REQ-KP.02) */
   const requirementMet = b => b.startsWith('gebaut:') ? has(b.slice(7)) : sourceMet(b);
@@ -1025,6 +1039,9 @@ function create(){
     const options = S.pacing === 'karten' ? drawOptionsKarten(draftSize()) : drawOptions(draftSize());
     if (!options.length){ S.pendingLevels = 0; return; }
     S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0 };
+    if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Zielzeit des Fahrplans, Erscheinen, Wahl (REQ-P.06)
+      const d = S.pendingDraft; (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, soll: sollZeit(d.level), t: Math.round(S.t * 10) / 10, tp: null });
+    }
   }
   /* Neu ziehen (REQ-5.07): alle Optionen der offenen Wahl neu ziehen, je Wahl höchstens mAdd('rerolls')-mal */
   const rerollsLeft = () => S.pendingDraft ? Math.max(0, mAdd('rerolls') - (S.pendingDraft.rerolled || 0)) : 0;
@@ -1138,7 +1155,8 @@ function create(){
     log('log.draft', { name: '@' + o.nameKey, tier: S.draft.stacks[o.id] });
     S.pendingDraft = null;
     S.pendingLevels--;
-    if (S.pendingLevels > 0) offerDraft();
+    if (S.stats.wahlen && S.stats.wahlen.length) S.stats.wahlen[S.stats.wahlen.length - 1].tp = Math.round(S.t * 10) / 10;
+    if (S.pendingLevels > 0 && draftReady()) offerDraft();
     emit('cardChosen', { id: o.id });
     return true;
   }
@@ -1186,7 +1204,9 @@ function create(){
     }
     S.t += dt;
     S.stats.prod[phase()].time += dt;
-    // Mindesttempo (REQ-KP.06): nach maxAbstand Sekunden ohne Wahl wird die nächste fällig; die EP-Schwellen der folgenden Wahlen bleiben unverändert
+    // Aufgeschobene Wahl (Mindestabstand, REQ-P.02) erscheint, sobald der Abstand erreicht ist
+    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
+    // Höchstabstand (REQ-KP.06, P.02): nach maxAbstand Sekunden ohne Wahl wird die nächste fällig; die EP-Schwellen der folgenden Wahlen bleiben unverändert
     if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels === 0 && S.t - S.pfad.lastPickT >= C.KARTEN.maxAbstand){
       S.level++; S.pfad.free++; S.pendingLevels++; S.stats.freeChoices = (S.stats.freeChoices || 0) + 1;
       log('log.freeChoice', { n: S.level });
@@ -1320,7 +1340,7 @@ function create(){
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
-    phase, xpProgress, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    phase, xpProgress, sollZeit, gainXp, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,
