@@ -6,7 +6,7 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Branch `exp/kartenpfad` (Experiment, nicht auf `main`/`MVP`): v0.9-kartenpfad-3, Karten steuern das Pacing (Abschnitt „Kartenpfad“ unten, `docs/anforderungen-kartenpfad.md`, `-2.md`, `-3.md`, `docs/STAND-kartenpfad.md`, Bericht Teil 3: `docs/bericht-kartenpfad-3.md`). `main` 0.9.2 ist eingemischt.
+Branch `exp/kartenpfad` (Experiment, nicht auf `main`/`MVP`): v0.9.2-kartenpfad-4, Karten steuern das Pacing (Abschnitt „Kartenpfad“ unten, `docs/anforderungen-kartenpfad.md`, `-2.md`, `-3.md`, `-4.md`, `docs/STAND-kartenpfad.md`, Bericht Teil 3: `docs/bericht-kartenpfad-3.md`, Teil 4: `docs/bericht-kartenpfad-4.md`). `main` 0.9.2 ist eingemischt.
 Stand der Linie `main`: v0.9.2 (Kartenbühne und Entdecken: `docs/anforderungen-kartenpfad-2.md`, `docs/bericht-ui-0.9.md`, Testleitfaden `docs/testleitfaden-ui-0.9.md`). Vorher v0.8.1 (MVP-Veröffentlichung: `docs/anforderungen-mvp-release.md`, `docs/bericht-mvp-release.md`; Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
 Vorher v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`.
 
@@ -22,6 +22,7 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `config.js` | **Alle** Zahlenwerte (Balancing, Regeln, Tooltip-Zeiten, Schwierigkeitsgrade). |
 | `data/draft-options.js` | Spezialkarten mit Stufen (`tiers`), deklarativ. Neue Karten nur hier ergänzen. |
 | `data/research.js` | Forschungsbaum der Universität, deklarativ; Wirkungen über dieselbe Pipeline wie Karten. |
+| `data/linien.js` | Branch Kartenpfad, Teil 4: Zeichen je Karte (Strategielinien Militär, Wirtschaft, Verteidigung) und die Gebäude-Varianten (Fabrik, Kaserne, Schmiede), deklarativ. Stufen und ihre Boni stehen in `config.js` (`LINIEN`). |
 | `data/kartenpfad.js` | Branch Kartenpfad: Pfadkarten (Bau, Technologie, Wagnis) und ihre Forschungen, deklarativ; daraus leitet `core.js` Sperren und Upgrade-Stufen ab. |
 | `stage.js` | Branch Kartenpfad: Kartenbühne in der Bildmitte und Stapel (`Stage`). |
 | `data/neighbors.js` | Nachbarschaftsregeln im 3×3-Raster, je Gebäudetyp eine, nur orthogonal. |
@@ -44,6 +45,8 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `tools/compare-human.mjs` | Ordnet Sitzungsprotokolle von Menschen dem nächstliegenden Bot-Profil zu. |
 | `tools/browser-bot.js` | Bot „Einheiten zuerst“: Durchlauftest, Protokollprüfung und zweite Simulationsstrategie (REQ-6.09). |
 | `tools/sim-karten.mjs` | Kurzsimulation des Branches Kartenpfad (Pfad-Varianten, Profile, Paarvergleich je Pfadkarte). |
+| `tools/sim-p4.mjs` | Branch Kartenpfad, Teil 4: Basismessung (`--suite basis`), Linien-Bots ohne und mit `?druck=hoch` (`--suite linien`). |
+| `tools/bildzeit.mjs` | Bildzeit im Browser bei 20/40/80 Einheiten (nur berichten). |
 | `tools/sim-p3.mjs` | Branch Kartenpfad, Teil 3: Wahlzeiten, Abstände, Partiedauer, Siegquoten je Feld (3 Grade × 3 Profile), Pfad-Varianten, `gierig`. |
 | `tools/fahrplan-kalibrieren.mjs` | Branch Kartenpfad: EP-Schwellen des Wahl-Fahrplans aus Referenzläufen ableiten und prüfen (`--modus obergrenze`, `--apply`). |
 | `tools/referenzlauf.mjs` | Branch Kartenpfad: EP-Stand zu den Zielzeiten des Fahrplans (Median) und tatsächliche Wahlzeiten. |
@@ -179,3 +182,17 @@ Siehe Abschnitt „Offen“ in `docs/bericht-tutorial.md` und `docs/bericht-iter
 - Partiedauer (REQ-P.03): einzige Stellschraube `KARTEN.basisFaktor` (Lebenspunkte der gegnerischen Basis, Zahl oder Tabelle je Grad).
 - Kartenbühne (`stage.js`): `UI.kartenbuehne`, `UI.entdecken` (beide `true`, wie `main` 0.9.2), URL `?buehne=1|0`, `?entdecken=1|0`; `KARTENBUEHNE.zeit` (`pause` Standard). Sprach-Audit: Schlüssel mit Präfix `tut.` und `kp.` dürfen die Wörter aus `tools/sprachliste.mjs` nicht enthalten.
 - Bots wählen Pfadkarten und Pfadforschung (`KF_BROWSER_BOT.pfadPick`, `pfadResearch`); `node tools/sim-karten.mjs --runs 50 --suite varianten|profile|paar` (Rohdaten unter `reports/kartenpfad-*`). Die Bot-Korrektur bei vollem Raster (kein Material zurückhalten, REQ-R.03) kommt aus `main`.
+
+
+## Strategielinien, Gebäude-Aufwertung, Schlüsselkarten (Branch `exp/kartenpfad`, Teil 4, REQ-S.01 – S.09)
+- **Zeichen und Linien** (nur Modus karten): Jede Karte und jeder Variantentyp trägt null, ein oder zwei Zeichen einer Linie (`KF_LINIEN.zeichen`, `data/linien.js`). Es zählen gewählte Karten und stehende, fertige Varianten (je Variantentyp einmal).
+  Stufe 1 ab 2, Stufe 2 ab 4 Zeichen (`C.LINIEN.zeichenStufen`, `maxStufe`); die Boni stehen in `C.LINIEN.stufen` und wirken über dieselbe Pipeline wie Karten (`mods()` in `core.js`, Zustand `G.lineState()`).
+  Die Oberfläche zeigt eine Linie erst mit ihrer Stufe 1 (`Disc 'hud:lines'`, Leiste `#hudLines`, Hinweise `linie_<name>`); Zeichen an Karten und Varianten erst danach. Neue Spielgrößen stehen im Kommentar von `LINIEN` in `config.js`.
+- **Gebäude-Aufwertung**: Ein Gebäude wird einmal zu einer Variante aufgewertet (`G.upgradeBuilding`, `variantBlock`, `slot.variant`, `slot.upg`). Kosten `LINIEN.aufwertung.kostenFaktor` × Baukosten, Dauer `dauerS` (das Gebäude wirkt nicht: `has`, `countType`, `matRate`, Nachbarschaft ignorieren `slot.upg`),
+  sichtbar ab Minute `abMinute` mit stehendem Gebäude des Typs. Der Platz behält seinen Typ (Ausbaustufen und Nachbarschaftsregeln bleiben). Nach Änderungen an `S.slots` von außen `S.slotVer++`, sonst veraltet der Cache der Modifikatoren.
+- **Schlüsselkarten** (`schluessel` in `data/draft-options.js`): sechs Karten, zwei je Linie, zwei Zeichen, eine Stufe, ab Wahl 3 und nur mit Wirkung (`wirkt`). Angebotsausgleich: ab Wahl `LINIEN.schluessel.abWahl` spätestens jede `spaetestensJe`-te Wahl eine Schlüsselkarte (Bonusplatz, `keyDue`);
+  führt der Spieler eine Linie (`vornAb` Zeichen), zieht ihre Schlüsselkarte mit `gewichtVorne`-fachem Gewicht. Im Modus standard gibt es sie nicht.
+- **Pool im Modus karten**: `KF_PFAD.entfallenKarten` (Kriegserfahrung, Serienbau, Bauleitung) und `KF_PFAD.entfallen` (Forschungen: Schildträger, Ingenieurskunst) sind nicht erreichbar; `KARTEN.kartenTiers` ersetzt Stufen einzelner Karten (Glücksritter: Wellenabstand +25 %, Söldnerheer: Produktion × 0,8) über `G.tiersOf(o)`.
+  Die Kaserne ist ab Start baubar (Echtes Militär: Werfer und +2 Versorgung). Schwer hat eigene EP-Schwellen (`KARTEN.schwellenGrad`).
+- **`?druck=hoch`** (Testschalter, Standard aus): verstärkt die Zahl der Einheiten regulärer Gegnerwellen ab Minute 4 um `C.DRUCK.hoch.faktor`; `S.druck`, im Protokoll (`druck`). Spielstand-Version 9.
+- Messung: `node tools/sim-p4.mjs --suite linien --runs 50` (Linien-Bots), `--suite basis`; Browser: `tests/browser-l4.mjs`.

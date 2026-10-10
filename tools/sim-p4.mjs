@@ -2,6 +2,7 @@
 // Aufruf:  node tools/sim-p4.mjs --suite basis [--runs 50] [--gierigRuns 20] [--json reports/kartenpfad4-basis.json]
 //   Filter: --diffs leicht,normal,schwer  --profiles aktiv,durchschnitt,gelegentlich  --strategy einheiten-zuerst|gierig
 //   linien Teil 4: die drei Linien-Bots (militaer, wirtschaft, verteidigung) und der schnelle Bot ohne Linie auf Normal/durchschnitt, je ohne und mit ?druck=hoch (--druck aus|hoch|beide)
+//   schluessel Paarvergleich je Schlüsselkarte (REQ-S.06): der Linien-Bot mit und ohne die Karte (Bann), Normal/durchschnitt, mit ?druck=hoch (--druck aus|hoch)
 //   basis  Ausgangslage vor allen Änderungen von Teil 4: Fabrikanteil im Raster (Minute 2/5/10), seltene und legendäre Karten je Partie
 //          (angeboten, gewählt), verlorene Mauer-Lebenspunkte je Partie, Siegquoten und Wahlzeiten; 3 Grade × 3 Profile (schneller Bot), dazu „gierig“ (Normal, durchschnitt)
 // Gleiche Seeds in allen Feldern. Die Simulation misst Stärke, nicht Spielspaß.
@@ -15,7 +16,7 @@ const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, see
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
-  parentPort.postMessage(workerData.jobs.map(j => Object.assign(SLIM(playGame(j)), { suite: j.suite, variant: j.variant, druckName: j.druckName })));
+  parentPort.postMessage(workerData.jobs.map(j => Object.assign(SLIM(playGame(j)), { suite: j.suite, variant: j.variant, druckName: j.druckName, arm: j.arm })));
 } else {
   process.env.KF_PACING = 'karten';
   const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
@@ -37,6 +38,10 @@ if (!isMainThread){
   if (SUITE === 'linien')
     for (const linie of LINIEN) for (const druck of (DRUCK === 'beide' ? ['aus', 'hoch'] : [DRUCK])) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'linien', diff: arg('diff', 'normal'), profile: arg('profile', 'durchschnitt'), strategy: EZ, linie: linie === 'ohne' ? undefined : linie, pfad: linie === 'ohne' ? 'militaer' : undefined, variant: linie, druck: druck === 'hoch' ? 'hoch' : undefined, druckName: druck, seed: seedOf(5, r) });
+  const KEYS = [['drillmeister', 'militaer'], ['vorhut', 'militaer'], ['handelsnetz', 'wirtschaft'], ['ruecklage', 'wirtschaft'], ['bollwerk', 'verteidigung'], ['gegenstoss', 'verteidigung']];
+  if (SUITE === 'schluessel')
+    for (const [card, linie] of KEYS) for (const arm of ['mit', 'ohne']) for (let r = 0; r < RUNS; r++)
+      jobs.push({ ...base, suite: 'schluessel', diff: 'normal', profile: 'durchschnitt', strategy: EZ, linie, variant: card, arm, druck: arg('druck', 'hoch') === 'hoch' ? 'hoch' : undefined, druckName: arg('druck', 'hoch'), banCards: arm === 'ohne' ? [card] : undefined, seed: seedOf(6, r) });
   const n = Math.max(1, Math.min(availableParallelism(), 8));
   const sorted = jobs.map((j, i) => ({ j, i })).sort((a, b) => (b.j.strategy === 'gierig') - (a.j.strategy === 'gierig'));
   const chunks = Array.from({ length: n }, () => []);
@@ -78,11 +83,29 @@ if (!isMainThread){
   };
   const report = { suite: SUITE, runs: RUNS, gierigRuns: GRUNS, felder: [], gierig: null, seltenheit: Object.fromEntries(Object.entries(rarity).filter(([, v]) => v !== 'common')) };
 
+  if (SUITE === 'schluessel'){
+    console.log(`SCHLÜSSELKARTEN – Paarvergleich (Linien-Bot, Normal/durchschnitt, druck ${arg('druck', 'hoch')}, ${RUNS} Partien je Arm)\n`);
+    console.log('Karte         | Linie        | Siege mit | Siege ohne (Bann) | Differenz | gewählt in | Siege, wenn gewählt | Dauer Median mit / ohne');
+    const rows = [];
+    for (const [card, linie] of KEYS){
+      const mit = results.filter(r => r.suite === 'schluessel' && r.variant === card && r.arm === 'mit'), ohne = results.filter(r => r.suite === 'schluessel' && r.variant === card && r.arm === 'ohne');
+      const w = a => pc(a.filter(r => r.status === 'won').length, a.length), picked = mit.filter(r => (r.keyPicked || []).includes(card));
+      const row = { card, linie, mit: w(mit), ohne: w(ohne), differenz: Math.round((w(mit) - w(ohne)) * 10) / 10, gewaehltAnteil: pc(picked.length, mit.length), siegeWennGewaehlt: picked.length ? w(picked) : null,
+        differenzWennGewaehlt: picked.length ? Math.round((w(picked) - w(ohne)) * 10) / 10 : null, dauerMit: median(mit.map(r => r.t)), dauerOhne: median(ohne.map(r => r.t)), siegDauerMit: median(mit.filter(r => r.status === 'won').map(r => r.t)), siegDauerOhne: median(ohne.filter(r => r.status === 'won').map(r => r.t)) };
+      rows.push(row);
+      console.log(`${card.padEnd(13)} | ${linie.padEnd(12)} | ${String(row.mit).padStart(8)}% | ${String(row.ohne).padStart(16)}% | ${String(row.differenz).padStart(8)} | ${String(row.gewaehltAnteil).padStart(8)}% | ${row.siegeWennGewaehlt == null ? '–' : row.siegeWennGewaehlt + '% (' + row.differenzWennGewaehlt + ' pp)'} | ${mm(row.dauerMit)} / ${mm(row.dauerOhne)}`);
+    }
+    const worst = Math.max(...rows.map(r => Math.max(r.differenz, r.differenzWennGewaehlt ?? -1e9)));
+    console.log(`\nGrößter Zuwachs der Siegquote durch eine Schlüsselkarte: ${worst} pp (Soll ≤ 25)`);
+    report.schluessel = rows;
+    if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify(report));
+    process.exit(0);
+  }
   if (SUITE === 'linien'){
     const rs0 = results.filter(r => r.suite === 'linien');
     const rows = [];
     console.log(`LINIEN-BOTS Teil 4 (${EZ}, ${arg('diff', 'normal')}/${arg('profile', 'durchschnitt')}, ${RUNS} Partien je Zeile, Modus karten)\n`);
-    console.log('Bot          | Druck | Siege | Nied. | offen | Dauer Median | Stufe 1 (Anteil, Median) | Stufe 2 (Anteil, Median) | Fabriken ohne Variante Min 5/10 | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße | Schlüsselkarten-Angebote (Median) / gewählt');
+    console.log('Bot          | Druck | Siege | Nied. | offen | Dauer Median | Stufe 1 (Anteil, Median) | Stufe 2 (Anteil, Median) | Stufe 3 (Anteil, Median) | Fabriken ohne Variante Min 5/10 | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße | Schlüsselkarten-Angebote (Median) / gewählt');
     for (const linie of LINIEN) for (const druck of (DRUCK === 'beide' ? ['aus', 'hoch'] : [DRUCK])){
       const rs = rs0.filter(r => r.variant === linie && r.druckName === druck);
       if (!rs.length) continue;
@@ -91,23 +114,23 @@ if (!isMainThread){
       const plain = t => mean(rs.map(r => r.grid && r.grid[t] ? (r.grid[t].types.fabrik || 0) - Object.entries(r.grid[t].variants || {}).filter(([id]) => ['werkstatt', 'manufaktur', 'wachstube'].includes(id)).reduce((a, [, c]) => a + c, 0) : null).filter(x => x != null));
       const s = stat(rs);
       const row = { linie, druck, n: rs.length, siegquote: s.siegquote, niederlagen: s.niederlagen, patt: s.patt, dauerMedian: s.dauerMedian, siegMedian: s.siegMedian, wahlenMedian: s.wahlenMedian,
-        stufeAnteil: own ? [1, 2].map(k => rs.filter(r => r.lineT[own][k] != null).length / rs.length) : null, stufeMedian: own ? [1, 2].map(k => median(rs.map(r => r.lineT[own][k]).filter(x => x != null))) : null,
-        stufeAllLines: Object.fromEntries(['militaer', 'wirtschaft', 'verteidigung'].map(l => [l, [1, 2].map(k => ({ anteil: rs.filter(r => r.lineT[l][k] != null).length / rs.length, median: median(rs.map(r => r.lineT[l][k]).filter(x => x != null)) }))])),
+        stufeAnteil: own ? [1, 2, 3].map(k => rs.filter(r => r.lineT[own][k] != null).length / rs.length) : null, stufeMedian: own ? [1, 2, 3].map(k => median(rs.map(r => r.lineT[own][k]).filter(x => x != null))) : null,
+        stufeAllLines: Object.fromEntries(['militaer', 'wirtschaft', 'verteidigung'].map(l => [l, [1, 2, 3].map(k => ({ anteil: rs.filter(r => r.lineT[l][k] != null).length / rs.length, median: median(rs.map(r => r.lineT[l][k]).filter(x => x != null)) }))])),
         fabrikenOhneVariante: { 300: plain(300), 600: plain(600) }, fabrikenMittel: s.fabrikenMittel, mauerVerlustMittel: s.mauerVerlustMittel, mauerVerlustMedian: s.mauerVerlustMedian,
         towerKills: mean(rs.map(r => r.towerKills)), towerMaterial: mean(rs.map(r => r.towerMaterial)), counterWaves: mean(rs.map(r => r.counterWaves)), wavesRepelled: mean(rs.map(r => r.wavesRepelled)),
         varianten: (() => { const m = {}; for (const r of rs) for (const v of new Set((r.variants || []).map(x => x.id))) m[v] = (m[v] || 0) + 1; return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +(v / rs.length).toFixed(2)])); })(),
         keyOffersMedian: median(rs.map(r => r.keyOffers)), keyPickedMittel: mean(rs.map(r => (r.keyPicked || []).length)), keyPickedIds: (() => { const m = {}; for (const r of rs) for (const id of r.keyPicked || []) m[id] = (m[id] || 0) + 1; return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +(v / rs.length).toFixed(2)])); })(),
         variantenAnzahlMittel: mean(rs.map(r => (r.variants || []).length)), wahlen: s.wahl };
       rows.push(row);
-      console.log(`${linie.padEnd(12)} | ${druck.padEnd(5)} | ${String(s.siegquote).padStart(4)}% | ${String(s.niederlagen).padStart(4)}% | ${String(s.patt).padStart(4)}% | ${mm(s.dauerMedian).padStart(12)} | ${stage(1).padEnd(24)} | ${stage(2).padEnd(24)} | ${f1(row.fabrikenOhneVariante[300])}/${f1(row.fabrikenOhneVariante[600])}`.padEnd(150) + ` | ${String(Math.round(s.mauerVerlustMittel)).padStart(6)} | ${f1(row.towerKills).padStart(6)} | ${f1(row.counterWaves).padStart(5)} | ${row.keyOffersMedian} / ${f1(row.keyPickedMittel)}`);
+      console.log(`${linie.padEnd(12)} | ${druck.padEnd(5)} | ${String(s.siegquote).padStart(4)}% | ${String(s.niederlagen).padStart(4)}% | ${String(s.patt).padStart(4)}% | ${mm(s.dauerMedian).padStart(12)} | ${stage(1).padEnd(24)} | ${stage(2).padEnd(24)} | ${stage(3).padEnd(24)} | ${f1(row.fabrikenOhneVariante[300])}/${f1(row.fabrikenOhneVariante[600])}`.padEnd(150) + ` | ${String(Math.round(s.mauerVerlustMittel)).padStart(6)} | ${f1(row.towerKills).padStart(6)} | ${f1(row.counterWaves).padStart(5)} | ${row.keyOffersMedian} / ${f1(row.keyPickedMittel)}`);
     }
     console.log('\nVarianten (Anteil der Partien, in denen mindestens eine Variante dieses Typs fertig wurde; je Bot) und mittlere Zahl fertiger Varianten');
     for (const row of rows) console.log(`${row.linie.padEnd(12)} ${row.druck.padEnd(5)} ${JSON.stringify(row.varianten)}  Mittel ${f1(row.variantenAnzahlMittel)}`);
-    console.log('\nStufen aller Linien je Bot (Anteil der Partien, Median in s): ' + rows.map(r => `${r.linie}/${r.druck}: ` + Object.entries(r.stufeAllLines).map(([l, a]) => `${l[0].toUpperCase()}1 ${Math.round(100 * a[0].anteil)}% ${mm(a[0].median)}, ${l[0].toUpperCase()}2 ${Math.round(100 * a[1].anteil)}% ${mm(a[1].median)}`).join(' · ')).join('\n  '));
+    console.log('\nStufen aller Linien je Bot (Anteil der Partien, Median in s): ' + rows.map(r => `${r.linie}/${r.druck}: ` + Object.entries(r.stufeAllLines).map(([l, a]) => `${l[0].toUpperCase()}1 ${Math.round(100 * a[0].anteil)}% ${mm(a[0].median)}, ${l[0].toUpperCase()}2 ${Math.round(100 * a[1].anteil)}% ${mm(a[1].median)}, ${l[0].toUpperCase()}3 ${Math.round(100 * a[2].anteil)}% ${mm(a[2].median)}`).join(' · ')).join('\n  '));
     report.linien = rows;
     const aus = rows.filter(r => r.druck === 'aus' && r.linie !== 'ohne').map(r => r.siegquote), hoch = rows.filter(r => r.druck === 'hoch' && r.linie !== 'ohne').map(r => r.siegquote);
     if (aus.length) console.log(`\nSpannweite der Siegquoten der Linien-Bots: ohne Schalter ${Math.max(...aus) - Math.min(...aus)} pp` + (hoch.length ? `, druck=hoch ${Math.max(...hoch) - Math.min(...hoch)} pp (Hypothese ≤ 20)` : ''));
-    if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, variant: r.variant, druck: r.druckName, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10, lineT: r.lineT, signs: r.signs, variants: r.variants, grid: r.grid, wallLost: r.wallLost, offers: r.offers, picks: r.picks, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })), towerKills: r.towerKills, counterWaves: r.counterWaves })) }));
+    if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, variant: r.variant, druck: r.druckName, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10, lineT: r.lineT, signs: r.signs, variants: r.variants, grid: r.grid, wallLost: r.wallLost, keyOffers: r.keyOffers, keyPicked: r.keyPicked, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })), towerKills: r.towerKills, counterWaves: r.counterWaves })) }));
     process.exit(0);
   }
   console.log(`BASISMESSUNG Teil 4 (${EZ}, ${RUNS} Partien je Feld, Modus karten, vor allen Änderungen)\n`);

@@ -701,11 +701,12 @@ function create(){
     S.nextWave += C.WAVE_INTERVAL_S;
     S.nextEnemy = rollEnemyWave();
   }
-  /* Gegenstoß (Teil 4, Linie Verteidigung Stufe 2 und Schlüsselkarte): nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus (ohne Kosten, Takt beginnt neu) */
+  /* Gegenstoß (Teil 4, Linie Verteidigung Stufe 2 und Schlüsselkarte): nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus (ohne Kosten, zusätzlich zum regelmäßigen Takt) */
   function counterWave(){
     if (!S.queue.length) return false;
+    const keep = S.nextOwnWave;                                            // der Gegenstoß ist eine zusätzliche Welle: der regelmäßige Takt bleibt
     launchOwnWave({ boost: mAdd('counterBoost') });
-    S.nextOwnWave = S.t + ownWaveInterval();
+    S.nextOwnWave = keep;
     S.stats.counterWaves = (S.stats.counterWaves || 0) + 1;
     return true;
   }

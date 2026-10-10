@@ -1,0 +1,32 @@
+LINIEN-BOTS Teil 4 (einheiten-zuerst, normal/durchschnitt, 50 Partien je Zeile, Modus karten)
+
+Bot          | Druck | Siege | Nied. | offen | Dauer Median | Stufe 1 (Anteil, Median) | Stufe 2 (Anteil, Median) | Fabriken ohne Variante Min 5/10 | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße | Schlüsselkarten-Angebote (Median) / gewählt
+ohne         | aus   |  100% |    0% |    0% |        11:37 | –                        | –                        | 6.0/5.4                            |     88 |    0.0 |   0.2 | 3 / 0.5
+ohne         | hoch  |  100% |    0% |    0% |        11:44 | –                        | –                        | 6.0/5.4                            |     46 |    0.0 |   0.1 | 3 / 0.4
+militaer     | aus   |  100% |    0% |    0% |        13:24 | 100 % 3:10               | 100 % 3:45               | 5.9/5.4                            |    107 |    0.0 |   0.0 | 3 / 1.9
+militaer     | hoch  |   98% |    0% |    2% |        12:38 | 100 % 3:10               | 100 % 3:45               | 6.0/5.4                            |    117 |    0.0 |   0.5 | 3 / 1.9
+wirtschaft   | aus   |   92% |    8% |    0% |        14:43 | 100 % 3:12               | 100 % 5:55               | 0.0/0.0                            |    395 |    0.0 |   0.0 | 4 / 1.6
+wirtschaft   | hoch  |   82% |   18% |    0% |        14:29 | 100 % 3:12               | 98 % 5:55                | 0.0/0.0                            |    558 |    0.1 |   0.2 | 4 / 1.6
+verteidigung | aus   |   88% |    6% |    6% |        22:40 | 100 % 3:10               | 100 % 3:45               | 6.1/5.3                            |   1935 |   23.0 |  38.1 | 7 / 2.5
+verteidigung | hoch  |   74% |    8% |   18% |        25:08 | 100 % 3:10               | 100 % 3:45               | 6.2/5.5                            |   2204 |   27.6 |  40.0 | 9 / 2.4
+
+Varianten (Anteil der Partien, in denen mindestens eine Variante dieses Typs fertig wurde; je Bot) und mittlere Zahl fertiger Varianten
+ohne         aus   {}  Mittel 0.0
+ohne         hoch  {}  Mittel 0.0
+militaer     aus   {"werkstatt":1,"exerzierplatz":1,"waffenschmiede":0.7}  Mittel 4.1
+militaer     hoch  {"werkstatt":1,"exerzierplatz":1,"waffenschmiede":0.76}  Mittel 4.3
+wirtschaft   aus   {"manufaktur":1}  Mittel 6.9
+wirtschaft   hoch  {"manufaktur":1}  Mittel 6.9
+verteidigung aus   {"wachstube":1,"garnison":1,"ruestkammer":0.96}  Mittel 5.1
+verteidigung hoch  {"wachstube":1,"garnison":1,"ruestkammer":1}  Mittel 5.2
+
+Stufen aller Linien je Bot (Anteil der Partien, Median in s): ohne/aus: M1 100% 4:50, M2 92% 8:05 · W1 50% 9:10, W2 10% 11:20 · V1 56% 10:15, V2 14% 11:20
+  ohne/hoch: M1 100% 4:50, M2 92% 8:05 · W1 44% 10:15, W2 2% 10:15 · V1 58% 9:10, V2 14% 11:06
+  militaer/aus: M1 100% 3:10, M2 100% 3:45 · W1 0% –, W2 0% – · V1 4% 14:25, V2 0% –
+  militaer/hoch: M1 100% 3:10, M2 100% 3:45 · W1 4% 21:21, W2 2% 28:52 · V1 4% 15:21, V2 2% 22:06
+  wirtschaft/aus: M1 88% 12:05, M2 32% 17:55 · W1 100% 3:12, W2 100% 5:55 · V1 4% 26:26, V2 0% –
+  wirtschaft/hoch: M1 76% 10:15, M2 18% 20:16 · W1 100% 3:12, W2 98% 5:55 · V1 6% 21:40, V2 2% 24:01
+  verteidigung/aus: M1 100% 13:30, M2 72% 18:06 · W1 62% 18:42, W2 24% 23:56 · V1 100% 3:10, V2 100% 3:45
+  verteidigung/hoch: M1 100% 12:25, M2 80% 20:15 · W1 66% 21:40, W2 24% 23:56 · V1 100% 3:10, V2 100% 3:45
+
+Spannweite der Siegquoten der Linien-Bots: ohne Schalter 12 pp, druck=hoch 24 pp (Hypothese ≤ 20)

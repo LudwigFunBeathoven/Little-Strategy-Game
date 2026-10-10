@@ -91,7 +91,7 @@ function hudTip(item){
         rows.push([`${t(`line.${l}.name`)} ${st[l].stage}`, nx ? t('line.hud.next', nx) : t('line.hud.max')]);
         for (let k = 1; k <= st[l].stage; k++) rows.push([t('tip.line.stage', { stage: k }), lineEffect(l, k)]);
       }
-      return { title: t('hud.lines'), body: t('tip.hud.lines', { a: th[0], b: th[1] }), rows };
+      return { title: t('hud.lines'), body: t('tip.hud.lines', { a: th[0], b: th[1], c: th[2] }), rows };
     }
   }
   return { title: item };

@@ -68,7 +68,7 @@ const Session = (() => {
       G[name] = (...args) => {
         const ok = orig[name](...args);
         if (ok && P && !muted){
-          record(name, { arg: args[0] });
+          record(name, name === 'upgradeBuilding' ? { arg: args[0], variant: args[1] } : { arg: args[0] });
           if (name === 'repair') P.wallUse.repairs++;
           if (name === 'buy' && /^(mauer|stacheln|moertel|turm|reichweite|kadenz)/.test(String(args[0]))) P.wallUse.upgrades++;
           if (name === 'rerollDraft') draftActs.rerolled++;

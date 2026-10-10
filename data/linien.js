@@ -15,7 +15,7 @@ const KF_LINIEN = {
     /* Pfadkarten (Gelehrte und Metallverarbeitung ohne Zeichen) */
     echtesMilitaer: 'militaer', pfadFestungsbau: 'verteidigung', handel: 'wirtschaft',
     fortgeschritteneTaktiken: 'militaer', ballistik: 'militaer', eiserneKlingen: 'militaer', befestigungskunde: 'verteidigung',
-    glaskanonen: 'militaer', volleAuslastung: 'militaer',
+    /* Wagnis-Karten (Glaskanonen, Volle Auslastung) ohne Zeichen: sie verändern die Regeln für alle Linien */
     /* Wirtschaft */
     bessereFabriken: 'wirtschaft', schwerePressen: 'wirtschaft', doppelschicht: 'wirtschaft', nachtschicht: 'wirtschaft',
     kriegsanleihe: 'wirtschaft', handelskontor: 'wirtschaft', grossauftrag: 'wirtschaft',
@@ -28,10 +28,10 @@ const KF_LINIEN = {
     /* Automatisierung: je nach Gegenstand */
     instandhaltung: 'verteidigung', zeugmeister: 'verteidigung',               // Reparatur und Türme
     fliessband: 'wirtschaft', rationalisierung: 'wirtschaft', selbstlaeufer: 'wirtschaft',   // Presse und Fabriken
-    dauerauftrag: 'militaer', werkmeister: 'militaer',                         // Einheiten und Schmiede
-    /* Sonderregel: je nach Gegenstand; Glücksritter (Kartenzahl) ohne Zeichen */
-    grosseArmee: 'militaer', allesAufDieMitte: 'militaer', blitzkrieg: 'militaer', soeldnerheer: 'militaer',
-    verbrannteErde: 'verteidigung',
+    dauerauftrag: 'wirtschaft', werkmeister: 'wirtschaft',                     // selbsttätige Ausgaben für Einheiten und Schmiede
+    /* Sonderregel: je nach Gegenstand; Glücksritter (Kartenzahl), Große Armee und Blitzkrieg (Wellentakt) ohne Zeichen.
+       Zeichenquellen (ohne Schlüsselkarten): Militär 15, Wirtschaft 14, Verteidigung 13 – ohne Absicht des Spielers soll keine Linie von selbst vorn liegen (Bericht kartenpfad-4). */
+    soeldnerheer: 'wirtschaft', allesAufDieMitte: 'verteidigung', verbrannteErde: 'verteidigung',
     /* Schlüsselkarten (REQ-S.06): zwei Zeichen ihrer Linie */
     drillmeister: ['militaer', 'militaer'], vorhut: ['militaer', 'militaer'],
     handelsnetz: ['wirtschaft', 'wirtschaft'], ruecklage: ['wirtschaft', 'wirtschaft'],

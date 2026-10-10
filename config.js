@@ -56,24 +56,24 @@ const KF_CONFIG = {
   },
   /* Teil 4 (REQ-S.04, S.05): Strategielinien (Militär, Wirtschaft, Verteidigung) und Gebäude-Aufwertung, nur im Modus karten.
      Jede Karte und jede Gebäude-Variante trägt null, ein oder zwei Zeichen (data/linien.js); es zählen gewählte Karten und stehende, fertige Varianten (je Variantentyp einmal).
-     Stufe n einer Linie gilt ab zeichenStufen[n − 1] Zeichen; die Boni der Stufen 1 bis n wirken zusammen. maxStufe 2: eine dritte Stufe (6 Zeichen) nur, wenn die Simulation
-     zeigt, dass Stufe 2 in der Mehrzahl der Partien vor Minute 8 erreicht wird. Eine Wirkung steht wie bei den Karten als { stat, mul | add }; neue Größen:
+     Stufe n einer Linie gilt ab zeichenStufen[n − 1] Zeichen; die Boni der Stufen 1 bis n wirken zusammen. Die dritte Stufe (6 Zeichen, Soll) gibt es, weil Stufe 2 in der Simulation
+     in der Mehrzahl der Partien vor Minute 8 erreicht wird (Bericht kartenpfad-4); maxStufe 2 schaltet sie ab. Eine Wirkung steht wie bei den Karten als { stat, mul | add }; neue Größen:
        unitDmg (Schaden eigener Einheiten ×), extraUnit (zusätzliche Einheiten je eigener Welle, braucht die Kaserne), kontorYield (Zinsen des Kontors ×),
        upgradeCost (Kosten der Ausbauten ×), variantCost (Kosten der Gebäude-Aufwertung ×), towerKillMaterial (Material je EP-Wert eines Turm-Abschusses),
        counterWave (nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus), counterBoost (Stärkezuschlag dieser Welle). */
   LINIEN: {
     zeichenStufen: [2, 4, 6],
-    maxStufe: 2,
+    maxStufe: 3,
     stufen: {
       militaer:     [[{ stat: 'unitDmg', mul: 1.1 }],
                      [{ stat: 'extraUnit', add: 1 }, { stat: 'unitHp', mul: 1.1 }],
-                     []],
+                     [{ stat: 'unitDmg', mul: 1.1 }, { stat: 'unitHp', mul: 1.1 }]],
       wirtschaft:   [[{ stat: 'materialYield', mul: 1.1 }],
                      [{ stat: 'kontorYield', mul: 1.5 }, { stat: 'upgradeCost', mul: 0.8 }, { stat: 'variantCost', mul: 0.8 }],
-                     []],
+                     [{ stat: 'materialYield', mul: 1.1 }, { stat: 'kontorYield', mul: 1.25 }]],
       verteidigung: [[{ stat: 'turretDmg', mul: 1.2 }, { stat: 'wallHp', mul: 1.15 }],
                      [{ stat: 'towerKillMaterial', add: 1.5 }, { stat: 'counterWave', add: 1 }],
-                     []],
+                     [{ stat: 'counterBoost', add: 0.3 }, { stat: 'turretDmg', mul: 1.2 }]],
     },
     /* Gebäude-Aufwertung: Kosten = kostenFaktor × Baukosten des Grundgebäudes (Fabrik: FACTORY_BASE_COST), Dauer in Sekunden Spielzeit (das Gebäude wirkt währenddessen nicht),
        sichtbar ab Minute abMinute, sobald ein Gebäude des Typs steht */

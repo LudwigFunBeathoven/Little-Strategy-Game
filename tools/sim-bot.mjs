@@ -325,7 +325,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
   const xpAt = sampleXp ? sampleXp.map(() => null) : null;                  // Referenzlauf (REQ-P.02): EP-Stand zu festen Zeitpunkten
   let wallFall = null, sx = 0;
   const lineT = {};                                                          // Teil 4: Zeitpunkt, zu dem eine Linie Stufe 1 bzw. 2 erreicht
-  for (const l of ['militaer', 'wirtschaft', 'verteidigung']) lineT[l] = [null, null, null];
+  for (const l of ['militaer', 'wirtschaft', 'verteidigung']) lineT[l] = [null, null, null, null];
   // Teil 4 (REQ-S.09): Belegung des Rasters zu festen Zeitpunkten und Lebenspunkte, die die Mauer insgesamt verliert (Abnahme je Schritt, Reparatur zählt nicht)
   const GRID_AT = [120, 300, 600], grid = {}, wallPrev = G.S.sections.map(x => x.hp);
   let wallLost = 0, gi = 0;
@@ -342,7 +342,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     if (xpAt) while (sx < sampleXp.length && G.S.t >= sampleXp[sx]) xpAt[sx++] = G.S.xpTotal;
     if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
     G.S.sections.forEach((x, k) => { if (x.hp < wallPrev[k]) wallLost += wallPrev[k] - x.hp; wallPrev[k] = x.hp; });
-    if (G.S.pacing === 'karten'){ const ls = G.lines(); for (const l in lineT) for (let st = 1; st <= 2; st++) if (lineT[l][st] === null && ls[l] && ls[l].stage >= st) lineT[l][st] = Math.round(G.S.t); }
+    if (G.S.pacing === 'karten'){ const ls = G.lines(); for (const l in lineT) for (let st = 1; st <= 3; st++) if (lineT[l][st] === null && ls[l] && ls[l].stage >= st) lineT[l][st] = Math.round(G.S.t); }
     while (gi < GRID_AT.length && G.S.t >= GRID_AT[gi]){
       const types = G.S.slots.filter(Boolean).map(x => x.type), n = {};
       for (const ty of types) n[ty] = (n[ty] || 0) + 1;
@@ -366,6 +366,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
+    enemyBaseFrac: S.enemyBaseHp / G.diffCfg().enemyBaseHp, supplyEnd: G.supplyCap(), kills: S.kills, losses: S.losses, matRateEnd: Math.round(G.matRate() * 10) / 10,
     grid, wallLost: Math.round(wallLost), lineT, signs: Object.fromEntries(Object.entries(G.lineState()).map(([l, v]) => [l, v.signs])), variants: S.stats.variants || [],
     keyOffers: S.stats.keyOffers || 0, keyPicked: S.draft ? ['drillmeister', 'vorhut', 'handelsnetz', 'ruecklage', 'bollwerk', 'gegenstoss'].filter(id => (S.draft.stacks[id] || 0) > 0) : [], towerKills: S.stats.towerKills || 0, towerMaterial: Math.round(S.stats.towerMaterial || 0), counterWaves: S.stats.counterWaves || 0, wavesRepelled: S.stats.wavesRepelled || 0, xpAt, wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
