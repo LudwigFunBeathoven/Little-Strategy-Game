@@ -200,7 +200,7 @@ Siehe Bericht, Abschnitt „Auslegungen und Abweichungen“.
 ## Umsetzung
 | Inkrement | Inhalt |
 |---|---|
-| L.0 | S.01: Fehler „undefined“ in der Wellenvorschau (Reiter Armee) behoben, siehe unten. Basismessung vor allen Änderungen (S.09): `reports/kartenpfad4-basis-*.json`. |
+| L.0 | S.01: Fehler „undefined“ in der Wellenvorschau (Reiter Armee) behoben, siehe unten. Basismessung vor allen Änderungen (S.09): `tools/sim-p4.mjs --suite basis` (450 Partien schneller Bot, 3 Grade × 3 Profile, dazu 20 Partien „gierig“; `reports/kartenpfad4-basis.json`, `.txt`) und `tools/bildzeit.mjs` (Bildzeit bei 20/40/80 Einheiten, `reports/kartenpfad4-bildzeit-basis.json`). Der Simulator hält jetzt Raster-Belegung (Minute 2/5/10) und verlorene Mauer-Lebenspunkte je Partie fest. |
 
 ## S.01: Ursache des Fehlers „undefined“
 Die Wellenvorschau im Reiter Armee (`renderPreview` in `panels.js`) setzte je Einheit ein Zeichen aus einer lokalen Tabelle `GLYPH`. Mit dem Einmischen von `main` 0.9.1 (Textsymbole statt Bilder) kamen die Zeichen für Läufer, Werfer und Schildträger aus `main`; im Branch ergänzt wurden Reiter, Schwertkämpfer und Bogenschütze, **nicht** aber Armbrustschütze und Katapult. `GLYPH['armbrust']` und `GLYPH['katapult']` waren `undefined`, die Zeile lautete „undefined×1“.

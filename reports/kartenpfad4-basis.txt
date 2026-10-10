@@ -1,0 +1,16 @@
+BASISMESSUNG Teil 4 (einheiten-zuerst, 50 Partien je Feld, Modus karten, vor allen Änderungen)
+
+Grad    | Profil       | Siege | Nied. | Dauer | Fabriken Min 2/5/10 (Median) | Anteil an Gebäuden Min 10 | selten ang./gew. | legendär ang./gew. | Mauer-Verlust (Median)
+leicht  | aktiv        |  100% |    0% | 10:14 | 7/6/5                        | 60 %                     | 5.0/0.0          | 0.0/0.0            | 0
+leicht  | durchschnitt |  100% |    0% | 11:37 | 6/6/6                        | 62 %                     | 6.0/1.0          | 0.0/0.0            | 0
+leicht  | gelegentlich |  100% |    0% | 14:26 | 4/6/6                        | 61 %                     | 9.0/2.0          | 0.0/0.0            | 0
+normal  | aktiv        |  100% |    0% | 10:24 | 7/6/5                        | 60 %                     | 4.0/1.0          | 0.0/0.0            | 0
+normal  | durchschnitt |  100% |    0% | 11:56 | 6/6/6                        | 61 %                     | 6.0/1.0          | 0.0/0.0            | 0
+normal  | gelegentlich |   98% |    2% | 14:56 | 3/6/5                        | 60 %                     | 11.0/2.0         | 0.0/0.0            | 32
+schwer  | aktiv        |   96% |    4% |  9:33 | 6/6/5                        | 61 %                     | 4.0/0.0          | 0.0/0.0            | 104
+schwer  | durchschnitt |   96% |    4% | 11:23 | 5/6/5                        | 60 %                     | 5.0/1.0          | 0.0/0.0            | 115
+schwer  | gelegentlich |   66% |   34% | 14:07 | 3/6/5                        | 60 %                     | 6.0/1.0          | 0.0/0.0            | 210
+
+gierig (Normal, durchschnitt, 20 Partien): Siege 100 %, Fabriken Min 2/5/10 6/6/6, selten 4.0/1.0, legendär 0.0/0.0, Mauer-Verlust 465
+
+Normal/durchschnitt: Fabriken im Mittel Min 2/5/10: 6.0 / 6.1 / 5.5 von 9 Plätzen

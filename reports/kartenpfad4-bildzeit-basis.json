@@ -1,0 +1,23 @@
+{
+ "rows": [
+  {
+   "soll": 20,
+   "einheiten": 24,
+   "zeichnenMs": 0.8,
+   "tickMs": 0.207
+  },
+  {
+   "soll": 40,
+   "einheiten": 42,
+   "zeichnenMs": 0.5,
+   "tickMs": 0.143
+  },
+  {
+   "soll": 80,
+   "einheiten": 84,
+   "zeichnenMs": 0.7,
+   "tickMs": 0.168
+  }
+ ],
+ "hinweis": "Headless-Chromium ohne Grafikkarte, Median"
+}
