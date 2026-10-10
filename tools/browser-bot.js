@@ -15,10 +15,17 @@ function KF_BROWSER_BOT(G, profile, hooks){
     const S = G.S;
     if (S.pendingDraft){ pickFirst(); return; }
     if (o.useWall) S.sections.forEach((s, i) => { if (s.hp < G.sectionMax(i) * 0.5) G.repair(i); });
-    const free = S.slots.findIndex(x => !x);
+    let free = S.slots.findIndex(x => !x);
     // Bauplatz mit dem größten Nachbarschaftsnutzen (REQ-6.07 a); bei Gleichstand der erste freie
     const bestSlot = type => { let best = free, bg = -Infinity;
       S.slots.forEach((x, i) => { if (x) return; const g = G.neighborGain ? G.neighborGain(i, type) : 0; if (g > bg + 1e-9){ bg = g; best = i; } }); return best; };
+    // Modus karten: ist das Raster voll und ein inzwischen freigeschaltetes Gebäude fehlt, reißt der Bot eine Fabrik ab (wie der Bot „gierig“); sonst blockiert ein früh gefülltes Raster die Kaserne
+    if (free < 0 && !o.noBuild && G.pacing() === 'karten' && G.factoryCount() > 3){
+      const want = ['kaserne', 'schmiede', 'universitaet', 'kontor'].find(b => !(o.forbid || []).includes(b) && !G.has(b) && G.isBuildable(b));
+      const i = want ? S.slots.findIndex(x => x && x.type === 'fabrik') : -1;
+      if (i >= 0) G.demolish(i);
+    }
+    free = S.slots.findIndex(x => !x);
     if (free >= 0 && !o.noBuild){
       const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);

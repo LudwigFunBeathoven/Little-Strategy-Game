@@ -30,12 +30,12 @@ const KF_CONFIG = {
       takt: 65,
       minAbstand: 45,
       zielzeitIstFrist: true,     // false = Fälligkeit allein nach EP-Schwelle und Höchstabstand, wie in REQ-P.02 beschrieben (Vergleichsmessung im Bericht)
-      schwellen: [43, 187, 205, 200, 255, 315, 485, 435, 500, 415, 625, 495],
+      schwellen: [43, 187, 205, 190, 250, 310, 445, 460, 540, 535, 500],
     },
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,
-    basisFaktor: { leicht: 4.5, normal: 4.5, schwer: 3.0 },   // Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer; eine Zahl gilt für alle Grade).
-                                // Vorher 3,5 für alle: Normal/durchschnitt 10:30 → jetzt 11:40; Schwer 3,0, damit das 90. Perzentil der Dauer unter 20 min bleibt (mit 4,5: 22:30)
+    basisFaktor: { leicht: 5.5, normal: 5.5, schwer: 3.0 },   // Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer; eine Zahl gilt für alle Grade).
+                                // Vorher 3,5 für alle. Normal/durchschnitt jetzt 11:56 mit 10 Wahlen; Schwer 3,0, sonst reicht das 90. Perzentil der Dauer von „gelegentlich“ über 20 min (Bericht kartenpfad-3)
     gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
     maxAbstand: 100,            // Höchstabstand: steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06, P.02)
     angebot: { basis: 3, universitaet: 4 },   // Karten je Angebot im Modus karten (REQ-P.04); Standard: DRAFT_OPTIONS_BASE / _UNIVERSITY

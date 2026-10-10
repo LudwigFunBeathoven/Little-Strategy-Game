@@ -3,7 +3,7 @@
 //   felder     Leicht/Normal/Schwer × aktiv/durchschnitt/gelegentlich mit dem schnellen Bot („einheiten-zuerst“)
 //   varianten  die drei Pfad-Varianten (militaer, wissen, festung) auf Normal, Profil durchschnitt
 //   bonus      Bewertung der angebotenen Bonuskarten durch Vorausschau (45 s) in Partien von „einheiten-zuerst“, Normal, durchschnitt (Inventar REQ-P.05)
-//   gierig     Bot mit Vorausschau („gierig“), Normal, durchschnitt und gelegentlich (aktiv braucht je Partie über drei Minuten und entfällt)
+//   gierig     Bot mit Vorausschau („gierig“), Normal: durchschnitt mit allen drei Varianten, gelegentlich nur militaer, je --gierigRuns (30) Partien; aktiv braucht je Partie über drei Minuten und entfällt
 // Gleiche Seeds in allen Feldern. Die Simulation misst Stärke, nicht Spielspaß.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { availableParallelism } from 'node:os';
@@ -20,7 +20,7 @@ if (!isMainThread){
 } else {
   process.env.KF_PACING = 'karten';
   const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
-  const RUNS = Number(arg('runs', 50)), SUITE = arg('suite', 'alle'), JSON_OUT = arg('json', null), EZ = arg('strategy', 'einheiten-zuerst');
+  const RUNS = Number(arg('runs', 50)), GRUNS = Number(arg('gierigRuns', 30)), SUITE = arg('suite', 'alle'), JSON_OUT = arg('json', null), EZ = arg('strategy', 'einheiten-zuerst');
   const seedOf = (k, r) => (5000 + r * 7919 + k * 104729) >>> 0;
   const { loadCore } = await import('./load-core.mjs');
   const core = loadCore(), C = core.KF_CONFIG, F = C.KARTEN.fahrplan;
@@ -35,7 +35,7 @@ if (!isMainThread){
     for (const variant of VARIANTS) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'varianten', diff: 'normal', profile: 'durchschnitt', strategy: EZ, pfad: variant, variant, seed: seedOf(1, r) });
   if (SUITE === 'alle' || SUITE === 'gierig')
-    for (const profile of ['durchschnitt', 'gelegentlich']) for (const variant of VARIANTS) for (let r = 0; r < RUNS; r++)
+    for (const [profile, variants] of [['durchschnitt', VARIANTS], ['gelegentlich', ['militaer']]]) for (const variant of variants) for (let r = 0; r < GRUNS; r++)
       jobs.push({ ...base, suite: 'gierig', diff: 'normal', profile, strategy: 'gierig', pfad: variant, variant, seed: seedOf(3, r) });
 
   if (SUITE === 'bonus')
