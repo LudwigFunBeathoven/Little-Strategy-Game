@@ -11,7 +11,7 @@ import { writeFileSync } from 'node:fs';
 
 const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, picks: r.picks, builtAt: r.builtAt, built: r.built,
   freeChoices: r.freeChoices, wahlen: r.wahlen || [], offers: r.offers, grid: r.grid, wallLost: r.wallLost, cards: r.cards, maxArmy: r.maxArmy,
-  lineT: r.lineT, signs: r.signs, variants: r.variants, towerKills: r.towerKills, towerMaterial: r.towerMaterial, counterWaves: r.counterWaves, wavesRepelled: r.wavesRepelled });
+  lineT: r.lineT, signs: r.signs, variants: r.variants, keyOffers: r.keyOffers, keyPicked: r.keyPicked, towerKills: r.towerKills, towerMaterial: r.towerMaterial, counterWaves: r.counterWaves, wavesRepelled: r.wavesRepelled });
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
@@ -82,7 +82,7 @@ if (!isMainThread){
     const rs0 = results.filter(r => r.suite === 'linien');
     const rows = [];
     console.log(`LINIEN-BOTS Teil 4 (${EZ}, ${arg('diff', 'normal')}/${arg('profile', 'durchschnitt')}, ${RUNS} Partien je Zeile, Modus karten)\n`);
-    console.log('Bot          | Druck | Siege | Nied. | offen | Dauer Median | Stufe 1 (Anteil, Median) | Stufe 2 (Anteil, Median) | Fabriken ohne Variante Min 5/10 | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße');
+    console.log('Bot          | Druck | Siege | Nied. | offen | Dauer Median | Stufe 1 (Anteil, Median) | Stufe 2 (Anteil, Median) | Fabriken ohne Variante Min 5/10 | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße | Schlüsselkarten-Angebote (Median) / gewählt');
     for (const linie of LINIEN) for (const druck of (DRUCK === 'beide' ? ['aus', 'hoch'] : [DRUCK])){
       const rs = rs0.filter(r => r.variant === linie && r.druckName === druck);
       if (!rs.length) continue;
@@ -96,9 +96,10 @@ if (!isMainThread){
         fabrikenOhneVariante: { 300: plain(300), 600: plain(600) }, fabrikenMittel: s.fabrikenMittel, mauerVerlustMittel: s.mauerVerlustMittel, mauerVerlustMedian: s.mauerVerlustMedian,
         towerKills: mean(rs.map(r => r.towerKills)), towerMaterial: mean(rs.map(r => r.towerMaterial)), counterWaves: mean(rs.map(r => r.counterWaves)), wavesRepelled: mean(rs.map(r => r.wavesRepelled)),
         varianten: (() => { const m = {}; for (const r of rs) for (const v of new Set((r.variants || []).map(x => x.id))) m[v] = (m[v] || 0) + 1; return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +(v / rs.length).toFixed(2)])); })(),
+        keyOffersMedian: median(rs.map(r => r.keyOffers)), keyPickedMittel: mean(rs.map(r => (r.keyPicked || []).length)), keyPickedIds: (() => { const m = {}; for (const r of rs) for (const id of r.keyPicked || []) m[id] = (m[id] || 0) + 1; return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +(v / rs.length).toFixed(2)])); })(),
         variantenAnzahlMittel: mean(rs.map(r => (r.variants || []).length)), wahlen: s.wahl };
       rows.push(row);
-      console.log(`${linie.padEnd(12)} | ${druck.padEnd(5)} | ${String(s.siegquote).padStart(4)}% | ${String(s.niederlagen).padStart(4)}% | ${String(s.patt).padStart(4)}% | ${mm(s.dauerMedian).padStart(12)} | ${stage(1).padEnd(24)} | ${stage(2).padEnd(24)} | ${f1(row.fabrikenOhneVariante[300])}/${f1(row.fabrikenOhneVariante[600])}`.padEnd(150) + ` | ${String(Math.round(s.mauerVerlustMittel)).padStart(6)} | ${f1(row.towerKills).padStart(6)} | ${f1(row.counterWaves)}`);
+      console.log(`${linie.padEnd(12)} | ${druck.padEnd(5)} | ${String(s.siegquote).padStart(4)}% | ${String(s.niederlagen).padStart(4)}% | ${String(s.patt).padStart(4)}% | ${mm(s.dauerMedian).padStart(12)} | ${stage(1).padEnd(24)} | ${stage(2).padEnd(24)} | ${f1(row.fabrikenOhneVariante[300])}/${f1(row.fabrikenOhneVariante[600])}`.padEnd(150) + ` | ${String(Math.round(s.mauerVerlustMittel)).padStart(6)} | ${f1(row.towerKills).padStart(6)} | ${f1(row.counterWaves).padStart(5)} | ${row.keyOffersMedian} / ${f1(row.keyPickedMittel)}`);
     }
     console.log('\nVarianten (Anteil der Partien, in denen mindestens eine Variante dieses Typs fertig wurde; je Bot) und mittlere Zahl fertiger Varianten');
     for (const row of rows) console.log(`${row.linie.padEnd(12)} ${row.druck.padEnd(5)} ${JSON.stringify(row.varianten)}  Mittel ${f1(row.variantenAnzahlMittel)}`);

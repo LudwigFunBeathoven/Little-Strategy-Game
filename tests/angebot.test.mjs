@@ -50,6 +50,8 @@ const CASES = {
   instandhaltung: {}, fliessband: {}, dauerauftrag: {},
   // Sonderregel
   allesAufDieMitte: {}, blitzkrieg: {}, soeldnerheer: {}, verbrannteErde: {}, gluecksritter: {},
+  // Schlüsselkarten (Teil 4, REQ-S.06): ab Wahl 3 und nur mit Wirkung; Tests der Wirkung in tests/schluessel.test.mjs
+  drillmeister: { schluessel: true }, vorhut: { schluessel: true }, handelsnetz: { schluessel: true }, ruecklage: { schluessel: true }, bollwerk: { schluessel: true }, gegenstoss: { schluessel: true },
 };
 
 test('Jede Bonuskarte ist in der Fallliste erfasst', () => {
@@ -60,6 +62,7 @@ test('Jede Bonuskarte ist in der Fallliste erfasst', () => {
 
 for (const [id, c] of Object.entries(CASES)){
   test(`Angebotsbedingung ${id}: bei Wirkung null nicht angeboten, mit Wirkung angeboten`, () => {
+    if (c.schluessel) return;                                           // eigene Tests: tests/schluessel.test.mjs
     if (c.entfaellt){ const { G } = game(11, 6); assert.equal(offered(G, id), false, `${id}: im Modus karten gestrichen`); return; }
     // angeboten: Grundzustand (Fabrik steht, Platz frei), Stufe der Partie hoch genug
     { const { G } = game(11, 6); if (c.base) c.base(G); if (c.on) c.on(G);

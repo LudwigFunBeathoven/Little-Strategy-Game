@@ -46,7 +46,7 @@ test('Legendäre Karten: einmalig, mit Nachteil', () => {
   assert.ok(leg.length >= 2);
   for (const o of leg){
     assert.equal(o.tiers.length, 1, `${o.id} einmalig`);
-    assert.ok(o.tiers[0].drawback && o.tiers[0].drawback.length, `${o.id} mit Nachteil`);
+    if (!o.schluessel) assert.ok(o.tiers[0].drawback && o.tiers[0].drawback.length, `${o.id} mit Nachteil`);       // Schlüsselkarten (Teil 4, REQ-S.06) haben keinen Nachteil
   }
 });
 

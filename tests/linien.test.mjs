@@ -29,7 +29,7 @@ test('S.04: Zuordnung der Zeichen: jede Karte hat höchstens zwei, Linien sind b
   assert.deepEqual([].concat(L.zeichen.handel), ['wirtschaft']);
   assert.equal(L.zeichen.gelehrte, undefined); assert.equal(L.zeichen.metallverarbeitung, undefined);
   // Kategorien: Armee → Militär, Wirtschaft → Wirtschaft, Basis → Verteidigung
-  for (const o of G.ALL_OPTIONS.filter(o => !o.pfad && !['kriegserfahrung', 'serienbau', 'bauleitung'].includes(o.id))){       // gestrichene Karten (Teil 4) tragen kein Zeichen
+  for (const o of G.ALL_OPTIONS.filter(o => !o.pfad && !o.schluessel && !['kriegserfahrung', 'serienbau', 'bauleitung'].includes(o.id))){       // gestrichene Karten und Schlüsselkarten (zwei Zeichen) tragen es anders
     const z = [].concat(L.zeichen[o.id] || []);
     if (o.category === 'armee') assert.deepEqual(z, ['militaer'], o.id);
     if (o.category === 'wirtschaft') assert.deepEqual(z, ['wirtschaft'], o.id);

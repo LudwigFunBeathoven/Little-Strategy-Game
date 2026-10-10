@@ -12,10 +12,14 @@
      synergy    optional: { stat, perCard } – Wirkung × (1 + perCard × Zahl gewählter Karten der eigenen Kategorie, sie selbst eingeschlossen)
      condition  optional: wann die Wirkung greift ({ type, value })
      requires   optional: Voraussetzung für das Angebot ({ upgrade } | { building } | { unit }); gilt in allen Modi
+     schluessel optional, nur Modus 'karten' (Teil 4, REQ-S.06): Schlüsselkarte einer Linie ('militaer' | 'wirtschaft' | 'verteidigung'); sie trägt zwei Zeichen (data/linien.js),
+                erscheint erst ab Wahl abWahl und nur, wenn ihre Wirkung im Spielstand größer als null ist (wirkt); der Angebotsausgleich (REQ-S.07) zieht sie bevorzugt
+     abWahl     optional: frühestens ab der n-ten Kartenwahl im Angebot
      wirkt      optional, nur Modus 'karten' (REQ-P.05): Voraussetzung, damit die Wirkung im Spielstand größer als null ist; die Karte erscheint sonst nicht.
                 { building } das Gebäude steht   { phase: 'mid'|'late' } Phase der Partie erreicht   { freeSlot: true } ein Bauplatz ist frei
                 { supply: n } Versorgungslimit ≥ n (Gruppen dieser Größe)   { ranged: true } eine Fernkampfeinheit ist verfügbar
-                { zinsdeckel: true } der Zinsdeckel des Kontors wurde erreicht (Teil 4)
+                { zinsdeckel: true } der Zinsdeckel des Kontors wurde erreicht (Teil 4)   { variant: id } eine fertige Variante dieses Typs steht   { variants: [id, n] } mindestens n Gebäude dieser Variante stehen
+                { tower: true } mindestens ein Turm ist gebaut   { unitFight: true } eine eigene Welle kann ausrücken (Kaserne steht)
                 Karten ohne Eintrag wirken ab Spielbeginn (Drill, Kriegsanleihe, Zinnen …).
    Werte sind Vorgaben, Kalibrierung in I4.8. */
 const KF_DRAFT_OPTIONS = [
@@ -125,4 +129,20 @@ const KF_DRAFT_OPTIONS = [
     tiers: [{ effect: [{ stat: 'scorchedEarth', add: 300 }], drawback: [{ stat: 'repairCost', mul: 2 }] }] },
   { id: 'gluecksritter', category: 'sonderregel', rarity: 'rare', nameKey: 'draft.gluecksritter.name', descKey: 'draft.gluecksritter.desc',
     tiers: [{ effect: [{ stat: 'draftSize', add: 1 }], drawback: [{ stat: 'xpNeed', mul: 1.15 }] }] },
+
+  /* ---------- Schlüsselkarten der Linien (Teil 4, REQ-S.06; nur Modus karten) ----------
+     Eine Schlüsselkarte macht eine Investition wertvoll, die vorher keine war. Zwei je Linie, je zwei Zeichen (data/linien.js), eine Stufe, kein Nachteil.
+     Namen und Werte sind Vorgaben; „Drillmeister“ und „Bollwerk“ heißen so, weil „Drill“ und „Bastion“ schon gewöhnliche Karten sind. */
+  { id: 'drillmeister', category: 'sonderregel', rarity: 'legendary', schluessel: 'militaer', abWahl: 3, wirkt: { variant: 'exerzierplatz' },
+    nameKey: 'draft.drillmeister.name', descKey: 'draft.drillmeister.desc', tiers: [{ effect: [{ stat: 'drillQuality', add: 1 }] }] },
+  { id: 'vorhut', category: 'armee', rarity: 'rare', schluessel: 'militaer', abWahl: 3, wirkt: { building: 'kaserne' },
+    nameKey: 'draft.vorhut.name', descKey: 'draft.vorhut.desc', tiers: [{ effect: [{ stat: 'extraUnit', add: 2 }] }] },
+  { id: 'handelsnetz', category: 'wirtschaft', rarity: 'legendary', schluessel: 'wirtschaft', abWahl: 3, wirkt: { variants: ['manufaktur', 2] },
+    nameKey: 'draft.handelsnetz.name', descKey: 'draft.handelsnetz.desc', tiers: [{ effect: [{ stat: 'handelsnetz', add: 0.1 }] }] },
+  { id: 'ruecklage', category: 'wirtschaft', rarity: 'rare', schluessel: 'wirtschaft', abWahl: 3, wirkt: { building: 'kontor' },
+    nameKey: 'draft.ruecklage.name', descKey: 'draft.ruecklage.desc', tiers: [{ effect: [{ stat: 'ruecklage', add: 0.15 }] }] },
+  { id: 'bollwerk', category: 'basis', rarity: 'rare', schluessel: 'verteidigung', abWahl: 3, requires: { upgrade: 'turm' }, wirkt: { tower: true },
+    nameKey: 'draft.bollwerk.name', descKey: 'draft.bollwerk.desc', tiers: [{ effect: [{ stat: 'turretDmg', mul: 1.5 }, { stat: 'towerKillXp', mul: 2 }] }] },
+  { id: 'gegenstoss', category: 'sonderregel', rarity: 'legendary', schluessel: 'verteidigung', abWahl: 3, wirkt: { building: 'kaserne' },
+    nameKey: 'draft.gegenstoss.name', descKey: 'draft.gegenstoss.desc', tiers: [{ effect: [{ stat: 'counterWave', add: 1 }, { stat: 'counterBoost', add: 0.3 }] }] },
 ];

@@ -32,6 +32,10 @@ const KF_LINIEN = {
     /* Sonderregel: je nach Gegenstand; Glücksritter (Kartenzahl) ohne Zeichen */
     grosseArmee: 'militaer', allesAufDieMitte: 'militaer', blitzkrieg: 'militaer', soeldnerheer: 'militaer',
     verbrannteErde: 'verteidigung',
+    /* Schlüsselkarten (REQ-S.06): zwei Zeichen ihrer Linie */
+    drillmeister: ['militaer', 'militaer'], vorhut: ['militaer', 'militaer'],
+    handelsnetz: ['wirtschaft', 'wirtschaft'], ruecklage: ['wirtschaft', 'wirtschaft'],
+    bollwerk: ['verteidigung', 'verteidigung'], gegenstoss: ['verteidigung', 'verteidigung'],
   },
   varianten: [
     /* Fabrik */

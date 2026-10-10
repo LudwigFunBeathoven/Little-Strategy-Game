@@ -78,6 +78,10 @@ const KF_CONFIG = {
     /* Gebäude-Aufwertung: Kosten = kostenFaktor × Baukosten des Grundgebäudes (Fabrik: FACTORY_BASE_COST), Dauer in Sekunden Spielzeit (das Gebäude wirkt währenddessen nicht),
        sichtbar ab Minute abMinute, sobald ein Gebäude des Typs steht */
     aufwertung: { kostenFaktor: 2, dauerS: 10, abMinute: 3 },
+    /* Schlüsselkarten (REQ-S.06, S.07): ab Wahl abWahl erscheint spätestens in jeder spaetestensJe-ten Wahl mindestens eine Schlüsselkarte (sie belegt einen Bonusplatz);
+       führt der Spieler eine Linie (mindestens vornAb Zeichen), zieht ihre Schlüsselkarte mit gewichtVorne-fachem Gewicht.
+       handelsnetzDeckel: höchstens so viel Mehrertrag je Manufaktur durch das Handelsnetz (Anteil); ruecklage wirkt auf den Zinsdeckel je bisheriger Kartenwahl. */
+    schluessel: { abWahl: 3, spaetestensJe: 3, vornAb: 2, gewichtVorne: 3, handelsnetzDeckel: 0.5 },
   },
   /* Teil 4 (REQ-S.08): Testschalter ?druck=hoch (Standard aus). Verstärkt die regulären Gegnerwellen ab Minute abMinute um faktor (Zahl der Einheiten); die Druckkurve selbst
      bleibt unverändert, bis der Spieltest Daten liefert (Entscheidung B4). Die Belagerungswelle bleibt unberührt. */
