@@ -48,11 +48,20 @@ if (!isMainThread){
   console.log('Wahl | Zielzeit | läuft noch | Median EP-Stand | Median Ertrag im Abschnitt | vorgeschlagener Schritt');
   for (const r of rows) console.log(`${String(r.n).padStart(4)} | ${mm(r.ziel).padStart(8)} | ${String(r.alive).padStart(10)} | ${String(r.medianStand == null ? '–' : Math.round(r.medianStand)).padStart(15)} | ${String(r.medianErtrag == null ? '–' : Math.round(r.medianErtrag)).padStart(26)} | ${String(r.schritt).padStart(8)}${r.fortgeschrieben ? ' (fortgeschrieben)' : ''}`);
   console.log(`\nschwellen: [${rows.map(r => r.schritt).join(', ')}],`);
-  // Wahlzeiten, die der laufende Fahrplan in diesen Partien tatsächlich erzeugte
-  console.log('\nTatsächliche Wahlzeiten (Median, Erscheinen) gegen Zielzeit:');
+  // Wahlzeiten, die der laufende Fahrplan in diesen Partien tatsächlich erzeugte (REQ-P.02): Median je Wahl gegen Zielzeit, Abstände, Zahl der Wahlen
+  const q = (a, p) => { if (!a.length) return null; const s2 = [...a].sort((x, y) => x - y); return s2[Math.min(s2.length - 1, Math.floor(p * s2.length))]; };
+  const wahlRows = [];
+  console.log('\nWahl | Ziel  | Median | Abweichung | P10    | P90    | Partien');
   for (let k = 0; k < Math.min(COUNT, 12); k++){
     const ts = results.map(r => (r.wahlen || []).find(w => w.n === k + 1)).filter(Boolean).map(w => w.t);
-    console.log(`  ${String(k + 1).padStart(2)}: Ziel ${mm(ziele[k])}  Median ${ts.length ? mm(median(ts)) : '–'}  (${ts.length} Partien)`);
+    const m = median(ts);
+    wahlRows.push({ n: k + 1, ziel: ziele[k], median: m, p10: q(ts, 0.1), p90: q(ts, 0.9), n_partien: ts.length });
+    console.log(`${String(k + 1).padStart(4)} | ${mm(ziele[k])} | ${m == null ? '    –' : mm(m).padStart(6)} | ${m == null ? '        –' : ((m - ziele[k] >= 0 ? '+' : '') + Math.round(m - ziele[k]) + ' s').padStart(10)} | ${ts.length ? mm(q(ts, 0.1)).padStart(6) : '–'} | ${ts.length ? mm(q(ts, 0.9)).padStart(6) : '–'} | ${ts.length}`);
   }
-  if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ runs: RUNS, strategy: STRATEGY, profile: PROFILE, diff: DIFF, pfad: PFAD, ziele, rows, schwellen: rows.map(r => r.schritt) }, null, 2));
+  const gaps = [];
+  for (const r of results){ const w = (r.wahlen || []).slice().sort((x, y) => x.n - y.n); for (let i = 1; i < w.length; i++) gaps.push(w[i].t - w[i - 1].t); }
+  const inBand = gaps.filter(g => g >= f.minAbstand - 0.3 && g <= C.KARTEN.maxAbstand + 0.3).length;
+  console.log(`\nAbstände: ${gaps.length}, davon ${f.minAbstand}–${C.KARTEN.maxAbstand} s: ${(100 * inBand / Math.max(1, gaps.length)).toFixed(1)} %, Median ${Math.round(median(gaps))} s, P10 ${Math.round(q(gaps, 0.1))} s, P90 ${Math.round(q(gaps, 0.9))} s`);
+  console.log(`Wahlen je Partie: Median ${median(results.map(r => (r.wahlen || []).length))}; Partiedauer: Median ${mm(median(results.map(r => r.t)))}, P90 ${mm(q(results.map(r => r.t), 0.9))}`);
+  if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ runs: RUNS, strategy: STRATEGY, profile: PROFILE, diff: DIFF, pfad: PFAD, ziele, rows, schwellen: rows.map(r => r.schritt), wahlRows }, null, 2));
 }

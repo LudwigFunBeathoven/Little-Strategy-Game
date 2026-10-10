@@ -60,7 +60,7 @@ function hudTip(item){
     case 'soldiers': return { title: t('hud.soldiers'), body: t('tip.hud.soldiers'), rows: [[t('front.field'), fmt(G.ownOnField())], [t('front.supply'), fmt(G.supplyCap())], [t('front.losses'), fmt(S.losses)]] };
     case 'material': return { title: t('hud.material'), body: t('tip.hud.material'), rows: [[t('tip.m.matRate'), fmt1(G.matRate() + G.autoPressCps() * G.clickPower())]] };
     case 'xp': { const x = G.xpProgress();
-      return { title: t('hud.xp'), body: t('tip.hud.xp'), rows: [[t('level.progress', { n: x.level + 1 }), `${fmt(Math.max(0, x.cur))} / ${fmt(x.need)}`], [t('tip.hud.xpRate'), fmt1(xpRate())]] }; }
+      return { title: t('hud.xp'), body: t('tip.hud.xp'), rows: [x.timed ? [t('tip.hud.nextCard'), clock(Math.ceil(x.etaS))] : [t('level.progress', { n: x.level + 1 }), `${fmt(Math.max(0, x.cur))} / ${fmt(x.need)}`], [t('tip.hud.xpRate'), fmt1(xpRate())]] }; }
     case 'waves': return { title: t('hud.waves'), body: t('tip.hud.waves', { s: C.WAVE_INTERVAL_S }) };
     case 'walls': return { title: t('hud.walls'), body: t('tip.hud.walls') };
     case 'army': return { title: t('hud.army'), body: t('tip.hud.army') };
@@ -80,9 +80,9 @@ function renderHud(){
   setText(E.xpVal, fmt(S.xp));
   // EP je Sekunde und geschätzte Zeit bis zur nächsten Kartenwahl (REQ-6.06)
   const xr = xpRate(), eta = xr > 0 ? Math.ceil(Math.max(0, x.need - x.cur) / xr) : null;
-  setText(E.xpRate, eta != null && running ? t('hud.xpEta', { n: fmt1(xr), s: clock(eta) }) : t('hud.perSecond', { n: fmt1(xr) }));
-  setText(E.lvlProg, t('hud.toLevel', { n: x.level + 1, cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
-  setWidth(E.barLvl, 100 * Math.max(0, Math.min(1, x.cur / x.need)));
+  setText(E.xpRate, !x.timed && eta != null && running ? t('hud.xpEta', { n: fmt1(xr), s: clock(eta) }) : t('hud.perSecond', { n: fmt1(xr) }));
+  setText(E.lvlProg, x.timed ? t('hud.cardIn', { s: clock(Math.ceil(x.etaS)) }) : t('hud.toLevel', { n: x.level + 1, cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
+  setWidth(E.barLvl, 100 * x.frac);
   // Wellen erst mit der ersten Welle (REQ-47); im Tutorial von Anfang an, der Countdown ist Ziel von Schritt 4 (REQ-T.01)
   setHidden(E.hudWaves, Disc.on() ? !Disc.shows('hud:waves') : !(G.introShows('waves') || Tutorial.active()));
   setText(E.waveIn, clock(Math.ceil(G.waveIn())));

@@ -292,12 +292,19 @@ function create(){
     return n <= f.ziele.length ? f.ziele[n - 1] : f.ziele[f.ziele.length - 1] + (n - f.ziele.length) * f.takt;
   }
   /* Mindestabstand (REQ-P.02): eine fällige Wahl erscheint frühestens minAbstand Sekunden nach der letzten; die EP darüber bleiben erhalten */
-  const draftReady = () => { const f = fahrplan(); return !f || S.t - S.pfad.lastPickT >= f.minAbstand; };
+  const draftReady = () => { const f = fahrplan(); return !f || !S.stats.wahlen || S.t - S.pfad.lastPickT >= f.minAbstand; };      // vor der ersten Wahl gibt es keinen Mindestabstand
   const xpNeed       = n => xpSum(n - freeLevels()) * mMul('xpNeed');
+  /* Fortschritt zur nächsten Kartenwahl. Standard: EP-Anteil. Modus karten (REQ-P.02): das Kartensymbol füllt sich nach EP oder nach Zeit, je nachdem, was weiter ist;
+     etaS = Sekunden bis zur spätestens fälligen Wahl (Höchstabstand), bei aufgeschobener Wahl bis zum Mindestabstand. */
   const xpProgress   = () => {
-    const need = xpNeed(S.level + 1) - xpNeed(S.level);
-    // Wahl fällig, aber durch den Mindestabstand aufgeschoben: der Balken steht voll (die nächste Schwelle liegt hinter dieser Wahl)
-    return { level: S.level, cur: S.pacing === 'karten' && S.pendingLevels > 0 && !S.pendingDraft ? need : S.xpTotal - xpNeed(S.level), need };
+    const need = xpNeed(S.level + 1) - xpNeed(S.level), cur = S.xpTotal - xpNeed(S.level);
+    const f = fahrplan();
+    if (!f) return { level: S.level, cur, need, frac: Math.max(0, Math.min(1, cur / need)), etaS: null, timed: false };
+    const waiting = S.pendingLevels > 0 && !S.pendingDraft;               // Wahl fällig, aber durch den Mindestabstand aufgeschoben
+    const timeFrac = (S.t - S.pfad.lastPickT) / C.KARTEN.maxAbstand;
+    const frac = waiting ? 1 : Math.max(0, Math.min(1, Math.max(cur / need, timeFrac)));
+    const etaS = waiting ? Math.max(0, S.pfad.lastPickT + f.minAbstand - S.t) : Math.max(0, S.pfad.lastPickT + C.KARTEN.maxAbstand - S.t);
+    return { level: S.level, cur: waiting ? need : cur, need, frac, etaS, timed: true };
   };
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
@@ -982,7 +989,10 @@ function create(){
     return r === 'rare' ? w.rare + b : r === 'common' ? Math.max(0, w.common - b) : w[r];
   }
   const cardWeight = o => rarityWeight(o.rarity) * Math.pow(C.CARD_TIER_WEIGHT_BONUS, cardTaken(o.id));
-  const draftSize = () => (has('universitaet') ? C.DRAFT_OPTIONS_UNIVERSITY : C.DRAFT_OPTIONS_BASE) + mAdd('draftSize');
+  const draftSize = () => {
+    const a = S.pacing === 'karten' ? C.KARTEN.angebot : null;           // Modus karten: 3 Karten, mit Universität 4 (REQ-P.04); Standard 2 bzw. 3
+    return (has('universitaet') ? (a ? a.universitaet : C.DRAFT_OPTIONS_UNIVERSITY) : (a ? a.basis : C.DRAFT_OPTIONS_BASE)) + mAdd('draftSize');
+  };
   /* Gewichtete Ziehung ohne Zurücklegen, über den seedbaren Spielzufall (REQ-45):
      höchstens eine legendäre Karte je Angebot; die letzte Karte kommt aus einer anderen Kategorie, falls sonst nur eine vertreten wäre */
   function drawOptions(k){
@@ -1004,8 +1014,9 @@ function create(){
     }
     return out;
   }
-  /* Angebot im Modus 'karten' (REQ-KP.02, KP.06): ein Platz für eine Pfadkarte (Meilenstein-Platz), mindestens eine Bonuskarte, höchstens eine Wagnis-Karte;
-     eine ziehbare Bau-Karte, die zu lange wartete, rückt zwingend ein (harte Grenze C.KARTEN.maxWarten). Die Reihenfolge der Plätze wird gemischt. */
+  /* Angebot im Modus 'karten' (REQ-P.04, ersetzt REQ-KP.02): zwei Wege gegeneinander. Pfadplätze = min(KARTEN.pfadPlaetze, ziehbare Pfadkarten), der Rest sind Bonusplätze
+     (aus Bonus- und Wagnis-Karten, höchstens eine Wagnis-Karte). Eine ziehbare Bau-Karte, die zu lange wartete, rückt zwingend ein (harte Grenze C.KARTEN.maxWarten);
+     die übrigen Pfadplätze werden nach Gewicht gezogen. Die Reihenfolge der Plätze wird gemischt. */
   const pfadWait = o => S.pfad.wait[o.id] || 0;
   const pickWeighted = (list, w) => {
     const total = list.reduce((a, o) => a + w(o), 0);
@@ -1014,25 +1025,25 @@ function create(){
     return list[i];
   };
   const weightKarten = o => o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) * (1 + C.KARTEN.rueckstandPlus * pfadWait(o)) : cardWeight(o);
-  function drawOptionsKarten(k, keep){
-    const pool = ALL_OPTIONS.filter(o => optionAvailable(o) && !(keep && keep.includes(o.id)));
-    const pf = pool.filter(isPathFamily), bonus = pool.filter(o => !o.pfad);
-    const out = (keep || []).map(id => OPT[id]);
-    const remove = o => { for (const l of [pf, bonus, pool]){ const i = l.indexOf(o); if (i >= 0) l.splice(i, 1); } };
-    const add = o => { out.push(o); remove(o); };
-    const reserve = bonus.length && !out.some(o => !o.pfad) ? 1 : 0;      // ein Platz bleibt der Bonuskarte
-    // harte Grenze: Bau-Karten, die seit ihrer Freigabe noch nie im Angebot standen, rücken zwingend ein, sobald ihre Frist (Wartezeit plus Rang in der Schlange) abläuft
+  function drawOptionsKarten(k){
+    const pool = ALL_OPTIONS.filter(optionAvailable);
+    const pf = pool.filter(isPathFamily), rest = pool.filter(o => !isPathFamily(o));
+    const out = [];
+    const take = (o, list) => { out.push(o); const i = list.indexOf(o); if (i >= 0) list.splice(i, 1); };
+    const slots = Math.min(C.KARTEN.pfadPlaetze, pf.length, k);
+    // harte Grenze: Bau-Karten, die seit ihrer Freigabe noch nie im Angebot standen, rücken zwingend ein, sobald ihre Frist (Wartezeit plus Rang in der Schlange) abläuft;
+    // jedes Angebot nimmt je Pfadplatz eine Karte der Schlange
     const unseen = pf.filter(o => o.family === 'bau' && !S.pfad.seen[o.id]).sort((a, b) => pfadWait(b) - pfadWait(a));
-    const forced = unseen.filter((o, i) => pfadWait(o) + i >= C.KARTEN.maxWarten - 1);
-    for (const o of forced) if (out.length < k - reserve) add(o);
-    if (!out.some(isPathFamily) && pf.length && out.length < k - reserve) add(pickWeighted(pf, weightKarten));
-    if (reserve && out.length < k) add(pickWeighted(bonus, weightKarten));
-    while (out.length < k && pool.length){
+    const forced = unseen.filter((o, i) => pfadWait(o) + Math.floor(i / Math.max(1, slots)) >= C.KARTEN.maxWarten - 1);
+    for (const o of forced) if (out.length < slots) take(o, pf);
+    while (out.length < slots && pf.length) take(pickWeighted(pf, weightKarten), pf);
+    while (out.length < k && rest.length){
       const hasWag = out.some(o => o.family === 'wagnis'), hasLeg = out.some(o => o.rarity === 'legendary');
-      const cand = pool.filter(o => !(o.family === 'wagnis' && hasWag) && !(o.rarity === 'legendary' && hasLeg));
+      const cand = rest.filter(o => !(o.family === 'wagnis' && hasWag) && !(o.rarity === 'legendary' && hasLeg));
       if (!cand.length) break;
-      add(pickWeighted(cand, weightKarten));
+      take(pickWeighted(cand, weightKarten), rest);
     }
+    while (out.length < k && pf.length) take(pickWeighted(pf, weightKarten), pf);       // Bonuskarten erschöpft: Pfadkarten füllen auf
     for (let i = out.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
     return out.map(o => o.id);
   }
@@ -1062,7 +1073,8 @@ function create(){
     if (!d || bansLeft() <= 0 || i < 0 || i >= d.options.length || !canBan(d.options[i])) return false;
     S.research.banned.push(d.options[i]);
     const rest = d.options.filter((_, k) => k !== i);
-    const pool = (S.pacing === 'karten' ? ALL_OPTIONS : OPTIONS).filter(o => optionAvailable(o) && !rest.includes(o.id));
+    const hasWag = rest.some(id => OPT[id] && OPT[id].family === 'wagnis');
+    const pool = (S.pacing === 'karten' ? ALL_OPTIONS : OPTIONS).filter(o => optionAvailable(o) && !rest.includes(o.id) && !(S.pacing === 'karten' && (isPathFamily(o) || (hasWag && o.family === 'wagnis'))));       // Bann tauscht nur Bonusplätze (REQ-P.04)
     const total = pool.reduce((a, o) => a + cardWeight(o), 0);
     let repl = null;
     if (pool.length){ let r = rnd() * total, k = 0; while (k < pool.length - 1 && r >= cardWeight(pool[k])){ r -= cardWeight(pool[k]); k++; } repl = pool[k].id; }
@@ -1288,6 +1300,7 @@ function create(){
   function newGame(diff, seed, opts = {}){
     S = freshState(diff, seed);
     S.pacing = opts.pacing || C.PACING_MODUS || 'standard';
+    if (S.pacing === 'karten') S.pfad.lastPickT = Math.max(0, C.KARTEN.fahrplan.ziele[0] - C.KARTEN.maxAbstand);       // die erste Wahl ist spätestens zur ersten Zielzeit fällig
     if (S.pacing === 'karten') S.enemyBaseHp = diffCfg().enemyBaseHp;
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();

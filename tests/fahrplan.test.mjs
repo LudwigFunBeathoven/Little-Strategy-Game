@@ -39,8 +39,9 @@ test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühesten
   const { G, C } = game('karten');
   const min = C.KARTEN.fahrplan.minAbstand;
   run(G, 5);
-  G.S.pfad.lastPickT = G.S.t;                                      // soeben gewählt
-  G.S.pendingDraft = null; G.S.pendingLevels = 0;
+  G.gainXp(G.xpNeed(1) - G.S.xpTotal + 1);                          // erste Wahl: kein Mindestabstand
+  assert.ok(G.S.pendingDraft, 'die erste Wahl erscheint sofort');
+  G.chooseDraft(0); immortal(G);                                   // soeben gewählt
   const level = G.S.level;
   G.gainXp(G.xpNeed(level + 3) - G.S.xpTotal + 1);                  // drei Schwellen auf einmal
   assert.equal(G.S.pendingLevels, 3);
@@ -64,26 +65,25 @@ test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühesten
   assert.ok(G.S.pendingDraft, 'zweite Wahl nach weiteren minAbstand Sekunden');
 });
 
-test('Höchstabstand: ohne EP-Ertrag wird die Wahl nach maxAbstand fällig, danach wieder nach maxAbstand', () => {
+test('Höchstabstand: ohne EP-Ertrag ist die erste Wahl zur ersten Zielzeit fällig, danach jeweils maxAbstand nach der letzten', () => {
   const { G, C } = game('karten');
-  const max = C.KARTEN.maxAbstand;
-  assert.equal(max, 100, 'Fahrplan: Höchstabstand 100 s');
-  run(G, max + 2, () => G.S.pendingDraft);
-  assert.ok(G.S.pendingDraft, 'fällig');
-  assert.ok(G.S.t >= max && G.S.t < max + 1);
+  const max = C.KARTEN.maxAbstand, z1 = C.KARTEN.fahrplan.ziele[0];
+  run(G, z1 + 2, () => G.S.pendingDraft);
+  assert.ok(G.S.pendingDraft, 'erste Wahl fällig');
+  assert.ok(G.S.t >= z1 - 0.1 && G.S.t < z1 + 1, `erste Wahl nach ${G.S.t} s, Zielzeit ${z1}`);
   assert.equal(G.S.pfad.free, 1);
   G.chooseDraft(0); immortal(G);
   const t1 = G.S.t;
   run(G, max - 5);
   assert.equal(G.S.pendingDraft, null, 'bis maxAbstand nichts');
   run(G, 10, () => G.S.pendingDraft);
-  assert.ok(G.S.pendingDraft); assert.ok(G.S.t - t1 >= max - 0.1);
+  assert.ok(G.S.pendingDraft); assert.ok(G.S.t - t1 >= max - 0.1 && G.S.t - t1 < max + 1);
 });
 
 test('Protokoll je Wahl: Zielzeit des Fahrplans, Erscheinen und Wahl', () => {
   const { G, C } = game('karten');
   const f = C.KARTEN.fahrplan;
-  run(G, C.KARTEN.maxAbstand + 2, () => G.S.pendingDraft);
+  run(G, f.ziele[0] + 2, () => G.S.pendingDraft);
   G.S.sections.forEach(s => { s.hp = 1e9; });
   const t = G.S.t; G.chooseDraft(0);
   const w = G.S.stats.wahlen;

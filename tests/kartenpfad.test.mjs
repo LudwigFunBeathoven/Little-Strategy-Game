@@ -73,21 +73,68 @@ test('Graphtest: jeder gesperrte Inhalt hat eine Quelle, Voraussetzungsketten si
   for (const src of Object.values(q.quellen).flat()) assert.ok(byId[src], `Quelle ${src}`);
 });
 
-test('Angebote: mindestens eine Bonuskarte, mindestens eine Pfadkarte (wenn ziehbar), höchstens eine Wagnis-Karte, keine Technologie ohne Universität', () => {
-  let offers = 0;
+/* Zustand für die Angebotstabelle (REQ-P.04): Teilmenge der Bau- und Technologiekarten schon gewählt, Universität ja/nein, Wahl-Nummer */
+const BAU = ['echtesMilitaer', 'pfadFestungsbau', 'metallverarbeitung', 'gelehrte', 'handel'], TECH = ['fortgeschritteneTaktiken', 'ballistik', 'eiserneKlingen', 'befestigungskunde'];
+function tableState(seed){
+  const { G, C } = game('karten', seed);
+  const r = k => ((seed * 2654435761 + k * 40503 + k * k * 7919) >>> 0) % 1000 / 1000;
+  const uni = seed % 2 === 1;
+  if (uni){ G.S.material = 1e6; G.unlockKey('bau:universitaet'); G.build('universitaet'); }
+  const level = 1 + (seed % 12);
+  G.S.pfad.choices = level - 1;
+  BAU.forEach((id, i) => { if (r(i) < (level > 3 ? 0.45 : 0.15)) G.S.draft.stacks[id] = 1; });
+  TECH.forEach((id, i) => { if (r(10 + i) < 0.25) G.S.draft.stacks[id] = 1; });
+  if (seed % 7 === 0) for (const id of [...BAU, ...TECH]) G.S.draft.stacks[id] = 1;                         // nichts mehr ziehbar
+  if (seed % 7 === 3){                                                                                         // genau eine Pfadkarte ziehbar
+    G.S.pfad.choices = 10;
+    for (const id of [...BAU, ...TECH]) G.S.draft.stacks[id] = 1;
+    delete G.S.draft.stacks[['handel', 'eiserneKlingen', 'befestigungskunde'][(seed >> 1) % 3]];
+  }
+  G.S.draft.ver++;
+  return { G, C, uni };
+}
+const pathCount = (G, ids) => ids.filter(id => G.isPathFamily(G.OPT[id])).length;
+
+test('Angebot folgt der Tabelle: Pfadplätze = min(2, ziehbare Pfadkarten), Rest Bonus; Größe 3, mit Universität 4; höchstens eine Wagnis-Karte (REQ-P.04)', () => {
+  const cells = {}; let offers = 0;
   for (let seed = 1; seed <= 1000; seed++){
-    const { G } = game('karten', seed);
+    const { G, uni } = tableState(seed);
+    const drawable = G.ALL_OPTIONS.filter(o => G.isPathFamily(o) && G.optionAvailable(o)).length;
     const d = newOffer(G); if (!d) continue;
     offers++;
-    const os = d.options.map(id => G.OPT[id]);
-    assert.ok(os.some(o => !o.pfad), `Bonus (${seed})`);
-    const drawable = G.ALL_OPTIONS.some(o => o.pfad && (o.family === 'bau' || o.family === 'technologie') && G.optionAvailable(o));
-    if (drawable) assert.ok(os.some(o => o.pfad && (o.family === 'bau' || o.family === 'technologie')), `Pfadkarte (${seed})`);
-    assert.ok(os.filter(o => o.family === 'wagnis').length <= 1);
-    assert.ok(!os.some(o => o.family === 'technologie'), 'ohne Universität keine Technologie');
+    const os = d.options.map(id => G.OPT[id]), k = uni ? 4 : 3;
+    assert.equal(os.length, k, `Größe (${seed})`);
+    assert.equal(pathCount(G, d.options), Math.min(2, drawable), `Pfadplätze bei ${drawable} ziehbaren (${seed})`);
+    assert.ok(os.filter(o => o.family === 'wagnis').length <= 1, 'höchstens eine Wagnis-Karte');
+    assert.equal(os.filter(o => !G.isPathFamily(o)).length, k - Math.min(2, drawable), 'Rest sind Bonusplätze');
+    assert.ok(uni || !os.some(o => o.family === 'technologie'), 'ohne Universität keine Technologie');
     assert.equal(new Set(d.options).size, d.options.length, 'keine doppelte Karte');
+    cells[`${Math.min(2, drawable)}/${k}`] = (cells[`${Math.min(2, drawable)}/${k}`] || 0) + 1;
   }
-  assert.ok(offers > 900);
+  assert.ok(offers > 900, `Angebote: ${offers}`);
+  for (const cell of ['0/3', '1/3', '2/3', '0/4', '1/4', '2/4']) assert.ok(cells[cell] > 0, `Feld ${cell} der Tabelle wurde geprüft: ${JSON.stringify(cells)}`);
+});
+
+test('Neu ziehen behält die Zahl der Pfadplätze; Bann tauscht nur Bonusplätze', () => {
+  for (let seed = 1; seed <= 200; seed++){
+    const { G } = tableState(seed);
+    const d = newOffer(G); if (!d) continue;
+    const n0 = pathCount(G, d.options), len0 = d.options.length;
+    G.S.research.done.r_neuziehen = 2; G.S.research.done.r_bann = 2; G.S.research.ver++;
+    if (G.rerollsLeft() > 0){
+      assert.ok(G.rerollDraft());
+      assert.equal(pathCount(G, G.S.pendingDraft.options), n0, `Pfadplätze nach Neu ziehen (${seed})`);
+      assert.equal(G.S.pendingDraft.options.length, len0);
+    }
+    if (G.bansLeft() > 0){
+      const i = G.S.pendingDraft.options.findIndex(id => G.canBan(id));
+      if (i >= 0){
+        assert.ok(G.banOption(i));
+        assert.equal(pathCount(G, G.S.pendingDraft.options), n0, `Pfadplätze nach Bann (${seed})`);
+        assert.ok(G.S.pendingDraft.options.filter(id => G.OPT[id].family === 'wagnis').length <= 1);
+      }
+    }
+  }
 });
 
 test('Nicht gewählte Pfadkarte bleibt im Stapel; gewählte erscheint nicht erneut', () => {
@@ -99,11 +146,10 @@ test('Nicht gewählte Pfadkarte bleibt im Stapel; gewählte erscheint nicht erne
   assert.equal(G.optionAvailable(G.OPT.festungsbau), true, 'nicht gewählt: wieder ziehbar');
 });
 
-test('Rückstandsgewicht und harte Grenze: eine ziehbare Bau-Karte erscheint spätestens in der dritten Wahl nach der Freigabe', () => {
+test('Rückstandsgewicht und harte Grenze: eine ziehbare Bau-Karte erscheint spätestens in der dritten Wahl nach der Freigabe (auch mit zwei Pfadplätzen)', () => {
   for (let seed = 1; seed <= 300; seed++){
     const { G, C } = game('karten', seed);
-    // Bei zwei Plätzen je Angebot bleibt ein Platz der Bonuskarte; die Grenze gilt daher, solange höchstens drei Bau-Karten zugleich ziehbar sind:
-    // Echtes Militär ist gewählt, die übrigen Bau-Karten werden nie gewählt
+    // Echtes Militär ist gewählt, die übrigen Bau-Karten werden nie gewählt: gewählt wird stets die Bonuskarte
     G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++;
     const release = {}, first = {};
     for (let choice = 1; choice <= 10; choice++){
@@ -294,9 +340,10 @@ test('Mindesttempo: nach maxAbstand ohne Wahl wird die nächste fällig, die EP-
   const { G, C } = game('karten', 6);
   G.S.sections.forEach(s => { s.hp = 1e9; });
   const nextThreshold = G.xpNeed(G.S.level + 1);                  // Schwelle der nächsten EP-Wahl vor der freien Wahl
-  for (let i = 0; i < 20 * (C.KARTEN.maxAbstand + 2) && !G.S.pendingDraft; i++) G.tick(0.05);
+  const z1 = C.KARTEN.fahrplan.ziele[0];                         // die erste Wahl ist spätestens zur ersten Zielzeit fällig
+  for (let i = 0; i < 20 * (z1 + 2) && !G.S.pendingDraft; i++) G.tick(0.05);
   assert.ok(G.S.pendingDraft, 'Wahl fällig nach maxAbstand');
-  assert.ok(G.S.t >= C.KARTEN.maxAbstand && G.S.t < C.KARTEN.maxAbstand + 2);
+  assert.ok(G.S.t >= z1 - 0.1 && G.S.t < z1 + 2);
   assert.equal(G.S.level, 1); assert.equal(G.S.pfad.free, 1);
   assert.equal(G.xpNeed(G.S.level + 1), nextThreshold, 'Schwelle der folgenden Wahl unverändert');
   G.chooseDraft(0);

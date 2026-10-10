@@ -197,9 +197,9 @@ const Stage = (() => {
     setHidden(el.cardSym, !(active && run && Disc.shows('hud:cardSym')));
     if (active && run){
       const x = G.xpProgress(), total = Object.values(S.draft.stacks).reduce((a, b) => a + b, 0);
-      { const h = (100 * Math.max(0, Math.min(1, x.cur / x.need))).toFixed(0) + '%'; if (el.deckFill.style.height !== h) el.deckFill.style.height = h; }
+      { const h = (100 * x.frac).toFixed(0) + '%'; if (el.deckFill.style.height !== h) el.deckFill.style.height = h; }
       setText(el.deckCount, total ? fmt(total) : '');
-      setText(el.deckExpl, t('ex.kp.deck', { cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
+      setText(el.deckExpl, x.timed ? t('ex.kp.deck.time', { s: clock(Math.ceil(x.etaS)) }) : t('ex.kp.deck', { cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
       el.cardSym.classList.toggle('pulse', !!d && folded);
     }
     if (!active || !d){ key = ''; folded = false; chain = chain && !!d; setHidden(el.stage, true); return; }
