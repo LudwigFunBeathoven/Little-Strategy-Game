@@ -5,9 +5,10 @@ Messung: schneller Bot („einheiten-zuerst“), je Feld 50 Partien, gleiche See
 „Vorher“ ist der Stand von `exp/kartenpfad` vor Teil 4 (Commit 60f5868), gemessen in L.0 mit denselben Seeds.
 
 ## Ergebnis
-Alle neun Anforderungen sind umgesetzt, `npm test` (336 Tests) und die Browser-Prüfungen (552 Prüfpunkte, drei bestehende Skripte und `tests/browser-l4.mjs`) sind grün, der Modus `standard` ist unverändert (Golden-Test). Die Wahlen auf Schwer liegen im Median höchstens 41 s vor ihrer Zielzeit (vorher bis 84 s), Normal hält die Werte aus Teil 3 (Dauer 11:49, 10 Wahlen, kein Patt), und die drei Linien-Bots liegen mit `?druck=hoch` 15 Prozentpunkte auseinander (Hypothese: höchstens 20).
-Drei Befunde widersprechen den Erwartungen der Anforderung. **Erstens** entfällt Befund 4.2 nicht: Auf Schwer gewinnt „durchschnitt“ jetzt 74 % statt 96 %, weil „Wissen zuerst“ (Gelehrte oder Metallverarbeitung in Wahl 1) dort in 62 % der Fälle bis Minute 2:25 verliert; mit Echtes Militär in Wahl 1 gewinnen 29 von 29 Partien. **Zweitens** brechen die Varianten die Fabrik-Dominanz nicht: Im Raster stehen bei Minute 10 weiter 5,4 bis 5,6 reine Fabriken (vorher 5,5). **Drittens** hebt keine Schlüsselkarte die Siegquote um mehr als 8 Prozentpunkte, die meisten bewirken in der Simulation fast nichts; die Linie Verteidigung gewinnt zu 91 bis 96 %, braucht aber 22 bis 24 Minuten und bleibt in 2 bis 7 % der Partien offen.
-Zur Bestätigung stehen zehn Auslegungen an (Abschnitt „Auslegungen und Abweichungen“), darunter drei Eingriffe in Werte der Anforderung: eine dritte Stufe der Linien (Soll), Versorgung +2 in Stufe 3 der Wirtschaft und doppelte Schwellen auf Schwer.
+Alle neun Anforderungen sind umgesetzt: 336 Tests und 552 Browser-Prüfpunkte sind grün, der Modus `standard` ist unverändert, die Wahlen auf Schwer liegen im Median höchstens 41 s vor ihrer Zielzeit (vorher 84 s), und die drei Linien-Bots liegen mit `?druck=hoch` 15 Prozentpunkte auseinander (Hypothese: höchstens 20). Drei Befunde widersprechen der Anforderung: Befund 4.2 entfällt nicht (Schwer, „durchschnitt“, 74 % statt 96 %, weil „Wissen zuerst“ dort früh verliert), die Varianten brechen die Fabrik-Dominanz nicht (5,4 bis 5,6 reine Fabriken bei Minute 10) und die Schlüsselkarten heben die Siegquote um höchstens 8 Prozentpunkte. Dreizehn Auslegungen und Abweichungen brauchen die Bestätigung des PO, darunter eine dritte Stufe der Linien, Versorgung +2 in deren Wirtschaftsstufe und doppelte EP-Schwellen auf Schwer.
+
+## Entscheidungen des PO (aus der Anforderung)
+B2 d/e: Aufwertung der Gebäude zu Varianten, Streichung der Baukosten-Inhalte; B4: Druckkurve bleibt, nur der Testschalter `?druck=hoch`; C1 bis C5: Fälligkeit nach Fahrplan bleibt, Kriegserfahrung entfällt und Glücksritter verlängert den Wellenabstand, eigene Schwellen für Schwer, Kaserne ab Start, Inventar der seltenen Karten; A1: Raster bleibt 3×3. Umsetzungsreihenfolge L.0 bis L.6 nach Abbruchregel; alle Inkremente sind fertig, nichts wurde gestrichen.
 
 ## Abnahmekriterien
 | REQ | Kriterium | Ergebnis |
@@ -53,7 +54,7 @@ Automatisierung: Instandhaltung und Zeugmeister → Verteidigung (Reparatur, Tü
 | Verteidigung | 15 | Maurerkolonne, Turmkanoniere, Bastion, Zinnen, Notreserve, Scharfschützen, Mauerwerk, Instandhaltung, Zeugmeister, Alles auf die Mitte, Verbrannte Erde, Bollwerk ◆◆, Gegenstoß ◆◆, Festungsbau *, Befestigungskunde * |
 | ohne Zeichen | 7 | Große Armee, Blitzkrieg, Glücksritter, Metallverarbeitung *, Gelehrte *, Glaskanonen *, Volle Auslastung * |
 
-Zeichenquellen ohne Schlüsselkarten: Militär 15, Wirtschaft 14, Verteidigung 13. Die erste Fassung (Armee, Automatisierung und Sonderregel überwiegend Militär) gab Militär 25 Quellen gegen 13 und 14; ein Spieler ohne Absicht wäre von selbst in die Linie Militär gelaufen. Varianten: je Variantentyp ein Zeichen (Auslegung 2).
+Zeichenquellen ohne Schlüsselkarten: Militär 15, Wirtschaft 14, Verteidigung 13. Die erste Fassung (Armee, Automatisierung und Sonderregel überwiegend Militär) gab Militär 23 Quellen gegen 11 (Wirtschaft) und 12 (Verteidigung); ein Spieler ohne Absicht wäre von selbst in die Linie Militär gelaufen. Varianten: je Variantentyp ein Zeichen (Auslegung 2).
 
 ## Gestrichene Inhalte (REQ-S.03)
 Im Modus `karten` nicht erreichbar, im Modus `standard` unverändert (`KF_PFAD.entfallenKarten`, `KF_PFAD.entfallen`):
