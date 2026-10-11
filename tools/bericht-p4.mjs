@@ -52,7 +52,7 @@ if (V && N){
   if (V.gierig && N.gierig) p(`\n„gierig“ (Normal, durchschnitt, ${N.gierig.n} Partien): Siege ${f1(V.gierig.siegquote)} → ${f1(N.gierig.siegquote)} %, Dauer Median ${mm(V.gierig.dauerMedian)} → ${mm(N.gierig.dauerMedian)}, Fabriken Minute 10 ${f1(V.gierig.fabrikenMittel[600])} → ${f1(N.gierig.fabrikenMittel[600])}.`);
 }
 if (L){
-  p('\n### Linien-Bots (Normal, durchschnitt, 50 Partien je Zeile)\n');
+  p(`\n### Linien-Bots (Normal, durchschnitt, ${L.linien[0].n} Partien je Zeile)\n`);
   p('| Bot | Druck | Siege | Niederlagen | Patt | Dauer Median | Stufe 1 | Stufe 2 | Stufe 3 | Schlüsselkarten-Angebote (Median) | gewählt (Mittel) | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße |');
   p('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   for (const r of L.linien){

@@ -694,7 +694,7 @@ KF_I18N.de = {
   'line.hud.stage': '{name} {stage}',
   'tip.hud.lines': 'Strategielinien: Karten und Gebäude-Varianten tragen Zeichen. Ab {a} Zeichen einer Linie beginnt deren Stufe 1, ab {b} die Stufe 2, ab {c} die Stufe 3. Mehrere Linien können zugleich wirken.',
   'line.eff.militaer.3': 'Einheiten +{e1} % Schaden und +{e2} % Lebenspunkte',
-  'line.eff.wirtschaft.3': 'Materialertrag +{e1} %; Zinsen des Kontors +{e2} %',
+  'line.eff.wirtschaft.3': 'Materialertrag +{e1} %; Zinsen des Kontors +{e2} %; Versorgungslimit +{e3}',
   'line.eff.verteidigung.3': 'Gegenstoß-Wellen +{e1} % stärker; Türme +{e2} % Schaden',
   'tip.line.stage': 'Stufe {stage}',
   'tip.line.next': 'Nächste Stufe ab {need} Zeichen',

@@ -1,5 +1,15 @@
 # Änderungen
 
+## v0.9.2-kartenpfad-4 – Branch `exp/kartenpfad`, Teil 4 (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad-4.md`, Bericht `docs/bericht-kartenpfad-4.md`, Testleitfaden `docs/testleitfaden-kartenpfad-4.md`. **Spielstand-Version 9: ältere Spielstände werden verworfen.** Der Modus `standard` ist identisch zu `main` 0.9.2.
+- **Fehler „undefined“** in der Wellenvorschau (Armbrustschütze, Katapult) behoben: Das Symbol steht jetzt je Einheit in `config.js`; Test über alle Einheiten und beide Sprachen. `main` ist nicht betroffen.
+- **Start:** Die Kaserne ist ab Spielstart baubar; „Echtes Militär“ schaltet nur noch den Werfer frei (+2 Versorgung). Gelehrte und Metallverarbeitung sind ab Wahl 1 ziehbar. Schwer hat eigene, höhere EP-Schwellen: keine Wahl liegt im Median mehr als 40 s vor ihrer Zielzeit (vorher bis 84 s).
+- **Kartenpool bereinigt:** Kriegserfahrung, Serienbau, Bauleitung und die Forschung Ingenieurskunst entfallen. Glücksritter verlängert den Abstand der eigenen Wellen um 25 % (statt EP-Aufschlag), Söldnerheer vermindert die Produktion nur noch auf × 0,8, das Handelskontor wird erst angeboten, wenn der Zinsdeckel erreicht ist.
+- **Strategielinien Militär, Wirtschaft, Verteidigung:** Karten und Gebäude-Varianten tragen Zeichen; ab 2, 4 und 6 Zeichen einer Linie wirken die Stufen 1, 2 und 3. Die Anzeige „Linien“ erscheint erst mit Stufe 1 einer Linie, Zeichen an Karten und Varianten danach.
+- **Gebäude-Aufwertung:** Fabrik, Kaserne und Schmiede lassen sich ab Minute 3 einmal zu einer Variante aufwerten (Werkstatt, Manufaktur, Wachstube; Exerzierplatz, Garnison; Waffenschmiede, Rüstkammer). Kosten das Zweifache der Baukosten, zehn Sekunden Bauzeit, das Gebäude ruht dabei.
+- **Schlüsselkarten:** sechs starke Karten mit zwei Zeichen (Drillmeister, Vorhut, Handelsnetz, Rücklage, Bollwerk, Gegenstoß) ab Wahl 3; spätestens in jeder dritten Wahl erscheint eine, wenn ihre Wirkung im Spiel etwas bewirkt.
+- **Testschalter `?druck=hoch`:** reguläre Gegnerwellen ab Minute 4 um ein Drittel größer (Standard aus); steht im Protokoll.
+
 ## v0.9.2-kartenpfad-3 – Branch `exp/kartenpfad`, Teil 3 (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-3.md`, Bericht `docs/bericht-kartenpfad-3.md`, Testleitfaden `docs/testleitfaden-kartenpfad-3.md`. `main` 0.9.2 ist eingemischt. Spielstand-Version (8) unverändert; der Modus `standard` ist identisch zu `main` 0.9.2.
 - **Wahl-Fahrplan:** zehn Kartenwahlen in gut elf Minuten (Zielzeiten 1:30, 2:40, 3:45 … 11:20, danach alle 65 s). Eine Wahl wird fällig, sobald die EP-Schwelle erreicht ist, spätestens zur Zielzeit, frühestens 45 s nach der letzten. Das Kartensymbol zeigt die Zeit bis zur nächsten Wahl. Protokoll je Wahl mit Zielzeit und tatsächlicher Zeit.

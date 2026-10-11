@@ -133,7 +133,7 @@ if (!isMainThread){
     if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, variant: r.variant, druck: r.druckName, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10, lineT: r.lineT, signs: r.signs, variants: r.variants, grid: r.grid, wallLost: r.wallLost, keyOffers: r.keyOffers, keyPicked: r.keyPicked, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })), towerKills: r.towerKills, counterWaves: r.counterWaves })) }));
     process.exit(0);
   }
-  console.log(`BASISMESSUNG Teil 4 (${EZ}, ${RUNS} Partien je Feld, Modus karten, vor allen Änderungen)\n`);
+  console.log(`FELDMESSUNG Teil 4 (${EZ}, ${RUNS} Partien je Feld, Modus karten${arg('label', '') ? ', ' + arg('label') : ''})\n`);
   console.log('Grad    | Profil       | Siege | Nied. | Dauer | Fabriken Min 2/5/10 (Median) | Anteil an Gebäuden Min 10 | selten ang./gew. | legendär ang./gew. | Mauer-Verlust (Median)');
   for (const diff of DIFFS) for (const profile of PROFILES){
     const rs = results.filter(r => r.suite === 'felder' && r.diff === diff && r.profile === profile), s = stat(rs);

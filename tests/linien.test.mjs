@@ -294,3 +294,28 @@ test('S.05 Varianten: Wachstube, Garnison, Waffenschmiede, Rüstkammer wirken wi
   R.S.material = 1e6; assert.ok(R.upgradeBuilding(2, 'ruestkammer')); finish(R);
   assert.ok(Math.abs(R.sectionMax(0) / wr0 - ef('ruestkammer')[0].mul) < 1e-9);
 });
+
+test('S.04 Stufe 3 (6 Zeichen): die Boni der Stufen 1 bis 3 wirken zusammen; maxStufe schaltet sie ab', () => {
+  const { G, C } = game();
+  const dmg0 = G.mMul('unitDmg'), hp0 = G.mMul('unitHp');
+  pick(G, 'echtesMilitaer', 'drill', 'aushebung', 'veteranen', 'taktiker');
+  assert.equal(G.lineState().militaer.stage, 2, 'fünf Zeichen');
+  pick(G, 'sappeure');
+  assert.equal(G.lineState().militaer.signs, 6); assert.equal(G.lineState().militaer.stage, 3);
+  assert.ok(Math.abs(G.mMul('unitDmg') / dmg0 - 1.1 * 1.1) < 1e-9, 'Stufe 1 und 3: Schaden');
+  assert.ok(Math.abs(G.mMul('unitHp') / hp0 - 0.9 * 1.1 * 1.1) < 1e-9 || G.mMul('unitHp') > hp0 * 0.9, 'Stufe 2 und 3: Lebenspunkte');
+  // Wirtschaft Stufe 3: Versorgung +2 (Reichtum kauft Nachschub)
+  const { G: W } = game(); place(W, 'kaserne', 0);
+  const cap0 = W.supplyCap();
+  pick(W, 'bessereFabriken', 'schwerePressen', 'doppelschicht', 'nachtschicht', 'kriegsanleihe', 'grossauftrag');
+  assert.equal(W.lineState().wirtschaft.stage, 3);
+  assert.equal(W.mAdd('supply'), 2); assert.ok(W.supplyCap() >= cap0 + 2);
+  // Verteidigung Stufe 3: Gegenstoß-Wellen +30 %
+  const { G: V } = game(); pick(V, 'zinnen', 'maurerkolonne', 'turmkanoniere', 'notreserve', 'scharfschuetzen', 'festungsbau');
+  assert.equal(V.lineState().verteidigung.stage, 3); assert.equal(V.mAdd('counterBoost'), 0.3); assert.equal(V.mAdd('counterWave'), 1);
+  // maxStufe 2 schaltet die dritte Stufe ab
+  const { G: M } = game('karten', 7, 'normal', c => { c.LINIEN.maxStufe = 2; });
+  pick(M, 'echtesMilitaer', 'drill', 'aushebung', 'veteranen', 'taktiker', 'sappeure');
+  assert.equal(M.lineState().militaer.stage, 2);
+  assert.equal(C.LINIEN.zeichenStufen[2], 6);
+});

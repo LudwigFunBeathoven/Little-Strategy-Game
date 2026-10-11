@@ -694,7 +694,7 @@ KF_I18N.en = {
   'line.hud.stage': '{name} {stage}',
   'tip.hud.lines': 'Strategy lines: cards and building variants carry signs. From {a} signs of a line its stage 1 begins, from {b} stage 2, from {c} stage 3. Several lines can work at once.',
   'line.eff.militaer.3': 'Units +{e1}% damage and +{e2}% health',
-  'line.eff.wirtschaft.3': 'Material yield +{e1}%; trading post interest +{e2}%',
+  'line.eff.wirtschaft.3': 'Material yield +{e1}%; trading post interest +{e2}%; supply limit +{e3}',
   'line.eff.verteidigung.3': 'Counterstrike waves {e1}% stronger; towers +{e2}% damage',
   'tip.line.stage': 'Stage {stage}',
   'tip.line.next': 'Next stage from {need} signs',

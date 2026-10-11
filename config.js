@@ -70,7 +70,7 @@ const KF_CONFIG = {
                      [{ stat: 'unitDmg', mul: 1.1 }, { stat: 'unitHp', mul: 1.1 }]],
       wirtschaft:   [[{ stat: 'materialYield', mul: 1.1 }],
                      [{ stat: 'kontorYield', mul: 1.5 }, { stat: 'upgradeCost', mul: 0.8 }, { stat: 'variantCost', mul: 0.8 }],
-                     [{ stat: 'materialYield', mul: 1.1 }, { stat: 'kontorYield', mul: 1.25 }]],
+                     [{ stat: 'materialYield', mul: 1.1 }, { stat: 'kontorYield', mul: 1.25 }, { stat: 'supply', add: 2 }]],       // Stufe 3: Reichtum kauft Nachschub (Versorgungslimit); ohne ihn setzt die Linie ihr Material nicht in Stärke um (Bericht kartenpfad-4)
       verteidigung: [[{ stat: 'turretDmg', mul: 1.2 }, { stat: 'wallHp', mul: 1.15 }],
                      [{ stat: 'towerKillMaterial', add: 1.5 }, { stat: 'counterWave', add: 1 }],
                      [{ stat: 'counterBoost', add: 0.3 }, { stat: 'turretDmg', mul: 1.2 }]],

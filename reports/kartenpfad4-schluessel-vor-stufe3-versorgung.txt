@@ -1,0 +1,11 @@
+SCHLÜSSELKARTEN – Paarvergleich (Linien-Bot, Normal/durchschnitt, druck hoch, 50 Partien je Arm)
+
+Karte         | Linie        | Siege mit | Siege ohne (Bann) | Differenz | gewählt in | Siege, wenn gewählt | Dauer Median mit / ohne
+drillmeister  | militaer     |      100% |              100% |        0 |       78% | 100% (0 pp) | 12:33 / 11:58
+vorhut        | militaer     |      100% |              100% |        0 |       98% | 100% (0 pp) | 12:33 / 11:59
+handelsnetz   | wirtschaft   |       78% |               84% |       -6 |       68% | 73.5% (-10.5 pp) | 15:47 / 15:35
+ruecklage     | wirtschaft   |       78% |               82% |       -4 |       86% | 79.1% (-2.9 pp) | 15:47 / 14:29
+bollwerk      | verteidigung |       86% |               86% |        0 |      100% | 86% (0 pp) | 23:11 / 24:26
+gegenstoss    | verteidigung |       86% |               78% |        8 |       72% | 86.1% (8.1 pp) | 23:11 / 25:58
+
+Größter Zuwachs der Siegquote durch eine Schlüsselkarte: 8.1 pp (Soll ≤ 25)
