@@ -28,6 +28,10 @@ const KF_CONFIG = {
        weil die Belagerung die regulären Gegnerwellen aufhält (Befund 4.1). */
     epBasis: { proProzent: 4 },                  // EP je 1 % der Lebenspunkte der gegnerischen Basis, die eigene Einheiten und Karten abtragen
     epWelle: { basis: 4, proEinheit: 2 },        // EP je vollständig abgewehrter Gegnerwelle: basis + proEinheit × Zahl der Einheiten dieser Welle (größere Wellen bringen mehr)
+    /* Forschungsbudget der Universität (Teil 5, REQ-K5.05, ersetzt im Modus karten den Hörsaal): Der Spieler stellt ein, welcher Anteil des laufenden Materialertrags (Fabriken und Presse)
+       in EP umgewandelt wird. stufen: wählbare Anteile; kurs: EP je Material bei kursFaktor 1; kursFaktor je Stufe: der Kurs sinkt mit dem Anteil (abnehmender Ertrag, reines Forschen soll nicht
+       die beste Strategie sein). Gilt nur bei stehender Universität. */
+    budget: { stufen: [0, 0.25, 0.5], kurs: 0.08, kursFaktor: [1, 1, 0.7] },
     xpMult: { leicht: 1, normal: 1, schwer: 1 }, // EP je Abschuss je Grad (ersetzt im Modus karten DIFFICULTY.xpMult: mehr Gegner bringen mehr EP, ein Ausgleich über den Faktor entfällt)
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,

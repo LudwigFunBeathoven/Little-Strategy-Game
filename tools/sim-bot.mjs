@@ -283,9 +283,10 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, linie, druck }){
+function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, linie, druck, budget }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
+  if (budget !== undefined) prof.budget = budget;                          // Forschungsbudget (Teil 5): Stufe 0, 1, 2 (0, 25, 50 %)
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
   if (linie){ prof.linie = linie; prof.pfad = prof.pfad && pfad ? prof.pfad : KF_BROWSER_BOT.LINIEN_PFAD[linie]; }       // Linien-Bot (Teil 4, REQ-S.09): bevorzugt Karten und Varianten seiner Linie
   const G = newGame(diff, seed, pacing, druck);

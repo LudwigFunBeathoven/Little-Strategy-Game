@@ -89,6 +89,7 @@ function freshState(diff, seed){
     turretCd: {}, enemyTurretCd: 0,
     druck: null,                      // Testschalter ?druck=hoch (Teil 4, REQ-S.08): null | 'hoch'; verstärkt die regulären Gegnerwellen ab C.DRUCK.hoch.abMinute
     pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, sinceKey: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    budget: 0,                        // Forschungsbudget (Teil 5): Index in C.KARTEN.budget.stufen
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0, waveSize: {},       // waveSize: Zahl der Einheiten je Gegnerwelle für die EP der abgewehrten Welle (Modus karten, Teil 5)
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
@@ -384,6 +385,27 @@ function create(){
     return null;
   }
 
+  /* Forschungsbudget (Teil 5, REQ-K5.05): Der eingestellte Anteil des laufenden Materialertrags (Fabriken und Presse, nicht Klicks, Zinsen oder Beute) wird in EP umgewandelt.
+     Nur im Modus karten und bei stehender Universität; der Kurs sinkt mit dem Anteil (kursFaktor), Karten und Sonderbauten können ihn heben (budgetKurs). */
+  const budgetStufe = () => S.pacing === 'karten' && has('universitaet') ? (S.budget || 0) : 0;
+  const budgetShare = () => C.KARTEN.budget.stufen[budgetStufe()] || 0;
+  const budgetKurs  = () => C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[budgetStufe()] * mMul('budgetKurs');
+  function setBudget(i){
+    if (S.pacing !== 'karten' || !has('universitaet') || !(i >= 0 && i < C.KARTEN.budget.stufen.length)) return false;
+    S.budget = i; return true;
+  }
+  /* Materialertrag je Sekunde nach Abzug des Forschungsbudgets (Anzeige) */
+  const incomeRate = () => (matRate() + autoPressCps() * clickPower()) * (1 - budgetShare());
+  function addProduction(n){
+    const sh = budgetShare();
+    if (sh > 0){
+      const used = n * sh;
+      S.stats.budgetMaterial = (S.stats.budgetMaterial || 0) + used;
+      gainXp(used * budgetKurs(), 'budget');
+      n -= used;
+    }
+    addMaterial(n);
+  }
   function addMaterial(n, source){
     S.material += n; S.materialTotal += n;
     const p = S.stats.prod[phase()];
@@ -1373,8 +1395,8 @@ function create(){
     S.stats.prod[phase()].time += dt;
     // Aufgeschobene Wahl (Mindestabstand, REQ-P.02) erscheint, sobald der Abstand erreicht ist
     if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
-    addMaterial(matRate() * dt);
-    addMaterial(autoPressCps() * clickPower() * dt);
+    addProduction(matRate() * dt);
+    addProduction(autoPressCps() * clickPower() * dt);
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
     if (S.waveRushCd) S.waveRushCd = Math.max(0, S.waveRushCd - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
@@ -1509,7 +1531,7 @@ function create(){
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     offerDraft, chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, gainXp, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
-    clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
+    clickPower, matRate, incomeRate, setBudget, budgetStufe, budgetShare, budgetKurs, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,
   };

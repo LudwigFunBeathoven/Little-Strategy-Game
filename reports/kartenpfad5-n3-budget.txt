@@ -1,0 +1,15 @@
+fertig in 220 s, 450 Partien
+
+FORSCHUNGSBUDGET – Paarvergleich (einheiten-zuerst, 50 Partien je Arm, gleiche Seeds, Modus karten, N.3, Kurs 0,08)
+
+| Grad | Profil | Budget | Siege | Dauer Median | Wahlen Median (Mittel) | Differenz Wahlen (Median) | Differenz Siege | EP aus Budget |
+|---|---|---|---|---|---|---|---|---|
+| normal | aktiv | 0 % | 100 % | 13:28 | 12 (11.9) | – | – | 0.0 % |
+| normal | aktiv | 25 % | 100 % | 11:58 | 14 (13.7) | +2 | +0.0 pp | 31.8 % |
+| normal | aktiv | 50 % | 100 % | 12:09 | 15 (14.7) | +3 | +0.0 pp | 40.5 % |
+| normal | durchschnitt | 0 % | 100 % | 14:18 | 13 (13.3) | – | – | 0.0 % |
+| normal | durchschnitt | 25 % | 100 % | 12:38 | 16 (15.2) | +3 | +0.0 pp | 31.7 % |
+| normal | durchschnitt | 50 % | 100 % | 12:50 | 16 (15.6) | +3 | +0.0 pp | 40.2 % |
+| normal | gelegentlich | 0 % | 100 % | 19:37 | 17 (15.7) | – | – | 0.0 % |
+| normal | gelegentlich | 25 % | 100 % | 13:58 | 18 (17.5) | +1 | +0.0 pp | 19.0 % |
+| normal | gelegentlich | 50 % | 100 % | 13:12 | 17 (16.5) | +0 | +0.0 pp | 40.4 % |

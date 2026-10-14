@@ -1,6 +1,7 @@
 // Klammerfront – Messung für Kartenpfad Teil 5 (REQ-K5.01, K5.10).
 // Aufruf:  node tools/sim-p5.mjs --suite felder [--runs 50] [--json reports/kartenpfad5-basis.json] [--label "Fahrplan aus"]
 //   Filter: --diffs leicht,normal,schwer  --profiles aktiv,durchschnitt,gelegentlich  --strategy einheiten-zuerst|gierig  --linie militaer|wirtschaft|verteidigung  --druck hoch
+//   budget  Paarvergleich des Forschungsbudgets (REQ-K5.05): derselbe Bot mit 0 %, 25 % und 50 %, Normal/durchschnitt (--budgetRuns, Standard 50)
 //   felder  Siegquote, Dauer, Wahlen je Partie, längste Lücke zwischen zwei Wahlen, EP je Minute in den Abschnitten 0–4, 4–8, 8–12, 12+ min,
 //           Anteile der EP-Quellen, Hörsaal (Stufen, Kosten, Ertrag), Fabriken im Raster; 3 Grade × 3 Profile, schneller Bot, gleiche Seeds in allen Feldern
 // „Fahrplan aus“ (Teil 4): KF_OVERRIDE='{"KARTEN":{"fahrplan":{"zielzeitIstFrist":false},"maxAbstand":1000000000}}' node tools/sim-p5.mjs …
@@ -32,6 +33,9 @@ if (!isMainThread){
     for (const diff of DIFFS) for (const profile of PROFILES) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: LINIE ? undefined : 'militaer', linie: LINIE || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, sampleXp: EP_AT, seed: seedOf(2, r) });
 
+  if (SUITE === 'budget')
+    for (const arm of [0, 1, 2]) for (const profile of PROFILES) for (const diff of DIFFS) for (let r = 0; r < RUNS; r++)
+      jobs.push({ ...base, suite: 'budget', diff, profile, strategy: EZ, pfad: LINIE ? undefined : 'militaer', linie: LINIE || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, budget: arm, arm, sampleXp: EP_AT, seed: seedOf(7, r) });
   const n = Math.max(1, Math.min(availableParallelism(), 8));
   const sorted = jobs.map((j, i) => ({ j, i })).sort((a, b) => (b.j.strategy === 'gierig') - (a.j.strategy === 'gierig'));
   const chunks = Array.from({ length: n }, () => []);
@@ -51,6 +55,7 @@ if (!isMainThread){
   const pc = (a, b) => b ? Math.round(1000 * a / b) / 10 : null;
   const f1 = x => x == null ? '–' : (Math.round(x * 10) / 10).toFixed(1);
   const f0 = x => x == null ? '–' : String(Math.round(x));
+  const pc1b = v => v == null ? '–' : (100 * v).toFixed(1) + ' %';
 
   /* EP je Minute in den Abschnitten 0–4, 4–8, 8–12, 12+ min: Partien, die den Abschnitt höchstens 30 s berühren, zählen nicht; endet die Partie im Abschnitt, gilt die tatsächliche Dauer */
   const BOUNDS = [0, ...EP_AT, Infinity];
@@ -126,7 +131,21 @@ if (!isMainThread){
       for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.hoersaal.anteil} % | ${x.hoersaal.stufe.map(v => v + ' %').join(' / ')} | ${mm(x.hoersaal.t1Median)} | ${f0(x.hoersaal.kostenMedian)} | ${f1(x.hoersaal.epMinMedian)} / ${f1(x.hoersaal.epMinMittel)} |`);
     }
   }
+  if (SUITE === 'budget'){
+    const rows = [];
+    for (const diff of DIFFS) for (const profile of PROFILES) for (const arm of [0, 1, 2]){
+      const rs = results.filter(r => r.suite === 'budget' && r.diff === diff && r.profile === profile && r.arm === arm), s = stat(rs);
+      rows.push({ diff, profile, arm, ...s }); report.felder.push({ diff, profile, arm, ...s });
+    }
+    console.log(`FORSCHUNGSBUDGET – Paarvergleich (${EZ}${LINIE ? ', Linie ' + LINIE : ''}, ${RUNS} Partien je Arm, gleiche Seeds, Modus karten${LABEL ? ', ' + LABEL : ''})\n`);
+    console.log('| Grad | Profil | Budget | Siege | Dauer Median | Wahlen Median (Mittel) | Differenz Wahlen (Median) | Differenz Siege | EP aus Budget |');
+    console.log('|---|---|---|---|---|---|---|---|---|');
+    for (const x of rows){
+      const base0 = rows.find(y => y.diff === x.diff && y.profile === x.profile && y.arm === 0);
+      console.log(`| ${x.diff} | ${x.profile} | ${[0, 25, 50][x.arm]} % | ${x.siegquote} % | ${mm(x.dauerMedian)} | ${x.wahlenMedian} (${f1(x.wahlenMittel)}) | ${x.arm ? '+' + (x.wahlenMedian - base0.wahlenMedian) : '–'} | ${x.arm ? (x.siegquote - base0.siegquote >= 0 ? '+' : '') + f1(x.siegquote - base0.siegquote) + ' pp' : '–'} | ${pc1b(x.quellen.budget)} |`);
+    }
+  }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
-    xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
+    arm: r.arm, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
     grid: r.grid, wallLost: r.wallLost, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })) })) }));
 }

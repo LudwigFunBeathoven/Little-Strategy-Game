@@ -26,7 +26,7 @@ const Session = (() => {
     if (k) unitLog = unitLog.slice(k);
     if (lastPos.size > 4 * S.units.length + 50){ const ids = new Set(S.units.map(u => u.id)); for (const id of lastPos.keys()) if (!ids.has(id)) lastPos.delete(id); }
   }
-  const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption', 'upgradeBuilding'];
+  const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption', 'upgradeBuilding', 'setBudget'];
   function reset(){
     const S = G.S;
     P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),

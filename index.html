@@ -145,6 +145,8 @@
   .field{display:flex; flex-direction:column; gap:6px;}
   .field-label{font-family:"IBM Plex Mono", monospace; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
   .seg{display:flex; gap:6px; flex-wrap:wrap;}
+  .budget{margin:0 0 12px;}
+  .budget .hint{margin:2px 0 6px;}
   .seg button{border:1px solid var(--rule-strong); background:var(--surface); border-radius:5px; padding:7px 14px; font-weight:500; cursor:pointer; min-height:32px;}
   .seg button[aria-pressed="true"]{border-color:var(--brass); background:var(--brass-soft);}
   .diff[aria-pressed="true"]{border-color:var(--brass); background:var(--brass-soft);}
@@ -421,7 +423,7 @@
   <!-- Band 1: Ressourcenleiste (REQ-5.03) -->
   <header class="hud" id="hud">
     <div class="hud-item" data-tooltip="hud:soldiers"><span class="hud-l" data-i18n="hud.soldiers"></span><b class="num" id="hudSoldiers">0/3</b></div>
-    <div class="hud-item" data-tooltip="hud:material"><span class="hud-l" data-i18n="hud.material"></span><b class="num" id="material">0</b><span class="hud-s num" id="rate"></span></div>
+    <div class="hud-item" data-tooltip="hud:material"><span class="hud-l" data-i18n="hud.material"></span><b class="num" id="material">0</b><span class="hud-s num" id="rate"></span><span class="hud-s" id="budgetInfo" hidden></span></div>
     <div class="hud-item hud-xp" data-tooltip="hud:xp"><span class="hud-l" data-i18n="hud.xp"></span><span class="xp-row"><b class="num" id="xpVal">0</b><button class="card-sym" id="cardSym" type="button" data-tooltip="deck" hidden><span class="cs-card" aria-hidden="true"><i id="deckFill"></i></span><span class="cs-n num" id="deckCount"></span><span class="expl" id="deckExpl"></span></button></span>
       <span class="bar brass"><i id="barLvl"></i></span><span class="hud-s num"><span id="xpRate"></span> · <span id="lvlProg"></span></span></div>
     <div class="hud-item" id="hudWaves" data-tooltip="hud:waves"><span class="hud-l" data-i18n="hud.waves"></span>
@@ -513,6 +515,11 @@
         </div>
         <div class="tabpanel" id="panel-uni" role="tabpanel" hidden>
           <p class="hint" id="uniInfo"></p>
+          <div class="budget" id="budgetBox" hidden>
+            <h3 class="sub" data-i18n="budget.title"></h3>
+            <p class="hint" id="budgetText"></p>
+            <div class="seg" id="budgetSeg" role="group" data-i18n-aria="budget.title"></div>
+          </div>
           <div class="res-active" id="resActive"></div>
           <div class="res-pfad" id="resPfad" hidden></div>
           <div class="res-tree">

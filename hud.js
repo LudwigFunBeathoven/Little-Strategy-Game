@@ -54,7 +54,7 @@ function floatNow(which, v, text){
 }
 function buildHud(){
   for (const id of ['hudSoldiers', 'material', 'rate', 'xpVal', 'xpRate', 'barLvl', 'lvlProg', 'waveIn', 'enemyWaveIn', 'siegeInfo',
-                    'hudWaves', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn', 'tutSkipBtn'])
+                    'hudWaves', 'budgetInfo', 'armyState', 'clock', 'eraLabel', 'diffLabel', 'draftBtn', 'pauseBtn', 'langBtn', 'newBtn', 'tutSkipBtn'])
     hudEl[id] = $(id);
   hudEl.lineItem = $('hudLines'); hudEl.lineChips = {};
   for (const l of KF_LINIEN.linien){                                                 // je Linie ein Anzeigefeld, nur mit Stufe 1 sichtbar
@@ -76,7 +76,9 @@ function hudTip(item){
   const S = G.S;
   switch (item){
     case 'soldiers': return { title: t('hud.soldiers'), body: t('tip.hud.soldiers'), rows: [[t('front.field'), fmt(G.ownOnField())], [t('front.supply'), fmt(G.supplyCap())], [t('front.losses'), fmt(S.losses)]] };
-    case 'material': return { title: t('hud.material'), body: t('tip.hud.material'), rows: [[t('tip.m.matRate'), fmt1(G.matRate() + G.autoPressCps() * G.clickPower())]] };
+    case 'material': { const rows = [[t('tip.m.matRate'), fmt1(G.incomeRate())]];
+      if (G.budgetShare() > 0) rows.push([t('tip.m.budget'), t('hud.budget', { n: pct(G.budgetShare()) })]);       // Teil 5: Forschungsbudget
+      return { title: t('hud.material'), body: t('tip.hud.material'), rows }; }
     case 'xp': { const x = G.xpProgress();
       return { title: t('hud.xp'), body: t('tip.hud.xp'), rows: [[t('level.progress', { n: x.level + 1 }), `${fmt(Math.max(0, x.cur))} / ${fmt(x.need)}`], [t('tip.hud.xpRate'), fmt1(xpRate())]] }; }
     case 'waves': return { title: t('hud.waves'), body: t('tip.hud.waves', { s: C.WAVE_INTERVAL_S }) };
@@ -113,7 +115,9 @@ function renderHud(){
   setText(E.hudSoldiers, `${fmt(G.ownOnField())}/${fmt(G.supplyCap())}`);
   setText(E.material, fmt(S.material));
   // mit Handelskontor: nächster Zinsbetrag und Deckel (REQ-6.07 b)
-  const rateText = t('hud.perSecond', { n: fmt1(G.matRate() + G.autoPressCps() * G.clickPower()) });
+  const rateText = t('hud.perSecond', { n: fmt1(G.incomeRate()) });
+  setHidden(E.budgetInfo, !(S.pacing === 'karten' && G.budgetShare() > 0));                      // Forschungsbudget (Teil 5): kleine Anzeige, sobald es über 0 % steht
+  if (G.budgetShare() > 0) setText(E.budgetInfo, t('hud.budget', { n: pct(G.budgetShare()) }));
   setText(E.rate, G.has('kontor') ? t('hud.rateInterest', { rate: rateText, n: fmt(G.kontorNext()), cap: fmt(G.kontorCap()), s: Math.max(0, Math.ceil(C.KONTOR.intervalS - S.kontorT)) }) : rateText);
   const x = G.xpProgress();
   setText(E.xpVal, fmt(S.xp));

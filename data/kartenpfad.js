@@ -44,7 +44,7 @@ const KF_PFAD = {
      Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
   /* Forschungen, die im Modus karten entfallen: Schildträger (eine Pfadforschung ersetzt sie), Ingenieurskunst (Teil 4, REQ-S.03: nur Baukosten) und der Hörsaal (Teil 5, REQ-K5.05:
      das Forschungsbudget der Universität ersetzt ihn) */
-  entfallen: ['r_schildtraeger', 'r_ingenieur'],
+  entfallen: ['r_schildtraeger', 'r_ingenieur', 'r_hoersaal'],
   /* Karten, die im Modus karten nicht im Pool sind (Teil 4): Serienbau und Bauleitung (REQ-S.03: einzige Wirkung verbilligt bzw. beschleunigt das Bauen). Im Modus standard bleiben sie unverändert.
      Kriegserfahrung kehrt mit Teil 5 zurück (REQ-K5.04, dort unter dem Namen „Lehrjahre“, Pool-Eintrag in data/draft-options.js). */
   entfallenKarten: ['serienbau', 'bauleitung'],

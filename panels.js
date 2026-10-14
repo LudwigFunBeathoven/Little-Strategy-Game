@@ -184,6 +184,11 @@ function buildPanels(){
       resEls[r.id].card = card.id; resEls[r.id].group = resGroups[card.id];
     } else resEls[r.id] = makeOpt($(BRANCH_BOX[r.branch]), 'res', 'res:' + r.id, () => G.startResearch(r.id));
   }
+  // Forschungsbudget (Teil 5, REQ-K5.05): ein Knopf je Stufe, einmal erzeugt
+  C.KARTEN.budget.stufen.forEach((sh, i) => {
+    const b = mkButton('', '', () => { if (G.setBudget(i)) requestRender(); }, 'budget:' + i, '');
+    $('budgetSeg').appendChild(b); budgetBtns.push(b);
+  });
   $('rerollBtn').addEventListener('click', () => { if (!isDis($('rerollBtn')) && G.rerollDraft()){ draftKey = ''; requestRender(); } });
   // Klickfeld löst auf pointerdown aus (REQ-5.01); Tastatur (Enter, Leertaste) kommt als click ohne Zeigerereignis
   const press = () => { if (!isDis($('clickBtn'))){ G.doClick(); requestRender(); } };
@@ -584,6 +589,22 @@ function researchReason(id){
   }
   return null;
 }
+/* Forschungsbudget (Teil 5): Knöpfe, Beschriftung und Erklärzeile je Stufe; nur im Modus karten */
+const budgetBtns = [];
+function renderBudget(){
+  const S = G.S, karten = S.pacing === 'karten', uni = G.has('universitaet');
+  setHidden($('budgetBox'), !karten);
+  if (!karten) return;
+  const cur = G.budgetStufe();
+  setText($('budgetText'), t(uni ? 'budget.text' : 'budget.needUni', { n: pct(G.budgetShare()), k: fmt2(G.budgetKurs()) }));
+  C.KARTEN.budget.stufen.forEach((sh, i) => {
+    const b = budgetBtns[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs');
+    setText(b.querySelector('.btn-label'), t('budget.step', { n: pct(sh) }));
+    setText(b.querySelector('.expl'), sh > 0 ? t('ex.budget', { n: pct(sh), k: fmt2(k) }) : t('ex.budget.off'));
+    b.setAttribute('aria-pressed', String(i === cur && uni));
+    setDis(b, !uni || S.status !== 'running');
+  });
+}
 let resRunKey = '';
 function renderResearch(){
   const S = G.S;
@@ -608,6 +629,7 @@ function renderResearch(){
                           : t('opt.max'));
     setDis(el.btn, !!blk);
   }
+  if (S.pacing === 'karten') for (const col of document.querySelectorAll('.res-tree > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));       // Teil 5: der Hörsaal entfällt, die Spalte „Lehre“ bleibt leer
   if (Disc.on()){                                                          // REQ-K2.04: keine leeren Bereiche, Gruppen und Spalten ohne sichtbare Forschung entfallen
     for (const g of Object.values(resGroupsAll)) setHidden(g.g, !g.opts.querySelector('.opt:not([hidden])'));
     for (const col of document.querySelectorAll('.res-tree > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));
@@ -740,6 +762,7 @@ function renderPanels(){
   setText($('smithyText'), Disc.on() && !G.has('schmiede') ? t('panel.smithy.none') : t('panel.smithy.text', { n: S.lvl.qualitaet }));
   setText($('uniInfo'), t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() }) + ' ' + t(G.has('universitaet') ? 'research.intro' : 'research.needUni', { n: G.researchSlots() }));
   renderResearch();
+  renderBudget();
   renderDraft();
   renderChosen();
   NewMarks.endRender();

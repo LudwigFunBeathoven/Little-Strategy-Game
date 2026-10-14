@@ -30,6 +30,11 @@ function KF_BROWSER_BOT(G, profile, hooks){
       const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
+    // Forschungsbudget (Teil 5, REQ-K5.10): feste Regel je Linie – Militär 0 %, Wirtschaft 50 %, Verteidigung 25 %; ohne Linie und Angabe 0 %; o.budget überschreibt (Stufe 0, 1, 2)
+    if (G.pacing() === 'karten' && G.has('universitaet')){
+      const want = o.budget !== undefined ? o.budget : o.linie ? KF_BROWSER_BOT.LINIEN_BUDGET[o.linie] : 0;
+      if (G.budgetStufe() !== want) G.setBudget(want);
+    }
     if (o.linie && G.pacing() === 'karten') KF_BROWSER_BOT.aufwerten(G, o.linie, h);       // Linien-Bot (Teil 4): Gebäude zu Varianten seiner Linie aufwerten
     if (!o.noUpgrades){
       for (const id of PRIO) if (C.UPGRADES[id] && (o.useWall || !/^(turm|mauer)/.test(id))) G.buy(id);
@@ -86,6 +91,7 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, linie){
 
 /* Gebäude-Aufwertung (Teil 4, REQ-S.05): Der Linien-Bot wertet jedes Gebäude, für das seine Linie eine Variante hat, auf, sobald das Material mit Rücklage reicht.
    Fabriken werden nur zur Manufaktur mehrfach aufgewertet (Ertrag je Gebäude); jede andere Variante wirkt einmal, ein zweites Gebäude brächte nichts. */
+KF_BROWSER_BOT.LINIEN_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Linien-Bot (0, 25, 50 %)
 KF_BROWSER_BOT.LINIEN_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Linien-Bots
 KF_BROWSER_BOT.aufwerten = function(G, linie, hooks){
   const S = G.S;

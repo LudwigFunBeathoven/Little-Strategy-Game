@@ -251,6 +251,11 @@ function tipContent(id){
       if (Disc.shows('hud:lines')) rows.push([t('tip.variant.line'), t(`line.${v.linie}.name`)]);
       return { title: t(v.nameKey), body: t(v.descKey, variantParams(v)) + ' ' + t('variant.once'), rows, reason: variantReason(G.variantBlock(i, b), b) };
     }
+    case 'budget': {                                                              // Forschungsbudget (Teil 5, REQ-K5.05)
+      const i = Number(a), sh = C.KARTEN.budget.stufen[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs'), gross = G.matRate() + G.autoPressCps() * G.clickPower();
+      return { title: t('budget.step.title', { n: pct(sh) }), body: sh > 0 ? t('tip.budget.body', { n: pct(sh), k: fmt2(k) }) : t('tip.budget.off'),
+               rows: [[t('tip.budget.rate'), sh > 0 ? fmt2(k) : '–'], [t('tip.budget.xp'), fmt1(gross * sh * k)], [t('tip.budget.mat'), fmt1(gross * (1 - sh))]],
+               reason: G.has('universitaet') ? null : t('tip.needsBuilding', { name: t('bld.universitaet.name') }) }; }
     case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
     case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: refundText(G.refundFor(Number(a))) }) };
     case 'cancel': return { title: t('slot.cancel'), body: t('tip.cancel.body') };
