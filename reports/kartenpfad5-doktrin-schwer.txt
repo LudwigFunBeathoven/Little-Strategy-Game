@@ -1,0 +1,22 @@
+fertig in 368 s, 750 Partien
+
+DOKTRINEN – Paarvergleich (einheiten-zuerst, schwer/durchschnitt, 50 Partien je Arm, gleiche Seeds, druck: aus, Modus karten, Endstand, Schwer)
+
+| Doktrin | Linie | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Sonderbau gebaut (mit) |
+|---|---|---|---|---|---|---|
+| zunftordnung | wirtschaft | 92 % | 92 % | 0 | 13:49 / 13:16 | 92 % (gewählt 92 %, Differenz bei Wahl +8) |
+| stiftung | wirtschaft | 92 % | 92 % | 0 | 13:29 / 13:16 | 2 % (gewählt 92 %, Differenz bei Wahl +8) |
+| stehendesHeer | militaer | 90 % | 90 % | 0 | 9:49 / 11:40 | 92 % (gewählt 92 %, Differenz bei Wahl +7.8) |
+| vorstoss | militaer | 90 % | 90 % | 0 | 9:42 / 11:40 | – (gewählt 92 %, Differenz bei Wahl +7.8) |
+| bollwerk | verteidigung | 92 % | 92 % | 0 | 12:38 / 12:11 | 92 % (gewählt 92 %, Differenz bei Wahl +8) |
+| ausfall | verteidigung | 92 % | 92 % | 0 | 12:38 / 12:11 | – (gewählt 92 %, Differenz bei Wahl +8) |
+
+Angebote mit Doktrin (Arm „alle“: alle sechs Doktrinen im Pool, Linien-Bot)
+
+| Linie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt Mittel | Erste Doktrin gewählt in Wahl (Median) | Unterhalt Median (Material) |
+|---|---|---|---|---|---|
+| militaer | 92 % | 3 (2.9) | 1.6 | 6 | 43 |
+| wirtschaft | 90 % | 3 (3.3) | 1.7 | 8 | 0 |
+| verteidigung | 92 % | 3 (3.2) | 1.7 | 7 | 0 |
+
+Gewählt je Doktrin (Anteil der Partien): [{"zunftordnung":12,"stiftung":4,"stehendesHeer":60,"vorstoss":62,"bollwerk":14,"ausfall":4},{"zunftordnung":78,"stiftung":70,"stehendesHeer":2,"vorstoss":4,"bollwerk":14,"ausfall":6},{"zunftordnung":8,"stiftung":8,"stehendesHeer":12,"vorstoss":10,"bollwerk":70,"ausfall":58}]

@@ -1,0 +1,22 @@
+fertig in 779 s, 1500 Partien
+
+DOKTRINEN – Paarvergleich (einheiten-zuerst, normal/durchschnitt, 100 Partien je Arm, gleiche Seeds, druck: nur Verteidigung hoch, Modus karten, Endstand: Normal, durchschnitt, Verteidigung mit druck=hoch)
+
+| Doktrin | Linie | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Wahlen Median mit / ohne | Mauer-Verlust mit / ohne | Turm-Abschüsse mit / ohne | Sonderbau gebaut (mit) |
+|---|---|---|---|---|---|---|---|---|---|
+| zunftordnung | wirtschaft | 100 % | 100 % | 0 | 14:34 / 14:07 | 17 / 16 | 43 / 60 | 0.6 / 0.3 | 100 % (gewählt 100 %, Differenz bei Wahl 0) |
+| stiftung | wirtschaft | 100 % | 100 % | 0 | 14:31 / 14:07 | 17 / 16 | 84 / 60 | 0.5 / 0.3 | 93 % (gewählt 100 %, Differenz bei Wahl 0) |
+| stehendesHeer | militaer | 100 % | 100 % | 0 | 10:49 / 13:27 | 11 / 13 | 14 / 34 | 0.3 / 0.3 | 100 % (gewählt 100 %, Differenz bei Wahl 0) |
+| vorstoss | militaer | 100 % | 100 % | 0 | 10:17 / 13:27 | 11 / 13 | 11 / 34 | 0.3 / 0.3 | – (gewählt 100 %, Differenz bei Wahl 0) |
+| bollwerk | verteidigung | 100 % | 100 % | 0 | 13:46 / 13:25 | 15 / 15 | 98 / 52 | 0.3 / 0.3 | 100 % (gewählt 100 %, Differenz bei Wahl 0) |
+| ausfall | verteidigung | 100 % | 100 % | 0 | 13:48 / 13:25 | 15 / 15 | 25 / 52 | 0.3 / 0.3 | – (gewählt 100 %, Differenz bei Wahl 0) |
+
+Angebote mit Doktrin (Arm „alle“: alle sechs Doktrinen im Pool, Linien-Bot)
+
+| Linie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt Mittel | Erste Doktrin gewählt in Wahl (Median) | Unterhalt Median (Material) |
+|---|---|---|---|---|---|
+| militaer | 100 % | 3 (3.0) | 1.6 | 6 | 50 |
+| wirtschaft | 99 % | 4 (3.7) | 1.9 | 8 | 0 |
+| verteidigung | 100 % | 4 (3.6) | 1.9 | 8 | 0 |
+
+Gewählt je Doktrin (Anteil der Partien): [{"zunftordnung":6,"stiftung":4,"stehendesHeer":65,"vorstoss":75,"bollwerk":2,"ausfall":3},{"zunftordnung":89,"stiftung":84,"stehendesHeer":6,"vorstoss":5,"bollwerk":5,"ausfall":2},{"zunftordnung":8,"stiftung":8,"stehendesHeer":10,"vorstoss":5,"bollwerk":77,"ausfall":82}]

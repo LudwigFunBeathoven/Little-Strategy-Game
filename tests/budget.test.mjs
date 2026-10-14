@@ -76,7 +76,7 @@ test('Lehrjahre und die Kartenwahl: das Budget bringt EP, die zur nächsten Wahl
   assert.ok(Math.abs(s.budget - gross * 0.5 * rate * 1.3) < 1e-6 * gross, 'Lehrjahre wirken auf das Budget');
   // genug Sekunden: aus dem Budget allein wird eine Wahl fällig
   G.S.draft.stacks.kriegserfahrung = 0; G.S.draft.ver++;
-  for (let i = 0; i < 20 * 200 && !G.S.pendingDraft; i++){ G.S.sections.forEach(x => { x.hp = 1e9; }); G.tick(0.05); }
+  for (let i = 0; i < 20 * 800 && !G.S.pendingDraft; i++){ G.S.sections.forEach(x => { x.hp = 1e9; }); G.tick(0.05); }
   assert.ok(G.S.pendingDraft, 'Wahl aus Forschungsbudget');
   assert.ok(G.S.stats.xpSrc.budget > 0 && G.S.xpTotal >= G.xpNeed(1));
 });

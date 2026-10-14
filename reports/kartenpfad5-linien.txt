@@ -1,0 +1,36 @@
+fertig in 439 s, 400 Partien
+
+LINIEN-BOTS Teil 4 (einheiten-zuerst, normal/durchschnitt, 50 Partien je Zeile, Modus karten)
+
+Bot          | Druck | Siege | Nied. | offen | Dauer Median | Stufe 1 (Anteil, Median) | Stufe 2 (Anteil, Median) | Stufe 3 (Anteil, Median) | Fabriken ohne Variante Min 5/10 | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße | Schlüsselkarten-Angebote (Median) / gewählt
+ohne         | aus   |  100% |    0% |    0% |        14:15 | –                        | –                        | –                        | 5.0/5.0 (Median 5) |     53 |    0.1 |   0.3 | undefined / –
+ohne         | hoch  |  100% |    0% |    0% |        14:29 | –                        | –                        | –                        | 5.0/5.0 (Median 5) |     11 |    0.1 |   1.5 | undefined / –
+militaer     | aus   |  100% |    0% |    0% |        11:11 | 100 % 5:02               | 90 % 6:18                | 90 % 6:53                | 4.2/4.0 (Median 4) |     26 |    0.1 |   0.0 | undefined / –
+militaer     | hoch  |  100% |    0% |    0% |        11:02 | 100 % 5:03               | 98 % 6:05                | 98 % 6:52                | 4.2/4.0 (Median 4) |     38 |    0.1 |   0.0 | undefined / –
+wirtschaft   | aus   |  100% |    0% |    0% |        14:39 | 100 % 5:43               | 100 % 5:55               | 100 % 7:44               | 0.0/0.0 (Median 0) |     51 |    0.1 |   0.0 | undefined / –
+wirtschaft   | hoch  |   96% |    2% |    2% |        14:46 | 100 % 5:50               | 100 % 6:45               | 100 % 7:57               | 0.0/0.0 (Median 0) |    237 |    1.0 |   0.0 | undefined / –
+verteidigung | aus   |   98% |    0% |    2% |        13:58 | 100 % 5:14               | 98 % 6:31                | 98 % 7:27                | 3.4/1.3 (Median 0) |    104 |    0.1 |   5.3 | undefined / –
+verteidigung | hoch  |  100% |    0% |    0% |        14:02 | 100 % 5:10               | 100 % 6:31               | 100 % 7:26               | 3.6/1.5 (Median 0) |     67 |    0.1 |   3.4 | undefined / –
+
+Varianten (Anteil der Partien, in denen mindestens eine Variante dieses Typs fertig wurde; je Bot) und mittlere Zahl fertiger Varianten
+ohne         aus   {}  Mittel 0.0
+ohne         hoch  {}  Mittel 0.0
+militaer     aus   {"werkstatt":1,"exerzierplatz":0.88,"waffenschmiede":1,"heerlager":0.66}  Mittel 5.2
+militaer     hoch  {"werkstatt":1,"exerzierplatz":0.82,"waffenschmiede":1,"heerlager":0.7}  Mittel 5.1
+wirtschaft   aus   {"manufaktur":1,"zahlmeisterei":1,"muenzschmiede":1,"zunfthaus":0.86,"stiftungshaus":0.88}  Mittel 14.2
+wirtschaft   hoch  {"manufaktur":1,"zahlmeisterei":1,"zunfthaus":0.88,"muenzschmiede":1,"stiftungshaus":0.72}  Mittel 14.2
+verteidigung aus   {"wachstube":0.96,"bastion":0.86,"garnison":1,"ruestkammer":1}  Mittel 9.3
+verteidigung hoch  {"bastion":0.88,"garnison":1,"ruestkammer":1,"wachstube":0.96}  Mittel 9.4
+
+Stufen aller Linien je Bot (Anteil der Partien, Median in s): ohne/aus: M1 26% 11:13, M2 2% 8:10, M3 2% 8:10 · W1 26% 9:36, W2 4% 13:05, W3 4% 13:05 · V1 18% 10:39, V2 4% 17:37, V3 4% 17:37
+  ohne/hoch: M1 30% 9:40, M2 6% 11:16, M3 6% 11:16 · W1 34% 11:57, W2 4% 13:55, W3 4% 13:55 · V1 32% 11:15, V2 2% 16:57, V3 2% 16:57
+  militaer/aus: M1 100% 5:02, M2 90% 6:18, M3 90% 6:53 · W1 16% 10:14, W2 0% –, W3 0% – · V1 8% 9:31, V2 0% –, V3 0% –
+  militaer/hoch: M1 100% 5:03, M2 98% 6:05, M3 98% 6:52 · W1 14% 9:41, W2 0% –, W3 0% – · V1 10% 10:17, V2 0% –, V3 0% –
+  wirtschaft/aus: M1 14% 7:17, M2 0% –, M3 0% – · W1 100% 5:43, W2 100% 5:55, W3 100% 7:44 · V1 8% 11:10, V2 0% –, V3 0% –
+  wirtschaft/hoch: M1 16% 8:47, M2 0% –, M3 0% – · W1 100% 5:50, W2 100% 6:45, W3 100% 7:57 · V1 14% 9:56, V2 0% –, V3 0% –
+  verteidigung/aus: M1 8% 8:49, M2 0% –, M3 0% – · W1 22% 9:06, W2 0% –, W3 0% – · V1 100% 5:14, V2 98% 6:31, V3 98% 7:27
+  verteidigung/hoch: M1 14% 8:28, M2 0% –, M3 0% – · W1 10% 9:40, W2 0% –, W3 0% – · V1 100% 5:10, V2 100% 6:31, V3 100% 7:26
+
+Verteilung der Aufwertungen über alle Bots (2874 fertige Varianten): {"werkstatt":9.1,"exerzierplatz":3,"waffenschmiede":3.5,"heerlager":2.4,"manufaktur":24.6,"zahlmeisterei":3.5,"muenzschmiede":3.5,"zunfthaus":15.1,"stiftungshaus":2.8,"wachstube":8.4,"bastion":17.3,"garnison":3.5,"ruestkammer":3.5}; größter Anteil einer Grundvariante 24.6 % (Soll ≤ 60)
+
+Spannweite der Siegquoten der Linien-Bots: ohne Schalter 2 pp, druck=hoch 4 pp (Hypothese ≤ 20)

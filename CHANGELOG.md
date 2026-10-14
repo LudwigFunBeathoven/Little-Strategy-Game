@@ -1,5 +1,15 @@
 # Änderungen
 
+## v0.9.2-kartenpfad-5 – Branch `exp/kartenpfad`, Teil 5 (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad-5.md`, Bericht `docs/bericht-kartenpfad-5.md`, Testleitfaden `docs/testleitfaden-kartenpfad-5.md`. **Spielstand-Version 10: ältere Spielstände werden verworfen.** Der Modus `standard` ist unverändert (Golden-Test).
+- **Grundausstattung ab Start:** Fabrik, Kaserne, Schmiede, Universität, Kontor, Läufer, Werfer, Türme und alle Ausbauten gibt es ohne Karte; die Bau-Karten (auch Echtes Militär) entfallen. Die Versorgung wächst nur durch Kauf (Kaserne-Ausbau „Quartiere“, +2 je Stufe) oder Doktrin. Befestigungskunde öffnet zwei neue Forschungen (Wehrgang, Schießscharten).
+- **Kartenwahl aus dem Spielfluss:** Eine Wahl wird fällig, wenn die EP die Schwelle erreichen (Kurve 70 × 1,05^(k−1)); kein Fahrplan, keine Zielzeit, kein Höchstabstand. Neue EP-Quellen: Schaden an der gegnerischen Basis (10 EP je Prozent) und vollständig abgewehrte Gegnerwellen. Normal, durchschnitt: 14 Wahlen, 13:35 Minuten, längste Lücke 89 s (Median).
+- **Forschungsbudget** der Universität (0 / 25 / 50 % des Materialertrags werden zu EP, schlechterer Kurs bei höherem Anteil); der Hörsaal entfällt.
+- **Sechs Doktrinen** ersetzen die Schlüsselkarten: Zunftordnung, Stiftung, Stehendes Heer, Vorstoß, Bollwerk, Ausfall; je mit Sonderbau oder Fähigkeit und bindender Einschränkung, höchstens zwei je Partie. Sonderbauten: Zunfthaus, Stiftungshaus, Heerlager, Bastion.
+- **Linien neu:** Zeichen tragen nur Doktrinen (drei) und Gebäude-Varianten; Stufe 3 braucht eine Doktrin; die Stufen sind Regeln (Läufer, Schmiede-Stufe, Durchbruch; Diagonale, Lagerdeckel, Söldner; Turm-Material, Gegenstoß, Ausbruch). Grundvarianten angeglichen, neu: Zahlmeisterei, Münzschmiede.
+- **Kartenpool:** 28 statt 45 Karten, Stufen mit neuem Effekt (sieben Regeländerungen); Kriegserfahrung heißt „Lehrjahre“, Glücksritter hat wieder einen EP-Nachteil.
+- **Schwer** (nur Modus karten): Grundwelle 4,0 statt 3,5; Siegquote „durchschnitt“ 86 %.
+
 ## v0.9.2-kartenpfad-4 – Branch `exp/kartenpfad`, Teil 4 (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-4.md`, Bericht `docs/bericht-kartenpfad-4.md`, Testleitfaden `docs/testleitfaden-kartenpfad-4.md`. **Spielstand-Version 9: ältere Spielstände werden verworfen.** Der Modus `standard` ist identisch zu `main` 0.9.2.
 - **Fehler „undefined“** in der Wellenvorschau (Armbrustschütze, Katapult) behoben: Das Symbol steht jetzt je Einheit in `config.js`; Test über alle Einheiten und beide Sprachen. `main` ist nicht betroffen.

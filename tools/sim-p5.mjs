@@ -2,8 +2,8 @@
 // Aufruf:  node tools/sim-p5.mjs --suite felder [--runs 50] [--json reports/kartenpfad5-basis.json] [--label "Fahrplan aus"]
 //   Filter: --diffs leicht,normal,schwer  --profiles aktiv,durchschnitt,gelegentlich  --strategy einheiten-zuerst|gierig  --linie militaer|wirtschaft|verteidigung  --druck hoch
 //   budget  Paarvergleich des Forschungsbudgets (REQ-K5.05): derselbe Bot mit 0 %, 25 % und 50 %, Normal/durchschnitt (--budgetRuns, Standard 50)
-//   doktrin Paarvergleich je Doktrin (REQ-K5.07): der Linien-Bot der Doktrin, Normal/durchschnitt, nur diese Doktrin im Pool (Arm „mit“) gegen keine Doktrin (Arm „ohne“),
-//           Verteidigung mit druck=hoch (--druck aus schaltet ab); dazu Arm „alle“ je Linie: Angebote mit Doktrin und gewählte Doktrinen (--doktrinRuns, Standard 100)
+//   doktrin Paarvergleich je Doktrin (REQ-K5.07): der Linien-Bot der Doktrin, Normal/durchschnitt (--doktrinDiff, --doktrinProfile), nur diese Doktrin im Pool (Arm „mit“) gegen keine Doktrin (Arm „ohne“),
+//           Verteidigung mit druck=hoch (--druck aus | hoch schaltet für alle Linien um); dazu Arm „alle“ je Linie: Angebote mit Doktrin und gewählte Doktrinen (--doktrinRuns, Standard 100)
 //   felder  Siegquote, Dauer, Wahlen je Partie, längste Lücke zwischen zwei Wahlen, EP je Minute in den Abschnitten 0–4, 4–8, 8–12, 12+ min,
 //           Anteile der EP-Quellen, Hörsaal (Stufen, Kosten, Ertrag), Fabriken im Raster; 3 Grade × 3 Profile, schneller Bot, gleiche Seeds in allen Feldern
 // „Fahrplan aus“ (Teil 4): KF_OVERRIDE='{"KARTEN":{"fahrplan":{"zielzeitIstFrist":false},"maxAbstand":1000000000}}' node tools/sim-p5.mjs …
@@ -40,13 +40,13 @@ if (!isMainThread){
     for (const arm of [0, 1, 2]) for (const profile of PROFILES) for (const diff of DIFFS) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'budget', diff, profile, strategy: EZ, pfad: LINIE ? undefined : 'militaer', linie: LINIE || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, budget: arm, arm, sampleXp: EP_AT, seed: seedOf(7, r) });
   const DOKS = [['zunftordnung', 'wirtschaft'], ['stiftung', 'wirtschaft'], ['stehendesHeer', 'militaer'], ['vorstoss', 'militaer'], ['bollwerk', 'verteidigung'], ['ausfall', 'verteidigung']];
-  const DRUNS = Number(arg('doktrinRuns', 100));
+  const DRUNS = Number(arg('doktrinRuns', 100)), DDIFF = arg('doktrinDiff', 'normal'), DPROF = arg('doktrinProfile', 'durchschnitt');
   if (SUITE === 'doktrin'){
     const druckOf = linie => (arg('druck', 'auto') === 'auto' ? linie === 'verteidigung' : arg('druck') === 'hoch') ? 'hoch' : undefined;
     for (const [doc, linie] of DOKS) for (const arm of ['mit', 'ohne']) for (let r = 0; r < DRUNS; r++)
-      jobs.push({ ...base, suite: 'doktrin', diff: 'normal', profile: 'durchschnitt', strategy: EZ, linie, variant: doc, arm, druck: druckOf(linie), banCards: DOKS.map(d => d[0]).filter(x => arm === 'ohne' || x !== doc), seed: seedOf(11, r) });
-    for (const linie of ['militaer', 'wirtschaft', 'verteidigung']) for (let r = 0; r < DRUNS; r++)
-      jobs.push({ ...base, suite: 'doktrin', diff: 'normal', profile: 'durchschnitt', strategy: EZ, linie, variant: linie, arm: 'alle', druck: druckOf(linie), seed: seedOf(11, r) });
+      jobs.push({ ...base, suite: 'doktrin', diff: DDIFF, profile: DPROF, strategy: EZ, linie, variant: doc, arm, druck: druckOf(linie), banCards: DOKS.map(d => d[0]).filter(x => arm === 'ohne' || x !== doc), seed: seedOf(11, r) });
+    if (arg('doktrinAlle', 'ja') !== 'nein') for (const linie of ['militaer', 'wirtschaft', 'verteidigung']) for (let r = 0; r < DRUNS; r++)
+      jobs.push({ ...base, suite: 'doktrin', diff: DDIFF, profile: DPROF, strategy: EZ, linie, variant: linie, arm: 'alle', druck: druckOf(linie), seed: seedOf(11, r) });
   }
   const n = Math.max(1, Math.min(availableParallelism(), 8));
   const sorted = jobs.map((j, i) => ({ j, i })).sort((a, b) => (b.j.strategy === 'gierig') - (a.j.strategy === 'gierig'));
@@ -136,6 +136,13 @@ if (!isMainThread){
     console.log('|---|---|---|---|---|---|---|---|');
     const pc1 = v => v == null ? '–' : (100 * v).toFixed(1) + ' %';
     for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${pc1(x.quellen.kill)} | ${pc1(x.quellen.tower)} | ${pc1(x.quellen.base)} | ${pc1(x.quellen.wave)} | ${pc1(x.quellen.budget)} | ${pc1(x.quellen.passive)} |`);
+    /* Wahlrate je Karte (REQ-K5.06, Hinweis): wie oft eine angebotene Karte gewählt wird, über alle Partien Normal (Bots messen sich selbst mit; nur Hinweis) */
+    { const by = {}; for (const r of results.filter(x => x.suite === 'felder' && x.diff === 'normal')) for (const o of r.offers || []){ const e = by[o.id] || (by[o.id] = { a: 0, c: 0 }); e.a++; if (o.chosen) e.c++; }
+      const list = Object.entries(by).map(([id, e]) => ({ id, angeboten: e.a, gewaehlt: e.c, rate: e.a ? Math.round(1000 * e.c / e.a) / 10 : null })).sort((a, b) => a.rate - b.rate);
+      report.wahlraten = list;
+      const out = list.filter(x => x.rate < 5 || x.rate > 60);
+      console.log(`\nWahlrate je Karte (Normal, alle Profile, ${list.reduce((a, x) => a + x.angeboten, 0)} Angebote): ${list.length} Karten, außerhalb von 5–60 %: ${out.length}\n`);
+      console.log(list.map(x => `${x.id} ${x.rate} % (${x.gewaehlt}/${x.angeboten})`).join(', ')); }
     if (rows.some(x => x.hoersaal.anteil > 0)){
       console.log('\nHörsaal (Anteil der Partien mit Stufe 1 / 2 / 3; Fertigstellung Stufe 1; Material bis zur erreichten Stufe; EP je Minute ab Fertigstellung)\n');
       console.log('| Grad | Profil | Partien mit Hörsaal | Stufe 1 / 2 / 3 | Stufe 1 fertig (Median) | Kosten (Median) | EP je Minute (Median / Mittel) |');
@@ -159,9 +166,9 @@ if (!isMainThread){
   }
   if (SUITE === 'doktrin'){
     const w = a => pc(a.filter(r => r.status === 'won').length, a.length), rows = [];
-    console.log(`DOKTRINEN – Paarvergleich (${EZ}, Normal/durchschnitt, ${DRUNS} Partien je Arm, gleiche Seeds, Verteidigung mit druck=hoch, Modus karten${LABEL ? ', ' + LABEL : ''})\n`);
-    console.log('| Doktrin | Linie | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Sonderbau gebaut (mit) |');
-    console.log('|---|---|---|---|---|---|---|');
+    console.log(`DOKTRINEN – Paarvergleich (${EZ}, ${DDIFF}/${DPROF}, ${DRUNS} Partien je Arm, gleiche Seeds, druck: ${arg('druck', 'auto') === 'auto' ? 'nur Verteidigung hoch' : arg('druck')}, Modus karten${LABEL ? ', ' + LABEL : ''})\n`);
+    console.log('| Doktrin | Linie | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Wahlen Median mit / ohne | Mauer-Verlust mit / ohne | Turm-Abschüsse mit / ohne | Sonderbau gebaut (mit) |');
+    console.log('|---|---|---|---|---|---|---|---|---|---|');
     for (const [doc, linie] of DOKS){
       const mit = results.filter(r => r.suite === 'doktrin' && r.variant === doc && r.arm === 'mit'), ohne = results.filter(r => r.suite === 'doktrin' && r.variant === doc && r.arm === 'ohne');
       const sb = { zunftordnung: 'zunfthaus', stiftung: 'stiftungshaus', stehendesHeer: 'heerlager', vorstoss: null, bollwerk: 'bastion', ausfall: null }[doc];
@@ -169,7 +176,9 @@ if (!isMainThread){
       const row = { doktrin: doc, linie, mit: w(mit), ohne: w(ohne), differenz: Math.round((w(mit) - w(ohne)) * 10) / 10, dauerMit: median(mit.map(r => r.t)), dauerOhne: median(ohne.map(r => r.t)), gewaehlt, sonderbauGebaut: gebaut,
         differenzWennGewaehlt: (() => { const g = mit.filter(r => (r.doktrinen || []).some(d => d.id === doc)); return g.length ? Math.round((w(g) - w(ohne)) * 10) / 10 : null; })() };
       rows.push(row);
-      console.log(`| ${doc} | ${linie} | ${row.mit} % | ${row.ohne} % | ${row.differenz > 0 ? '+' : ''}${row.differenz} | ${mm(row.dauerMit)} / ${mm(row.dauerOhne)} | ${gebaut == null ? '–' : gebaut + ' %'} (gewählt ${gewaehlt} %, Differenz bei Wahl ${row.differenzWennGewaehlt == null ? '–' : (row.differenzWennGewaehlt > 0 ? '+' : '') + row.differenzWennGewaehlt}) |`);
+      const wl = a => Math.round(mean(a.map(r => r.wallLost || 0))), tk = a => f1(mean(a.map(r => r.towerKills || 0))), wa = a => median(a.map(r => (r.wahlen || []).length));
+      Object.assign(row, { wahlenMit: wa(mit), wahlenOhne: wa(ohne), mauerMit: wl(mit), mauerOhne: wl(ohne), turmMit: +tk(mit), turmOhne: +tk(ohne) });
+      console.log(`| ${doc} | ${linie} | ${row.mit} % | ${row.ohne} % | ${row.differenz > 0 ? '+' : ''}${row.differenz} | ${mm(row.dauerMit)} / ${mm(row.dauerOhne)} | ${wa(mit)} / ${wa(ohne)} | ${wl(mit)} / ${wl(ohne)} | ${tk(mit)} / ${tk(ohne)} | ${gebaut == null ? '–' : gebaut + ' %'} (gewählt ${gewaehlt} %, Differenz bei Wahl ${row.differenzWennGewaehlt == null ? '–' : (row.differenzWennGewaehlt > 0 ? '+' : '') + row.differenzWennGewaehlt}) |`);
     }
     report.doktrin = rows;
     console.log('\nAngebote mit Doktrin (Arm „alle“: alle sechs Doktrinen im Pool, Linien-Bot)\n');
@@ -187,6 +196,6 @@ if (!isMainThread){
     console.log('\nGewählt je Doktrin (Anteil der Partien):', JSON.stringify(report.alle.map(r => r.gewaehltJeDoktrin)));
   }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
-    arm: r.arm, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
+    arm: r.arm, variant: r.variant, druckName: r.druckName, doktrinen: r.doktrinen, doktrinOffers: r.doktrinOffers, upkeep: r.upkeep, towerKills: r.towerKills, variants: r.variants, xpSrc: r.xpSrc, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
     grid: r.grid, wallLost: r.wallLost, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })) })) }));
 }

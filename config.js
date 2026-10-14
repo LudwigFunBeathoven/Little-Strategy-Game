@@ -21,12 +21,12 @@ const KF_CONFIG = {
        Schwelle (kumuliert) der Wahl n = Summe der Schritte 1 … n; Schritt k = start × wachstum^(k−1) × schwellenFaktor[Grad] (die Kurve ist für alle Grade gleich, der Faktor je Grad ist
        nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
        Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
-    schwellen: { start: 50, wachstum: 1.03 },
+    schwellen: { start: 70, wachstum: 1.05 },
     schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
     minAbstand: 45,
     /* EP-Quellen aus dem Spielfluss neben den Abschüssen (Teil 5, REQ-K5.03): Schaden an der gegnerischen Basis und vollständig abgewehrte Gegnerwellen. Die Mitte der Partie bringt sonst kaum EP,
        weil die Belagerung die regulären Gegnerwellen aufhält (Befund 4.1). */
-    epBasis: { proProzent: 4 },                  // EP je 1 % der Lebenspunkte der gegnerischen Basis, die eigene Einheiten und Karten abtragen
+    epBasis: { proProzent: 10 },                  // EP je 1 % der Lebenspunkte der gegnerischen Basis, die eigene Einheiten und Karten abtragen
     epWelle: { basis: 4, proEinheit: 2 },        // EP je vollständig abgewehrter Gegnerwelle: basis + proEinheit × Zahl der Einheiten dieser Welle (größere Wellen bringen mehr)
     /* Forschungsbudget der Universität (Teil 5, REQ-K5.05, ersetzt im Modus karten den Hörsaal): Der Spieler stellt ein, welcher Anteil des laufenden Materialertrags (Fabriken und Presse)
        in EP umgewandelt wird. stufen: wählbare Anteile; kurs: EP je Material bei kursFaktor 1; kursFaktor je Stufe: der Kurs sinkt mit dem Anteil (abnehmender Ertrag, reines Forschen soll nicht
@@ -37,6 +37,8 @@ const KF_CONFIG = {
     wellenAnstiegMin: 8,
     basisFaktor: { leicht: 8.0, normal: 10.5, schwer: 7.5 },   // Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer).
                                 // Teil 5 (REQ-K5.03): Ziel etwa 15 Minuten bei 12–16 Wahlen (Normal, „durchschnitt“); vorher 5,5 / 5,5 / 3,0 bei etwa 11:50. Leicht liefert weniger Abschüsse (kleinere Wellen), Schwer mehr.
+    /* Werte des Schwierigkeitsgrades (DIFFICULTY), die im Modus karten anders gelten (Teil 5, REQ-K5.02: „Schwer, durchschnitt“ 70–90 % Siege); der Modus standard bleibt unverändert */
+    gegner: { leicht: {}, normal: {}, schwer: { waveBase: 4.0 } },       // Schwer: Grundwelle 4,0 statt 3,5 (Messung: 3,8 und 4,0 → 87,5 % Siege bei „durchschnitt“, 4,2 → 20 %, die Eröffnung entscheidet)
     gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
     angebot: { basis: 3, universitaet: 4 },   // Karten je Angebot im Modus karten (REQ-P.04); Standard: DRAFT_OPTIONS_BASE / _UNIVERSITY
     pfadPlaetze: 2,             // Plätze für Pfadkarten (Technologie) je Angebot, wenn so viele ziehbar sind; der Rest sind Bonusplätze (REQ-P.04)

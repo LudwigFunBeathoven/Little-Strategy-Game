@@ -89,23 +89,31 @@ if (!isMainThread){
       if (!rs.length) continue;
       const own = linie === 'ohne' ? null : linie;
       const stage = k => { if (!own) return '–'; const ts = rs.map(r => r.lineT[own][k]).filter(x => x != null); return `${Math.round(100 * ts.length / rs.length)} % ${ts.length ? mm(median(ts)) : '–'}`; };
-      const plain = t => mean(rs.map(r => r.grid && r.grid[t] ? (r.grid[t].types.fabrik || 0) - Object.entries(r.grid[t].variants || {}).filter(([id]) => ['werkstatt', 'manufaktur', 'wachstube'].includes(id)).reduce((a, [, c]) => a + c, 0) : null).filter(x => x != null));
+      const FAB_VAR = ['werkstatt', 'manufaktur', 'wachstube', 'zunfthaus', 'bastion'];       // Fabrik-Varianten (Teil 5: auch Zunfthaus und Bastion)
+      const plainList = t => rs.map(r => r.grid && r.grid[t] ? (r.grid[t].types.fabrik || 0) - Object.entries(r.grid[t].variants || {}).filter(([id]) => FAB_VAR.includes(id)).reduce((a, [, c]) => a + c, 0) : null).filter(x => x != null);
+      const plain = t => mean(plainList(t)), plainMed = t => median(plainList(t));
       const s = stat(rs);
       const row = { linie, druck, n: rs.length, siegquote: s.siegquote, niederlagen: s.niederlagen, patt: s.patt, dauerMedian: s.dauerMedian, siegMedian: s.siegMedian, wahlenMedian: s.wahlenMedian,
         stufeAnteil: own ? [1, 2, 3].map(k => rs.filter(r => r.lineT[own][k] != null).length / rs.length) : null, stufeMedian: own ? [1, 2, 3].map(k => median(rs.map(r => r.lineT[own][k]).filter(x => x != null))) : null,
         stufeAllLines: Object.fromEntries(['militaer', 'wirtschaft', 'verteidigung'].map(l => [l, [1, 2, 3].map(k => ({ anteil: rs.filter(r => r.lineT[l][k] != null).length / rs.length, median: median(rs.map(r => r.lineT[l][k]).filter(x => x != null)) }))])),
-        fabrikenOhneVariante: { 300: plain(300), 600: plain(600) }, fabrikenMittel: s.fabrikenMittel, mauerVerlustMittel: s.mauerVerlustMittel, mauerVerlustMedian: s.mauerVerlustMedian,
+        fabrikenOhneVariante: { 300: plain(300), 600: plain(600) }, fabrikenOhneVarianteMedian: { 300: plainMed(300), 600: plainMed(600) }, fabrikenMittel: s.fabrikenMittel, mauerVerlustMittel: s.mauerVerlustMittel, mauerVerlustMedian: s.mauerVerlustMedian,
         towerKills: mean(rs.map(r => r.towerKills)), towerMaterial: mean(rs.map(r => r.towerMaterial)), counterWaves: mean(rs.map(r => r.counterWaves)), wavesRepelled: mean(rs.map(r => r.wavesRepelled)),
         varianten: (() => { const m = {}; for (const r of rs) for (const v of new Set((r.variants || []).map(x => x.id))) m[v] = (m[v] || 0) + 1; return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +(v / rs.length).toFixed(2)])); })(),
         doktrinOffersMedian: median(rs.map(r => r.doktrinOffers || 0)), doktrinenMittel: mean(rs.map(r => (r.doktrinen || []).length)),
         variantenAnzahlMittel: mean(rs.map(r => (r.variants || []).length)), wahlen: s.wahl };
       rows.push(row);
-      console.log(`${linie.padEnd(12)} | ${druck.padEnd(5)} | ${String(s.siegquote).padStart(4)}% | ${String(s.niederlagen).padStart(4)}% | ${String(s.patt).padStart(4)}% | ${mm(s.dauerMedian).padStart(12)} | ${stage(1).padEnd(24)} | ${stage(2).padEnd(24)} | ${stage(3).padEnd(24)} | ${f1(row.fabrikenOhneVariante[300])}/${f1(row.fabrikenOhneVariante[600])}`.padEnd(150) + ` | ${String(Math.round(s.mauerVerlustMittel)).padStart(6)} | ${f1(row.towerKills).padStart(6)} | ${f1(row.counterWaves).padStart(5)} | ${row.keyOffersMedian} / ${f1(row.keyPickedMittel)}`);
+      console.log(`${linie.padEnd(12)} | ${druck.padEnd(5)} | ${String(s.siegquote).padStart(4)}% | ${String(s.niederlagen).padStart(4)}% | ${String(s.patt).padStart(4)}% | ${mm(s.dauerMedian).padStart(12)} | ${stage(1).padEnd(24)} | ${stage(2).padEnd(24)} | ${stage(3).padEnd(24)} | ${f1(row.fabrikenOhneVariante[300])}/${f1(row.fabrikenOhneVariante[600])} (Median ${row.fabrikenOhneVarianteMedian[600]})`.padEnd(150) + ` | ${String(Math.round(s.mauerVerlustMittel)).padStart(6)} | ${f1(row.towerKills).padStart(6)} | ${f1(row.counterWaves).padStart(5)} | ${row.keyOffersMedian} / ${f1(row.keyPickedMittel)}`);
     }
     console.log('\nVarianten (Anteil der Partien, in denen mindestens eine Variante dieses Typs fertig wurde; je Bot) und mittlere Zahl fertiger Varianten');
     for (const row of rows) console.log(`${row.linie.padEnd(12)} ${row.druck.padEnd(5)} ${JSON.stringify(row.varianten)}  Mittel ${f1(row.variantenAnzahlMittel)}`);
     console.log('\nStufen aller Linien je Bot (Anteil der Partien, Median in s): ' + rows.map(r => `${r.linie}/${r.druck}: ` + Object.entries(r.stufeAllLines).map(([l, a]) => `${l[0].toUpperCase()}1 ${Math.round(100 * a[0].anteil)}% ${mm(a[0].median)}, ${l[0].toUpperCase()}2 ${Math.round(100 * a[1].anteil)}% ${mm(a[1].median)}, ${l[0].toUpperCase()}3 ${Math.round(100 * a[2].anteil)}% ${mm(a[2].median)}`).join(' · ')).join('\n  '));
     report.linien = rows;
+    /* Teil 5 (REQ-K5.09): Verteilung der Aufwertungen über alle Bots; keine Grundvariante soll mehr als 60 % der Aufwertungen stellen */
+    { const cnt = {}; let tot = 0; for (const r of results.filter(x => x.suite === 'linien')) for (const v of r.variants || []){ cnt[v.id] = (cnt[v.id] || 0) + 1; tot++; }
+      const BASIS = ['werkstatt', 'manufaktur', 'wachstube', 'exerzierplatz', 'garnison', 'waffenschmiede', 'ruestkammer', 'zahlmeisterei', 'muenzschmiede'];
+      const share = Object.fromEntries(Object.entries(cnt).map(([k, v]) => [k, pc(v, tot)])), maxBasis = Math.max(0, ...BASIS.map(k => share[k] || 0));
+      report.varianteVerteilung = { gesamt: tot, anteilProzent: share, groessteGrundvariante: maxBasis };
+      console.log(`\nVerteilung der Aufwertungen über alle Bots (${tot} fertige Varianten): ${JSON.stringify(share)}; größter Anteil einer Grundvariante ${maxBasis} % (Soll ≤ 60)`); }
     const aus = rows.filter(r => r.druck === 'aus' && r.linie !== 'ohne').map(r => r.siegquote), hoch = rows.filter(r => r.druck === 'hoch' && r.linie !== 'ohne').map(r => r.siegquote);
     if (aus.length) console.log(`\nSpannweite der Siegquoten der Linien-Bots: ohne Schalter ${Math.max(...aus) - Math.min(...aus)} pp` + (hoch.length ? `, druck=hoch ${Math.max(...hoch) - Math.min(...hoch)} pp (Hypothese ≤ 20)` : ''));
     if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, variant: r.variant, druck: r.druckName, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10, lineT: r.lineT, signs: r.signs, variants: r.variants, grid: r.grid, wallLost: r.wallLost, doktrinOffers: r.doktrinOffers, doktrinen: r.doktrinen, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })), towerKills: r.towerKills, counterWaves: r.counterWaves })) }));

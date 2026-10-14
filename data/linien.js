@@ -5,6 +5,7 @@
    varianten   Gebäude-Aufwertung (einmal, endgültig; Abriss und Neubau möglich):
      id, basis, linie   Kennung, Grundgebäude, Linie (die Variante trägt ein Zeichen dieser Linie)
      doktrin            nur Sonderbauten (Teil 5): Id der Doktrin, ohne die die Variante nicht angeboten wird
+     kostenFaktor       optional: Kosten × Baukosten des Grundgebäudes statt des Standards (LINIEN.aufwertung bzw. DOKTRIN.sonderbau)
      effect             Wirkung wie bei den Karten (stat, mul/add); wirkt einmal je Variantentyp, sobald eine Variante dieses Typs fertig steht.
                         Ausnahme: stat 'variantYield' (Manufaktur) gilt je Gebäude.
      nameKey, descKey   Texte (Präfix var.), {e1}, {e2} = Werte der Wirkungen
@@ -36,7 +37,7 @@ const KF_LINIEN = {
       nameKey: 'var.zunfthaus.name',     descKey: 'var.zunfthaus.desc' },
     { id: 'bastion',       basis: 'fabrik',       linie: 'verteidigung', doktrin: 'bollwerk',     effect: [],
       nameKey: 'var.bastion.name',       descKey: 'var.bastion.desc' },
-    { id: 'stiftungshaus', basis: 'universitaet', linie: 'wirtschaft',   doktrin: 'stiftung',     effect: [{ stat: 'budgetKurs', mul: 2 }],
+    { id: 'stiftungshaus', basis: 'universitaet', linie: 'wirtschaft',   doktrin: 'stiftung',     kostenFaktor: 2, effect: [{ stat: 'budgetKurs', mul: 2 }],
       nameKey: 'var.stiftungshaus.name', descKey: 'var.stiftungshaus.desc' },
     { id: 'heerlager',     basis: 'kaserne',      linie: 'militaer',     doktrin: 'stehendesHeer', effect: [{ stat: 'supply', add: 6 }],
       nameKey: 'var.heerlager.name',     descKey: 'var.heerlager.desc' },

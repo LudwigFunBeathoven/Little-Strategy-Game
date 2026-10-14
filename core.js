@@ -252,7 +252,13 @@ function create(){
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
   const baseFactor   = () => { const b = C.KARTEN.basisFaktor; return typeof b === 'object' ? b[S.diff] ?? 1 : b; };       // Zahl oder Tabelle je Schwierigkeitsgrad
-  const diffCfg      = () => S.pacing === 'karten' && baseFactor() !== 1 ? Object.assign({}, C.DIFFICULTY[S.diff], { enemyBaseHp: C.DIFFICULTY[S.diff].enemyBaseHp * baseFactor() }) : C.DIFFICULTY[S.diff];   // Modus karten: längere Partien über die gegnerische Basis
+  /* Modus karten: längere Partien über die gegnerische Basis (basisFaktor); KARTEN.gegner überschreibt Werte des Grades nur in diesem Modus (Teil 5, REQ-K5.02: Schwer soll nicht mühelos gewonnen werden) */
+  const diffCfg      = () => {
+    if (S.pacing !== 'karten') return C.DIFFICULTY[S.diff];
+    const over = C.KARTEN.gegner && C.KARTEN.gegner[S.diff], f = baseFactor();
+    if (!over && f === 1) return C.DIFFICULTY[S.diff];
+    return Object.assign({}, C.DIFFICULTY[S.diff], over || {}, f !== 1 ? { enemyBaseHp: C.DIFFICULTY[S.diff].enemyBaseHp * f } : {});
+  };
   // Klickwert wächst nur über die gedeckelte Presse (REQ-03.3); Material kommt sonst aus Fabriken (REQ-16.2)
   const clickPower   = () => (1 + C.FX_PRESSE * lv('presse')) * mMul('clickYield');
   const factoryCount = () => countType('fabrik');
@@ -509,7 +515,7 @@ function create(){
   /* Aufwertungen, die für den Platz i angeboten werden: ohne Variante alle des Typs; mit einer Grundvariante nur die Sonderbauten (sie lösen sie ab, die Kosten fallen voll an) */
   const variantsFor = i => { const sl = S.slots[i]; return !sl || sl.upg ? [] : variantsOf(sl.type).filter(v => !sl.variant || (v.doktrin && !VAR[sl.variant].doktrin)); };
   const variantBase = type => type === 'fabrik' ? C.FACTORY_BASE_COST : C.BUILDING_COST[type];
-  const variantCost = vid => Math.ceil(variantBase(VAR[vid].basis) * (VAR[vid].doktrin ? C.DOKTRIN.sonderbau.kostenFaktor : C.LINIEN.aufwertung.kostenFaktor) * mMul('variantCost'));
+  const variantCost = vid => Math.ceil(variantBase(VAR[vid].basis) * (VAR[vid].kostenFaktor ?? (VAR[vid].doktrin ? C.DOKTRIN.sonderbau.kostenFaktor : C.LINIEN.aufwertung.kostenFaktor)) * mMul('variantCost'));
   /* Die Aufwertung eines Typs ist sichtbar, sobald ein Gebäude des Typs steht und die Partie Minute abMinute erreicht hat */
   const variantVisible = type => S.pacing === 'karten' && variantsOf(type).length > 0 && S.t >= C.LINIEN.aufwertung.abMinute * 60 && S.slots.some(sl => sl && sl.type === type);
   function variantBlock(i, vid){

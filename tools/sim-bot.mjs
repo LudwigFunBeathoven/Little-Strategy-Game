@@ -283,7 +283,7 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, linie, druck, budget }){
+function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, linie, druck, budget }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (budget !== undefined) prof.budget = budget;                          // Forschungsbudget (Teil 5): Stufe 0, 1, 2 (0, 25, 50 %)
@@ -341,6 +341,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     bot.step();
     dirs.sample(G.S, DT);
     if (xpAt) while (sx < sampleXp.length && G.S.t >= sampleXp[sx]) xpAt[sx++] = G.S.xpTotal;
+    if (trace && G.S.t >= (trace.next || 0)){ trace.next = (trace.next || 0) + traceEvery; trace.fn(G); }       // Werkzeug: Zustand im Takt traceEvery (Sekunden Spielzeit) beobachten
     if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
     G.S.sections.forEach((x, k) => { if (x.hp < wallPrev[k]) wallLost += wallPrev[k] - x.hp; wallPrev[k] = x.hp; });
     if (G.S.pacing === 'karten'){ const ls = G.lines(); for (const l in lineT) for (let st = 1; st <= 3; st++) if (lineT[l][st] === null && ls[l] && ls[l].stage >= st) lineT[l][st] = Math.round(G.S.t); }
