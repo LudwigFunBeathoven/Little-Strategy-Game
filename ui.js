@@ -175,6 +175,7 @@ function buildReason(block, cost, type){
     case 'notRunning': return t('tip.notRunning');
     case 'locked': { const src = type ? G.keySource('bau:' + type) : null; return (src && sourceLabel(src)) || lockedText(); }
     case 'standing': return t('build.reason.standing');
+    case 'limit': { const d = G.doctrineLimit(type); return d ? t('build.reason.limit', { name: t(d.nameKey), n: d.grenze.max, types: d.grenze.typen.map(x => t(`bld.${x}.name`)).join(', ') }) : null; }
     case 'material': return missing('material', cost, G.S.material);
   }
   return null;

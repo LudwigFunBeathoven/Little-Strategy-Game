@@ -130,19 +130,4 @@ const KF_DRAFT_OPTIONS = [
   { id: 'gluecksritter', category: 'sonderregel', rarity: 'rare', nameKey: 'draft.gluecksritter.name', descKey: 'draft.gluecksritter.desc',
     tiers: [{ effect: [{ stat: 'draftSize', add: 1 }], drawback: [{ stat: 'xpNeed', mul: 1.15 }] }] },
 
-  /* ---------- Schlüsselkarten der Linien (Teil 4, REQ-S.06; nur Modus karten) ----------
-     Eine Schlüsselkarte macht eine Investition wertvoll, die vorher keine war. Zwei je Linie, je zwei Zeichen (data/linien.js), eine Stufe, kein Nachteil.
-     Namen und Werte sind Vorgaben; „Drillmeister“ und „Bollwerk“ heißen so, weil „Drill“ und „Bastion“ schon gewöhnliche Karten sind. */
-  { id: 'drillmeister', category: 'sonderregel', rarity: 'legendary', schluessel: 'militaer', abWahl: 3, wirkt: { variant: 'exerzierplatz' },
-    nameKey: 'draft.drillmeister.name', descKey: 'draft.drillmeister.desc', tiers: [{ effect: [{ stat: 'drillQuality', add: 1 }] }] },
-  { id: 'vorhut', category: 'armee', rarity: 'rare', schluessel: 'militaer', abWahl: 3, wirkt: { building: 'kaserne' },
-    nameKey: 'draft.vorhut.name', descKey: 'draft.vorhut.desc', tiers: [{ effect: [{ stat: 'extraUnit', add: 2 }] }] },
-  { id: 'handelsnetz', category: 'wirtschaft', rarity: 'legendary', schluessel: 'wirtschaft', abWahl: 3, wirkt: { variants: ['manufaktur', 2] },
-    nameKey: 'draft.handelsnetz.name', descKey: 'draft.handelsnetz.desc', tiers: [{ effect: [{ stat: 'handelsnetz', add: 0.1 }] }] },
-  { id: 'ruecklage', category: 'wirtschaft', rarity: 'rare', schluessel: 'wirtschaft', abWahl: 3, wirkt: { building: 'kontor' },
-    nameKey: 'draft.ruecklage.name', descKey: 'draft.ruecklage.desc', tiers: [{ effect: [{ stat: 'ruecklage', add: 0.15 }] }] },
-  { id: 'bollwerk', category: 'basis', rarity: 'rare', schluessel: 'verteidigung', abWahl: 3, requires: { upgrade: 'turm' }, wirkt: { tower: true },
-    nameKey: 'draft.bollwerk.name', descKey: 'draft.bollwerk.desc', tiers: [{ effect: [{ stat: 'turretDmg', mul: 1.5 }, { stat: 'towerKillXp', mul: 2 }] }] },
-  { id: 'gegenstoss', category: 'sonderregel', rarity: 'legendary', schluessel: 'verteidigung', abWahl: 3, wirkt: { building: 'kaserne' },
-    nameKey: 'draft.gegenstoss.name', descKey: 'draft.gegenstoss.desc', tiers: [{ effect: [{ stat: 'counterWave', add: 1 }, { stat: 'counterBoost', add: 0.3 }] }] },
 ];

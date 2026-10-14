@@ -56,6 +56,7 @@ const Session = (() => {
       for (const l in ls){ const x = P.lines[l] || (P.lines[l] = { signs: 0, stage: 0, t1: null, t2: null, t3: null }); x.signs = ls[l].signs; x.stage = ls[l].stage; for (let k = 1; k <= 3; k++) if (x['t' + k] === null && ls[l].stage >= k) x['t' + k] = +S.t.toFixed(1); }
       P.variants = (S.stats.variants || []).slice();
       P.xpBySource = Object.fromEntries(Object.entries(S.stats.xpSrc || {}).map(([k, v]) => [k, Math.round(v)]));       // Teil 5 (REQ-K5.10): EP je Quelle (Abschuss, Turm, Basisschaden, abgewehrte Welle, Forschungsbudget …)
+      P.doktrinen = (S.stats.doktrinen || []).slice(); P.doktrinAngebote = S.stats.doktrinOffers || 0; P.unterhalt = Math.round(S.stats.upkeep || 0);       // Teil 5 (REQ-K5.07): gewählte Doktrinen mit Wahl und Zeitpunkt, Angebote mit Doktrin, gezahlter Unterhalt
       const hp = S.sections.map(s => s.hp);
       if (P.wallPrev) hp.forEach((v, i) => { if (v < P.wallPrev[i]) P.wallHpLost += P.wallPrev[i] - v; });
       P.wallPrev = hp;

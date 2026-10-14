@@ -2,7 +2,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 const root = new URL('../', import.meta.url);
-export function loadCore(files = ['config.js', 'data/draft-options.js', 'data/kartenpfad.js', 'data/linien.js', 'data/research.js', 'data/neighbors.js', 'core.js', 'tools/browser-bot.js']){
+export function loadCore(files = ['config.js', 'data/draft-options.js', 'data/kartenpfad.js', 'data/doktrinen.js', 'data/linien.js', 'data/research.js', 'data/neighbors.js', 'core.js', 'tools/browser-bot.js']){
   const ctx = { Math, Date, JSON, console, Intl };
   vm.createContext(ctx);
   for (const f of files){
@@ -10,7 +10,7 @@ export function loadCore(files = ['config.js', 'data/draft-options.js', 'data/ka
     if (!existsSync(p)) continue;
     vm.runInContext(readFileSync(p, 'utf8'), ctx, { filename: f });
   }
-  vm.runInContext('globalThis.__out = { KF_CONFIG, KlammerCore, KF_DRAFT_OPTIONS: typeof KF_DRAFT_OPTIONS !== "undefined" ? KF_DRAFT_OPTIONS : null, KF_PFAD: typeof KF_PFAD !== "undefined" ? KF_PFAD : null, KF_LINIEN: typeof KF_LINIEN !== "undefined" ? KF_LINIEN : null, KF_RESEARCH: typeof KF_RESEARCH !== "undefined" ? KF_RESEARCH : null, KF_BROWSER_BOT: typeof KF_BROWSER_BOT !== "undefined" ? KF_BROWSER_BOT : null, KF_NEIGHBORS: typeof KF_NEIGHBORS !== "undefined" ? KF_NEIGHBORS : null };', ctx);
+  vm.runInContext('globalThis.__out = { KF_CONFIG, KlammerCore, KF_DRAFT_OPTIONS: typeof KF_DRAFT_OPTIONS !== "undefined" ? KF_DRAFT_OPTIONS : null, KF_PFAD: typeof KF_PFAD !== "undefined" ? KF_PFAD : null, KF_DOKTRINEN: typeof KF_DOKTRINEN !== "undefined" ? KF_DOKTRINEN : null, KF_LINIEN: typeof KF_LINIEN !== "undefined" ? KF_LINIEN : null, KF_RESEARCH: typeof KF_RESEARCH !== "undefined" ? KF_RESEARCH : null, KF_BROWSER_BOT: typeof KF_BROWSER_BOT !== "undefined" ? KF_BROWSER_BOT : null, KF_NEIGHBORS: typeof KF_NEIGHBORS !== "undefined" ? KF_NEIGHBORS : null };', ctx);
   // Simulation und Tests laufen im Standardmodus, solange der Modus nicht ausdrücklich gewählt wird (KF_PACING=karten oder KF_OVERRIDE)
   ctx.__out.KF_CONFIG.PACING_MODUS = process.env.KF_PACING || 'standard';
   // Balancing-Versuche ohne Dateiänderung: KF_OVERRIDE='{"DIFFICULTY":{"normal":{"waveGrowth":0.6}}}'

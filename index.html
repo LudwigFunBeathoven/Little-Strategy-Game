@@ -194,15 +194,16 @@
   /* Spezialkarten (REQ-45): Farbe je Kategorie, Rahmen je Seltenheit */
   .cat-wirtschaft{--cat:var(--cat-wirtschaft);} .cat-armee{--cat:var(--cat-armee);} .cat-basis{--cat:var(--cat-basis);}
   .cat-bau{--cat:var(--steel);} .cat-technologie{--cat:var(--cat-automatisierung);} .cat-wagnis{--cat:var(--rust);}
-  .cat-automatisierung{--cat:var(--cat-automatisierung);} .cat-sonderregel{--cat:var(--cat-sonderregel);}
+  .cat-automatisierung{--cat:var(--cat-automatisierung);} .cat-sonderregel{--cat:var(--cat-sonderregel);} .cat-doktrin{--cat:var(--gold);}
   .card-pick{border-left:5px solid var(--cat);}
   .card-pick .k{color:var(--cat);}
   .card-pick.rar-rare{border-top:2px solid var(--cat); border-right:2px solid var(--cat); border-bottom:2px solid var(--cat);}
+  .card-pick.rar-doktrin{border:3px double var(--gold); border-left:5px solid var(--cat); background:var(--brass-soft);}
   .card-pick.rar-legendary{border:3px double var(--gold); border-left:5px solid var(--cat); background:var(--brass-soft);}
   .chosen .fam-h{flex-basis:100%; font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); margin-top:4px;}
   .chosen .opt-tag{border-left:4px solid var(--cat);}
   .chosen .opt-tag.rar-rare{box-shadow:inset 0 0 0 1px var(--cat);}
-  .chosen .opt-tag.rar-legendary{box-shadow:inset 0 0 0 2px var(--gold);}
+  .chosen .opt-tag.rar-legendary, .chosen .opt-tag.rar-doktrin{box-shadow:inset 0 0 0 2px var(--gold);}
 
 
   /* Kartenbühne (REQ-KP.03): Schleier über allem, Kartenreihe genau in der Bildmitte (Raster 1fr auto 1fr), Stapel am unteren Rand der Bildmitte */
@@ -225,7 +226,7 @@
   .kcard[aria-disabled="true"]{cursor:default;}
   .kcard.rar-rare{border-width:3px; --frame:var(--steel);}
   .kcard.rar-wagnis{border-style:dashed; --frame:var(--rust);}
-  .kcard.rar-legendary{border:3px double var(--gold); background:var(--brass-soft);}
+  .kcard.rar-legendary, .kcard.rar-doktrin{border:3px double var(--gold); background:var(--brass-soft);}
   .kc-face{display:flex; flex-direction:column; gap:6px; flex:1 1 auto; min-height:0;}
   .kc-back{display:none; position:absolute; inset:0; align-items:center; justify-content:center; font-size:calc(var(--kw) * .3); color:var(--brass-soft);
            background:repeating-linear-gradient(45deg, var(--brass-ink) 0 6px, var(--brass) 6px 12px);}
@@ -245,8 +246,8 @@
   .kc-art{display:flex; align-items:center; justify-content:center; flex:1 1 0; min-height:0; overflow:hidden; font-size:calc(var(--kw) * .22); color:var(--cat); opacity:.85;}
   .kc-desc{font-size:12px; line-height:1.3; color:var(--ink-soft); flex:0 0 auto;}
   .kc-unlock, .kc-needs{display:block; margin-top:4px; font-size:11.5px; color:var(--ink);} .kc-needs{color:var(--ink-faint);}
-  .fam-bonus{--fam:var(--brass);} .fam-bau{--fam:var(--steel);} .fam-technologie{--fam:var(--cat-automatisierung);} .fam-wagnis{--fam:var(--rust);}
-  .stage .kcard.fam-bau, .stage .kcard.fam-technologie, .stage .kcard.fam-wagnis, .stage .kcard.fam-bonus{--cat:var(--fam);}
+  .fam-bonus{--fam:var(--brass);} .fam-bau{--fam:var(--steel);} .fam-technologie{--fam:var(--cat-automatisierung);} .fam-wagnis{--fam:var(--rust);} .fam-doktrin{--fam:var(--gold);}
+  .stage .kcard.fam-bau, .stage .kcard.fam-technologie, .stage .kcard.fam-wagnis, .stage .kcard.fam-bonus, .stage .kcard.fam-doktrin{--cat:var(--fam);}
   .kc-foot{display:flex; justify-content:space-between; align-items:center; font-family:"IBM Plex Mono", monospace; font-size:11px; color:var(--ink-faint);}
   .kcard .expl{font-size:10px;}
   @media (prefers-reduced-motion: reduce){ .stage-cards .kcard{animation:none; transition:none;} .card-sym.pulse{animation:none;} .fx-glow{animation:none; outline:3px solid var(--brass);} .disc-in{animation:none;} }
@@ -590,6 +591,7 @@
 <script src="i18n/en.js"></script>
 <script src="data/draft-options.js"></script>
 <script src="data/kartenpfad.js"></script>
+<script src="data/doktrinen.js"></script>
 <script src="data/linien.js"></script>
 <script src="data/research.js"></script>
 <script src="data/neighbors.js"></script>

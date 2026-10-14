@@ -11,7 +11,12 @@ const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [
    Aus ihren Datensätzen entstehen die Sperren (Schlüssel) und Upgrade-Stufen des Modus 'karten' samt ihrer Quelle (Karte oder Forschung). */
 const PFAD = (typeof KF_PFAD !== 'undefined') ? KF_PFAD : null;
 const PFAD_OPTIONS = PFAD ? PFAD.karten.map(k => ({ id: k.id, category: k.familie, family: k.familie, rarity: k.rarity || 'common', nameKey: k.nameKey, descKey: k.descKey, tiers: k.tiers, pfad: k })) : [];
-const ALL_OPTIONS = [...OPTIONS, ...PFAD_OPTIONS];
+/* Doktrinen (Teil 5, REQ-K5.07): aus data/doktrinen.js; Karten der Familie 'doktrin' mit einer Stufe, Wirkung und Einschränkung über dieselbe Pipeline wie die Karten */
+const DOKTRINEN = (typeof KF_DOKTRINEN !== 'undefined') ? KF_DOKTRINEN : [];
+const DOK = Object.fromEntries(DOKTRINEN.map(d => [d.id, d]));
+const DOKTRIN_OPTIONS = DOKTRINEN.map(d => ({ id: d.id, category: 'doktrin', family: 'doktrin', rarity: 'doktrin', nameKey: d.nameKey, descKey: d.descKey, linie: d.linie,
+  abWahl: C.DOKTRIN.abWahl, wirkt: d.wirkt, tiers: [{ effect: d.effect || [], drawback: d.drawback || [] }], doktrin: d }));
+const ALL_OPTIONS = [...OPTIONS, ...PFAD_OPTIONS, ...DOKTRIN_OPTIONS];
 /* Strategielinien und Gebäude-Varianten (Teil 4, REQ-S.04, S.05): Zeichen und Varianten aus data/linien.js, nur im Modus karten */
 const LINIEN = (typeof KF_LINIEN !== 'undefined') ? KF_LINIEN : null;
 const VARIANTS = LINIEN ? LINIEN.varianten : [];
@@ -88,7 +93,7 @@ function freshState(diff, seed){
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
     druck: null,                      // Testschalter ?druck=hoch (Teil 4, REQ-S.08): null | 'hoch'; verstärkt die regulären Gegnerwellen ab C.DRUCK.hoch.abMinute
-    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, sinceKey: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, sinceDoktrin: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     budget: 0,                        // Forschungsbudget (Teil 5): Index in C.KARTEN.budget.stufen
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0, waveSize: {},       // waveSize: Zahl der Einheiten je Gegnerwelle für die EP der abgewehrten Welle (Modus karten, Teil 5)
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
@@ -257,7 +262,9 @@ function create(){
     let n = 0; for (const j of adjacent(i)) if (slots[j] && slots[j].type === rule.with && !slots[j].upg) n++;
     return Math.min(rule.max, n);
   }
-  const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) : 0; };
+  /* Zunfthaus (Sonderbau der Doktrin Zunftordnung): der Nachbarschaftsbonus dieser Fabrik wirkt im Vielfachen C.DOKTRIN.zunfthaus.nachbarFaktor */
+  const nbFactor = (i, type, slots = S.slots) => { const sl = slots[i]; return type === 'fabrik' && S.pacing === 'karten' && sl && sl.variant === 'zunfthaus' && !sl.upg ? C.DOKTRIN.zunfthaus.nachbarFaktor : 1; };
+  const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) * nbFactor(i, type, slots) : 0; };
   /* Summe der Regelwerte aller Gebäude eines Typs (Schmiede, Kaserne, Universität, Kontor gibt es je einmal) */
   const nbTotal = type => S.slots.reduce((a, sl, i) => a + (sl && sl.type === type && !sl.upg ? neighborValue(i, type) : 0), 0);
   /* Vorschau für Platz i und Typ: was das Gebäude dort erhielte und welchen Nachbarn es etwas gäbe */
@@ -281,19 +288,12 @@ function create(){
   // Fabriken einzeln: jede mit ihrem Nachbarschaftsbonus (Fabrik neben Fabrik)
   const variantYield = sl => {
     if (!sl.variant || sl.upg || S.pacing !== 'karten' || !VAR[sl.variant]) return 0;
-    let y = VAR[sl.variant].effect.reduce((a, e) => a + (e.stat === 'variantYield' ? e.add : 0), 0);
-    // Handelsnetz (Schlüsselkarte, Teil 4): jede andere Manufaktur erhöht den Ertrag dieser um den Anteil, höchstens handelsnetzDeckel
-    if (sl.variant === 'manufaktur' && mAdd('handelsnetz') > 0){
-      const others = S.slots.filter(x => x && x !== sl && x.variant === 'manufaktur' && !x.upg).length;
-      y += Math.min(C.LINIEN.schluessel.handelsnetzDeckel, mAdd('handelsnetz') * others);
-    }
-    return y;
+    return VAR[sl.variant].effect.reduce((a, e) => a + (e.stat === 'variantYield' ? e.add : 0), 0);
   };
   const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
-  // drillQuality: Schlüsselkarte „Drillmeister“ – steht ein Exerzierplatz, starten die Einheiten mit der nächsten Schmiede-Stufe (Teil 4)
-  const qualityLevel = () => lv('qualitaet') + (mAdd('drillQuality') > 0 && standingVariants().includes('exerzierplatz') ? 1 : 0);
+  const qualityLevel = () => lv('qualitaet');
   const qualityMult  = () => Math.pow(1 + (C.FX_QUALITAET + mAdd('qualityBonus')) * mMul('smithEffect'), qualityLevel());       // smithEffect: Waffenschmiede (Teil 4)
   const hpMultP      = () => levelStrength() * qualityMult() * mMul('unitStrength');
   const dmgMultP     = () => levelStrength() * qualityMult() * mMul('unitStrength') * mMul('unitDmg');
@@ -308,7 +308,14 @@ function create(){
   const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
   const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane)) * mMul('turretDmg');
   const turretRange  = lane => (C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane))) * mMul('towerRange');
-  const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane)));
+  const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane))) * mMul('towerCd');       // towerCd: Doktrin Vorstoß (Teil 5)
+  /* Bastion (Sonderbau der Doktrin Bollwerk, Teil 5): feuert wie ein Turm in die Lane seiner Zeile (oben Lane 0, Mitte Tor-Lane, unten Lane 2); Schaden, Reichweite und Kadenz folgen den Türmen der Lane */
+  const upLv         = id => C.UPGRADES[id] ? lv(id) : 0;
+  const bastionLane  = i => Math.floor(i / C.GRID_SIZE);
+  const bastionSlots = () => S.pacing !== 'karten' ? [] : S.slots.map((sl, i) => sl && sl.variant === 'bastion' && !sl.upg ? i : -1).filter(i => i >= 0);
+  const bastionDmg   = lane => C.PLAYER_TURRET.dmgPerLevel * Math.max(C.DOKTRIN.bastion.grundStufe, upLv(towerId('turm', lane))) * C.DOKTRIN.bastion.schadenFaktor * mMul('turretDmg');
+  const bastionRange = lane => (C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel * upLv(towerId('reichweite', lane))) * mMul('towerRange');
+  const bastionCd    = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, upLv(towerId('kadenz', lane))) * mMul('towerCd');
   /* Gegnerstärke wächst linear; nach der Belagerungswelle kommt POST_SIEGE_GROWTH je Minute hinzu (REQ-19.4) */
   const postSiege    = () => S.siegeDone ? C.POST_SIEGE_GROWTH * Math.max(0, S.t - S.siegeWaveT) / 60 : 0;
   const enemyHpMult  = () => (1 + diffCfg().hpGrowth * S.t / 60 + postSiege()) * mMul('enemyHp');
@@ -344,8 +351,7 @@ function create(){
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
   const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));
   /* Handelskontor (REQ-6.07 b): Deckel und nächster Zinsbetrag */
-  // ruecklage: Schlüsselkarte „Rücklage“ – der Zinsdeckel wächst mit jeder bisherigen Kartenwahl (Teil 4)
-  const kontorCap = () => Math.round((C.KONTOR.capBase + C.KONTOR.capPerLevel * lv('zinseszins')) * (1 + nbTotal('kontor')) * mMul('kontorCap') * (1 + mAdd('ruecklage') * S.pfad.choices));
+  const kontorCap = () => Math.round((C.KONTOR.capBase + C.KONTOR.capPerLevel * lv('zinseszins')) * (1 + nbTotal('kontor')) * mMul('kontorCap'));
   const kontorRaw = () => Math.min(kontorCap(), Math.floor(Math.max(0, S.material) / C.KONTOR.perN) * C.KONTOR.amount);
   const kontorNext = () => Math.floor(kontorRaw() * mMul('kontorYield'));         // kontorYield: Linie Wirtschaft, Stufe 2 (Teil 4)
 
@@ -381,9 +387,19 @@ function create(){
     if (!isBuildable(type)) return 'locked';
     if (type !== 'fabrik' && standingCount(type) >= C.MAX_PER_TYPE) return 'standing';
     if (i < 0 || i >= SLOTS || S.slots[i]) return 'occupied';
+    if (doctrineLimit(type)) return 'limit';
     if (S.material < buildCost(type)) return 'material';
     return null;
   }
+  /* Einschränkung einer Doktrin als Regel (Teil 5, REQ-K5.07): höchstens max Plätze mit den genannten Typen (Zunftordnung: vier Fabriken, Zunfthäuser eingeschlossen);
+     gibt die Doktrin zurück, die das Bauen sperrt. Was schon steht, bleibt stehen. */
+  const doctrineLimit = type => {
+    if (S.pacing !== 'karten') return null;
+    for (const d of activeDoctrines()) if (d.grenze && d.grenze.typen.includes(type) && S.slots.filter(sl => sl && d.grenze.typen.includes(sl.type)).length >= d.grenze.max) return d;
+    return null;
+  };
+  const activeDoctrines = () => DOKTRINEN.filter(d => cardTaken(d.id) > 0);
+  const doktrinCount = () => activeDoctrines().length;
 
   /* Forschungsbudget (Teil 5, REQ-K5.05): Der eingestellte Anteil des laufenden Materialertrags (Fabriken und Presse, nicht Klicks, Zinsen oder Beute) wird in EP umgewandelt.
      Nur im Modus karten und bei stehender Universität; der Kurs sinkt mit dem Anteil (kursFaktor), Karten und Sonderbauten können ihn heben (budgetKurs). */
@@ -395,7 +411,14 @@ function create(){
     S.budget = i; return true;
   }
   /* Materialertrag je Sekunde nach Abzug des Forschungsbudgets (Anzeige) */
-  const incomeRate = () => (matRate() + autoPressCps() * clickPower()) * (1 - budgetShare());
+  /* Unterhalt (Doktrin Stehendes Heer, Teil 5): jede eigene Einheit auf dem Feld kostet mAdd('upkeep') Material je Minute */
+  const upkeepRate = () => {
+    if (S.pacing !== 'karten') return 0;
+    const u = mAdd('upkeep'); if (!(u > 0)) return 0;
+    let n = 0; for (const x of S.units) if (x.side === 'p') n++;
+    return n * u / 60;
+  };
+  const incomeRate = () => (matRate() + autoPressCps() * clickPower()) * (1 - budgetShare()) - upkeepRate();
   function addProduction(n){
     const sh = budgetShare();
     if (sh > 0){
@@ -470,9 +493,12 @@ function create(){
      Ein Grundgebäude lässt sich einmal in eine Variante aufwerten (je eine pro Linie). Der Platz behält Typ, Ausbaustufen und Nachbarschaftsregeln (slot.type bleibt der des Grundgebäudes);
      die Variante steht als slot.variant. Während der Aufwertung (slot.upg) wirkt das Gebäude nicht. Kosten: kostenFaktor × Baukosten des Grundgebäudes, nach einem Abriss gibt es
      die halbe Summe zurück wie bei jedem Gebäude (slot.paid). */
-  const variantsOf = type => VARIANTS.filter(v => v.basis === type);
+  /* Sonderbauten (Feld doktrin) gibt es nur mit ihrer Doktrin */
+  const variantsOf = type => VARIANTS.filter(v => v.basis === type && (!v.doktrin || cardTaken(v.doktrin) > 0));
+  /* Aufwertungen, die für den Platz i angeboten werden: ohne Variante alle des Typs; mit einer Grundvariante nur die Sonderbauten (sie lösen sie ab, die Kosten fallen voll an) */
+  const variantsFor = i => { const sl = S.slots[i]; return !sl || sl.upg ? [] : variantsOf(sl.type).filter(v => !sl.variant || (v.doktrin && !VAR[sl.variant].doktrin)); };
   const variantBase = type => type === 'fabrik' ? C.FACTORY_BASE_COST : C.BUILDING_COST[type];
-  const variantCost = vid => Math.ceil(variantBase(VAR[vid].basis) * C.LINIEN.aufwertung.kostenFaktor * mMul('variantCost'));
+  const variantCost = vid => Math.ceil(variantBase(VAR[vid].basis) * (VAR[vid].doktrin ? C.DOKTRIN.sonderbau.kostenFaktor : C.LINIEN.aufwertung.kostenFaktor) * mMul('variantCost'));
   /* Die Aufwertung eines Typs ist sichtbar, sobald ein Gebäude des Typs steht und die Partie Minute abMinute erreicht hat */
   const variantVisible = type => S.pacing === 'karten' && variantsOf(type).length > 0 && S.t >= C.LINIEN.aufwertung.abMinute * 60 && S.slots.some(sl => sl && sl.type === type);
   function variantBlock(i, vid){
@@ -481,7 +507,8 @@ function create(){
     if (S.status !== 'running') return 'notRunning';
     if (S.pacing !== 'karten') return 'notInMode';
     if (!sl || sl.type !== v.basis) return 'noBuilding';
-    if (sl.variant) return 'done';
+    if (v.doktrin && !cardTaken(v.doktrin)) return 'doctrine';
+    if (sl.variant && !(v.doktrin && !VAR[sl.variant].doktrin)) return 'done';                    // ein Sonderbau löst eine Grundvariante ab, sonst bleibt die Variante endgültig (Teil 5)
     if (sl.upg) return 'upgrading';
     if (!variantVisible(v.basis)) return 'hidden';
     if (S.material < variantCost(vid)) return 'material';
@@ -894,6 +921,18 @@ function create(){
       const tg = (kept && (kept.lane === lane || !own) ? kept : own) || nearestIn(idx.e[GATE], PBW, r);
       if (tg){ targets.set(key, tg.id); attacks.push({ turret: lane, tg, dmg: turretDmg(lane) * (tg.type === 'werfer' ? mMul('turretVsRanged') : 1) }); S.turretCd[lane] = turretCd(lane); }
     }
+    // Bastionen (Sonderbau der Doktrin Bollwerk): wie die Türme der Lane, jede mit eigener Abklingzeit
+    for (const i of bastionSlots()){
+      const lane = bastionLane(i);
+      if (!sectionUp(lane)) continue;
+      const ck = 'b' + i;
+      S.turretCd[ck] = (S.turretCd[ck] || 0) - dt;
+      if (S.turretCd[ck] > 0) continue;
+      const r = bastionRange(lane), key = 'pB' + i;
+      const own = nearestIn(idx.e[lane], PBW, r), kept = keepTarget(key, PBW, r, [lane, GATE]);
+      const tg = (kept && (kept.lane === lane || !own) ? kept : own) || nearestIn(idx.e[GATE], PBW, r);
+      if (tg){ targets.set(key, tg.id); attacks.push({ turret: lane, tg, dmg: bastionDmg(lane) * (tg.type === 'werfer' ? mMul('turretVsRanged') : 1) }); S.turretCd[ck] = bastionCd(lane); }
+    }
     // 2. Alle Angriffe gemeinsam anwenden; überschüssiger Schaden verfällt
     for (const a of attacks){
       if (a.turret !== undefined){
@@ -1127,7 +1166,7 @@ function create(){
     const n = cardTaken(o.id), tiers = tiersOf(o);
     if (S.research.banned.includes(o.id)) return false;
     if (S.pacing === 'karten' && PFAD && (PFAD.entfallenKarten || []).includes(o.id)) return false;       // Teil 4: aus dem Pool des Modus karten gestrichen (REQ-S.02 C2, S.03)
-    if (o.schluessel && S.pacing !== 'karten') return false;                                              // Schlüsselkarten der Linien gibt es nur im Modus karten (REQ-S.06)
+    if (o.doktrin && (S.pacing !== 'karten' || doktrinCount() >= C.DOKTRIN.max)) return false;               // Doktrinen: nur im Modus karten, höchstens C.DOKTRIN.max je Partie (Teil 5, REQ-K5.07)
     if (o.abWahl && o.abWahl > S.pfad.choices + 1) return false;
     if (n >= Math.min(tiers.length, C.CARD_MAX_TIER)) return false;
     if (o.requires){
@@ -1142,8 +1181,6 @@ function create(){
       if (w.phase && PHASES.indexOf(phase()) < PHASES.indexOf(w.phase)) return false;
       if (w.freeSlot && !S.slots.some(x => !x)) return false;
       if (w.supply && supplyCap() < w.supply) return false;
-      if (w.variant && !standingVariants().includes(w.variant)) return false;                                 // Schlüsselkarten: Wirkung nur, wenn die Variante steht (Teil 4)
-      if (w.variants && S.slots.filter(sl => sl && sl.variant === w.variants[0] && !sl.upg).length < w.variants[1]) return false;
       if (w.tower && !C.TOWER_LANES.some(towerBuilt)) return false;
       if (w.zinsdeckel && !(S.stats.zinsDeckel > 0)) return false;                  // Handelskontor: erst anbieten, wenn der Zinsdeckel erreicht wurde (Teil 4, REQ-S.03)
       if (w.ranged && !Object.keys(C.UNITS).some(ty => !C.UNITS[ty].base && unitUnlocked(ty) && isRangedType(ownType(ty)))) return false;       // eigene Grundtypen (Ersatztypen tragen base)
@@ -1192,10 +1229,11 @@ function create(){
     while (i < list.length - 1 && r >= w(list[i])){ r -= w(list[i]); i++; }
     return list[i];
   };
-  /* führt der Spieler eine Linie (mindestens vornAb Zeichen), zieht ihre Schlüsselkarte mit mehrfachem Gewicht (REQ-S.07) */
-  const leadsLine = l => (lineState()[l] || { signs: 0 }).signs >= C.LINIEN.schluessel.vornAb;
-  const weightKarten = o => o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) : cardWeight(o) * (o.schluessel && leadsLine(o.schluessel) ? C.LINIEN.schluessel.gewichtVorne : 1);
-  const keyDue = () => S.pacing === 'karten' && S.pfad.choices + 1 >= C.LINIEN.schluessel.abWahl && S.pfad.sinceKey >= C.LINIEN.schluessel.spaetestensJe - 1;
+  /* führt der Spieler eine Linie (mindestens vornAb Zeichen), ziehen ihre Doktrinen mit mehrfachem Gewicht (Teil 5, REQ-K5.07) */
+  const leadsLine = l => (lineState()[l] || { signs: 0 }).signs >= C.DOKTRIN.vornAb;
+  const weightKarten = o => o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) : o.doktrin ? C.DOKTRIN.gewicht * (leadsLine(o.linie) ? C.DOKTRIN.gewichtVorne : 1) : cardWeight(o);
+  /* Angebotsausgleich: ab Wahl abWahl erscheint spätestens in jeder spaetestensJe-ten Wahl eine Doktrin, solange noch eine fehlt (sie belegt einen Bonusplatz) */
+  const doktrinDue = () => S.pacing === 'karten' && doktrinCount() < C.DOKTRIN.max && S.pfad.choices + 1 >= C.DOKTRIN.abWahl && S.pfad.sinceDoktrin >= C.DOKTRIN.spaetestensJe - 1;
   function drawOptionsKarten(k){
     const pool = ALL_OPTIONS.filter(optionAvailable);
     const pf = pool.filter(isPathFamily), rest = pool.filter(o => !isPathFamily(o));
@@ -1203,12 +1241,11 @@ function create(){
     const take = (o, list) => { out.push(o); const i = list.indexOf(o); if (i >= 0) list.splice(i, 1); };
     const slots = Math.min(C.KARTEN.pfadPlaetze, pf.length, k);
     while (out.length < slots && pf.length) take(pickWeighted(pf, weightKarten), pf);
-    // Angebotsausgleich (REQ-S.07): ab Wahl abWahl erscheint spätestens in jeder spaetestensJe-ten Wahl eine Schlüsselkarte, auf einem Bonusplatz
-    const keys = rest.filter(o => o.schluessel);
-    if (keyDue() && keys.length && out.length < k) take(pickWeighted(keys, weightKarten), rest);
+    const doks = rest.filter(o => o.doktrin);
+    if (doktrinDue() && doks.length && out.length < k) take(pickWeighted(doks, weightKarten), rest);
     while (out.length < k && rest.length){
-      const hasWag = out.some(o => o.family === 'wagnis'), hasLeg = out.some(o => o.rarity === 'legendary');
-      const cand = rest.filter(o => !(o.family === 'wagnis' && hasWag) && !(o.rarity === 'legendary' && hasLeg));
+      const hasWag = out.some(o => o.family === 'wagnis'), hasLeg = out.some(o => o.rarity === 'legendary'), hasDok = out.some(o => o.doktrin);
+      const cand = rest.filter(o => !(o.family === 'wagnis' && hasWag) && !(o.rarity === 'legendary' && hasLeg) && !(o.doktrin && hasDok));
       if (!cand.length) break;
       take(pickWeighted(cand, weightKarten), rest);
     }
@@ -1219,10 +1256,10 @@ function create(){
   function offerDraft(){
     const options = S.pacing === 'karten' ? drawOptionsKarten(draftSize()) : drawOptions(draftSize());
     if (!options.length){ S.pendingLevels = 0; return; }
-    S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0, keyForced: keyDue() };       // keyForced: eine Schlüsselkarte war fällig (Bann behält sie)
-    if (S.pacing === 'karten'){                                              // Angebote mit Schlüsselkarte zählen; ohne eine seit Wahl abWahl läuft der Zähler bis zur erzwungenen (REQ-S.07)
-      if (options.some(id => OPT[id].schluessel)){ S.pfad.sinceKey = 0; S.stats.keyOffers = (S.stats.keyOffers || 0) + 1; }
-      else if (S.pfad.choices + 1 >= C.LINIEN.schluessel.abWahl) S.pfad.sinceKey++;
+    S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0, doktrinForced: doktrinDue() };       // doktrinForced: eine Doktrin war fällig (Bann behält sie)
+    if (S.pacing === 'karten'){                                              // Angebote mit Doktrin zählen; ohne eine seit Wahl abWahl läuft der Zähler bis zur erzwungenen (Teil 5, REQ-K5.07)
+      if (options.some(id => OPT[id].doktrin)){ S.pfad.sinceDoktrin = 0; S.stats.doktrinOffers = (S.stats.doktrinOffers || 0) + 1; }
+      else if (S.pfad.choices + 1 >= C.DOKTRIN.abWahl) S.pfad.sinceDoktrin++;
     }
     if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Nummer, Erscheinen, Wahl (REQ-P.06)
       const d = S.pendingDraft; (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, t: Math.round(S.t * 10) / 10, tp: null });
@@ -1247,13 +1284,14 @@ function create(){
     S.research.banned.push(d.options[i]);
     const rest = d.options.filter((_, k) => k !== i);
     const hasWag = rest.some(id => OPT[id] && OPT[id].family === 'wagnis');
-    const pool = (S.pacing === 'karten' ? ALL_OPTIONS : OPTIONS).filter(o => optionAvailable(o) && !rest.includes(o.id) && !(S.pacing === 'karten' && (isPathFamily(o) || (hasWag && o.family === 'wagnis'))));       // Bann tauscht nur Bonusplätze (REQ-P.04)
+    const hasDok = rest.some(id => OPT[id] && OPT[id].doktrin);
+    const pool = (S.pacing === 'karten' ? ALL_OPTIONS : OPTIONS).filter(o => optionAvailable(o) && !rest.includes(o.id) && !(S.pacing === 'karten' && (isPathFamily(o) || (hasWag && o.family === 'wagnis') || (hasDok && o.doktrin))));       // Bann tauscht nur Bonusplätze (REQ-P.04)
     const total = pool.reduce((a, o) => a + cardWeight(o), 0);
     let repl = null;
     if (pool.length){ let r = rnd() * total, k = 0; while (k < pool.length - 1 && r >= cardWeight(pool[k])){ r -= cardWeight(pool[k]); k++; } repl = pool[k].id; }
-    // war eine Schlüsselkarte fällig und die gebannte die einzige im Angebot, tritt eine andere Schlüsselkarte an ihre Stelle (REQ-S.07)
-    if (S.pacing === 'karten' && OPT[d.options[i]].schluessel && d.keyForced && !rest.some(id => OPT[id].schluessel)){
-      const kp = pool.filter(o => o.schluessel); if (kp.length) repl = pickWeighted(kp, weightKarten).id;
+    // war eine Doktrin fällig und die gebannte die einzige im Angebot, tritt eine andere Doktrin an ihre Stelle (Teil 5, REQ-K5.07)
+    if (S.pacing === 'karten' && OPT[d.options[i]].doktrin && d.doktrinForced && !rest.some(id => OPT[id].doktrin)){
+      const kp = pool.filter(o => o.doktrin); if (kp.length) repl = pickWeighted(kp, weightKarten).id;
     }
     d.options = repl ? d.options.map((id, k) => k === i ? repl : id) : rest;
     return true;
@@ -1335,6 +1373,7 @@ function create(){
       for (const r of o.pfad.oeffnetForschung || []) if (unlockKey('forschung:' + r)) S.research.fresh = true;
     }
     S.pfad.choices++; S.pfad.lastPickT = S.t;
+    if (o.doktrin) (S.stats.doktrinen = S.stats.doktrinen || []).push({ id: o.id, wahl: S.pfad.choices, t: +S.t.toFixed(1) });
     for (const e of cardTier(o.id, S.draft.stacks[o.id]).effect || []){
       if (e.unlock){ unlockBuilding(e.unlock); log('log.unlocked', { building: '@bld.' + e.unlock + '.name' }); }
       if (e.grant === 'production') addMaterial(Math.max(matRate(), C.GRANT_MIN_RATE) * e.seconds);
@@ -1384,6 +1423,11 @@ function create(){
     }
   }
 
+  /* Unterhalt wird vom Material abgezogen; was fehlt, wird nicht nachgefordert (kein Minus) */
+  function payUpkeep(dt){
+    const paid = Math.min(Math.max(0, S.material), upkeepRate() * dt);
+    S.material -= paid; S.stats.upkeep = (S.stats.upkeep || 0) + paid;
+  }
   function tick(dt){
     if (S.status !== 'running') return;
     if (S.pendingDraft){                                    // offene Kartenwahl: pausiert das Spiel (Standard), läuft langsam oder weiter (KARTENBUEHNE.zeit, REQ-K2.02)
@@ -1397,6 +1441,7 @@ function create(){
     if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
     addProduction(matRate() * dt);
     addProduction(autoPressCps() * clickPower() * dt);
+    if (S.pacing === 'karten' && mAdd('upkeep') > 0) payUpkeep(dt);
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
     if (S.waveRushCd) S.waveRushCd = Math.max(0, S.waveRushCd - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
@@ -1525,13 +1570,13 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, variantsFor, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     offerDraft, chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, gainXp, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
-    clickPower, matRate, incomeRate, setBudget, budgetStufe, budgetShare, budgetKurs, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
+    clickPower, matRate, incomeRate, upkeepRate, xpMult, setBudget, budgetStufe, budgetShare, budgetKurs, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,
   };

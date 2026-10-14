@@ -71,10 +71,19 @@ const KF_CONFIG = {
     /* Gebäude-Aufwertung: Kosten = kostenFaktor × Baukosten des Grundgebäudes (Fabrik: FACTORY_BASE_COST), Dauer in Sekunden Spielzeit (das Gebäude wirkt währenddessen nicht),
        sichtbar ab Minute abMinute, sobald ein Gebäude des Typs steht */
     aufwertung: { kostenFaktor: 2, dauerS: 10, abMinute: 3 },
-    /* Schlüsselkarten (REQ-S.06, S.07): ab Wahl abWahl erscheint spätestens in jeder spaetestensJe-ten Wahl mindestens eine Schlüsselkarte (sie belegt einen Bonusplatz);
-       führt der Spieler eine Linie (mindestens vornAb Zeichen), zieht ihre Schlüsselkarte mit gewichtVorne-fachem Gewicht.
-       handelsnetzDeckel: höchstens so viel Mehrertrag je Manufaktur durch das Handelsnetz (Anteil); ruecklage wirkt auf den Zinsdeckel je bisheriger Kartenwahl. */
-    schluessel: { abWahl: 3, spaetestensJe: 3, vornAb: 2, gewichtVorne: 3, handelsnetzDeckel: 0.5 },
+  },
+  /* Teil 5 (REQ-K5.07): Doktrinen (data/doktrinen.js) ersetzen die Schlüsselkarten aus Teil 4; nur im Modus karten.
+     max: höchstens so viele Doktrinen je Partie, danach erscheinen keine weiteren. zeichen: Zeichen der Linie je Doktrin. abWahl: erste Wahl mit einer Doktrin im Angebot;
+     spaetestensJe: spätestens in jeder n-ten Wahl liegt eine Doktrin auf einem Bonusplatz (solange noch eine fehlt). vornAb, gewichtVorne: wer eine Linie führt (mindestens vornAb Zeichen),
+     zieht ihre Doktrinen mit mehrfachem Gewicht; gewicht: Grundgewicht im Angebot. Die Wirkungen der Doktrinen stehen in data/doktrinen.js, die der Sonderbauten in data/linien.js.
+     sonderbau.kostenFaktor: Kosten der Aufwertung zum Sonderbau × Baukosten des Grundgebäudes (statt LINIEN.aufwertung.kostenFaktor).
+     zunfthaus.nachbarFaktor: Der Nachbarschaftsbonus eines fertigen Zunfthauses (Fabrik neben Fabrik) wirkt in diesem Vielfachen.
+     bastion: feuert wie ein Turm in die Lane seiner Spalte (links Lane 0, Mitte Lane 1, rechts Lane 2) mit schadenFaktor × Turmschaden der Stufe max(grundStufe, Turm der Lane); gleiche Kadenz und Reichweite wie die Türme. */
+  DOKTRIN: {
+    max: 2, zeichen: 3, abWahl: 3, spaetestensJe: 3, vornAb: 2, gewichtVorne: 3, gewicht: 8,
+    sonderbau: { kostenFaktor: 3 },
+    zunfthaus: { nachbarFaktor: 3 },
+    bastion: { schadenFaktor: 1.5, grundStufe: 2 },
   },
   /* Teil 4 (REQ-S.08): Testschalter ?druck=hoch (Standard aus). Verstärkt die regulären Gegnerwellen ab Minute abMinute um faktor (Zahl der Einheiten); die Druckkurve selbst
      bleibt unverändert, bis der Spieltest Daten liefert (Entscheidung B4). Die Belagerungswelle bleibt unberührt. */
@@ -181,7 +190,7 @@ const KF_CONFIG = {
     faecherGrad: 6,             // äußerste Karten stehen um so viele Grad schief
     hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
     inhaltSymbole: { bau: '\u2302', einheit: '\u25B2', stufe: '\u21E7', forschung: '\u2697' },   // Symbole für Inhalte auf den Karten (Gebäude, Einheit, Ausbaustufe, Forschung)
-    symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0' },
+    symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0', doktrin: '\u2691' },
   },
 
   /* Tutorial „Erste Schritte“ (REQ-T.01 – T.04): Schritte in data/tutorial-steps.js, Texte in den Sprachdateien */

@@ -10,7 +10,7 @@ function game(seed = 7, level = 1){
   G.build('fabrik');                                                     // wie im Spiel: die erste Fabrik steht in den ersten Sekunden
   return { G, C: KF_CONFIG, P: KF_PFAD };
 }
-const bonus = G => G.ALL_OPTIONS.filter(o => !o.pfad);
+const bonus = G => G.ALL_OPTIONS.filter(o => !o.pfad && !o.doktrin);
 const open = (G, ...keys) => keys.forEach(k => G.unlockKey(k));
 const offered = (G, id) => G.optionAvailable(G.OPT[id]);
 const exhaust = (G, id) => { G.S.draft.stacks[id] = G.OPT[id].tiers.length; G.S.draft.ver++; };
@@ -50,8 +50,6 @@ const CASES = {
   instandhaltung: {}, fliessband: {}, dauerauftrag: {},
   // Sonderregel
   allesAufDieMitte: {}, blitzkrieg: {}, soeldnerheer: {}, verbrannteErde: {}, gluecksritter: {},
-  // Schlüsselkarten (Teil 4, REQ-S.06): ab Wahl 3 und nur mit Wirkung; Tests der Wirkung in tests/schluessel.test.mjs
-  drillmeister: { schluessel: true }, vorhut: { schluessel: true }, handelsnetz: { schluessel: true }, ruecklage: { schluessel: true }, bollwerk: { schluessel: true }, gegenstoss: { schluessel: true },
 };
 
 test('Jede Bonuskarte ist in der Fallliste erfasst', () => {
@@ -62,7 +60,6 @@ test('Jede Bonuskarte ist in der Fallliste erfasst', () => {
 
 for (const [id, c] of Object.entries(CASES)){
   test(`Angebotsbedingung ${id}: bei Wirkung null nicht angeboten, mit Wirkung angeboten`, () => {
-    if (c.schluessel) return;                                           // eigene Tests: tests/schluessel.test.mjs
     if (c.entfaellt){ const { G } = game(11, 6); assert.equal(offered(G, id), false, `${id}: im Modus karten gestrichen`); return; }
     // angeboten: Grundzustand (Fabrik steht, Platz frei), Stufe der Partie hoch genug
     { const { G } = game(11, 6); if (c.base) c.base(G); if (c.on) c.on(G);

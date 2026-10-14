@@ -21,14 +21,14 @@ test('S.04: Zuordnung der Zeichen: jede Karte hat höchstens zwei, Linien sind b
   const { G, L } = game();
   for (const [id, z] of Object.entries(L.zeichen)){
     assert.ok(G.OPT[id], `unbekannte Karte ${id}`);
-    const list = [].concat(z); assert.ok(list.length >= 1 && list.length <= 2, id);
+    const list = [].concat(z); assert.ok(list.length >= 1 && list.length <= (G.OPT[id].doktrin ? 3 : 1), id);
     for (const l of list) assert.ok(L.linien.includes(l), `${id}: ${l}`);
   }
   for (const id of ['fortgeschritteneTaktiken', 'ballistik', 'eiserneKlingen']) assert.deepEqual([].concat(L.zeichen[id]), ['militaer']);
   assert.deepEqual([].concat(L.zeichen.befestigungskunde), ['verteidigung']);
   for (const id of ['echtesMilitaer', 'pfadFestungsbau', 'handel', 'gelehrte', 'metallverarbeitung']) assert.equal(L.zeichen[id], undefined, `${id} entfiel mit Teil 5`);
   // Kategorien: Armee → Militär, Wirtschaft → Wirtschaft, Basis → Verteidigung
-  for (const o of G.ALL_OPTIONS.filter(o => !o.pfad && !o.schluessel && !['kriegserfahrung', 'serienbau', 'bauleitung'].includes(o.id))){       // gestrichene Karten und Schlüsselkarten (zwei Zeichen) tragen es anders
+  for (const o of G.ALL_OPTIONS.filter(o => !o.pfad && !o.doktrin && !['kriegserfahrung', 'serienbau', 'bauleitung'].includes(o.id))){       // gestrichene Karten und Schlüsselkarten (zwei Zeichen) tragen es anders
     const z = [].concat(L.zeichen[o.id] || []);
     if (o.category === 'armee') assert.deepEqual(z, ['militaer'], o.id);
     if (o.category === 'wirtschaft') assert.deepEqual(z, ['wirtschaft'], o.id);

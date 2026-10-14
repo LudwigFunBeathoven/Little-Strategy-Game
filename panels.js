@@ -222,7 +222,7 @@ function nbPreviewText(i, type){
 }
 
 /* ---------- Gebäude-Aufwertung (Teil 4, REQ-S.05): Namen, Werte, Aktionen am Gebäude ---------- */
-const variantParams = v => { const p = {}; v.effect.forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); }); return p; };
+const variantParams = v => { const p = Object.assign({}, sonderbauParams()); v.effect.forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); }); return p; };
 /* Anzeigename eines Platzes: Variante, sonst Grundgebäude */
 const slotName = sl => sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(`bld.${sl.type}.name`);
 const variantTarget = sl => sl.upg && G.VAR[sl.upg.to] ? G.VAR[sl.upg.to] : null;
@@ -283,14 +283,14 @@ function renderContext(){
   }
   // Knöpfe nur bei geänderter Auswahl oder Optionsmenge neu bauen, nie wegen Material oder Zeit (REQ-5.01)
   const key = [lang, show, JSON.stringify(sel), JSON.stringify(S.slots.map(x => x && [x.type, x.paid, x.variant || 0, x.upg ? x.upg.to : 0])), demolishArmed, S.status, JSON.stringify(S.unlocked),
-               C.BUILDINGS.map(b => plot && !sl ? ['hidden', 'standing'].includes(G.buildBlock(sel.i, b)) : 0).join(), sl ? G.variantVisible(sl.type) : 0].join('|');
+               C.BUILDINGS.map(b => plot && !sl ? ['hidden', 'standing'].includes(G.buildBlock(sel.i, b)) : 0).join(), sl ? G.variantVisible(sl.type) : 0, G.activeDoctrines().map(d => d.id).join()].join('|');
   if (key === ctxKey){ updatePicks(); updateVariantPicks(); return; }
   ctxKey = key;
   const build = $('ctxBuild'), dem = $('ctxDemolish'), vbox = $('ctxVariants');
   build.innerHTML = ''; dem.innerHTML = ''; vbox.innerHTML = ''; picks = []; vpicks = [];
   // Aufwertung zu einer Variante: Aktion am Gebäude, sobald sie sichtbar ist (REQ-S.05); ein fertiges oder laufendes Gebäude bietet sie nicht mehr an
-  if (sl && !sl.variant && !sl.upg && G.variantVisible(sl.type)){
-    for (const v of G.variantsOf(sl.type)){
+  if (sl && G.variantVisible(sl.type)){
+    for (const v of G.variantsFor(sel.i)){
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `variant:${sel.i}:${v.id}`;
       const nm = document.createElement('b'); nm.textContent = t('variant.pick', { name: t(v.nameKey) });
@@ -393,10 +393,19 @@ function renderOpts(){
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const cardName = (o, tier) => G.tiersOf(o).length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
 /* Werte für die Kartentexte: Faktoren als Prozent, außer echte Vielfache; Anteile als Prozent */
-const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus', 'variantYield', 'handelsnetz', 'ruecklage', 'counterBoost'];      // Anteile werden in Prozent gezeigt
+const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect', 'budgetKurs'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus', 'variantYield', 'handelsnetz', 'ruecklage', 'counterBoost'];      // Anteile werden in Prozent gezeigt
 /* Anzeigewert einer Wirkung (Karten und Forschungen gleich): Faktor, Prozent, Anteil in Prozentpunkten oder Zahl */
 const effectValue = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
   : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : e.add % 1 ? fmt2(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
+/* Werte für die Texte der Sonderbauten und Doktrinen (Teil 5): nb = Faktor des Zunfthauses, bd = Mehrschaden der Bastion in Prozent, g = Grenze der Doktrin, s1, s2 = Wirkungen ihres Sonderbaus */
+function sonderbauParams(){ return { nb: fmtNum(C.DOKTRIN.zunfthaus.nachbarFaktor), bd: pct(C.DOKTRIN.bastion.schadenFaktor - 1) }; }
+function doktrinParams(d){
+  const p = Object.assign({}, sonderbauParams());
+  if (d.grenze) p.g = d.grenze.max;
+  const v = d.sonderbau && G.VAR[d.sonderbau];
+  if (v) v.effect.forEach((e, i) => { p['s' + (i + 1)] = effectValue(e); });
+  return p;
+}
 function optParams(o, tier){
   const val = effectValue;
   const tiers = G.tiersOf(o), tr = tiers[Math.min(Math.max(1, tier), tiers.length) - 1], p = {};
@@ -404,6 +413,7 @@ function optParams(o, tier){
   (tr.drawback || []).forEach((e, i) => { p['d' + (i + 1)] = val(e); if (e.mul !== undefined) p['d' + (i + 1) + 'p'] = pct(Math.abs(e.mul - 1)); });
   if (o.condition && o.condition.value !== undefined) p.c1 = o.condition.value < 1 ? pct(o.condition.value) : o.condition.value;
   if (o.synergy) p.syn = pct(o.synergy.perCard);
+  if (o.doktrin) Object.assign(p, doktrinParams(o.doktrin));
   p.s = C.WALL_REGEN_DELAY_S;
   return p;
 }
@@ -444,7 +454,7 @@ function pathStatus(){
   }
   return out;
 }
-const FAMILY_ORDER = ['technologie', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
+const FAMILY_ORDER = ['technologie', 'doktrin', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
 let chosenKey = '', draftKey = '';
 function renderChosen(){
   const ps = Stage.on() && !Disc.on() && G.S.pacing === 'karten' ? pathStatus() : [];

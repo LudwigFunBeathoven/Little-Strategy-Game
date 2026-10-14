@@ -93,14 +93,15 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, linie){
    Fabriken werden nur zur Manufaktur mehrfach aufgewertet (Ertrag je Gebäude); jede andere Variante wirkt einmal, ein zweites Gebäude brächte nichts. */
 KF_BROWSER_BOT.LINIEN_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Linien-Bot (0, 25, 50 %)
 KF_BROWSER_BOT.LINIEN_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Linien-Bots
+KF_BROWSER_BOT.MEHRFACH = ['manufaktur', 'zunfthaus', 'bastion'];       // Varianten, deren Wirkung je Gebäude gilt
 KF_BROWSER_BOT.aufwerten = function(G, linie, hooks){
   const S = G.S;
   for (let i = 0; i < S.slots.length; i++){
     const sl = S.slots[i];
-    if (!sl || sl.variant || sl.upg) continue;
-    const v = G.variantsOf(sl.type).find(x => x.linie === linie);
+    if (!sl || sl.upg) continue;
+    const cands = G.variantsFor(i).filter(x => x.linie === linie), v = cands.find(x => x.doktrin) || cands[0];       // Sonderbau der gewählten Doktrin zuerst; er löst eine Grundvariante ab (Teil 5)
     if (!v) continue;
-    if (v.id !== 'manufaktur' && S.slots.some(x => x && (x.variant === v.id || (x.upg && x.upg.to === v.id)))) continue;
+    if (!KF_BROWSER_BOT.MEHRFACH.includes(v.id) && S.slots.some(x => x && (x.variant === v.id || (x.upg && x.upg.to === v.id)))) continue;
     if (G.variantBlock(i, v.id) !== null || S.material < G.variantCost(v.id) * 1.5) continue;
     if (G.upgradeBuilding(i, v.id) && hooks && hooks.variant) hooks.variant(v.id);
   }
