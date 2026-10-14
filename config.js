@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.2-kartenpfad-4',
-  SAVE_KEY: 'klammerfront.save.v9',          // Branch: eigene, höhere Spielstand-Version als main (7); 9 mit Teil 4 (Strategielinien, Gebäude-Varianten): ältere Spielstände werden verworfen
+  VERSION: '0.9.2-kartenpfad-5',
+  SAVE_KEY: 'klammerfront.save.v10',         // Branch: eigene, höhere Spielstand-Version als main (7); 10 mit Teil 5 (Grundausstattung, Doktrinen, Pacing aus dem Spielfluss): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -17,7 +17,6 @@ const KF_CONFIG = {
   PACING: {},
   /* Kartenpfad (REQ-KP.02, KP.06): Angebot im Modus 'karten'; Startwerte, per Simulation zu kalibrieren */
   KARTEN: {
-    rueckstandPlus: 0.5,        // Gewichtszuschlag je Wahl, in der eine ziehbare Bau-Karte nicht im Angebot erschien (Faktor auf das Grundgewicht)
     /* Wahl-Fahrplan (REQ-P.02): Zielzeit je Wahl in Sekunden Spielzeit (Profil „durchschnitt“, Normal); ab Wahl 11 je takt Sekunden später.
        Eine Wahl wird fällig, sobald die EP-Schwelle erreicht ist (schwellen: EP-Schritt je Wahl; über das Tabellenende gilt der letzte Schritt), spätestens zur Zielzeit der Wahl,
        spätestens maxAbstand nach der letzten Wahl; frühestens minAbstand nach der letzten Wahl (die EP darüber bleiben erhalten). Gleich auf allen Schwierigkeitsgraden.
@@ -39,8 +38,7 @@ const KF_CONFIG = {
     gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
     maxAbstand: 100,            // Höchstabstand: steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06, P.02)
     angebot: { basis: 3, universitaet: 4 },   // Karten je Angebot im Modus karten (REQ-P.04); Standard: DRAFT_OPTIONS_BASE / _UNIVERSITY
-    pfadPlaetze: 2,             // Plätze für Pfadkarten (Bau, Technologie) je Angebot, wenn so viele ziehbar sind; der Rest sind Bonusplätze (REQ-P.04)
-    maxWarten: 3,               // eine ziehbare Bau-Karte erscheint spätestens in der n-ten Wahl nach ihrer Freigabe (harte Grenze)
+    pfadPlaetze: 2,             // Plätze für Pfadkarten (Technologie) je Angebot, wenn so viele ziehbar sind; der Rest sind Bonusplätze (REQ-P.04)
     /* Teil 4 (REQ-S.02 C2, REQ-S.03): Stufen einzelner Karten im Modus karten; sie ersetzen dort die Stufen aus data/draft-options.js (Modus standard unverändert).
        Glücksritter: Nachteil „Abstand der eigenen Wellen +25 %“ statt „Stufen kosten 15 % mehr EP“ (die EP-Schwellen bleiben unberührt).
        Söldnerheer: Nachteil abgeschwächt, Produktion × 0,8 statt × 0,6. Texte: Schlüssel mit Suffix .karten (draft.<id>.desc.karten). */

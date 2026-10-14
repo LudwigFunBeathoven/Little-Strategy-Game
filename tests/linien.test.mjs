@@ -24,10 +24,9 @@ test('S.04: Zuordnung der Zeichen: jede Karte hat höchstens zwei, Linien sind b
     const list = [].concat(z); assert.ok(list.length >= 1 && list.length <= 2, id);
     for (const l of list) assert.ok(L.linien.includes(l), `${id}: ${l}`);
   }
-  for (const id of ['echtesMilitaer']) assert.deepEqual([].concat(L.zeichen[id]), ['militaer']);
-  assert.deepEqual([].concat(L.zeichen.pfadFestungsbau), ['verteidigung']);
-  assert.deepEqual([].concat(L.zeichen.handel), ['wirtschaft']);
-  assert.equal(L.zeichen.gelehrte, undefined); assert.equal(L.zeichen.metallverarbeitung, undefined);
+  for (const id of ['fortgeschritteneTaktiken', 'ballistik', 'eiserneKlingen']) assert.deepEqual([].concat(L.zeichen[id]), ['militaer']);
+  assert.deepEqual([].concat(L.zeichen.befestigungskunde), ['verteidigung']);
+  for (const id of ['echtesMilitaer', 'pfadFestungsbau', 'handel', 'gelehrte', 'metallverarbeitung']) assert.equal(L.zeichen[id], undefined, `${id} entfiel mit Teil 5`);
   // Kategorien: Armee → Militär, Wirtschaft → Wirtschaft, Basis → Verteidigung
   for (const o of G.ALL_OPTIONS.filter(o => !o.pfad && !o.schluessel && !['kriegserfahrung', 'serienbau', 'bauleitung'].includes(o.id))){       // gestrichene Karten und Schlüsselkarten (zwei Zeichen) tragen es anders
     const z = [].concat(L.zeichen[o.id] || []);
@@ -40,11 +39,11 @@ test('S.04: Zuordnung der Zeichen: jede Karte hat höchstens zwei, Linien sind b
 test('S.04: Zeichen zählen gewählte Karten; im Modus standard zählt nichts', () => {
   const { G } = game();
   assert.equal(signs(G, 'militaer'), 0);
-  pick(G, 'echtesMilitaer', 'drill', 'gelehrte');
-  assert.equal(signs(G, 'militaer'), 2, 'Echtes Militär und Drill; Gelehrte ohne Zeichen');
+  pick(G, 'kriegstrommeln', 'drill', 'glaskanonen');
+  assert.equal(signs(G, 'militaer'), 2, 'Kriegstrommeln und Drill; Glaskanonen (Wagnis) ohne Zeichen');
   pick(G, 'zinnen'); assert.equal(signs(G, 'verteidigung'), 1);
   pick(G, 'bessereFabriken'); assert.equal(signs(G, 'wirtschaft'), 1);
-  const { G: S } = game('standard'); pick(S, 'echtesMilitaer', 'drill', 'zinnen');
+  const { G: S } = game('standard'); pick(S, 'kriegstrommeln', 'drill', 'zinnen');
   assert.equal(S.lineState().militaer.signs, 0, 'standard');
   assert.equal(S.mMul('unitDmg'), 1);
 });
@@ -54,7 +53,7 @@ test('S.04: Stufe 1 ab 2 Zeichen, Stufe 2 ab 4 Zeichen; die Boni greifen genau d
   const { G, C } = game();
   const dmg0 = G.mMul('unitDmg'), hp0 = G.mMul('unitHp');
   pick(G, 'drill'); assert.equal(G.lineState().militaer.stage, 0); assert.equal(G.mMul('unitDmg'), dmg0, 'ein Zeichen: kein Bonus');
-  pick(G, 'echtesMilitaer'); assert.equal(G.lineState().militaer.stage, 1);
+  pick(G, 'kriegstrommeln'); assert.equal(G.lineState().militaer.stage, 1);
   assert.ok(Math.abs(G.mMul('unitDmg') / dmg0 - C.LINIEN.stufen.militaer[0][0].mul) < 1e-9, 'Stufe 1: Einheiten +10 % Schaden');
   assert.equal(G.mMul('unitHp'), hp0, 'Lebenspunkte erst mit Stufe 2');
   pick(G, 'aushebung'); assert.equal(G.lineState().militaer.stage, 1, 'drei Zeichen');
@@ -74,7 +73,7 @@ test('S.04: Stufe 1 ab 2 Zeichen, Stufe 2 ab 4 Zeichen; die Boni greifen genau d
 
 test('S.04: ohne Stufe 1 gibt es keinen Linienbonus, mehrere Linien erreichen Stufen gleichzeitig', () => {
   const { G } = game();
-  pick(G, 'drill', 'echtesMilitaer', 'bessereFabriken', 'schwerePressen', 'zinnen');
+  pick(G, 'drill', 'kriegstrommeln', 'bessereFabriken', 'schwerePressen', 'zinnen');
   const st = G.lineState();
   assert.equal(st.militaer.stage, 1); assert.equal(st.wirtschaft.stage, 1); assert.equal(st.verteidigung.stage, 0);
 });
@@ -155,7 +154,7 @@ test('S.05/S.04: Zeichen der Varianten zählen je Variantentyp einmal; Abriss se
   assert.equal(signs(G, 'wirtschaft'), 0, 'während der Aufwertung zählt kein Zeichen');
   finish(G);
   assert.equal(signs(G, 'wirtschaft'), 1, 'zwei Manufakturen: ein Zeichen'); assert.equal(signs(G, 'militaer'), 1);
-  pick(G, 'echtesMilitaer');
+  pick(G, 'kriegstrommeln');
   assert.equal(G.lineState().militaer.stage, 1);
   const dmg = G.mMul('unitDmg');
   assert.ok(G.demolish(3));
@@ -178,9 +177,9 @@ test('S.05: Manufaktur wirkt je Gebäude, Werkstatt und die übrigen Varianten e
   assert.ok(Math.abs(G.matRate() / r0 - (1 + 2 * (1 + yield1)) / 3) < 1e-6, `Mehrertrag je Manufaktur: ${G.matRate() / r0}`);
 });
 
-test('S.05: Spielstand-Version 9 und Zustand der Aufwertung im Spielstand', () => {
+test('S.05: Spielstand-Version 10 und Zustand der Aufwertung im Spielstand', () => {
   const { G } = game();
-  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 9);
+  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 10);
   place(G, 'fabrik', 0); G.S.t = 200; G.S.material = 1e6; G.upgradeBuilding(0, 'manufaktur');
   const snap = JSON.parse(JSON.stringify(G.snapshot()));
   assert.ok(snap.slots[0].upg);
@@ -191,7 +190,7 @@ test('S.05: Spielstand-Version 9 und Zustand der Aufwertung im Spielstand', () =
 
 /* ---------- Wirkung der Stufen und Varianten im Spiel ---------- */
 const idle = G => { G.S.pendingDraft = null; G.S.pendingLevels = 0; G.S.pfad.lastPickT = G.S.t; G.S.sections.forEach(x => { x.hp = Math.max(x.hp, 1e9); }); };
-const stage2 = (G, line) => { const ids = { militaer: ['echtesMilitaer', 'drill', 'aushebung', 'veteranen'], wirtschaft: ['bessereFabriken', 'schwerePressen', 'doppelschicht', 'nachtschicht'], verteidigung: ['zinnen', 'maurerkolonne', 'bastion', 'turmkanoniere'] }[line]; pick(G, ...ids); assert.equal(G.lineState()[line].stage, 2, line); };
+const stage2 = (G, line) => { const ids = { militaer: ['kriegstrommeln', 'drill', 'aushebung', 'veteranen'], wirtschaft: ['bessereFabriken', 'schwerePressen', 'doppelschicht', 'nachtschicht'], verteidigung: ['zinnen', 'maurerkolonne', 'bastion', 'turmkanoniere'] }[line]; pick(G, ...ids); assert.equal(G.lineState()[line].stage, 2, line); };
 
 test('S.04 Militär Stufe 2: die Kaserne schickt je Welle eine Einheit mehr (nur mit Kaserne, ohne Kosten, ohne Einfluss auf die Dauerauftrag-Zusammensetzung)', () => {
   const { G } = game();
@@ -235,7 +234,7 @@ test('S.04 Wirtschaft: Stufe 1 Materialertrag, Stufe 2 Zinsen des Kontors und bi
 test('S.04 Verteidigung Stufe 1: Türme +20 % Schaden, Mauer +15 % Lebenspunkte', () => {
   const { G } = game();
   const w0 = G.sectionMax(1), t0 = G.mMul('turretDmg');
-  pick(G, 'pfadFestungsbau', 'befestigungskunde');
+  pick(G, 'scharfschuetzen', 'befestigungskunde');
   assert.equal(G.lineState().verteidigung.stage, 1);
   assert.ok(Math.abs(G.sectionMax(1) / w0 - 1.15) < 1e-9);
   assert.ok(Math.abs(G.mMul('turretDmg') / t0 - 1.2) < 1e-9);
@@ -298,7 +297,7 @@ test('S.05 Varianten: Wachstube, Garnison, Waffenschmiede, Rüstkammer wirken wi
 test('S.04 Stufe 3 (6 Zeichen): die Boni der Stufen 1 bis 3 wirken zusammen; maxStufe schaltet sie ab', () => {
   const { G, C } = game();
   const dmg0 = G.mMul('unitDmg'), hp0 = G.mMul('unitHp');
-  pick(G, 'echtesMilitaer', 'drill', 'aushebung', 'veteranen', 'taktiker');
+  pick(G, 'kriegstrommeln', 'drill', 'aushebung', 'veteranen', 'taktiker');
   assert.equal(G.lineState().militaer.stage, 2, 'fünf Zeichen');
   pick(G, 'sappeure');
   assert.equal(G.lineState().militaer.signs, 6); assert.equal(G.lineState().militaer.stage, 3);
@@ -315,7 +314,7 @@ test('S.04 Stufe 3 (6 Zeichen): die Boni der Stufen 1 bis 3 wirken zusammen; max
   assert.equal(V.lineState().verteidigung.stage, 3); assert.equal(V.mAdd('counterBoost'), 0.3); assert.equal(V.mAdd('counterWave'), 1);
   // maxStufe 2 schaltet die dritte Stufe ab
   const { G: M } = game('karten', 7, 'normal', c => { c.LINIEN.maxStufe = 2; });
-  pick(M, 'echtesMilitaer', 'drill', 'aushebung', 'veteranen', 'taktiker', 'sappeure');
+  pick(M, 'kriegstrommeln', 'drill', 'aushebung', 'veteranen', 'taktiker', 'sappeure');
   assert.equal(M.lineState().militaer.stage, 2);
   assert.equal(C.LINIEN.zeichenStufen[2], 6);
 });

@@ -47,7 +47,7 @@ const adjacent = i => { const g = C.GRID_SIZE, r = Math.floor(i / g), c = i % g,
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 9;                       // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+const SAVE_VERSION = 10;                      // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 /* Werfer und seine Ersatzeinheiten teilen die Werfer-Karten (Lange Wurfarme …) */
 const isThrower = type => (C.UNITS[type].base || type) === 'werfer';
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
@@ -88,7 +88,7 @@ function freshState(diff, seed){
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
     druck: null,                      // Testschalter ?druck=hoch (Teil 4, REQ-S.08): null | 'hoch'; verstärkt die regulären Gegnerwellen ab C.DRUCK.hoch.abMinute
-    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, wait: {}, seen: {}, free: 0, lastPickT: 0, sinceKey: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, free: 0, lastPickT: 0, sinceKey: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
@@ -1089,7 +1089,7 @@ function create(){
   }
   /* Pfadkarten (Modus 'karten'): ziehbar ab der abWahl-ten Wahl, wenn ihre Voraussetzungen stehen und keine Exklusivkarte gewählt ist (REQ-KP.02) */
   const requirementMet = b => b.startsWith('gebaut:') ? has(b.slice(7)) : sourceMet(b);
-  const isPathFamily = o => !!o.pfad && (o.family === 'bau' || o.family === 'technologie');
+  const isPathFamily = o => !!o.pfad && o.family === 'technologie';
   function pfadAvailable(o){
     const k = o.pfad;
     if (S.pacing !== 'karten' || cardTaken(o.id) > 0 || S.research.banned.includes(o.id)) return false;
@@ -1163,9 +1163,8 @@ function create(){
     return out;
   }
   /* Angebot im Modus 'karten' (REQ-P.04, ersetzt REQ-KP.02): zwei Wege gegeneinander. Pfadplätze = min(KARTEN.pfadPlaetze, ziehbare Pfadkarten), der Rest sind Bonusplätze
-     (aus Bonus- und Wagnis-Karten, höchstens eine Wagnis-Karte). Eine ziehbare Bau-Karte, die zu lange wartete, rückt zwingend ein (harte Grenze C.KARTEN.maxWarten);
-     die übrigen Pfadplätze werden nach Gewicht gezogen. Die Reihenfolge der Plätze wird gemischt. */
-  const pfadWait = o => S.pfad.wait[o.id] || 0;
+     (aus Bonus- und Wagnis-Karten, höchstens eine Wagnis-Karte). Pfadkarten sind seit Teil 5 nur noch Technologie-Karten (erst mit Universität); sie werden nach Gewicht gezogen.
+     Die Reihenfolge der Plätze wird gemischt. */
   const pickWeighted = (list, w) => {
     const total = list.reduce((a, o) => a + w(o), 0);
     let r = rnd() * total, i = 0;
@@ -1174,7 +1173,7 @@ function create(){
   };
   /* führt der Spieler eine Linie (mindestens vornAb Zeichen), zieht ihre Schlüsselkarte mit mehrfachem Gewicht (REQ-S.07) */
   const leadsLine = l => (lineState()[l] || { signs: 0 }).signs >= C.LINIEN.schluessel.vornAb;
-  const weightKarten = o => o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) * (1 + C.KARTEN.rueckstandPlus * pfadWait(o)) : cardWeight(o) * (o.schluessel && leadsLine(o.schluessel) ? C.LINIEN.schluessel.gewichtVorne : 1);
+  const weightKarten = o => o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) : cardWeight(o) * (o.schluessel && leadsLine(o.schluessel) ? C.LINIEN.schluessel.gewichtVorne : 1);
   const keyDue = () => S.pacing === 'karten' && S.pfad.choices + 1 >= C.LINIEN.schluessel.abWahl && S.pfad.sinceKey >= C.LINIEN.schluessel.spaetestensJe - 1;
   function drawOptionsKarten(k){
     const pool = ALL_OPTIONS.filter(optionAvailable);
@@ -1182,11 +1181,6 @@ function create(){
     const out = [];
     const take = (o, list) => { out.push(o); const i = list.indexOf(o); if (i >= 0) list.splice(i, 1); };
     const slots = Math.min(C.KARTEN.pfadPlaetze, pf.length, k);
-    // harte Grenze: Bau-Karten, die seit ihrer Freigabe noch nie im Angebot standen, rücken zwingend ein, sobald ihre Frist (Wartezeit plus Rang in der Schlange) abläuft;
-    // jedes Angebot nimmt je Pfadplatz eine Karte der Schlange
-    const unseen = pf.filter(o => o.family === 'bau' && !S.pfad.seen[o.id]).sort((a, b) => pfadWait(b) - pfadWait(a));
-    const forced = unseen.filter((o, i) => pfadWait(o) + Math.floor(i / Math.max(1, slots)) >= C.KARTEN.maxWarten - 1);
-    for (const o of forced) if (out.length < slots) take(o, pf);
     while (out.length < slots && pf.length) take(pickWeighted(pf, weightKarten), pf);
     // Angebotsausgleich (REQ-S.07): ab Wahl abWahl erscheint spätestens in jeder spaetestensJe-ten Wahl eine Schlüsselkarte, auf einem Bonusplatz
     const keys = rest.filter(o => o.schluessel);
@@ -1313,8 +1307,6 @@ function create(){
     const d = S.pendingDraft;
     if (!d || i < 0 || i >= d.options.length) return false;
     const o = OPT[d.options[i]];
-    // Rückstandsgewicht: ziehbare Bau-Karten, die nicht im Angebot standen, warten eine Wahl länger; wer erschien, beginnt von vorn (REQ-KP.06)
-    if (S.pacing === 'karten') for (const q of PFAD_OPTIONS) if (q.family === 'bau' && optionAvailable(q)) { const shown = d.options.includes(q.id); S.pfad.wait[q.id] = shown ? 0 : pfadWait(q) + 1; if (shown) S.pfad.seen[q.id] = true; }
     S.draft.stacks[o.id] = cardTaken(o.id) + 1;
     S.draft.ver++;
     if (o.pfad){

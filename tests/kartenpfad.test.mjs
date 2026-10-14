@@ -1,4 +1,4 @@
-// Tests Kartenpfad, REQ-KP.01/KP.02/KP.06: Startzustand, Freischaltung, Angebot, Rückstandsgewicht.
+// Tests Kartenpfad, REQ-KP.01/KP.02/KP.06, ab Teil 5 (REQ-K5.02): Startzustand mit Grundausstattung, Technologie- und Wagnis-Karten, Angebot, Forschung der Universität.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCore } from '../tools/load-core.mjs';
@@ -8,9 +8,6 @@ function game(pacing = 'karten', seed = 5){
   const G = KlammerCore.create(); G.FX.on = false; G.newGame('normal', seed, { pacing });
   return { G, C: KF_CONFIG, P: KF_PFAD };
 }
-const offer = G => { G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.xpTotal = G.xpNeed(G.S.level + 1); G.S.xp = G.S.xpTotal;
-  G.tick(0.05); if (!G.S.pendingDraft){ G.S.level++; G.S.pendingLevels = 1; G.S.xpTotal = G.xpNeed(G.S.level); G.S.xp = G.S.xpTotal; } return G; };
-const draw = G => { G.S.pendingLevels = 1; G.S.pendingDraft = null; G.S.level++; G.gainXp ? G.gainXp(0) : 0; };
 // Angebot direkt über den Kern anstoßen: Stufe anheben und EP setzen
 function newOffer(G){
   G.S.level = G.S.level + 1; G.S.pendingLevels = 1; G.S.pendingDraft = null;
@@ -21,15 +18,16 @@ function newOffer(G){
   return G.S.pendingDraft;
 }
 
-test('Startzustand karten: nur Fabrik und Läufer, alles Weitere gesperrt, Quelle bekannt', () => {
-  const { G, P } = game('karten');
+test('Teil 5, Startzustand karten: Grundausstattung ab Start, nur Technologie-Inhalte sind gesperrt, jede Sperre hat eine Quelle', () => {
+  const { G, C } = game('karten');
   G.S.material = 1e5;
-  for (const b of ['schmiede', 'universitaet', 'kontor']){ assert.equal(G.isBuildable(b), false, b); assert.equal(G.build(b), false); assert.ok(G.keySource('bau:' + b), `Quelle für ${b}`); }
-  assert.equal(G.isBuildable('kaserne'), true, 'Teil 4 (REQ-S.02 C4): Kaserne ab Start baubar'); assert.equal(G.keySource('bau:kaserne'), null);
-  assert.ok(G.build('fabrik')); assert.ok(G.spawn('laeufer'));
-  assert.equal(G.unitUnlocked('werfer'), false); assert.ok(G.unitSource('werfer'));
-  for (const id of ['turm_0', 'turm_2', 'mauer', 'stacheln', 'moertel']) assert.ok(G.stageSource(id), `Stufe ${id} gesperrt`);
-  assert.equal(G.stageSource('presse'), null, 'Presse bleibt frei');
+  for (const b of C.BUILDINGS){ assert.equal(G.isBuildable(b), true, b); assert.equal(G.keySource('bau:' + b), null, `keine Quelle für ${b}`); }
+  for (const b of ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik']) assert.ok(G.build(b), `${b} baubar`);
+  for (const u of ['laeufer', 'werfer']) assert.equal(G.unitUnlocked(u), true, u);
+  assert.ok(G.spawn('werfer'));
+  for (const id of ['turm_0', 'turm_2', 'mauer', 'stacheln', 'moertel', 'reichweite_0', 'kadenz_0', 'presse', 'ausbau']) assert.equal(G.stageSource(id), null, `Stufe ${id} frei`);
+  for (const u of ['reiter', 'schild', 'armbrust', 'katapult']){ assert.equal(G.unitUnlocked(u), false, u); assert.ok(G.unitSource(u), `Quelle für ${u}`); }
+  G.S.lvl.qualitaet = 3; assert.ok(G.stageSource('qualitaet'), 'Schmiede-Stufe 4 braucht Eisenwaffen');
 });
 
 test('Startzustand standard: unverändert, alles baubar', () => {
@@ -38,20 +36,12 @@ test('Startzustand standard: unverändert, alles baubar', () => {
   assert.equal(G.stageSource('mauer'), null);
 });
 
-test('Bau-Karte schaltet genau ihre Inhalte frei', () => {
+test('Keine Bau-Karte im Pool: Echtes Militär, Festungsbau, Metallverarbeitung, Gelehrte und Handel gibt es nicht (REQ-K5.02)', () => {
   const { G, P } = game('karten');
-  const card = P.karten.find(k => k.id === 'echtesMilitaer');
-  G.S.pendingDraft = { level: 1, options: ['echtesMilitaer', 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1;
-  const supply0 = G.supplyCap();
-  assert.ok(G.chooseDraft(0));
-  assert.ok(G.isBuildable('kaserne') && G.unitUnlocked('werfer'));
-  assert.equal(G.isBuildable('schmiede'), false, 'nur die genannten Inhalte');
-  assert.equal(G.supplyCap(), supply0 + 2, '+2 Versorgung (Teil 4)');
-  G.S.material = 1e5; assert.ok(G.build('kaserne'));
-  const g2 = game('karten').G; g2.S.pendingDraft = { level: 1, options: ['pfadFestungsbau', 'bessereFabriken'], rerolled: 0 }; g2.S.pendingLevels = 1;
-  g2.chooseDraft(0);
-  assert.equal(g2.stageSource('mauer'), null); assert.equal(g2.stageSource('turm_0'), null);
-  assert.equal(g2.isBuildable('schmiede'), false);
+  for (const id of ['echtesMilitaer', 'pfadFestungsbau', 'metallverarbeitung', 'gelehrte', 'handel']){ assert.equal(G.OPT[id], undefined, id); assert.ok(!P.karten.some(k => k.id === id)); }
+  assert.ok(G.ALL_OPTIONS.every(o => o.family !== 'bau'));
+  assert.ok(!P.karten.some(k => (k.schaltetFrei || []).some(key => key.startsWith('bau:'))), 'keine Karte schaltet ein Gebäude frei');
+  for (let seed = 1; seed <= 40; seed++){ const g = game('karten', seed).G; for (const id of g.drawOptionsKarten(4)) assert.ok(g.OPT[id].family !== 'bau'); }
 });
 
 test('Graphtest: jeder gesperrte Inhalt hat eine Quelle, Voraussetzungsketten sind auflösbar und ohne Zyklus', () => {
@@ -70,33 +60,30 @@ test('Graphtest: jeder gesperrte Inhalt hat eine Quelle, Voraussetzungsketten si
     state[id] = 2;
   };
   for (const id of Object.keys(byId)) visit(id);
-  // erreichbar: jede Quelle ist eine Karte oder Forschung des Datensatzes
   for (const src of Object.values(q.quellen).flat()) assert.ok(byId[src], `Quelle ${src}`);
 });
 
-/* Zustand für die Angebotstabelle (REQ-P.04): Teilmenge der Bau- und Technologiekarten schon gewählt, Universität ja/nein, Wahl-Nummer */
-const BAU = ['echtesMilitaer', 'pfadFestungsbau', 'metallverarbeitung', 'gelehrte', 'handel'], TECH = ['fortgeschritteneTaktiken', 'ballistik', 'eiserneKlingen', 'befestigungskunde'];
+/* Zustand für die Angebotstabelle (REQ-P.04): Teilmenge der Technologiekarten schon gewählt, Universität ja/nein, Wahl-Nummer */
+const TECH = ['fortgeschritteneTaktiken', 'ballistik', 'eiserneKlingen', 'befestigungskunde'];
 function tableState(seed){
   const { G, C } = game('karten', seed);
   const r = k => ((seed * 2654435761 + k * 40503 + k * k * 7919) >>> 0) % 1000 / 1000;
   const uni = seed % 2 === 1;
-  if (uni){ G.S.material = 1e6; G.unlockKey('bau:universitaet'); G.build('universitaet'); }
+  if (uni){ G.S.material = 1e6; G.build('universitaet'); }
   const level = 1 + (seed % 12);
   G.S.pfad.choices = level - 1;
-  BAU.forEach((id, i) => { if (r(i) < (level > 3 ? 0.45 : 0.15)) G.S.draft.stacks[id] = 1; });
-  TECH.forEach((id, i) => { if (r(10 + i) < 0.25) G.S.draft.stacks[id] = 1; });
-  if (seed % 7 === 0) for (const id of [...BAU, ...TECH]) G.S.draft.stacks[id] = 1;                         // nichts mehr ziehbar
+  TECH.forEach((id, i) => { if (r(10 + i) < 0.3) G.S.draft.stacks[id] = 1; });
+  if (seed % 7 === 0) for (const id of TECH) G.S.draft.stacks[id] = 1;                                        // nichts mehr ziehbar
   if (seed % 7 === 3){                                                                                         // genau eine Pfadkarte ziehbar
-    G.S.pfad.choices = 10;
-    for (const id of [...BAU, ...TECH]) G.S.draft.stacks[id] = 1;
-    delete G.S.draft.stacks[['handel', 'eiserneKlingen', 'befestigungskunde'][(seed >> 1) % 3]];
+    for (const id of TECH) G.S.draft.stacks[id] = 1;
+    delete G.S.draft.stacks[['eiserneKlingen', 'befestigungskunde'][(seed >> 1) % 2]];
   }
   G.S.draft.ver++;
   return { G, C, uni };
 }
 const pathCount = (G, ids) => ids.filter(id => G.isPathFamily(G.OPT[id])).length;
 
-test('Angebot folgt der Tabelle: Pfadplätze = min(2, ziehbare Pfadkarten), Rest Bonus; Größe 3, mit Universität 4; höchstens eine Wagnis-Karte (REQ-P.04)', () => {
+test('Angebot folgt der Tabelle: Pfadplätze = min(2, ziehbare Technologiekarten), Rest Bonus; Größe 3, mit Universität 4; höchstens eine Wagnis-Karte (REQ-P.04)', () => {
   const cells = {}; let offers = 0;
   for (let seed = 1; seed <= 1000; seed++){
     const { G, uni } = tableState(seed);
@@ -113,7 +100,7 @@ test('Angebot folgt der Tabelle: Pfadplätze = min(2, ziehbare Pfadkarten), Rest
     cells[`${Math.min(2, drawable)}/${k}`] = (cells[`${Math.min(2, drawable)}/${k}`] || 0) + 1;
   }
   assert.ok(offers > 900, `Angebote: ${offers}`);
-  for (const cell of ['0/3', '1/3', '2/3', '0/4', '1/4', '2/4']) assert.ok(cells[cell] > 0, `Feld ${cell} der Tabelle wurde geprüft: ${JSON.stringify(cells)}`);
+  for (const cell of ['0/3', '0/4', '1/4', '2/4']) assert.ok(cells[cell] > 0, `Feld ${cell} der Tabelle wurde geprüft: ${JSON.stringify(cells)}`);
 });
 
 test('Neu ziehen behält die Zahl der Pfadplätze; Bann tauscht nur Bonusplätze', () => {
@@ -138,31 +125,14 @@ test('Neu ziehen behält die Zahl der Pfadplätze; Bann tauscht nur Bonusplätze
   }
 });
 
-test('Nicht gewählte Pfadkarte bleibt im Stapel; gewählte erscheint nicht erneut', () => {
+test('Nicht gewählte Technologiekarte bleibt im Stapel; gewählte erscheint nicht erneut', () => {
   const { G } = game('karten', 3);
-  G.S.pendingDraft = { level: 1, options: ['echtesMilitaer', 'pfadFestungsbau'], rerolled: 0 }; G.S.pendingLevels = 1;
+  G.S.material = 1e6; G.build('universitaet');
+  G.S.pendingDraft = { level: 1, options: ['eiserneKlingen', 'befestigungskunde'], rerolled: 0 }; G.S.pendingLevels = 1;
   G.chooseDraft(0);
-  assert.equal(G.cardTaken('echtesMilitaer'), 1);
-  assert.equal(G.optionAvailable(G.OPT.echtesMilitaer), false, 'gewählt: nie wieder');
-  assert.equal(G.optionAvailable(G.OPT.festungsbau), true, 'nicht gewählt: wieder ziehbar');
-});
-
-test('Rückstandsgewicht und harte Grenze: eine ziehbare Bau-Karte erscheint spätestens in der dritten Wahl nach der Freigabe (auch mit zwei Pfadplätzen)', () => {
-  for (let seed = 1; seed <= 300; seed++){
-    const { G, C } = game('karten', seed);
-    // Echtes Militär ist gewählt, die übrigen Bau-Karten werden nie gewählt: gewählt wird stets die Bonuskarte
-    G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++;
-    const release = {}, first = {};
-    for (let choice = 1; choice <= 10; choice++){
-      const d = newOffer(G); if (!d) break;
-      for (const k of ['pfadFestungsbau', 'metallverarbeitung', 'gelehrte']){
-        if (release[k] === undefined && G.optionAvailable(G.OPT[k])) release[k] = choice;
-        if (first[k] === undefined && d.options.includes(k)) first[k] = choice;
-      }
-      G.chooseDraft(d.options.findIndex(id => !G.OPT[id].pfad));
-    }
-    for (const k of Object.keys(release)) assert.ok(first[k] !== undefined && first[k] - release[k] <= C.KARTEN.maxWarten - 1, `${k}: frei ab Wahl ${release[k]}, erstmals angeboten in Wahl ${first[k]} (Seed ${seed})`);
-  }
+  assert.equal(G.cardTaken('eiserneKlingen'), 1);
+  assert.equal(G.optionAvailable(G.OPT.eiserneKlingen), false, 'gewählt: nie wieder');
+  assert.equal(G.optionAvailable(G.OPT.befestigungskunde), true, 'nicht gewählt: wieder ziehbar');
 });
 
 test('Kartenkennungen sind eindeutig (Bonus- und Pfadkarten)', () => {
@@ -174,71 +144,82 @@ test('Kartenkennungen sind eindeutig (Bonus- und Pfadkarten)', () => {
 /* ---------- Universität als Forschungsstätte (REQ-KP.04) ---------- */
 function withUni(seed = 9){
   const g = game('karten', seed), { G } = g;
-  G.S.material = 1e6; G.unlockKey('bau:universitaet'); G.build('universitaet');
-  G.S.draft.stacks.pfadFestungsbau = 1; G.S.draft.ver++;
+  G.S.material = 1e6; G.build('universitaet');
   return g;
 }
 const pickCard = (G, id) => { G.S.pendingDraft = { level: 1, options: [id, 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; return G.chooseDraft(0); };
 
 test('Technologiekarte öffnet genau ihre Forschungen; vorher sind sie gesperrt', () => {
   const { G } = withUni();
-  for (const id of ['r_mauerausbau3', 'r_turmausbau']) assert.equal(G.researchBlock(id), 'closed', id);
+  for (const id of ['r_wehrgang', 'r_schiessscharten']) assert.equal(G.researchBlock(id), 'closed', id);
   assert.ok(pickCard(G, 'befestigungskunde'));
-  for (const id of ['r_mauerausbau3', 'r_turmausbau']) assert.equal(G.researchBlock(id), null, id);
+  for (const id of ['r_wehrgang', 'r_schiessscharten']) assert.equal(G.researchBlock(id), null, id);
+  assert.equal(G.researchBlock('r_eisenwaffen'), 'closed', 'nur die Forschungen der gewählten Karte');
 });
 
 test('Pfadforschung gilt nur im Modus karten; im Standard ist sie nicht vorhanden', () => {
   const { G } = game('standard'); G.S.material = 1e6; G.build('universitaet');
-  assert.equal(G.researchBlock('r_mauerausbau3'), 'notInMode');
+  assert.equal(G.researchBlock('r_wehrgang'), 'notInMode');
 });
 
-test('Forschung läuft nur bei laufender Spielzeit; Abschluss öffnet die Stufe', () => {
-  const { G } = withUni(); pickCard(G, 'befestigungskunde');
-  assert.equal(G.stageSource('mauer') === null, true, 'Stufe 2 durch Festungsbau offen');
-  G.buy('mauer');
-  assert.equal(G.stageSource('mauer'), 'r_mauerausbau3', 'Stufe 3 braucht die Forschung');
-  assert.ok(G.startResearch('r_mauerausbau3'));
+test('Forschung läuft nur bei laufender Spielzeit; Abschluss wirkt und öffnet die Schmiede-Stufe 4', () => {
+  const { G } = withUni(); pickCard(G, 'eiserneKlingen'); G.build('schmiede');
+  G.S.lvl.qualitaet = 3;
+  assert.equal(G.stageSource('qualitaet'), 'r_eisenwaffen', 'Stufe 4 braucht die Forschung');
+  assert.equal(G.canBuy('qualitaet'), false);
+  assert.ok(G.startResearch('r_eisenwaffen'));
   const a = G.S.research.active[0], t0 = a.t;
   G.S.pendingDraft = { level: 1, options: ['bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1;   // offene Wahl pausiert die Zeit
   for (let i = 0; i < 40; i++) G.tick(0.05);
   assert.equal(a.t, t0, 'Pause: kein Fortschritt');
   G.S.pendingDraft = null; G.S.pendingLevels = 0;
-  for (let i = 0; i < 60 * 20 + 5; i++) G.tick(0.05);
-  assert.equal(G.researchTier('r_mauerausbau3'), 1);
-  assert.equal(G.stageSource('mauer'), null);
-  assert.ok(G.buy('mauer'), 'Stufe 3 kaufbar');
+  G.S.sections.forEach(s => { s.hp = 1e9; });
+  for (let i = 0; i < 20 * 60 + 5; i++){ G.S.pendingDraft = null; G.S.pendingLevels = 0; G.tick(0.05); }
+  assert.equal(G.researchTier('r_eisenwaffen'), 1);
+  assert.equal(G.stageSource('qualitaet'), null);
+  G.S.material = 1e6; assert.ok(G.buy('qualitaet'), 'Stufe 4 kaufbar');
+});
+
+test('Wehrgänge und Schießscharten wirken über die Pipeline der Karten', () => {
+  const { G } = withUni(); pickCard(G, 'befestigungskunde');
+  const wall0 = G.sectionMax(1), dmg0 = G.mMul('turretDmg');
+  G.S.research.done.r_wehrgang = 1; G.S.research.done.r_schiessscharten = 1; G.S.research.ver++;
+  assert.ok(Math.abs(G.sectionMax(1) / wall0 - 1.3) < 1e-9, 'Mauern +30 %');
+  assert.ok(Math.abs(G.mMul('repairCd') - 0.7) < 1e-9);
+  assert.ok(Math.abs(G.mMul('turretDmg') / dmg0 - 1.3) < 1e-9);
+  assert.equal(G.mMul('turretVsRanged'), 2);
 });
 
 test('Ein Forschungsplatz nimmt keine zweite Forschung an; mit zweitem Platz laufen beide', () => {
   const { G } = withUni(); pickCard(G, 'befestigungskunde');
-  assert.ok(G.startResearch('r_mauerausbau3'));
-  assert.equal(G.researchBlock('r_turmausbau'), 'busy');
+  assert.ok(G.startResearch('r_wehrgang'));
+  assert.equal(G.researchBlock('r_schiessscharten'), 'busy');
   G.S.draft.stacks.x = 0; G.S.research.done.r_logistik = 1; G.S.research.done.r_zweiterplatz = 1; G.S.research.ver++;
   assert.equal(G.researchSlots(), 2);
-  assert.ok(G.startResearch('r_turmausbau'));
+  assert.ok(G.startResearch('r_schiessscharten'));
   assert.equal(G.S.research.active.length, 2);
 });
 
 test('Abriss der Universität: Fertiges bleibt wirksam, Laufendes pausiert', () => {
   const { G } = withUni(); pickCard(G, 'befestigungskunde');
-  G.S.research.done.r_mauerausbau3 = 1; G.S.research.ver++;
-  G.S.lvl.mauer = 1;
-  assert.equal(G.stageSource('mauer'), null, 'Stufe 3 offen dank Forschung');
-  assert.ok(G.startResearch('r_turmausbau'));
+  G.S.sections.forEach(s => { s.hp = 1e9; });
+  G.S.research.done.r_wehrgang = 1; G.S.research.ver++;
+  assert.ok(G.mMul('repairCd') < 1, 'Wirkung der fertigen Forschung');
+  assert.ok(G.startResearch('r_schiessscharten'));
   const i = G.S.slots.findIndex(s => s && s.type === 'universitaet');
   G.demolish(i);
   const a = G.S.research.active[0], t0 = a.t;
   for (let i2 = 0; i2 < 100; i2++) G.tick(0.05);
   assert.equal(a.t, t0, 'ohne Universität kein Fortschritt');
-  assert.equal(G.researchTier('r_mauerausbau3'), 1, 'abgeschlossen bleibt');
-  assert.equal(G.stageSource('mauer'), null, 'die Wirkung bleibt');
+  assert.equal(G.researchTier('r_wehrgang'), 1, 'abgeschlossen bleibt');
+  assert.ok(G.mMul('repairCd') < 1, 'die Wirkung bleibt');
   G.build('universitaet');
   for (let i2 = 0; i2 < 100; i2++) G.tick(0.05);
   assert.ok(a.t > t0, 'mit neuer Universität geht es weiter');
 });
 
 /* ---------- Upgrade-Stufen, Einheitenersatz, neue Einheiten (REQ-KP.05) ---------- */
-test('Jede Upgrade-Stufe ab 2 hat genau eine Quelle; ohne Quelle nicht kaufbar', () => {
+test('Jede Upgrade-Stufe mit Quelle hat genau eine Quelle; Quartiere (Kaserne-Ausbau) sind ohne Karte kaufbar', () => {
   const { G, C } = game('karten');
   const q = G.pacingKeys();
   for (const [up, list] of Object.entries(q.stufen)){
@@ -247,32 +228,33 @@ test('Jede Upgrade-Stufe ab 2 hat genau eine Quelle; ohne Quelle nicht kaufbar',
     assert.equal(new Set(abs).size, abs.length, `${up}: jede Stufe genau eine Quelle`);
     for (const e of list) assert.ok(e.ab >= 1);
   }
-  G.S.material = 1e7; G.build('fabrik');
-  G.unlockKey('bau:schmiede'); G.unlockKey('bau:kaserne'); G.build('schmiede'); G.build('kaserne');
-  assert.equal(G.buy('ausbau'), false, 'Kaserne-Ausbau 2 braucht Forschung Reiter');
-  for (let i = 0; i < 3; i++) assert.ok(G.buy('qualitaet'), `Schmiede Stufe 1, Kauf ${i + 1}`);
-  assert.equal(G.buy('qualitaet'), false, 'Schmiede-Ausbau 2 braucht Forschung Eisenwaffen');
-  G.S.research.done.r_reiter = 1; G.S.research.done.r_eisenwaffen = 1; G.S.research.ver++;
-  assert.ok(G.buy('ausbau') && G.buy('qualitaet'));
+  G.S.material = 1e7; G.build('fabrik'); G.build('schmiede'); G.build('kaserne');
+  const cap = G.supplyCap();
+  assert.ok(G.buy('ausbau'), 'Quartiere: Ausbau der Kaserne ohne Forschung');
+  assert.equal(G.supplyCap(), cap + C.KASERNE_SUPPLY_PER_LEVEL, 'Versorgung steigt nur durch den Kauf');
+  for (let i = 0; i < 3; i++) assert.ok(G.buy('qualitaet'), `Schmiede Stufe ${i + 1}`);
+  assert.equal(G.buy('qualitaet'), false, 'Schmiede-Stufe 4 braucht die Forschung Eisenwaffen');
+  G.S.research.done.r_eisenwaffen = 1; G.S.research.ver++;
+  assert.ok(G.buy('qualitaet'));
 });
 
 test('Neue Einheiten: Reiter und Schildträger erst nach der Forschung, Karte öffnet sie', () => {
-  const { G } = withUni(); G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; G.unlockKey('bau:kaserne');
+  const { G } = withUni(); G.build('kaserne');
   for (const u of ['reiter', 'schild']) assert.equal(G.unitUnlocked(u), false, u);
   assert.equal(G.researchBlock('r_reiter'), 'closed');
   assert.ok(pickCard(G, 'fortgeschritteneTaktiken'));
   assert.equal(G.researchBlock('r_reiter'), null); assert.equal(G.researchBlock('r_schild'), null);
   assert.ok(G.startResearch('r_reiter'));
+  G.S.sections.forEach(s => { s.hp = 1e9; });
   for (let i = 0; i < 20 * 80; i++) G.tick(0.05);
   assert.equal(G.researchTier('r_reiter'), 1);
   assert.ok(G.unitUnlocked('reiter') && !G.unitUnlocked('schild'));
   assert.ok(G.spawn('reiter') && G.S.queue.at(-1).type === 'reiter');
-  assert.equal(G.stageSource('ausbau'), null, 'Kaserne-Ausbau 2 durch Forschung Reiter');
   assert.equal(G.researchBlock('r_schildtraeger'), 'notInMode', 'alte Forschung entfällt im Modus karten');
 });
 
 test('Eisenwaffen: Einheitenersatz wertet Warteschlange und Feld auf, die Zahl bleibt gleich', () => {
-  const { G } = withUni(); G.S.draft.stacks.metallverarbeitung = 1; G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; G.unlockKey('einheit:werfer');
+  const { G } = withUni(); G.build('kaserne');
   assert.ok(pickCard(G, 'eiserneKlingen'));
   G.spawn('laeufer'); G.spawn('werfer');
   G.addFormation('p', 1, ['laeufer', 'werfer', 'laeufer'], 120);
@@ -294,68 +276,43 @@ test('Ersatzeinheiten erben die Werfer-Karten (Lange Wurfarme)', () => {
   assert.equal(G.unitRange('p', 'bogenschuetze'), game('karten').C.UNITS.bogenschuetze.range + 25);
 });
 
-/* ---------- Wagnis, Exklusivpfad, Mindesttempo (REQ-KP.06, KP.07) ---------- */
+/* ---------- Wagnis, Exklusivpfad (REQ-KP.06, KP.07) ---------- */
 test('Wagnis-Karten wirken dauerhaft mit Nachteil', () => {
-  const { G } = withUni(); G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; G.unlockKey('einheit:werfer');
+  const { G } = withUni(); G.build('kaserne');
   G.addFormation('p', 1, ['laeufer', 'werfer'], 100);
   const hp0 = G.unitStats('p', 'werfer').hp, d0 = G.mMul('rangedDmg');
   assert.ok(pickCard(G, 'glaskanonen'));
   assert.equal(G.mMul('rangedDmg'), d0 * 2);
   assert.equal(G.unitStats('p', 'werfer').hp, 1, 'Fernkämpfer haben 1 Lebenspunkt');
   assert.equal(G.unitStats('p', 'laeufer').hp > 1, true, 'Nahkämpfer unberührt');
-  const g2 = withUni().G; g2.S.draft.stacks.echtesMilitaer = 1; g2.S.draft.ver++;
+  const g2 = withUni().G; g2.build('kaserne');
   const sup = g2.supplyCap(), m0 = g2.mMul('materialYield');
   assert.ok(pickCard(g2, 'volleAuslastung'));
   assert.equal(g2.mMul('materialYield'), m0 * 0.5);
-  assert.ok(g2.supplyCap() >= Math.min(g2.C_MAX || 99, sup * 2) || g2.supplyCap() > sup, 'Versorgung steigt');
+  assert.ok(g2.supplyCap() > sup, 'Versorgung steigt');
   assert.ok(hp0 > 1);
 });
 
-test('Wagnis: höchstens eine je Angebot, erst ab Wahl 5 und nur mit Echtem Militär', () => {
-  const { G } = game('karten', 4); G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; G.S.pfad.choices = 4;
+test('Wagnis: höchstens eine je Angebot, erst ab Wahl 5 und nur mit Kaserne', () => {
+  const { G } = game('karten', 4); G.S.material = 1e6; G.build('kaserne'); G.S.pfad.choices = 4;
   assert.equal(G.optionAvailable(G.OPT.glaskanonen), true);
   const g2 = game('karten', 4).G; g2.S.pfad.choices = 4;
-  assert.equal(g2.optionAvailable(g2.OPT.glaskanonen), false, 'ohne Echtes Militär');
-  const g3 = game('karten', 4).G; g3.S.draft.stacks.echtesMilitaer = 1; g3.S.pfad.choices = 3;
+  assert.equal(g2.optionAvailable(g2.OPT.glaskanonen), false, 'ohne Kaserne');
+  const g3 = game('karten', 4).G; g3.S.material = 1e6; g3.build('kaserne'); g3.S.pfad.choices = 3;
   assert.equal(g3.optionAvailable(g3.OPT.glaskanonen), false, 'vor Wahl 5');
 });
 
 test('Exklusivpaar: nach Wahl einer Karte erscheint die andere nie wieder; ihre Forschung und Einheiten entfallen', () => {
   for (const [a, b] of [['fortgeschritteneTaktiken', 'ballistik'], ['ballistik', 'fortgeschritteneTaktiken']]){
-    const { G } = withUni(); G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; G.S.pfad.choices = 3;
+    const { G } = withUni(); G.S.pfad.choices = 3;
     assert.equal(G.optionAvailable(G.OPT[a]) && G.optionAvailable(G.OPT[b]), true, 'vorher beide ziehbar');
     assert.ok(pickCard(G, a));
     assert.equal(G.optionAvailable(G.OPT[b]), false);
     assert.equal(G.cardExcluded(b), true);
-    for (let seed = 1; seed <= 300; seed++){ const g = withUni(seed).G; g.S.draft.stacks.echtesMilitaer = 1; g.S.draft.stacks[a] = 1; g.S.draft.ver++; g.S.pfad.choices = 5;
+    for (let seed = 1; seed <= 300; seed++){ const g = withUni(seed).G; g.S.draft.stacks[a] = 1; g.S.draft.ver++; g.S.pfad.choices = 5;
       const d = newOffer(g); if (d) assert.ok(!d.options.includes(b), `${b} erscheint nicht (Seed ${seed})`); }
   }
-  const { G } = withUni(); G.S.draft.stacks.echtesMilitaer = 1; G.S.pfad.choices = 3; pickCard(G, 'ballistik');
-  assert.equal(G.stageSource('ausbau') !== null, true);
+  const { G } = withUni(); G.build('kaserne'); G.S.pfad.choices = 3; pickCard(G, 'ballistik');
   assert.ok(G.startResearch('r_armbrust')); G.rushResearch('r_armbrust');
-  assert.equal(G.stageSource('ausbau'), null, 'Kaserne-Ausbau 2 öffnet auch über die Fernkampflinie');
   assert.ok(G.unitUnlocked('armbrust'));
-});
-
-test('Mindesttempo: nach maxAbstand ohne Wahl wird die nächste fällig, die EP-Schwelle der folgenden bleibt', () => {
-  const { G, C } = game('karten', 6);
-  G.S.sections.forEach(s => { s.hp = 1e9; });
-  const nextThreshold = G.xpNeed(G.S.level + 1);                  // Schwelle der nächsten EP-Wahl vor der freien Wahl
-  const z1 = C.KARTEN.fahrplan.ziele[0];                         // die erste Wahl ist spätestens zur ersten Zielzeit fällig
-  for (let i = 0; i < 20 * (z1 + 2) && !G.S.pendingDraft; i++) G.tick(0.05);
-  assert.ok(G.S.pendingDraft, 'Wahl fällig nach maxAbstand');
-  assert.ok(G.S.t >= z1 - 0.1 && G.S.t < z1 + 2);
-  assert.equal(G.S.level, 1); assert.equal(G.S.pfad.free, 1);
-  assert.equal(G.xpNeed(G.S.level + 1), nextThreshold, 'Schwelle der folgenden Wahl unverändert');
-  G.chooseDraft(0);
-  assert.equal(G.S.pendingDraft, null);
-  const t1 = G.S.t;
-  for (let i = 0; i < 20 * (C.KARTEN.maxAbstand - 5) && !G.S.pendingDraft; i++) G.tick(0.05);
-  assert.equal(G.S.pendingDraft, null, 'bis maxAbstand keine weitere freie Wahl');
-});
-
-test('Standardmodus: kein Mindesttempo, keine Pfadkarten im Angebot', () => {
-  const { G, C } = game('standard', 6); G.S.sections.forEach(s => { s.hp = 1e9; });
-  for (let i = 0; i < 20 * (C.KARTEN.maxAbstand + 30); i++) G.tick(0.05);
-  assert.equal(G.S.pfad.free, 0);
 });

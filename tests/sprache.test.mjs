@@ -42,7 +42,7 @@ test('Ersatztexte des Tutorials stehen wörtlich in den Sprachdateien (KP.08)', 
   assert.equal(I.de['tut.greet1'], 'Willkommen, Statthalter. Ich bin dein Quartiermeister.');
   assert.equal(I.en['tut.greet1'], 'Welcome, governor. I am your quartermaster.');
   assert.equal(I.de['tut.karte.task'], 'Wähle eine Karte. Sie verändert dein Reich.');
-  assert.equal(I.de['tut.bye1.karten'], 'Vieles ist noch verschlossen. Deine Karten öffnen den Weg.');
+  assert.equal(I.de['tut.bye1.karten'], 'Mauer, Türme, Schmiede, Universität – alles steht bereit. Deine Karten weisen den Weg.');   // Teil 5: Grundausstattung ab Start
   assert.equal(I.de['tut.bye1'], 'Mauer, Türme, Schmiede, Universität – vieles wartet darauf, entdeckt zu werden.');
   assert.equal(I.de['tut.bye2'], 'Was neu ist, ist markiert. Bewahre das Tor, Statthalter.');
   assert.equal(I.en['tut.xpBounty'], '+{n} experience');

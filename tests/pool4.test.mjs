@@ -12,7 +12,7 @@ function game(pacing = 'karten', seed = 7, diff = 'normal', tweak = null){
 }
 const offered = (G, id) => G.optionAvailable(G.OPT[id]);
 const choose = (G, id) => { G.S.draft.stacks[id] = (G.S.draft.stacks[id] || 0) + 1; G.S.draft.ver++; };
-const REMOVED_CARDS = ['kriegserfahrung', 'serienbau', 'bauleitung'], REMOVED_RESEARCH = ['r_ingenieur'];
+const REMOVED_CARDS = ['serienbau', 'bauleitung'], REMOVED_RESEARCH = ['r_ingenieur'];       // Teil 5 (REQ-K5.04): Kriegserfahrung kehrt in den Pool zurück
 
 test('S.02 C2 / S.03: gestrichene Karten sind im Modus karten nie ziehbar, im Modus standard unverändert', () => {
   for (const seed of [1, 2, 3]){
@@ -31,6 +31,7 @@ test('S.02 C2 / S.03: gestrichene Karten sind im Modus karten nie ziehbar, im Mo
   S.S.material = 1e7;
   for (const id of ['kriegserfahrung', 'serienbau', 'bauleitung']) assert.ok(S.OPT[id], `${id} existiert`);
   assert.equal(offered(S, 'kriegserfahrung'), true, 'Standard: Kriegserfahrung weiter ziehbar');
+  assert.equal(offered(game('karten').G, 'kriegserfahrung'), true, 'Teil 5: Kriegserfahrung im Modus karten wieder ziehbar');
   assert.equal(offered(S, 'bauleitung'), true, 'Standard: Bauleitung weiter ziehbar');
 });
 
@@ -107,41 +108,25 @@ test('S.03: Handelskontor wird im Modus karten erst angeboten, wenn der Zinsdeck
   assert.equal(S.S.stats.zinsDeckel, undefined, 'Standard: keine neuen Zähler');
 });
 
-test('S.02 C4: Kaserne ist ab Start baubar, Werfer erst mit „Echtes Militär“ (+2 Versorgung)', () => {
-  const { G } = game('karten');
+test('Teil 5 (REQ-K5.02): Kaserne und Werfer sind ab Start da; Versorgung steigt nur durch Kauf (Quartiere)', () => {
+  const { G, C } = game('karten');
   G.S.material = 1e7;
+  assert.equal(G.supplyCap(), C.SUPPLY_CAP_START, 'ohne Kaserne gilt der Startwert');
   assert.equal(G.isBuildable('kaserne'), true, 'baubar ohne Karte');
   assert.equal(G.buildBlock(0, 'kaserne'), null);
   assert.equal(G.buildAt(0, 'kaserne'), true);
   assert.equal(G.unitUnlocked('laeufer'), true);
-  assert.equal(G.unitUnlocked('werfer'), false, 'Werfer erst mit der Karte');
+  assert.equal(G.unitUnlocked('werfer'), true, 'Werfer ohne Karte');
+  assert.equal(G.supplyCap(), C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL, 'die Kaserne gibt die erste Stufe');
   const cap = G.supplyCap();
-  choose(G, 'echtesMilitaer');
-  G.unlockKey('einheit:werfer');
-  assert.equal(G.supplyCap() - cap, 2, '+2 Versorgung');
-  assert.equal(G.unitUnlocked('werfer'), true);
-  // Ausbau (Grundausbau darüber hinaus) bleibt an Forschung gebunden
-  assert.ok(G.stageSource('ausbau'), 'Ausbau der Kaserne braucht weiterhin Forschung');
-  const { P } = game('karten');
-  const c = P.karten.find(k => k.id === 'echtesMilitaer');
-  assert.ok(!c.schaltetFrei.includes('bau:kaserne'));
-  assert.equal(G.pacingKeys().gesperrt.filter(k => k === 'bau:kaserne').length, 0, 'Kaserne nicht gesperrt');
-});
-
-test('S.02 C4: Gelehrte und Metallverarbeitung sind in der ersten Wahl ziehbar', () => {
-  const { G } = game('karten');
-  assert.equal(G.S.pfad.choices, 0);
-  assert.equal(offered(G, 'gelehrte'), true);
-  assert.equal(offered(G, 'metallverarbeitung'), true);
-  assert.equal(offered(G, 'echtesMilitaer'), true);
-  assert.equal(offered(G, 'handel'), false, 'Handel braucht Gelehrte');
-  // über viele erste Angebote erscheinen beide
-  const seen = new Set();
-  for (let seed = 1; seed <= 60; seed++){
-    const { G: g } = game('karten', seed);
-    for (const id of g.drawOptionsKarten(3)) seen.add(id);
-  }
-  for (const id of ['gelehrte', 'metallverarbeitung']) assert.ok(seen.has(id), `${id} in einer ersten Wahl gezogen`);
+  assert.equal(G.stageSource('ausbau'), null, 'Quartiere ohne Forschung kaufbar');
+  assert.ok(G.buy('ausbau')); assert.equal(G.supplyCap() - cap, C.KASERNE_SUPPLY_PER_LEVEL, '+2 Versorgung je Stufe');
+  // keine Karte, keine Forschung und kein Spielzustand hebt die Versorgung ohne Kauf (Karten mit Versorgungswirkung sind Bonuskarten oder Wagnis)
+  const { P, G: H } = game('karten');
+  for (const k of P.karten) if (k.familie === 'technologie') for (const t of k.tiers) assert.ok(!(t.effect || []).some(e => e.stat === 'supply'), `${k.id} gibt Versorgung`);
+  for (const r of P.forschungen) for (const t of r.tiers) assert.ok(!(t.effect || []).some(e => e.stat === 'supply' || e.stat === 'supplyMult'), `${r.id} gibt Versorgung`);
+  assert.equal(H.supplyCap(), C.SUPPLY_CAP_START);
+  assert.equal(G.pacingKeys().gesperrt.filter(k => k === 'bau:kaserne' || k === 'einheit:werfer').length, 0, 'weder Kaserne noch Werfer gesperrt');
 });
 
 test('S.02 C3: Schwellen je Grad überschreiben nur den betroffenen Grad', () => {

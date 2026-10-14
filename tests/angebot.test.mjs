@@ -17,7 +17,7 @@ const exhaust = (G, id) => { G.S.draft.stacks[id] = G.OPT[id].tiers.length; G.S.
 
 /* Je Bonuskarte: ein Spielstand, in dem ihre Wirkung null wäre (nicht angeboten), und einer, in dem sie wirkt (angeboten).
    Karten ohne Strukturbedingung wirken ab Spielbeginn; ihr „Wirkung null“-Zustand ist die höchste Stufe (nichts mehr zu gewinnen). */
-const CAPPED = G => { G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; open(G, 'bau:kaserne'); G.build('kaserne'); G.S.lvl.ausbau = 5; G.S.research.done.r_logistik = 3; G.S.research.ver++; };   // Versorgungslimit am Deckel (15)
+const CAPPED = G => { G.build('kaserne'); G.S.lvl.ausbau = 5; G.S.research.done.r_logistik = 3; G.S.research.ver++; };   // Versorgungslimit am Deckel (15)
 const CASES = {
   // Wirtschaft
   bessereFabriken: { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
@@ -30,14 +30,14 @@ const CASES = {
   nachtschicht:    { off: G => { G.S.level = 1; }, on: G => { G.S.level = 6; } },
   selbstlaeufer:   { off: G => { G.S.level = 1; }, on: G => { G.S.level = 3; } },
   handelskontor:   { off: G => {}, on: G => { open(G, 'bau:kontor'); G.build('kontor'); G.S.stats.zinsDeckel = 1; }, base: G => { G.S.level = 3; } },   // Teil 4: erst, wenn der Zinsdeckel erreicht wurde
-  kriegserfahrung: { entfaellt: true }, kriegsanleihe: {},
+  kriegserfahrung: {}, kriegsanleihe: {},                                // Teil 5: Kriegserfahrung kehrt in den Pool zurück (REQ-K5.04)
   // Armee
   aushebung:       { off: CAPPED },
   grosseArmee:     { off: CAPPED },
-  kriegstrommeln:  { off: G => {}, on: G => { G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; } },
-  schildwall:      { off: G => {}, on: G => { G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; } },
-  weitschuss:      { off: G => {}, on: G => open(G, 'einheit:werfer') },
-  langeWurfarme:   { off: G => {}, on: G => open(G, 'einheit:werfer') },
+  kriegstrommeln:  { off: G => {}, on: G => { G.build('kaserne'); } },        // Teil 5: Versorgung 5 gibt es mit der Kaserne (3 + 2), ohne Karte
+  schildwall:      { off: G => {}, on: G => { G.build('kaserne'); } },
+  weitschuss: {},                                                          // Teil 5: der Werfer ist ab Start verfügbar
+  langeWurfarme: {},
   drill: {}, belagerungsgeraet: {}, vorposten: {}, sappeure: {}, veteranen: {}, taktiker: {},
   // Basis
   turmkanoniere:   { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
@@ -114,7 +114,6 @@ test('1.000 Angebote in zufälligen Spielständen: keine angebotene Bonuskarte h
     if (r(5) < 0.3) for (let i = 0; i < G.S.slots.length; i++) if (!G.S.slots[i]) G.S.slots[i] = { type: 'fabrik' };
     if (r(6) < 0.4) open(G, 'einheit:werfer');
     if (r(7) < 0.3) G.S.lvl.turm_0 = 1 + Math.floor(r(8) * 3);
-    if (r(9) < 0.4) G.S.draft.stacks.echtesMilitaer = 1;
     if (r(10) < 0.2) G.S.research.done.r_logistik = 3;
     G.S.draft.ver++; G.S.research.ver++;
     G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.lastPickT = G.S.t - 1000; G.S.xpTotal = G.xpNeed(G.S.level + 1);
@@ -142,10 +141,9 @@ test('Kein Kartentitel kommt im Modus karten doppelt vor (de und en)', () => {
   }
 });
 
-test('Die Bonuskarte Festungsbau heißt im Modus karten Mauerwerk, die Pfadkarte behält den Namen', () => {
+test('Die Bonuskarte Festungsbau behält ihren Namen: die gleichnamige Pfadkarte entfiel mit Teil 5', () => {
   const I18N = loadI18n();
-  assert.equal(I18N.de['draft.festungsbau.name.karten'], 'Mauerwerk');
-  assert.equal(I18N.de['draft.festungsbau.name'], 'Festungsbau', 'Standardmodus unverändert');
-  assert.equal(I18N.de['kp.card.festungsbau.name'], 'Festungsbau');
-  assert.ok(I18N.en['draft.festungsbau.name.karten']);
+  assert.equal(I18N.de['draft.festungsbau.name'], 'Festungsbau');
+  assert.equal(I18N.de['draft.festungsbau.name.karten'], undefined, 'kein Sondername mehr im Modus karten');
+  assert.equal(I18N.de['kp.card.festungsbau.name'], undefined, 'die Pfadkarte gibt es nicht mehr');
 });

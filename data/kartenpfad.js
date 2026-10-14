@@ -1,8 +1,10 @@
-/* Klammerfront – Kartenpfad (Branch exp/kartenpfad, REQ-KP.01, KP.02): Pfadkarten und Freischaltungen, deklarativ.
+/* Klammerfront – Kartenpfad (Branch exp/kartenpfad, REQ-KP.01, KP.02; Teil 5 REQ-K5.02): Technologie- und Wagnis-Karten und ihre Forschungen, deklarativ.
    Gilt nur im Pacing-Modus 'karten'; im Modus 'standard' ist dieser Inhalt nicht im Pool und nichts gesperrt.
+   Teil 5 (Leitsatz des PO): Die Grundlagen jeder Strategie sind ohne Karte verfügbar (Fabrik, Kaserne, Mauer, Türme, Schmiede, Universität, Kontor, Läufer, Werfer samt ihren Ausbaustufen);
+   Karten öffnen eine Strategie. Die Bau-Karten (Echtes Militär, Festungsbau, Metallverarbeitung, Gelehrte, Handel) entfallen.
    Felder einer Karte:
-     id, familie    Kennung; 'bau' | 'technologie' | 'wagnis' (die Familie 'bonus' sind die Karten aus data/draft-options.js)
-     rarity         'common' | 'rare' | 'legendary' (Anzeige); gewicht = Grundgewicht im Angebot (relativ zu den Pfadkarten)
+     id, familie    Kennung; 'technologie' | 'wagnis' (die Familie 'bonus' sind die Karten aus data/draft-options.js, die Familie 'doktrin' steht in data/doktrinen.js)
+     rarity         'common' | 'rare' | 'legendary' (Anzeige); gewicht = Grundgewicht im Angebot (relativ zu den anderen Pfadkarten)
      abWahl         frühestens ab der n-ten Kartenwahl im Angebot
      benoetigt      Liste: Karten-Ids, Forschungs-Ids oder 'gebaut:<gebäude>', die vorhanden sein müssen
      schaltetFrei   Schlüssel: 'bau:<gebäude>', 'einheit:<typ>', 'stufe:<upgrade>:<n>' (Kauf ab Stufe n)
@@ -13,68 +15,54 @@
    Werte sind Startwerte (REQ-KP.02), Kalibrierung per Simulation. */
 const KF_PFAD = {
   karten: [
-    /* ---------- Bau: schaltet Gebäude oder Ausbaustufen sofort frei ---------- */
-    /* Teil 4 (REQ-S.02 C4): Die Kaserne ist ab Spielstart baubar (Läufer, Grundausbau); „Echtes Militär“ schaltet nur noch den Werfer frei und gibt +2 Versorgung. */
-    { id: 'echtesMilitaer', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
-      schaltetFrei: ['einheit:werfer'],
-      nameKey: 'kp.card.echtesMilitaer.name', descKey: 'kp.card.echtesMilitaer.desc', tiers: [{ effect: [{ stat: 'supply', add: 2 }] }] },
-    { id: 'pfadFestungsbau', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
-      schaltetFrei: ['stufe:turm_0:1', 'stufe:turm_2:1', 'stufe:mauer:1', 'stufe:stacheln:1', 'stufe:moertel:1'],
-      nameKey: 'kp.card.festungsbau.name', descKey: 'kp.card.festungsbau.desc', tiers: [{ effect: [] }] },
-    { id: 'metallverarbeitung', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
-      schaltetFrei: ['bau:schmiede'],
-      nameKey: 'kp.card.metallverarbeitung.name', descKey: 'kp.card.metallverarbeitung.desc', tiers: [{ effect: [] }] },
-    { id: 'gelehrte', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: [],
-      schaltetFrei: ['bau:universitaet'],
-      nameKey: 'kp.card.gelehrte.name', descKey: 'kp.card.gelehrte.desc', tiers: [{ effect: [] }] },
-    { id: 'handel', familie: 'bau', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['gelehrte'],
-      schaltetFrei: ['bau:kontor'],
-      nameKey: 'kp.card.handel.name', descKey: 'kp.card.handel.desc', tiers: [{ effect: [] }] },
-    /* ---------- Technologie: öffnet Forschungsoptionen in der Universität (REQ-KP.04) ---------- */
-    { id: 'fortgeschritteneTaktiken', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 3, benoetigt: ['echtesMilitaer', 'gebaut:universitaet'],
+    /* ---------- Technologie: öffnet Forschungsoptionen in der Universität (REQ-KP.04); erscheint, sobald eine Universität steht (Teil 5, REQ-K5.02) ---------- */
+    { id: 'fortgeschritteneTaktiken', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
       exklusivMit: ['ballistik'], oeffnetForschung: ['r_reiter', 'r_schild'],
       nameKey: 'kp.card.fortgeschritteneTaktiken.name', descKey: 'kp.card.fortgeschritteneTaktiken.desc', tiers: [{ effect: [] }] },
-    { id: 'ballistik', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 3, benoetigt: ['echtesMilitaer', 'gebaut:universitaet'],
+    { id: 'ballistik', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
       exklusivMit: ['fortgeschritteneTaktiken'], oeffnetForschung: ['r_armbrust', 'r_katapult'],
       nameKey: 'kp.card.ballistik.name', descKey: 'kp.card.ballistik.desc', tiers: [{ effect: [] }] },
-    { id: 'eiserneKlingen', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['metallverarbeitung', 'gebaut:universitaet'],
+    { id: 'eiserneKlingen', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
       oeffnetForschung: ['r_eisenwaffen'],
       nameKey: 'kp.card.eiserneKlingen.name', descKey: 'kp.card.eiserneKlingen.desc', tiers: [{ effect: [] }] },
-    /* ---------- Wagnis: spielverändernd mit Nachteil, dauerhaft (REQ-KP.07) ---------- */
-    { id: 'glaskanonen', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['echtesMilitaer'],
+    /* Teil 5: Mauer-, Turm- und Ausbaustufen gehören zur Grundausstattung; Befestigungskunde öffnet stattdessen zwei Forschungen mit eigener Wirkung (Vorschlag, zur Bestätigung) */
+    { id: 'befestigungskunde', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+      oeffnetForschung: ['r_wehrgang', 'r_schiessscharten'],
+      nameKey: 'kp.card.befestigungskunde.name', descKey: 'kp.card.befestigungskunde.desc', tiers: [{ effect: [] }] },
+    /* ---------- Wagnis: spielverändernd mit Nachteil, dauerhaft (REQ-KP.07); Fernkämpfer und Armee setzen eine Kaserne voraus ---------- */
+    { id: 'glaskanonen', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['gebaut:kaserne'],
       nameKey: 'kp.card.glaskanonen.name', descKey: 'kp.card.glaskanonen.desc',
       tiers: [{ effect: [{ stat: 'rangedDmg', mul: 2 }], drawback: [{ stat: 'rangedHpOne', add: 1 }] }] },
-    { id: 'volleAuslastung', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['echtesMilitaer'],
+    { id: 'volleAuslastung', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['gebaut:kaserne'],
       nameKey: 'kp.card.volleAuslastung.name', descKey: 'kp.card.volleAuslastung.desc',
       tiers: [{ effect: [{ stat: 'supplyMult', mul: 2 }], drawback: [{ stat: 'materialYield', mul: 0.5 }] }] },
-    { id: 'befestigungskunde', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 4, benoetigt: ['pfadFestungsbau', 'gebaut:universitaet'],
-      oeffnetForschung: ['r_mauerausbau3', 'r_turmausbau'],
-      nameKey: 'kp.card.befestigungskunde.name', descKey: 'kp.card.befestigungskunde.desc', tiers: [{ effect: [] }] },
   ],
 
   /* Forschungen der Pfadkarten (REQ-KP.04); Schema wie data/research.js, dazu:
        schaltetFrei   Schlüssel, die der Abschluss öffnet ('einheit:<typ>', 'stufe:<upgrade>:<n>')
        ersetzt        Einheitenersatz { von: nach }
      Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
-  /* Forschungen, die im Modus karten entfallen: Schildträger (eine Pfadforschung ersetzt sie) und Ingenieurskunst (Teil 4, REQ-S.03: nur Baukosten) */
+  /* Forschungen, die im Modus karten entfallen: Schildträger (eine Pfadforschung ersetzt sie), Ingenieurskunst (Teil 4, REQ-S.03: nur Baukosten) und der Hörsaal (Teil 5, REQ-K5.05:
+     das Forschungsbudget der Universität ersetzt ihn) */
   entfallen: ['r_schildtraeger', 'r_ingenieur'],
-  /* Karten, die im Modus karten nicht im Pool sind (Teil 4): Kriegserfahrung (REQ-S.02 C2, EP-Beschleunigung); Serienbau und Bauleitung (REQ-S.03:
-     einzige Wirkung verbilligt bzw. beschleunigt das Bauen). Im Modus standard bleiben sie unverändert. */
-  entfallenKarten: ['kriegserfahrung', 'serienbau', 'bauleitung'],
+  /* Karten, die im Modus karten nicht im Pool sind (Teil 4): Serienbau und Bauleitung (REQ-S.03: einzige Wirkung verbilligt bzw. beschleunigt das Bauen). Im Modus standard bleiben sie unverändert.
+     Kriegserfahrung kehrt mit Teil 5 zurück (REQ-K5.04, dort unter dem Namen „Lehrjahre“, Pool-Eintrag in data/draft-options.js). */
+  entfallenKarten: ['serienbau', 'bauleitung'],
   forschungen: [
     { id: 'r_reiter', branch: 'pfad', nameKey: 'kp.res.reiter.name', descKey: 'kp.res.reiter.desc',
-      schaltetFrei: ['einheit:reiter', 'stufe:ausbau:1'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },
+      schaltetFrei: ['einheit:reiter'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },
     { id: 'r_schild', branch: 'pfad', nameKey: 'kp.res.schild.name', descKey: 'kp.res.schild.desc',
       schaltetFrei: ['einheit:schild'], tiers: [{ cost: 320, timeS: 45, effect: [{ stat: 'unlockSchild', add: 1 }] }] },
     { id: 'r_armbrust', branch: 'pfad', nameKey: 'kp.res.armbrust.name', descKey: 'kp.res.armbrust.desc',
-      schaltetFrei: ['einheit:armbrust', 'stufe:ausbau:1'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },
+      schaltetFrei: ['einheit:armbrust'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },
     { id: 'r_katapult', branch: 'pfad', nameKey: 'kp.res.katapult.name', descKey: 'kp.res.katapult.desc',
       schaltetFrei: ['einheit:katapult'], tiers: [{ cost: 360, timeS: 50, effect: [] }] },
     { id: 'r_eisenwaffen', branch: 'pfad', nameKey: 'kp.res.eisenwaffen.name', descKey: 'kp.res.eisenwaffen.desc',
       schaltetFrei: ['stufe:qualitaet:4'], ersetzt: { laeufer: 'schwertkaempfer', werfer: 'bogenschuetze' }, tiers: [{ cost: 400, timeS: 50, effect: [] }] },
-    { id: 'r_mauerausbau3', branch: 'pfad', nameKey: 'kp.res.mauerausbau3.name', descKey: 'kp.res.mauerausbau3.desc',
-      schaltetFrei: ['stufe:mauer:2'], tiers: [{ cost: 300, timeS: 40, effect: [] }] },
-    { id: 'r_turmausbau', branch: 'pfad', nameKey: 'kp.res.turmausbau.name', descKey: 'kp.res.turmausbau.desc',
-      schaltetFrei: ['stufe:turm_0:2', 'stufe:turm_2:2', 'stufe:reichweite_0:1', 'stufe:reichweite_2:1', 'stufe:kadenz_0:1', 'stufe:kadenz_2:1'], tiers: [{ cost: 300, timeS: 40, effect: [] }] },
+    /* Ersatz für Mauerausbau III und Turmausbau (Teil 5): beide Stufen gehören zur Grundausstattung */
+    { id: 'r_wehrgang', branch: 'pfad', nameKey: 'kp.res.wehrgang.name', descKey: 'kp.res.wehrgang.desc',
+      tiers: [{ cost: 300, timeS: 40, effect: [{ stat: 'wallHp', mul: 1.3 }, { stat: 'repairCd', mul: 0.7 }] }] },
+    { id: 'r_schiessscharten', branch: 'pfad', nameKey: 'kp.res.schiessscharten.name', descKey: 'kp.res.schiessscharten.desc',
+      tiers: [{ cost: 300, timeS: 40, effect: [{ stat: 'turretDmg', mul: 1.3 }, { stat: 'turretVsRanged', mul: 2 }] }] },
   ],
 };

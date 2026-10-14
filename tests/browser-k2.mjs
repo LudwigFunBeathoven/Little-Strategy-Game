@@ -136,19 +136,18 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   check(s.build && s.army && s.mat && s.waves && !s.wall && !s.smithy && !s.uni && !s.cards && !s.xp && !s.sym && !s.supply && !s.armyst, `K2.04: Start: nur Bauen, Armee, Material, Wellen ${JSON.stringify(s)}`);
   const armyKas = () => p.evaluate(() => { __kf.selectTab('army'); const e = document.getElementById('armyKaserne'); return e.checkVisibility(); });
   await settle(p, 100);
-  check(!(await armyKas()), 'K2.04: Kaserne-Abschnitt nicht sichtbar, solange die Kaserne nicht baubar ist');
-  await p.evaluate(() => { __kf.G.unlockKey('bau:kaserne'); __kf.requestRender(); }); await settle(p, 150);
-  check(await armyKas(), 'K2.04: Kaserne-Abschnitt sichtbar, sobald die Kaserne baubar ist');
-  await p.evaluate(() => { __kf.G.S.material = 100000; __kf.G.tick(0.05); __kf.G.tick(0.05); __kf.requestRender(); }); await settle(p, 150);
-  check(await p.evaluate(() => [...document.querySelectorAll('#panel-wall .opt')].every(e => e.hidden || e.dataset.tooltip.startsWith('repair'))), 'K2.04/B3: ohne gewählte Karte sind Mauer, Türme, Stachelwall und Mörtelkolonne verborgen (nicht ausgegraut)');
-  s = await v(); check(!s.wall, `K2.04/B4: Reiter Mauer & Türme bleibt verborgen, solange nur gesperrte Ausbauten (Karte nicht gewählt) bereitstehen ${JSON.stringify(s)}`);
+  await armyKas(); await settle(p, 150);
+  check(await armyKas(), 'K2.04: Kaserne-Abschnitt sichtbar: die Kaserne ist ab Start baubar (Teil 5)');
+  // Teil 5: Mauer und Türme gehören zur Grundausstattung; sie erscheinen, sobald sie bezahlbar sind, nicht erst mit einer Karte
+  check(await p.evaluate(() => [...document.querySelectorAll('#panel-wall .opt')].every(e => e.hidden || e.dataset.tooltip.startsWith('repair'))), 'K2.04/B3: solange nichts bezahlbar ist, sind Mauer, Türme, Stachelwall und Mörtelkolonne verborgen');
+  s = await v(); check(!s.wall, `K2.04/B4: Reiter Mauer & Türme bleibt verborgen, solange kein Ausbau bezahlbar ist ${JSON.stringify(s)}`);
   await p.evaluate(() => { __kf.selectTab('build'); });
-  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.pfadFestungsbau = 1; G.S.material = 100000; G.tick(0.05); G.tick(0.05); __kf.requestRender(); }); await settle(p, 200);
-  s = await v(); check(s.wall, `K2.04/B4: Reiter Mauer & Türme erscheint, sobald die Karte gewählt (Ausbau freigeschaltet) ist ${JSON.stringify(s)}`);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 100000; G.tick(0.05); G.tick(0.05); __kf.requestRender(); }); await settle(p, 200);
+  s = await v(); check(s.wall, `K2.04/B4: Reiter Mauer & Türme erscheint, sobald ein Ausbau bezahlbar ist (ohne Karte) ${JSON.stringify(s)}`);
   await p.evaluate(() => __kf.selectTab('wall')); await settle(p, 200);
   const wallOpts = await p.evaluate(() => { __kf.G.S.lvl.mauer = 1; __kf.requestRender(); return 0; }); await settle(p, 200);
   const wallTxt = await p.evaluate(() => [...document.querySelectorAll('#panel-wall .opt')].filter(e => e.checkVisibility()).map(e => e.dataset.tooltip + '|' + e.textContent));
-  check(wallTxt.length >= 1 && wallTxt.every(x => !/Spezialkarte|freischaltbar/.test(x)) && wallTxt.some(x => x.startsWith('upg:mauer') && x.includes('Nächste Stufe noch nicht verfügbar')), `K2.04/B3: eine gesperrte Folgestufe nennt weder Karte noch Quelle ${JSON.stringify(wallTxt)}`);
+  check(wallTxt.length >= 1 && wallTxt.every(x => !/Spezialkarte|freischaltbar|Nächste Stufe noch nicht verfügbar/.test(x)) && wallTxt.some(x => x.startsWith('upg:mauer')), `K2.04/B3: die Folgestufe der Mauer ist ohne Karte kaufbar und nennt keine Quelle ${JSON.stringify(wallTxt)}`);
   await p.evaluate(() => { __kf.selectTab('build'); });
   await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = 3; G.S.xp = 3; __kf.requestRender(); }); await settle(p, 150);
   s = await v(); check(s.xp && s.sym, 'K2.04: EP und Kartensymbol ab dem ersten EP-Gewinn');
@@ -182,7 +181,8 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
 {
   const { ctx, p } = await open('pacing=karten');
   await p.evaluate(() => { __kf.G.S.material = 2500; });
-  const names = await p.evaluate(() => { const t = __kf.t, G = __kf.G, C = __kf.C; return { locked: [t('unit.werfer.name'), t('unit.schild.name'), t('unit.armbrust.name'), t('unit.katapult.name'), t('bld.schmiede.name'), t('bld.universitaet.name'), t('bld.kontor.name'), 'Festungsbau', 'Echtes Militär', 'Metallverarbeitung', 'Gelehrte'] }; });
+  // Teil 5: nur die Technologie-Inhalte sind noch gesperrt
+  const names = await p.evaluate(() => { const t = __kf.t, G = __kf.G, C = __kf.C; return { locked: [t('unit.schild.name'), t('unit.armbrust.name'), t('unit.katapult.name'), 'Eisenwaffen', 'Ballistik', 'Fortgeschrittene Taktiken'] }; });
   const texts = [];
   for (const tab of ['build', 'army', 'wall']){
     await p.evaluate(tab => { __kf.selectTab(tab); __kf.selectPlot(0); }, tab); await settle(p, 200);
@@ -190,7 +190,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   }
   await p.evaluate(() => __kf.selectTab('cards')); await settle(p, 150); texts.push(await p.evaluate(() => document.body.innerText));
   const all = texts.join('\n'), hit = names.locked.filter(n => new RegExp(`(^|[^\\p{L}])${n}([^\\p{L}]|$)`, 'u').test(all));
-  // Der Name der Kaserne darf stehen, weil sie baubar ist; Gesperrtes (Werfer, Schmiede, Universität …) nicht.
+  // Die Grundausstattung (Kaserne, Schmiede, Universität …) darf stehen; gesperrte Technologie (Reiter, Armbrust, Katapult …) nicht.
   check(hit.length === 0, `K2.05: im sichtbaren Text kommt kein gesperrter Inhalt vor${show(hit)}`);
   check(!/Freischaltung: Karte|Öffnet mit|Pfadübersicht/.test(all) && await p.evaluate(() => !document.getElementById('pathList') || document.getElementById('pathList').hidden), 'K2.05: keine Quellenangabe („Freischaltung: Karte …“, „Öffnet mit“), keine Pfadübersicht');
   await ctx.close();
@@ -202,10 +202,10 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   await settle(p, 600);                                                    // Grundlinie
   const hints = () => p.evaluate(() => JSON.parse(localStorage.getItem(__kf.C.HINTS_KEY) || '[]').filter(x => x.startsWith('disc:')));
   check((await hints()).length === 0, 'K2.06: vor dem Moment kein Entdeckungshinweis');
-  // drei gleichzeitige Freischaltungen: Reiter Mauer & Türme, Kaserne-Abschnitt, EP/Kartensymbol – in einem Bild
-  await p.evaluate(() => { const G = __kf.G; G.unlockKey('bau:kaserne'); G.S.draft.stacks.pfadFestungsbau = 1; G.S.xpTotal = 3; G.S.xp = 3; G.S.material = 100000; G.tick(0.05); G.tick(0.05); __kf.requestRender(); }); await settle(p, 500);
+  // zwei gleichzeitige Freischaltungen: Reiter Mauer & Türme (bezahlbar), EP/Kartensymbol – in einem Bild
+  await p.evaluate(() => { const G = __kf.G; G.S.xpTotal = 3; G.S.xp = 3; G.S.material = 100000; G.tick(0.05); G.tick(0.05); __kf.requestRender(); }); await settle(p, 500);
   const h1 = await hints();
-  check(h1.length === 1, `K2.06: drei gleichzeitige Freischaltungen lösen genau einen Hinweis aus ${JSON.stringify(h1)}`);
+  check(h1.length === 1, `K2.06: zwei gleichzeitige Freischaltungen lösen genau einen Hinweis aus ${JSON.stringify(h1)}`);
   check(await vis(p, '#tab-wall i.new'), 'K2.06: neuer Reiter trägt die Marke „neu“ am Reiterknopf');
   const fade = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--x') + '|' + (parseFloat(__kf.C.ENTDECKEN.einblendenMs) <= 300));
   check(fade.endsWith('true'), 'K2.06: Einblenden höchstens 300 ms (Konfiguration)');

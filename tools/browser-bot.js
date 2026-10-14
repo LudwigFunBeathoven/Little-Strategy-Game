@@ -61,12 +61,12 @@ function KF_BROWSER_BOT(G, profile, hooks){
 /* Pfadkarten (REQ-KP.09): Im Modus 'karten' wählt der Bot aus dem Angebot die Karte, die in seiner Pfadreihenfolge am weitesten vorn steht;
    steht keine darin, gilt die bisherige Regel der Strategie (null). Drei Pfad-Varianten messen die Strategievielfalt. */
 KF_BROWSER_BOT.PFAD_ORDER = {
-  militaer: ['echtesMilitaer', 'gelehrte', 'fortgeschritteneTaktiken', 'metallverarbeitung', 'eiserneKlingen'],
-  wissen:   ['gelehrte', 'metallverarbeitung', 'eiserneKlingen', 'echtesMilitaer', 'fortgeschritteneTaktiken'],
-  festung:  ['pfadFestungsbau', 'gelehrte', 'befestigungskunde', 'echtesMilitaer', 'metallverarbeitung'],
+  militaer: ['fortgeschritteneTaktiken', 'eiserneKlingen', 'ballistik', 'befestigungskunde'],       // Teil 5: nur noch Technologie-Karten (Bau-Karten entfallen)
+  wissen:   ['eiserneKlingen', 'befestigungskunde', 'fortgeschritteneTaktiken', 'ballistik'],
+  festung:  ['befestigungskunde', 'eiserneKlingen', 'fortgeschritteneTaktiken', 'ballistik'],
 };
 /* Pfadforschung: die Bots erforschen, was ihre Karten geöffnet haben, vor der Grundforschung (REQ-KP.09) */
-KF_BROWSER_BOT.PFAD_RESEARCH = ['r_eisenwaffen', 'r_reiter', 'r_schild', 'r_mauerausbau3', 'r_turmausbau'];
+KF_BROWSER_BOT.PFAD_RESEARCH = ['r_eisenwaffen', 'r_reiter', 'r_schild', 'r_wehrgang', 'r_schiessscharten'];
 KF_BROWSER_BOT.pfadResearch = function(G){
   if (G.pacing() !== 'karten') return null;
   return KF_BROWSER_BOT.PFAD_RESEARCH.find(id => G.RES[id] && G.researchBlock(id) === null) || null;

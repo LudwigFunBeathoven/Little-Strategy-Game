@@ -439,7 +439,7 @@ function pathStatus(){
   }
   return out;
 }
-const FAMILY_ORDER = ['bau', 'technologie', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
+const FAMILY_ORDER = ['technologie', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
 let chosenKey = '', draftKey = '';
 function renderChosen(){
   const ps = Stage.on() && !Disc.on() && G.S.pacing === 'karten' ? pathStatus() : [];
@@ -564,8 +564,10 @@ function renderLog(){
 /* ---------- Universität: Forschungsbaum (REQ-5.07) ---------- */
 const researchName = (r, tier) => r.tiers.length > 1 ? `${t(r.nameKey)} ${ROMAN[tier]}` : t(r.nameKey);
 function researchParams(r, tier){
-  const e = (r.tiers[Math.max(1, tier) - 1].effect || [])[0] || {};
-  return { e1: e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? effectValue({ stat: e.stat, add: e.add }) : '' };
+  const p = {};
+  (r.tiers[Math.max(1, tier) - 1].effect || []).forEach((e, i) => { p['e' + (i + 1)] = e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : e.add !== undefined ? effectValue({ stat: e.stat, add: e.add }) : ''; });
+  if (p.e1 === undefined) p.e1 = '';
+  return p;
 }
 function researchReason(id){
   const b = G.researchBlock(id), r = G.RES[id];

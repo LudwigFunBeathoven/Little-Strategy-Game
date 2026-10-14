@@ -77,7 +77,7 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1'); await calm(p);
   await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.drill = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 250);
   check(!(await vis(p, '#hudLines')), 'S.04: ein Zeichen: keine Linie sichtbar');
-  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 400);
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.kriegstrommeln = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 400);
   const hud = await p.evaluate(() => ({ vis: !!document.querySelector('#hudLines') && document.querySelector('#hudLines').checkVisibility(), text: document.querySelector('#lineRow').innerText.replace(/\s+/g, ' ') }));
   check(hud.vis && /Militär 1/.test(hud.text) && /2\/4/.test(hud.text), `S.04: Linie Militär Stufe 1 erscheint mit Zeichen bis zur nächsten Stufe ${show(hud)}`);
   const lh = await hintLike(p, /Linie Militär/);
@@ -99,13 +99,13 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
 {
   const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1');
   let lvl = 0; const offer = ids => p.evaluate(([ids, lv]) => { const G = __kf.G; G.S.pendingDraft = { level: lv, options: ids, rerolled: 0 }; G.S.pendingLevels = Math.max(1, G.S.pendingLevels); __kf.requestRender(); }, [ids, ++lvl]);
-  await offer(['drill', 'zinnen', 'gelehrte']); await settle(p, 1500);
+  await offer(['drill', 'zinnen', 'glaskanonen']); await settle(p, 1500);
   const before = await p.evaluate(() => [...document.querySelectorAll('.kcard .kc-sign')].map(e => e.textContent));
   check(before.length === 0, `S.04: vor Stufe 1 kein Zeichen an den Karten ${show(before)}`);
-  await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = null; G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.stacks.aushebung = 1; G.S.draft.ver++; });
-  await offer(['drill', 'zinnen', 'gelehrte']); await settle(p, 1500);
+  await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = null; G.S.draft.stacks.kriegstrommeln = 1; G.S.draft.stacks.aushebung = 1; G.S.draft.ver++; });
+  await offer(['drill', 'zinnen', 'glaskanonen']); await settle(p, 1500);
   const after = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(e => (e.querySelector('.kc-sign') || {}).textContent || ''));
-  check(/Militär/.test(after[0]) && /Verteidigung/.test(after[1]) && after[2] === '', `S.04: nach Stufe 1: Zeichen an Drill und Zinnen, keines an Gelehrte ${show(after)}`);
+  check(/Militär/.test(after[0]) && /Verteidigung/.test(after[1]) && after[2] === '', `S.04: nach Stufe 1: Zeichen an Drill und Zinnen, keines an Glaskanonen ${show(after)}`);
   check(errs.length === 0, `S.04 Karten: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }
@@ -113,7 +113,7 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
 /* ---------- Standardmodus: nichts davon ---------- */
 {
   const { ctx, p, errs } = await open('pacing=standard');
-  await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.build('fabrik'); G.S.t = 400; G.S.pfad.lastPickT = 400; __kf.selectTab('build'); __kf.selectPlot(0); G.S.draft.stacks.drill = 1; G.S.draft.stacks.echtesMilitaer = 1; G.S.draft.ver++; __kf.requestRender(); });
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.build('fabrik'); G.S.t = 400; G.S.pfad.lastPickT = 400; __kf.selectTab('build'); __kf.selectPlot(0); G.S.draft.stacks.drill = 1; G.S.draft.stacks.kriegstrommeln = 1; G.S.draft.ver++; __kf.requestRender(); });
   await settle(p, 400);
   check(!(await vis(p, '#ctxVariants .pick')) && !(await vis(p, '#hudLines')), 'standard: keine Aufwertung, keine Linienanzeige');
   check(errs.length === 0, `standard: keine Konsolenfehler${show(errs)}`);

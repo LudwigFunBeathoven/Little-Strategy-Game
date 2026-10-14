@@ -13,7 +13,6 @@ const KF_LINIEN = {
   linien: ['militaer', 'wirtschaft', 'verteidigung'],
   zeichen: {
     /* Pfadkarten (Gelehrte und Metallverarbeitung ohne Zeichen) */
-    echtesMilitaer: 'militaer', pfadFestungsbau: 'verteidigung', handel: 'wirtschaft',
     fortgeschritteneTaktiken: 'militaer', ballistik: 'militaer', eiserneKlingen: 'militaer', befestigungskunde: 'verteidigung',
     /* Wagnis-Karten (Glaskanonen, Volle Auslastung) ohne Zeichen: sie verändern die Regeln für alle Linien */
     /* Wirtschaft */

@@ -18,7 +18,7 @@ test('K2.03: jede Bonuskarte hat eine Wirkungszeile von höchstens 44 Zeichen (d
 });
 
 test('K2.03: Pfadkarten mit langer Freischaltliste und Wagnis haben eine eigene Wirkungszeile', () => {
-  for (const id of ['pfadFestungsbau', 'glaskanonen', 'volleAuslastung']) for (const lang of ['de', 'en'])
+  for (const id of ['glaskanonen', 'volleAuslastung']) for (const lang of ['de', 'en'])
     assert.ok(I[lang]['kp.eff.' + id] && fill(I[lang]['kp.eff.' + id]).length <= 44, `${lang} ${id}`);
 });
 

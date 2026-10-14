@@ -1008,43 +1008,43 @@ for (const [vw, vh] of [[1280, 720], [1920, 1080]]){
   await ctx.close();
 }
 
-/* ---------- Modus karten: gesperrte Inhalte, Pfadkarten auf der Bühne (REQ-KP.01, KP.02) ---------- */
+/* ---------- Modus karten: Grundausstattung ab Start, Technologie-Karten auf der Bühne (REQ-KP.01, KP.02; Teil 5 REQ-K5.02) ---------- */
 for (const lang of ['de', 'en']){
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if ((m.type() === 'error' || (m.type() === 'warning' && m.text().includes('[i18n]'))) && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
   await p.goto(base + `index.html?dev=1&tutorial=0&pacing=karten&entdecken=0&lang=${lang}&difficulty=easy`); await p.waitForTimeout(400);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.G.S.material = 3000; __kf.selectPlot(1); }); await p.waitForTimeout(250);
-  const srcName = id => p.evaluate(id => __kf.t(__kf.G.OPT[id].nameKey), id);
+  const srcName = id => p.evaluate(id => __kf.t(__kf.G.OPT[id] ? __kf.G.OPT[id].nameKey : __kf.G.RES[id].nameKey), id);
   const buildTxt = await p.evaluate(() => [...document.querySelectorAll('#ctxBuild .pick')].map(x => ({ type: x.dataset.tooltip.split(':')[1], dis: x.getAttribute('aria-disabled'), txt: x.textContent })));
-  const kas = buildTxt.find(x => x.type === 'kaserne'), sch = buildTxt.find(x => x.type === 'schmiede'), fab = buildTxt.find(x => x.type === 'fabrik');
-  // Teil 4 (REQ-S.02 C4): Die Kaserne ist ab Start baubar; die Schmiede bleibt gesperrt und nennt Metallverarbeitung
-  check(kas && kas.dis !== 'true' && sch && sch.dis === 'true' && sch.txt.includes(await srcName('metallverarbeitung')) && fab && fab.dis !== 'true', `[${lang}] Karten: Kaserne baubar, Schmiede gesperrt mit Quelle „${sch && sch.txt.slice(-40)}“, Fabrik frei`);
+  // Teil 5 (REQ-K5.02): Grundausstattung ab Start – nichts davon braucht eine Karte
+  check(['fabrik', 'kaserne', 'schmiede', 'universitaet', 'kontor'].every(ty => { const x = buildTxt.find(y => y.type === ty); return x && x.dis !== 'true'; }), `[${lang}] Karten: Fabrik, Kaserne, Schmiede, Universität und Kontor sind ab Start baubar ${JSON.stringify(buildTxt.map(x => [x.type, x.dis]))}`);
   await p.evaluate(() => __kf.selectTab('army')); await p.waitForTimeout(150);
-  const werfer = await p.evaluate(() => { const b = document.querySelector('[data-tooltip="unit:werfer"]'); return { vis: b && !b.hidden, dis: b && b.getAttribute('aria-disabled'), txt: b ? b.textContent : '', fresh: b ? !b.querySelector('i.new').hidden : null }; });
-  check(werfer.vis && werfer.dis === 'true' && werfer.txt.includes(await srcName('echtesMilitaer')) && werfer.fresh === false, `[${lang}] Karten: Werfer sichtbar, gesperrt, nennt die Karte, ohne Marke „neu“`);
+  const units = await p.evaluate(() => Object.fromEntries(['laeufer', 'werfer', 'schild', 'reiter', 'armbrust', 'katapult'].map(u => { const b = document.querySelector(`[data-tooltip="unit:${u}"]`); return [u, b ? { vis: !b.hidden, dis: b.getAttribute('aria-disabled'), txt: b.textContent, fresh: !b.querySelector('i.new').hidden } : null]; })));
+  check(units.werfer.vis && units.werfer.dis === 'false', `[${lang}] Karten: Werfer ab Start verfügbar ${JSON.stringify(units.werfer)}`);
+  check(units.reiter.vis && units.reiter.dis === 'true' && units.reiter.txt.includes(await srcName('r_reiter')) && units.reiter.fresh === false, `[${lang}] Karten: Reiter bleibt gesperrt, nennt die Forschung, ohne Marke „neu“`);
   await p.evaluate(() => __kf.selectTab('wall')); await p.waitForTimeout(150);
-  const wall = await p.evaluate(() => ['upg:mauer', 'upg:turm_0', 'upg:stacheln'].map(k => { const b = document.querySelector(`[data-tooltip="${k}"]`); return b && !b.hidden && b.getAttribute('aria-disabled') === 'true' && b.textContent; }));
-  check(wall.every(x => x && x.includes(lang === 'de' ? 'Festungsbau' : 'Fortification')), `[${lang}] Karten: Mauerstufe, Turm und Stachelwall sind gesperrt und nennen die Karte Festungsbau`);
+  const wall = await p.evaluate(() => ['upg:mauer', 'upg:turm_0', 'upg:stacheln'].map(k => { const b = document.querySelector(`[data-tooltip="${k}"]`); return b && !b.hidden && b.getAttribute('aria-disabled') === 'false'; }));
+  check(wall.every(Boolean), `[${lang}] Karten: Mauerstufe, Turm und Stachelwall sind ab Start kaufbar ${JSON.stringify(wall)}`);
   check((await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }))).t === 0 && (await p.evaluate(() => __kf.explAudit().length)) === 0, `[${lang}] Karten: Tooltip und Erklärzeile an jedem Element (Startzustand)`);
-  // erste Wahl: Pfadkarte auf der Bühne mit „Schaltet frei:“
-  await p.evaluate(() => { const G = __kf.G; G.S.level = 1; G.S.pendingLevels = 1; G.S.xpTotal = G.xpNeed(1); G.S.xp = G.S.xpTotal;
+  // erste Wahl mit Universität: Technologie-Karte auf der Bühne mit „Öffnet Forschung:“
+  await p.evaluate(() => { const G = __kf.G; G.build('universitaet'); G.S.level = 1; G.S.pendingLevels = 1; G.S.xpTotal = G.xpNeed(1); G.S.xp = G.S.xpTotal;
     G.S.units.push({ id: 99990, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
   await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
   const cards = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(c => ({ fam: [...c.classList].find(x => x.startsWith('fam-')), txt: c.textContent })));
-  check(cards.length >= 2 && cards.some(c => c.fam !== 'fam-bonus' && /⌂|▲|⇧/.test(c.txt)) && cards.some(c => c.fam === 'fam-bonus'), `[${lang}] Karten: Angebot mit Pfad- und Bonuskarte, Pfadkarte nennt, was sie freischaltet ${JSON.stringify(cards.map(c => c.fam))}`);
-  // Detailzeile der Pfadkarte nennt die Rückkehr in den Stapel
+  check(cards.length === 4 && cards.filter(c => c.fam === 'fam-technologie').length === 2 && cards.some(c => c.fam === 'fam-bonus' && !/⚗/.test(c.txt)) && cards.filter(c => c.fam === 'fam-technologie').every(c => /⚗/.test(c.txt)), `[${lang}] Karten: Angebot mit Technologie- und Bonuskarten, Technologie nennt ihre Forschung ${JSON.stringify(cards.map(c => c.fam))}`);
+  // Detailzeile der Pfadkarte nennt die Rückkehr in den Stapel nicht
   await p.evaluate(() => { const i = [...document.querySelectorAll('.kcard')].findIndex(c => !c.classList.contains('fam-bonus')); document.querySelectorAll('.kcard')[i].focus(); });
   await p.waitForTimeout(100);
   check(!(await p.evaluate(() => document.getElementById('stageDetail').textContent)).includes(await p.evaluate(() => __kf.t('kp.card.returns'))), `[${lang}] Karten: Detailzeile ohne Hinweis auf die Rückkehr in den Stapel (REQ-K2.03)`);
   const aud = await p.evaluate(() => ({ t: __kf.tooltipAudit(), e: __kf.explAudit() }));
-  check(aud.t.length === 0 && aud.e.length === 0, `[${lang}] Karten: Bühne mit Pfadkarten: Tooltip und Erklärzeile${show([...aud.t, ...aud.e])}`);
-  // Pfadkarte wählen: Inhalt wird baubar
+  check(aud.t.length === 0 && aud.e.length === 0, `[${lang}] Karten: Bühne mit Technologie-Karten: Tooltip und Erklärzeile${show([...aud.t, ...aud.e])}`);
+  // Technologie-Karte wählen: ihre Forschungen werden verfügbar, die der anderen bleiben gesperrt
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
-  const pickedId = await p.evaluate(() => { const d = __kf.G.S.pendingDraft; const i = d.options.findIndex(id => __kf.G.OPT[id].pfad); __kf.G.chooseDraft(i); return d.options[i]; });
-  const opened = await p.evaluate(id => ({ card: id, kaserne: __kf.G.isBuildable('kaserne'), werfer: __kf.G.unitUnlocked('werfer'), mauer: !__kf.G.stageSource('mauer'), schmiede: __kf.G.isBuildable('schmiede') }), pickedId);
-  const okOpen = { echtesMilitaer: o => o.werfer && !o.schmiede && !o.mauer, pfadFestungsbau: o => o.mauer && !o.werfer && !o.schmiede, metallverarbeitung: o => o.schmiede && !o.werfer && !o.mauer };
-  check(opened.kaserne && (okOpen[opened.card] ? okOpen[opened.card](opened) : !opened.werfer && !opened.schmiede), `[${lang}] Karten: gewählte Pfadkarte schaltet genau ihre Inhalte frei (Kaserne ab Start) ${JSON.stringify(opened)}`);
+  const opened = await p.evaluate(() => { const G = __kf.G, d = G.S.pendingDraft; const i = d.options.findIndex(id => G.OPT[id].family === 'technologie'); const id = d.options[i]; G.chooseDraft(i);
+    const own = G.OPT[id].pfad.oeffnetForschung, other = Object.values(G.OPT).filter(o => o.pfad && o.family === 'technologie' && o.id !== id).flatMap(o => o.pfad.oeffnetForschung);
+    return { card: id, own: own.map(r => G.researchBlock(r)), other: other.map(r => G.researchBlock(r)) }; });
+  check(opened.own.every(x => x === null) && opened.other.every(x => x === 'closed'), `[${lang}] Karten: gewählte Technologie-Karte öffnet genau ihre Forschungen ${JSON.stringify(opened)}`);
   check(errs.length === 0, `[${lang}] Karten: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }
@@ -1082,23 +1082,23 @@ for (const lang of ['de', 'en']){
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
   await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&entdecken=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
-  await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.unlockKey('bau:universitaet'); G.build('universitaet'); document.querySelector('#hintBox').hidden = true; __kf.selectTab('uni'); }); await p.waitForTimeout(250);
-  const u1 = await p.evaluate(() => ({ box: !document.getElementById('resPfad').hidden, groups: [...document.querySelectorAll('#resPfad .res-group:not([hidden])')].map(g => g.textContent), dis: [...document.querySelectorAll('[data-tooltip="res:r_mauerausbau3"]')].map(b => b.getAttribute('aria-disabled')) }));
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.build('universitaet'); document.querySelector('#hintBox').hidden = true; __kf.selectTab('uni'); }); await p.waitForTimeout(250);
+  const u1 = await p.evaluate(() => ({ box: !document.getElementById('resPfad').hidden, groups: [...document.querySelectorAll('#resPfad .res-group:not([hidden])')].map(g => g.textContent), dis: [...document.querySelectorAll('[data-tooltip="res:r_wehrgang"]')].map(b => b.getAttribute('aria-disabled')) }));
   check(u1.box && u1.groups.length >= 1 && u1.groups.some(g => g.includes('Befestigungskunde') && g.includes('Öffnet mit: Karte Befestigungskunde')) && u1.groups.length === 4 && u1.dis[0] === 'true', `Universität/karten: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“ ${JSON.stringify(u1.groups)}`);
-  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.pfadFestungsbau = 1; G.S.pendingDraft = { level: 1, options: ['befestigungskunde', 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0); G.startResearch('r_mauerausbau3'); __kf.requestRender(); });
+  await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = { level: 1, options: ['befestigungskunde', 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0); G.startResearch('r_wehrgang'); __kf.requestRender(); });
   await p.waitForTimeout(300);
-  const u2 = await p.evaluate(() => ({ run: document.getElementById('resActive').textContent, dis: document.querySelector('[data-tooltip="res:r_turmausbau"]').getAttribute('aria-disabled'), txt: document.querySelector('[data-tooltip="res:r_turmausbau"]').textContent }));
-  check(u2.run.includes('Mauerausbau III') && u2.run.includes('0:40') && !u2.txt.includes('Öffnet mit'), `Universität/karten: laufende Forschung mit Restzeit, zweite Forschung geöffnet ${JSON.stringify([u2.run.slice(0, 40), u2.dis])}`);
+  const u2 = await p.evaluate(() => ({ run: document.getElementById('resActive').textContent, dis: document.querySelector('[data-tooltip="res:r_schiessscharten"]').getAttribute('aria-disabled'), txt: document.querySelector('[data-tooltip="res:r_schiessscharten"]').textContent }));
+  check(u2.run.includes('Wehrgänge') && u2.run.includes('0:40') && !u2.txt.includes('Öffnet mit'), `Universität/karten: laufende Forschung mit Restzeit, zweite Forschung geöffnet ${JSON.stringify([u2.run.slice(0, 40), u2.dis])}`);
   const a = await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }));
   check(a.t === 0 && a.e === 0 && errs.length === 0, `Universität/karten: Tooltips, Erklärzeilen, keine Fehler${show(errs)}`);
   // Sammlung mit Pfadübersicht: Status je Pfadkarte und Forschung
   await p.evaluate(() => __kf.selectTab('cards')); await p.waitForTimeout(250);
   const pl = await p.evaluate(() => [...document.querySelectorAll('#pathList li')].map(li => li.textContent));
-  check(pl.length === 18 && pl.some(x => x.includes('Befestigungskunde') && x.includes('gewählt')) && pl.some(x => x.includes('Mauerausbau III') && x.includes('läuft')) && pl.some(x => x.includes('Ballistik') && x.includes('gesperrt')) && pl.some(x => x.includes('Gelehrte') && x.includes('verfügbar')), `Sammlung/karten: Pfadübersicht mit Status (${pl.length} Einträge) ${JSON.stringify(pl.slice(0, 4))}`);
+  check(pl.length === 13 && pl.some(x => x.includes('Befestigungskunde') && x.includes('gewählt')) && pl.some(x => x.includes('Wehrgänge') && x.includes('läuft')) && pl.some(x => x.includes('Ballistik') && x.includes('verfügbar')) && pl.some(x => x.includes('Glaskanonen') && x.includes('gesperrt')), `Sammlung/karten: Pfadübersicht mit Status (${pl.length} Einträge) ${JSON.stringify(pl.slice(0, 4))}`);
   // Standardmodus: keine Pfadforschung
   const ctx2 = await b.newContext({ viewport: { width: 1280, height: 720 } }), p2 = await ctx2.newPage();
   await p2.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p2.waitForTimeout(300);
-  check(await p2.evaluate(() => document.getElementById('resPfad').hidden && [...document.querySelectorAll('[data-tooltip="res:r_mauerausbau3"]')].every(b => b.hidden)), 'Universität/standard: keine Pfadforschung sichtbar');
+  check(await p2.evaluate(() => document.getElementById('resPfad').hidden && [...document.querySelectorAll('[data-tooltip="res:r_wehrgang"]')].every(b => b.hidden)), 'Universität/standard: keine Pfadforschung sichtbar');
   await ctx2.close(); await ctx.close();
 }
 
@@ -1109,8 +1109,8 @@ for (const lang of ['de', 'en']){
   await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&entdecken=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; __kf.G.S.material = 5000; __kf.selectTab('army'); }); await p.waitForTimeout(250);
   const names = () => p.evaluate(() => [...document.querySelectorAll('#optsUnits .opt')].filter(b => !b.hidden).map(b => b.querySelector('.opt-name span:nth-child(2)').textContent));
-  check((await names()).join() === 'Läufer,Werfer,Schildträger,Reiter,Armbrustschütze,Katapult' && await p.evaluate(() => ['werfer', 'schild', 'reiter', 'armbrust', 'katapult'].every(u => document.querySelector(`[data-tooltip="unit:${u}"]`).getAttribute('aria-disabled') === 'true')), `Armee/karten: Läufer frei, alle weiteren Einheiten sichtbar und gesperrt ${JSON.stringify(await names())}`);
-  await p.evaluate(() => { const G = __kf.G; G.unlockKey('einheit:werfer'); G.S.research.done.r_reiter = 1; G.unlockKey('einheit:reiter'); G.S.research.ver++; G.spawn('laeufer'); __kf.requestRender(); }); await p.waitForTimeout(250);
+  check((await names()).join() === 'Läufer,Werfer,Schildträger,Reiter,Armbrustschütze,Katapult' && await p.evaluate(() => ['schild', 'reiter', 'armbrust', 'katapult'].every(u => document.querySelector(`[data-tooltip="unit:${u}"]`).getAttribute('aria-disabled') === 'true') && document.querySelector('[data-tooltip="unit:werfer"]').getAttribute('aria-disabled') === 'false'), `Armee/karten: Läufer frei, alle weiteren Einheiten sichtbar und gesperrt ${JSON.stringify(await names())}`);
+  await p.evaluate(() => { const G = __kf.G; G.S.research.done.r_reiter = 1; G.unlockKey('einheit:reiter'); G.S.research.ver++; G.spawn('laeufer'); __kf.requestRender(); }); await p.waitForTimeout(250);
   const n2 = await names();
   check(n2.includes('Reiter') && await p.evaluate(() => document.querySelector('[data-tooltip="unit:reiter"]').getAttribute('aria-disabled')) === 'false', `Armee/karten: Reiter nach der Forschung verfügbar ${JSON.stringify(n2)}`);
   await p.evaluate(() => { const G = __kf.G; G.S.research.done.r_eisenwaffen = 1; G.S.research.ver++; G.replaceUnit('laeufer', 'schwertkaempfer'); G.replaceUnit('werfer', 'bogenschuetze'); __kf.requestRender(); }); await p.waitForTimeout(250);
