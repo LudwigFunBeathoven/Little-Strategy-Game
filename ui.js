@@ -148,7 +148,7 @@ function explUnit(id){
   if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src) || lockedText(); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: G.S.queue.length, max: G.supplyCap() });   // Grund der Sperre (REQ-14.2)
   const own = G.ownType(id), hp = G.unitStats('p', own).hp;
-  return t('ex.unit', { role: t(G.unitRange('p', own) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitCost(own)) });
+  return t(G.unitIsMerc() ? 'ex.unit.merc' : 'ex.unit', { role: t(G.unitRange('p', own) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitPrice(own)) });
 }
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
 /* Wer einen gesperrten Inhalt öffnet: Karte oder Forschung (REQ-KP.01); id = Karten- oder Forschungs-Id */
@@ -200,7 +200,7 @@ function repairReason(i){
   return null;
 }
 function unitReason(id){
-  const S = G.S, c = G.unitCost(G.ownType(id));
+  const S = G.S, c = G.unitPrice(G.ownType(id));
   if (S.status !== 'running') return t('tip.notRunning');
   if (!G.unitUnlocked(id)){ const src = G.unitSource(id); return (src && sourceLabel(src)) || lockedText(); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: S.queue.length, max: G.supplyCap() });
@@ -225,7 +225,7 @@ function tipContent(id){
                rows: [[t('tip.m.role'), t(G.unitRange('p', o) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee')],
                       [t('tip.m.unitHp'), fmt(st.hp)],
                       [t('tip.m.unitDmg'), fmt1(st.dmg)],
-                      [t('tip.m.range'), fmt(G.unitRange('p', o))], [t('tip.cost'), costText('material', G.unitCost(o))]],
+                      [t('tip.m.range'), fmt(G.unitRange('p', o))], [t('tip.cost'), costText('material', G.unitPrice(o))]],
                reason: unitReason(a) };
     }
     case 'repair': {

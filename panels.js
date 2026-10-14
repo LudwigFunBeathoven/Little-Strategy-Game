@@ -393,7 +393,7 @@ function renderOpts(){
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const cardName = (o, tier) => G.tiersOf(o).length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
 /* Werte für die Kartentexte: Faktoren als Prozent, außer echte Vielfache; Anteile als Prozent */
-const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect', 'budgetKurs'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus', 'variantYield', 'handelsnetz', 'ruecklage', 'counterBoost'];      // Anteile werden in Prozent gezeigt
+const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect', 'budgetKurs', 'dmgVsBase', 'counterBaseDmg'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus', 'variantYield', 'handelsnetz', 'ruecklage', 'counterBoost'];      // Anteile werden in Prozent gezeigt
 /* Anzeigewert einer Wirkung (Karten und Forschungen gleich): Faktor, Prozent, Anteil in Prozentpunkten oder Zahl */
 const effectValue = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
   : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : e.add % 1 ? fmt2(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';

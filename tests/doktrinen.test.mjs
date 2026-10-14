@@ -84,12 +84,12 @@ test('K5.07: Sonderbauten gibt es nur mit ihrer Doktrin', () => {
 test('K5.07 Zunftordnung: Zunfthaus mit dreifachem Nachbarschaftsbonus; höchstens vier Fabriken und Zunfthäuser, die Aktion ist sonst gesperrt', () => {
   const { G, C } = game(); G.S.t = 200;
   for (const i of [0, 1, 3, 4]) place(G, 'fabrik', i);                         // 2×2-Block: je zwei Nachbarn
-  const per = 0.06, n = 2;
+  const per = 0.06;
   pick(G, 'zunftordnung');
   const r0 = G.matRate();                                                    // mit den drei Zeichen der Doktrin erreicht die Linie Wirtschaft Stufe 1 (Material +10 %)
   assert.equal(G.lineState().wirtschaft.stage, 1);
   upgrade(G, 0, 'zunfthaus');
-  const gain = G.factoryRate() * per * n * (C.DOKTRIN.zunfthaus.nachbarFaktor - 1);
+  const n = G.neighborCount(0, 'fabrik'), gain = G.factoryRate() * per * n * (C.DOKTRIN.zunfthaus.nachbarFaktor - 1);        // die Linie Wirtschaft zählt seit Stufe 1 auch diagonale Nachbarn
   assert.ok(Math.abs(G.matRate() - (r0 + gain)) < 1e-9, `Ertrag ${G.matRate()} gegen ${r0 + gain}`);
   // Grenze: vier Plätze belegt
   assert.equal(G.buildBlock(2, 'fabrik'), 'limit');
@@ -241,18 +241,18 @@ test('K5.07: ohne Doktrin mit Wirkung kein Zwang; der Zähler läuft ab Wahl 3',
 test('K5.07: führt der Spieler eine Linie, ziehen ihre Doktrinen mit höherem Gewicht', () => {
   const count = lead => {
     let hits = 0, n = 0;
-    for (let seed = 1; seed <= 150; seed++){
+    for (let seed = 1; seed <= 200; seed++){
       const { G } = richState(seed);
-      if (lead === 'verteidigung') pick(G, 'zinnen', 'maurerkolonne', 'bastion');
-      G.S.pfad.choices = 6; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.sinceDoktrin = 0; G.S.pfad.lastPickT = -1e9;
+      if (lead) pick(G, 'stehendesHeer');                              // drei Zeichen Militär: die Linie führt
+      G.S.pfad.choices = 6; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.sinceDoktrin = 2; G.S.pfad.lastPickT = -1e9;
       G.offerDraft();
-      for (const id of G.S.pendingDraft.options) if (G.OPT[id].linie === 'verteidigung') hits++;
+      if (G.S.pendingDraft.options.includes('vorstoss')) hits++;
       n++;
     }
     return hits / n;
   };
-  const lead = count('verteidigung'), none = count(null);
-  assert.ok(lead > none * 1.3, `mit Führung der Verteidigung häufiger: ${lead} gegen ${none}`);
+  const lead = count(true), none = count(false);
+  assert.ok(lead > none * 1.5, `mit Führung des Militärs häufiger: ${lead} gegen ${none}`);
 });
 
 test('K5.07: Bann einer fälligen Doktrin ersetzt sie durch eine andere Doktrin', () => {

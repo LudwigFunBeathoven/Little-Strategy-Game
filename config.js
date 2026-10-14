@@ -47,27 +47,33 @@ const KF_CONFIG = {
       soeldnerheer:  [{ effect: [{ stat: 'unitCost', mul: 0 }], drawback: [{ stat: 'autoProd', mul: 0.8 }] }],
     },
   },
-  /* Teil 4 (REQ-S.04, S.05): Strategielinien (Militär, Wirtschaft, Verteidigung) und Gebäude-Aufwertung, nur im Modus karten.
-     Jede Karte und jede Gebäude-Variante trägt null, ein oder zwei Zeichen (data/linien.js); es zählen gewählte Karten und stehende, fertige Varianten (je Variantentyp einmal).
-     Stufe n einer Linie gilt ab zeichenStufen[n − 1] Zeichen; die Boni der Stufen 1 bis n wirken zusammen. Die dritte Stufe (6 Zeichen, Soll) gibt es, weil Stufe 2 in der Simulation
-     in der Mehrzahl der Partien vor Minute 8 erreicht wird (Bericht kartenpfad-4); maxStufe 2 schaltet sie ab. Eine Wirkung steht wie bei den Karten als { stat, mul | add }; neue Größen:
-       unitDmg (Schaden eigener Einheiten ×), extraUnit (zusätzliche Einheiten je eigener Welle, braucht die Kaserne), kontorYield (Zinsen des Kontors ×),
-       upgradeCost (Kosten der Ausbauten ×), variantCost (Kosten der Gebäude-Aufwertung ×), towerKillMaterial (Material je EP-Wert eines Turm-Abschusses),
-       counterWave (nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus), counterBoost (Stärkezuschlag dieser Welle). */
+  /* Teil 4 (REQ-S.04, S.05), Teil 5 (REQ-K5.08): Strategielinien (Militär, Wirtschaft, Verteidigung) und Gebäude-Aufwertung, nur im Modus karten.
+     Zeichen tragen nur Doktrinen (drei, C.DOKTRIN.zeichen) und Gebäude-Varianten (eines je Variantentyp, Grundvariante oder Sonderbau); Bonus-, Technologie- und Wagnis-Karten tragen keine (data/linien.js).
+     Stufe n einer Linie gilt ab zeichenStufen[n − 1] Zeichen; die Regeln der Stufen 1 bis n wirken zusammen. Stufe doktrinAbStufe und höher setzt mindestens eine gewählte Doktrin der Linie voraus.
+     Stufen sind Regeländerungen statt Prozent-Boni; eine Wirkung steht wie bei den Karten als { stat, mul | add }, neue Größen:
+       extraUnit (zusätzliche Läufer je eigener Welle, braucht die Kaserne), startSmith (Einheiten starten mit so vielen Schmiede-Stufen mehr), dmgVsBase (Schaden eigener Einheiten an der gegnerischen Basis ×),
+       nbDiagonal (Nachbarschaftsboni zählen auch diagonale Nachbarn), lagerEp (Material über dem Lagerdeckel wird zu EP), soeldner (Einheiten über dem Versorgungslimit gegen Aufschlag, ohne Versorgung),
+       towerKillMaterial (Material je EP-Wert eines Turm-Abschusses), counterWave (nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus),
+       counterBoost (Stärkezuschlag dieser Welle), counterBaseDmg (Schaden der Gegenstoß-Einheiten an der gegnerischen Basis ×).
+     lager: Der Lagerdeckel ist der Materialertrag von minuten Minuten (mindestens min); Material darüber wird zu EP zum Kurs kurs (EP je Material) – Auslegung, im Spiel gab es keinen Lagerdeckel.
+     soeldner: Aufschlag auf die Kosten einer Einheit, die über dem Versorgungslimit angeworben wird. */
   LINIEN: {
     zeichenStufen: [2, 4, 6],
     maxStufe: 3,
+    doktrinAbStufe: 3,
     stufen: {
-      militaer:     [[{ stat: 'unitDmg', mul: 1.1 }],
-                     [{ stat: 'extraUnit', add: 1 }, { stat: 'unitHp', mul: 1.1 }],
-                     [{ stat: 'unitDmg', mul: 1.1 }, { stat: 'unitHp', mul: 1.1 }]],
-      wirtschaft:   [[{ stat: 'materialYield', mul: 1.1 }],
-                     [{ stat: 'kontorYield', mul: 1.5 }, { stat: 'upgradeCost', mul: 0.8 }, { stat: 'variantCost', mul: 0.8 }],
-                     [{ stat: 'materialYield', mul: 1.1 }, { stat: 'kontorYield', mul: 1.25 }, { stat: 'supply', add: 2 }]],       // Stufe 3: Reichtum kauft Nachschub (Versorgungslimit); ohne ihn setzt die Linie ihr Material nicht in Stärke um (Bericht kartenpfad-4)
-      verteidigung: [[{ stat: 'turretDmg', mul: 1.2 }, { stat: 'wallHp', mul: 1.15 }],
-                     [{ stat: 'towerKillMaterial', add: 1.5 }, { stat: 'counterWave', add: 1 }],
-                     [{ stat: 'counterBoost', add: 0.3 }, { stat: 'turretDmg', mul: 1.2 }]],
+      militaer:     [[{ stat: 'extraUnit', add: 1 }],
+                     [{ stat: 'startSmith', add: 1 }],
+                     [{ stat: 'dmgVsBase', mul: 2 }]],
+      wirtschaft:   [[{ stat: 'nbDiagonal', add: 1 }],
+                     [{ stat: 'lagerEp', add: 1 }],
+                     [{ stat: 'soeldner', add: 1 }]],
+      verteidigung: [[{ stat: 'towerKillMaterial', add: 1 }],
+                     [{ stat: 'counterWave', add: 1 }],
+                     [{ stat: 'counterBoost', add: 0.5 }, { stat: 'counterBaseDmg', mul: 2 }]],
     },
+    lager: { minuten: 3, min: 1500, kurs: 0.08 },
+    soeldner: { kostenFaktor: 1.5 },
     /* Gebäude-Aufwertung: Kosten = kostenFaktor × Baukosten des Grundgebäudes (Fabrik: FACTORY_BASE_COST), Dauer in Sekunden Spielzeit (das Gebäude wirkt währenddessen nicht),
        sichtbar ab Minute abMinute, sobald ein Gebäude des Typs steht */
     aufwertung: { kostenFaktor: 2, dauerS: 10, abMinute: 3 },

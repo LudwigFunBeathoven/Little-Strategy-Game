@@ -76,14 +76,14 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
 {
   const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1'); await calm(p);
   await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.drill = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 250);
-  check(!(await vis(p, '#hudLines')), 'S.04: ein Zeichen: keine Linie sichtbar');
-  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.kriegstrommeln = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 400);
+  check(!(await vis(p, '#hudLines')), 'S.04: Karten ohne Zeichen: keine Linie sichtbar');
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.stehendesHeer = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 400);       // Doktrin: drei Zeichen
   const hud = await p.evaluate(() => ({ vis: !!document.querySelector('#hudLines') && document.querySelector('#hudLines').checkVisibility(), text: document.querySelector('#lineRow').innerText.replace(/\s+/g, ' ') }));
-  check(hud.vis && /Militär 1/.test(hud.text) && /2\/4/.test(hud.text), `S.04: Linie Militär Stufe 1 erscheint mit Zeichen bis zur nächsten Stufe ${show(hud)}`);
+  check(hud.vis && /Militär 1/.test(hud.text) && /3\/4/.test(hud.text), `S.04: Linie Militär Stufe 1 erscheint mit Zeichen bis zur nächsten Stufe ${show(hud)}`);
   const lh = await hintLike(p, /Linie Militär/);
-  check(/Linie Militär, Stufe 1/.test(lh) && /10 %/.test(lh), `S.04: Hinweis „Militär Stufe 1“ mit einer Zeile Wirkung ${show(lh)}`);
+  check(/Linie Militär, Stufe 1/.test(lh) && /Läufer/.test(lh), `S.04: Hinweis „Militär Stufe 1“ mit einer Zeile Wirkung ${show(lh)}`);
   const tip = await tipOf(p, '#hudLines');
-  check(/Linien/.test(tip) && /Schaden/.test(tip), `S.04: Tooltip der Linienanzeige ${show(tip)}`);
+  check(/Linien/.test(tip) && /Läufer/.test(tip) && /Doktrin/.test(tip), `S.04: Tooltip der Linienanzeige ${show(tip)}`);
   const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
   check(JSON.stringify(audit.tips) === '[]' || (audit.tips && audit.tips.length === 0), `Tooltip-Audit leer ${show(audit.tips)}`);
   check(JSON.stringify(audit.expl) === '[]' || (audit.expl && audit.expl.length === 0), `Erklärzeilen-Audit leer ${show(audit.expl)}`);
@@ -99,13 +99,13 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
 {
   const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1');
   let lvl = 0; const offer = ids => p.evaluate(([ids, lv]) => { const G = __kf.G; G.S.pendingDraft = { level: lv, options: ids, rerolled: 0 }; G.S.pendingLevels = Math.max(1, G.S.pendingLevels); __kf.requestRender(); }, [ids, ++lvl]);
-  await offer(['drill', 'zinnen', 'glaskanonen']); await settle(p, 1500);
+  await offer(['vorstoss', 'drill', 'glaskanonen']); await settle(p, 1500);
   const before = await p.evaluate(() => [...document.querySelectorAll('.kcard .kc-sign')].map(e => e.textContent));
   check(before.length === 0, `S.04: vor Stufe 1 kein Zeichen an den Karten ${show(before)}`);
-  await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = null; G.S.draft.stacks.kriegstrommeln = 1; G.S.draft.stacks.aushebung = 1; G.S.draft.ver++; });
-  await offer(['drill', 'zinnen', 'glaskanonen']); await settle(p, 1500);
+  await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = null; G.S.draft.stacks.stehendesHeer = 1; G.S.draft.ver++; });
+  await offer(['vorstoss', 'drill', 'glaskanonen']); await settle(p, 1500);
   const after = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(e => (e.querySelector('.kc-sign') || {}).textContent || ''));
-  check(/Militär/.test(after[0]) && /Verteidigung/.test(after[1]) && after[2] === '', `S.04: nach Stufe 1: Zeichen an Drill und Zinnen, keines an Glaskanonen ${show(after)}`);
+  check(/◆◆◆ Militär/.test(after[0]) && after[1] === '' && after[2] === '', `S.04: nach Stufe 1: drei Zeichen an der Doktrin, keines an Drill und Glaskanonen ${show(after)}`);
   check(errs.length === 0, `S.04 Karten: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }

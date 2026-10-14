@@ -19,14 +19,17 @@ const hudEl = {};
 function lineParams(l, stage){
   const p = {};
   (C.LINIEN.stufen[l][stage - 1] || []).forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); });
+  p.m = C.LINIEN.lager.minuten; p.s = pct(C.LINIEN.soeldner.kostenFaktor - 1);                       // Lagerdeckel in Minuten Ertrag, Söldner-Aufschlag in Prozent (Teil 5)
   return p;
 }
 const lineEffect = (l, stage) => t(`line.eff.${l}.${stage}`, lineParams(l, stage));
 /* Zeichen bis zur nächsten Stufe: { n, need } oder null auf der Höchststufe */
 function lineNext(st){
   const th = C.LINIEN.zeichenStufen, top = Math.min(C.LINIEN.maxStufe, th.length);
-  return st.stage >= top ? null : { n: st.signs, need: th[st.stage] };
+  return st.stage >= top ? null : { n: st.signs, need: th[st.stage], doctrine: st.stage + 1 >= C.LINIEN.doktrinAbStufe && !st.doctrine };
 }
+/* Fortschrittstext einer Linie: Zeichen bis zur nächsten Stufe; Stufe 3 verlangt zusätzlich eine Doktrin der Linie (Teil 5, REQ-K5.08) */
+const lineProgress = nx => !nx ? t('line.hud.max') : nx.doctrine ? t('line.hud.next.doctrine', nx) : t('line.hud.next', nx);
 /* Schwebende Zahlen (REQ-5.10): Material- und EP-Gewinn der letzten Sekunde, höchstens eine je Quelle und Sekunde */
 const floatLast = { t: null, mat: 0, xp: 0 };
 function floatGain(){
@@ -90,7 +93,7 @@ function hudTip(item){
       for (const l of KF_LINIEN.linien){
         if (st[l].stage < 1) continue;
         const nx = lineNext(st[l]);
-        rows.push([`${t(`line.${l}.name`)} ${st[l].stage}`, nx ? t('line.hud.next', nx) : t('line.hud.max')]);
+        rows.push([`${t(`line.${l}.name`)} ${st[l].stage}`, lineProgress(nx)]);
         for (let k = 1; k <= st[l].stage; k++) rows.push([t('tip.line.stage', { stage: k }), lineEffect(l, k)]);
       }
       return { title: t('hud.lines'), body: t('tip.hud.lines', { a: th[0], b: th[1], c: th[2] }), rows };
@@ -108,7 +111,7 @@ function renderHud(){
     setHidden(ch.c, st.stage < 1);
     if (st.stage < 1) continue;
     setText(ch.b, t('line.hud.stage', { name: t(`line.${l}.name`), stage: st.stage }));
-    setText(ch.i, nx ? t('line.hud.next', nx) : t('line.hud.max'));
+    setText(ch.i, lineProgress(nx));
   }
   for (const l of KF_LINIEN.linien) if (lst[l].stage >= 1 && S.pacing === 'karten') showHint('linie_' + l);       // Hinweis „Linie Stufe 1“ einmal je Linie
   setHidden(E.soldItem, !Disc.shows('hud:supply')); setHidden(E.xpItem, !Disc.shows('hud:xp')); setHidden(E.armyItem, !Disc.shows('hud:army'));       // REQ-K2.04

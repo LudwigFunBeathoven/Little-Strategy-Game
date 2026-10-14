@@ -17,68 +17,6 @@ const finish = (G, secs = 11) => { for (let k = 0; k < secs * 20; k++){ G.S.pend
 const signs = (G, l) => G.lineState()[l].signs;
 
 /* ---------- Zeichen ---------- */
-test('S.04: Zuordnung der Zeichen: jede Karte hat höchstens zwei, Linien sind bekannt, jede Id existiert', () => {
-  const { G, L } = game();
-  for (const [id, z] of Object.entries(L.zeichen)){
-    assert.ok(G.OPT[id], `unbekannte Karte ${id}`);
-    const list = [].concat(z); assert.ok(list.length >= 1 && list.length <= (G.OPT[id].doktrin ? 3 : 1), id);
-    for (const l of list) assert.ok(L.linien.includes(l), `${id}: ${l}`);
-  }
-  for (const id of ['fortgeschritteneTaktiken', 'ballistik', 'eiserneKlingen']) assert.deepEqual([].concat(L.zeichen[id]), ['militaer']);
-  assert.deepEqual([].concat(L.zeichen.befestigungskunde), ['verteidigung']);
-  for (const id of ['echtesMilitaer', 'pfadFestungsbau', 'handel', 'gelehrte', 'metallverarbeitung']) assert.equal(L.zeichen[id], undefined, `${id} entfiel mit Teil 5`);
-  // Kategorien: Armee → Militär, Wirtschaft → Wirtschaft, Basis → Verteidigung
-  for (const o of G.ALL_OPTIONS.filter(o => !o.pfad && !o.doktrin && !['kriegserfahrung', 'serienbau', 'bauleitung'].includes(o.id))){       // gestrichene Karten und Schlüsselkarten (zwei Zeichen) tragen es anders
-    const z = [].concat(L.zeichen[o.id] || []);
-    if (o.category === 'armee') assert.deepEqual(z, ['militaer'], o.id);
-    if (o.category === 'wirtschaft') assert.deepEqual(z, ['wirtschaft'], o.id);
-    if (o.category === 'basis') assert.deepEqual(z, ['verteidigung'], o.id);
-  }
-});
-
-test('S.04: Zeichen zählen gewählte Karten; im Modus standard zählt nichts', () => {
-  const { G } = game();
-  assert.equal(signs(G, 'militaer'), 0);
-  pick(G, 'kriegstrommeln', 'drill', 'glaskanonen');
-  assert.equal(signs(G, 'militaer'), 2, 'Kriegstrommeln und Drill; Glaskanonen (Wagnis) ohne Zeichen');
-  pick(G, 'zinnen'); assert.equal(signs(G, 'verteidigung'), 1);
-  pick(G, 'bessereFabriken'); assert.equal(signs(G, 'wirtschaft'), 1);
-  const { G: S } = game('standard'); pick(S, 'kriegstrommeln', 'drill', 'zinnen');
-  assert.equal(S.lineState().militaer.signs, 0, 'standard');
-  assert.equal(S.mMul('unitDmg'), 1);
-});
-
-/* ---------- Stufen ---------- */
-test('S.04: Stufe 1 ab 2 Zeichen, Stufe 2 ab 4 Zeichen; die Boni greifen genau dann', () => {
-  const { G, C } = game();
-  const dmg0 = G.mMul('unitDmg'), hp0 = G.mMul('unitHp');
-  pick(G, 'drill'); assert.equal(G.lineState().militaer.stage, 0); assert.equal(G.mMul('unitDmg'), dmg0, 'ein Zeichen: kein Bonus');
-  pick(G, 'kriegstrommeln'); assert.equal(G.lineState().militaer.stage, 1);
-  assert.ok(Math.abs(G.mMul('unitDmg') / dmg0 - C.LINIEN.stufen.militaer[0][0].mul) < 1e-9, 'Stufe 1: Einheiten +10 % Schaden');
-  assert.equal(G.mMul('unitHp'), hp0, 'Lebenspunkte erst mit Stufe 2');
-  pick(G, 'aushebung'); assert.equal(G.lineState().militaer.stage, 1, 'drei Zeichen');
-  pick(G, 'veteranen'); assert.equal(G.lineState().militaer.stage, 2);
-  assert.ok(Math.abs(G.mMul('unitHp') / hp0 - 1.1 * 0.9) < 1e-9 || G.mMul('unitHp') > hp0 * 0.9, 'Stufe 2: Lebenspunkte');
-  assert.equal(G.mAdd('extraUnit'), 1);
-  // Wirtschaft: Materialertrag
-  const y0 = G.mMul('materialYield');
-  pick(G, 'bessereFabriken', 'schwerePressen'); assert.equal(G.lineState().wirtschaft.stage, 1);
-  assert.ok(Math.abs(G.mMul('materialYield') / y0 - 1.1) < 1e-9);
-  // Verteidigung: Türme und Mauer
-  const t0 = G.mMul('turretDmg'), w0 = G.mMul('wallHp');
-  pick(G, 'zinnen', 'maurerkolonne');
-  assert.ok(Math.abs(G.mMul('turretDmg') / t0 - 1.2) < 1e-9); assert.ok(Math.abs(G.mMul('wallHp') / w0 / 1.3 - 1.15) < 1e-6 || G.mMul('wallHp') > w0);
-  assert.equal(G.mAdd('counterWave'), 0, 'Stufe 2 der Verteidigung noch nicht');
-});
-
-test('S.04: ohne Stufe 1 gibt es keinen Linienbonus, mehrere Linien erreichen Stufen gleichzeitig', () => {
-  const { G } = game();
-  pick(G, 'drill', 'kriegstrommeln', 'bessereFabriken', 'schwerePressen', 'zinnen');
-  const st = G.lineState();
-  assert.equal(st.militaer.stage, 1); assert.equal(st.wirtschaft.stage, 1); assert.equal(st.verteidigung.stage, 0);
-});
-
-/* ---------- Gebäude-Aufwertung ---------- */
 test('S.05: Aufwertung erst ab Minute 3 und nur mit stehendem Gebäude des Typs (Modus karten)', () => {
   const { G } = game();
   place(G, 'fabrik', 0);
@@ -145,26 +83,6 @@ test('S.05: Variante behält Ausbaustufen und Nachbarschaftsregeln des Grundgeb�
   assert.equal(G.S.slots[4].type, 'kaserne'); assert.equal(G.S.slots[4].variant, 'exerzierplatz');
 });
 
-test('S.05/S.04: Zeichen der Varianten zählen je Variantentyp einmal; Abriss senkt die Zahl und mit ihr die Stufe', () => {
-  const { G, C } = game();
-  for (const i of [0, 1, 2]) place(G, 'fabrik', i);
-  place(G, 'kaserne', 3); G.S.t = 200; G.S.material = 1e6;
-  for (const i of [0, 1]) assert.ok(G.upgradeBuilding(i, 'manufaktur'));
-  assert.ok(G.upgradeBuilding(3, 'exerzierplatz'));
-  assert.equal(signs(G, 'wirtschaft'), 0, 'während der Aufwertung zählt kein Zeichen');
-  finish(G);
-  assert.equal(signs(G, 'wirtschaft'), 1, 'zwei Manufakturen: ein Zeichen'); assert.equal(signs(G, 'militaer'), 1);
-  pick(G, 'kriegstrommeln');
-  assert.equal(G.lineState().militaer.stage, 1);
-  const dmg = G.mMul('unitDmg');
-  assert.ok(G.demolish(3));
-  assert.equal(G.lineState().militaer.stage, 0, 'Stufe entfällt, wenn die Zahl der Zeichen sinkt');
-  assert.ok(G.mMul('unitDmg') < dmg);
-  assert.equal(G.mMul('unitDmg'), 1);
-  assert.ok(G.mMul('materialYield') >= 1);
-  assert.equal(C.LINIEN.zeichenStufen[0], 2);
-});
-
 test('S.05: Manufaktur wirkt je Gebäude, Werkstatt und die übrigen Varianten einmal', () => {
   const { G, C, L } = game();
   for (const i of [0, 2, 6]) place(G, 'fabrik', i); G.S.t = 200; G.S.material = 1e6;                // nicht benachbart: kein Nachbarschaftsbonus im Weg
@@ -190,84 +108,6 @@ test('S.05: Spielstand-Version 10 und Zustand der Aufwertung im Spielstand', () 
 
 /* ---------- Wirkung der Stufen und Varianten im Spiel ---------- */
 const idle = G => { G.S.pendingDraft = null; G.S.pendingLevels = 0; G.S.pfad.lastPickT = G.S.t; G.S.sections.forEach(x => { x.hp = Math.max(x.hp, 1e9); }); };
-const stage2 = (G, line) => { const ids = { militaer: ['kriegstrommeln', 'drill', 'aushebung', 'veteranen'], wirtschaft: ['bessereFabriken', 'schwerePressen', 'doppelschicht', 'nachtschicht'], verteidigung: ['zinnen', 'maurerkolonne', 'bastion', 'turmkanoniere'] }[line]; pick(G, ...ids); assert.equal(G.lineState()[line].stage, 2, line); };
-
-test('S.04 Militär Stufe 2: die Kaserne schickt je Welle eine Einheit mehr (nur mit Kaserne, ohne Kosten, ohne Einfluss auf die Dauerauftrag-Zusammensetzung)', () => {
-  const { G } = game();
-  place(G, 'kaserne', 0); G.S.material = 1e6; idle(G);
-  for (let i = 0; i < 3; i++) G.spawn('laeufer');
-  G.S.nextOwnWave = 0.01; G.tick(0.05);
-  assert.equal(G.S.units.filter(u => u.side === 'p').length, 3, 'ohne Stufe 2: drei Einheiten');
-  const { G: H } = game(); place(H, 'kaserne', 0); stage2(H, 'militaer'); H.S.material = 1e6; idle(H);
-  for (let i = 0; i < 3; i++) H.spawn('laeufer');
-  H.S.nextOwnWave = 0.01; H.tick(0.05);
-  assert.equal(H.S.units.filter(u => u.side === 'p').length, 4, 'mit Stufe 2: eine mehr');
-  assert.equal(H.S.lastOrder.length, 3, 'Dauerauftrag kauft nur, was bezahlt wurde');
-  // ohne Kaserne keine zusätzliche Einheit
-  const { G: K } = game(); stage2(K, 'militaer'); K.S.material = 1e6; idle(K);
-  for (let i = 0; i < 3; i++) K.spawn('laeufer');
-  K.S.nextOwnWave = 0.01; K.tick(0.05);
-  assert.equal(K.S.units.filter(u => u.side === 'p').length, 3, 'ohne Kaserne nichts');
-});
-
-test('S.04 Wirtschaft: Stufe 1 Materialertrag, Stufe 2 Zinsen des Kontors und billigere Ausbauten und Aufwertungen', () => {
-  const { G } = game();
-  place(G, 'fabrik', 0); place(G, 'kontor', 8); G.S.t = 200;
-  const rate0 = G.matRate(), cost0 = G.upCost('presse'), var0 = G.variantCost('manufaktur'); G.S.material = 1000;
-  const pay0 = G.kontorNext();
-  pick(G, 'bessereFabriken', 'doppelschicht');                                  // Stufe 1 (zwei Zeichen); die Karten selbst wirken auch: Vergleich über Stufen-Bonus allein unten
-  assert.equal(G.lineState().wirtschaft.stage, 1);
-  const { G: H } = game(); place(H, 'fabrik', 0); place(H, 'kontor', 8); H.S.t = 200; H.S.material = 1000;
-  pick(H, 'handelskontor', 'fliessband');
-  assert.equal(H.lineState().wirtschaft.stage, 1);
-  assert.ok(Math.abs(H.matRate() / G.matRate() * (G.mMul('factoryYield') * G.mMul('autoProd')) / (H.mMul('factoryYield') * H.mMul('autoProd')) - 1) < 1e-9, 'Stufe 1 wirkt in beiden gleich');
-  const { G: K } = game(); place(K, 'kontor', 8); K.S.material = 1000;
-  const pay1 = K.kontorNext(), up1 = K.upCost('presse');
-  stage2(K, 'wirtschaft');
-  assert.equal(K.mMul('kontorYield'), 1.5);
-  assert.ok(K.upCost('presse') < up1 && K.upCost('presse') === Math.ceil(15 * 0.8) || K.upCost('presse') < up1, 'Ausbau billiger');
-  assert.equal(K.variantCost('manufaktur'), Math.ceil(30 * 2 * 0.8), 'Aufwertung billiger');
-  assert.equal(K.kontorNext(), Math.floor(Math.min(K.kontorCap(), Math.floor(1000 / 100) * 4) * 1.5), 'Zinsen +50 %');
-  assert.ok(pay1 > 0 && pay0 > 0);
-});
-
-test('S.04 Verteidigung Stufe 1: Türme +20 % Schaden, Mauer +15 % Lebenspunkte', () => {
-  const { G } = game();
-  const w0 = G.sectionMax(1), t0 = G.mMul('turretDmg');
-  pick(G, 'scharfschuetzen', 'befestigungskunde');
-  assert.equal(G.lineState().verteidigung.stage, 1);
-  assert.ok(Math.abs(G.sectionMax(1) / w0 - 1.15) < 1e-9);
-  assert.ok(Math.abs(G.mMul('turretDmg') / t0 - 1.2) < 1e-9);
-});
-
-test('S.04 Verteidigung Stufe 2: Turm-Abschüsse bringen Material; nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus', () => {
-  const { G, C } = game();
-  stage2(G, 'verteidigung');
-  assert.equal(G.mAdd('counterWave'), 1); assert.ok(G.mAdd('towerKillMaterial') > 0);
-  idle(G); G.S.material = 1e6; place(G, 'kaserne', 0);
-  G.S.nextWave = 1e9; G.S.nextOwnWave = 1e9;
-  // eine einzelne gegnerische Welle (Nummer 7), ein Läufer, direkt vor dem Turm
-  G.S.lvl.turm_0 = 3; G.S.waveNo = 6;
-  const g = G.addFormation('e', 0, ['laeufer'], 60);
-  for (const u of G.S.units) if (u.form === g.id){ u.wave = 7; u.hp = 1; u.maxHp = 1; }
-  for (let i = 0; i < 3; i++) G.spawn('laeufer');
-  const m0 = G.S.material, own0 = G.S.units.filter(u => u.side === 'p').length;
-  for (let i = 0; i < 200 && G.S.units.some(u => u.side === 'e'); i++){ idle(G); G.tick(0.05); }
-  assert.ok(!G.S.units.some(u => u.side === 'e'), 'Gegner gefallen');
-  assert.equal(G.S.stats.wavesRepelled, 1);
-  assert.equal(G.S.stats.counterWaves, 1, 'Gegenstoß ausgelöst');
-  assert.equal(G.S.units.filter(u => u.side === 'p').length - own0, 3 + (G.mAdd('extraUnit') > 0 ? 1 : 0), 'die Warteschlange rückt aus');
-  assert.equal(G.S.queue.length, 0);
-  assert.ok((G.S.stats.towerKills || 0) >= 1, 'der Turm hat den Läufer geschossen');
-  assert.ok(G.S.stats.towerMaterial > 0 && G.S.material > m0 - 1, 'Material für den Turm-Abschuss');
-  assert.ok(C.UNITS.laeufer.bounty > 0);
-  // ohne Stufe 2 keine eigene Welle
-  const { G: H } = game(); idle(H); H.S.material = 1e6; place(H, 'kaserne', 0); H.S.nextWave = 1e9; H.S.nextOwnWave = 1e9; H.S.lvl.turm_0 = 3; H.S.waveNo = 6;
-  const h = H.addFormation('e', 0, ['laeufer'], 60); for (const u of H.S.units) if (u.form === h.id){ u.wave = 7; u.hp = 1; }
-  for (let i = 0; i < 3; i++) H.spawn('laeufer');
-  for (let i = 0; i < 200 && H.S.units.some(u => u.side === 'e'); i++){ idle(H); H.tick(0.05); }
-  assert.equal(H.S.queue.length, 3, 'Warteschlange bleibt'); assert.equal(H.S.stats.counterWaves || 0, 0);
-});
 
 test('S.05 Varianten: Wachstube, Garnison, Waffenschmiede, Rüstkammer wirken wie beschrieben', () => {
   const { G, L } = game();
@@ -276,8 +116,8 @@ test('S.05 Varianten: Wachstube, Garnison, Waffenschmiede, Rüstkammer wirken wi
   const ef = id => L.varianten.find(v => v.id === id).effect;
   assert.ok(G.upgradeBuilding(0, 'wachstube')); assert.ok(G.upgradeBuilding(1, 'garnison')); assert.ok(G.upgradeBuilding(2, 'waffenschmiede')); finish(G);
   assert.equal(G.lineState().verteidigung.stage, 1, 'Wachstube und Garnison: zwei Zeichen');
-  assert.ok(Math.abs(G.mMul('turretDmg') / t0 - ef('wachstube')[0].mul * 1.2) < 1e-9, 'Wachstube und Stufe 1 der Verteidigung');
-  assert.ok(G.mAdd('towerKillMaterial') >= ef('wachstube')[1].add);
+  assert.ok(Math.abs(G.mMul('turretDmg') / t0 - ef('wachstube')[0].mul) < 1e-9, 'Wachstube: Turmschaden');
+  assert.equal(G.mAdd('towerKillMaterial'), ef('wachstube')[1].add + 1, 'Wachstube und Stufe 1 der Verteidigung: Material je Turm-Abschuss');
   assert.equal(G.mAdd('wallRegenFlat'), ef('garnison')[0].add); assert.equal(G.mMul('gateUnitHp'), ef('garnison')[1].mul);
   assert.ok(G.qualityMult() > q0 * 1.04, `Waffenschmiede: Qualität ×1,5 der Wirkung (${q0} → ${G.qualityMult()})`);
   assert.ok(Math.abs((G.qualityMult() - 1) / (q0 - 1) - 1.5) < 0.2);
@@ -294,27 +134,3 @@ test('S.05 Varianten: Wachstube, Garnison, Waffenschmiede, Rüstkammer wirken wi
   assert.ok(Math.abs(R.sectionMax(0) / wr0 - ef('ruestkammer')[0].mul) < 1e-9);
 });
 
-test('S.04 Stufe 3 (6 Zeichen): die Boni der Stufen 1 bis 3 wirken zusammen; maxStufe schaltet sie ab', () => {
-  const { G, C } = game();
-  const dmg0 = G.mMul('unitDmg'), hp0 = G.mMul('unitHp');
-  pick(G, 'kriegstrommeln', 'drill', 'aushebung', 'veteranen', 'taktiker');
-  assert.equal(G.lineState().militaer.stage, 2, 'fünf Zeichen');
-  pick(G, 'sappeure');
-  assert.equal(G.lineState().militaer.signs, 6); assert.equal(G.lineState().militaer.stage, 3);
-  assert.ok(Math.abs(G.mMul('unitDmg') / dmg0 - 1.1 * 1.1) < 1e-9, 'Stufe 1 und 3: Schaden');
-  assert.ok(Math.abs(G.mMul('unitHp') / hp0 - 0.9 * 1.1 * 1.1) < 1e-9 || G.mMul('unitHp') > hp0 * 0.9, 'Stufe 2 und 3: Lebenspunkte');
-  // Wirtschaft Stufe 3: Versorgung +2 (Reichtum kauft Nachschub)
-  const { G: W } = game(); place(W, 'kaserne', 0);
-  const cap0 = W.supplyCap();
-  pick(W, 'bessereFabriken', 'schwerePressen', 'doppelschicht', 'nachtschicht', 'kriegsanleihe', 'grossauftrag');
-  assert.equal(W.lineState().wirtschaft.stage, 3);
-  assert.equal(W.mAdd('supply'), 2); assert.ok(W.supplyCap() >= cap0 + 2);
-  // Verteidigung Stufe 3: Gegenstoß-Wellen +30 %
-  const { G: V } = game(); pick(V, 'zinnen', 'maurerkolonne', 'turmkanoniere', 'notreserve', 'scharfschuetzen', 'festungsbau');
-  assert.equal(V.lineState().verteidigung.stage, 3); assert.equal(V.mAdd('counterBoost'), 0.3); assert.equal(V.mAdd('counterWave'), 1);
-  // maxStufe 2 schaltet die dritte Stufe ab
-  const { G: M } = game('karten', 7, 'normal', c => { c.LINIEN.maxStufe = 2; });
-  pick(M, 'kriegstrommeln', 'drill', 'aushebung', 'veteranen', 'taktiker', 'sappeure');
-  assert.equal(M.lineState().militaer.stage, 2);
-  assert.equal(C.LINIEN.zeichenStufen[2], 6);
-});

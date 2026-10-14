@@ -47,8 +47,10 @@ const RES = Object.fromEntries(RESEARCH.map(r => [r.id, r]));
 const NEIGHBORS = (typeof KF_NEIGHBORS !== 'undefined') ? KF_NEIGHBORS : [];       // Nachbarschaftsregeln (REQ-6.07 a)
 const NB_RULE = Object.fromEntries(NEIGHBORS.map(r => [r.building, r]));
 /* Orthogonale Nachbarn eines Platzes im Raster (oben, unten, links, rechts) */
-const adjacent = i => { const g = C.GRID_SIZE, r = Math.floor(i / g), c = i % g, out = [];
-  if (r > 0) out.push(i - g); if (r < g - 1) out.push(i + g); if (c > 0) out.push(i - 1); if (c < g - 1) out.push(i + 1); return out; };
+const adjacent = (i, diagonal = false) => { const g = C.GRID_SIZE, r = Math.floor(i / g), c = i % g, out = [];
+  if (r > 0) out.push(i - g); if (r < g - 1) out.push(i + g); if (c > 0) out.push(i - 1); if (c < g - 1) out.push(i + 1);
+  if (diagonal){ if (r > 0 && c > 0) out.push(i - g - 1); if (r > 0 && c < g - 1) out.push(i - g + 1); if (r < g - 1 && c > 0) out.push(i + g - 1); if (r < g - 1 && c < g - 1) out.push(i + g + 1); }
+  return out; };
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
@@ -165,12 +167,14 @@ function create(){
   const standingVariants = () => S.pacing !== 'karten' ? [] : [...new Set(S.slots.filter(sl => sl && sl.variant && !sl.upg && VAR[sl.variant]).map(sl => sl.variant))];
   function lineState(){
     const out = {};
-    for (const l of LINIEN ? LINIEN.linien : []) out[l] = { signs: 0, stage: 0 };
+    for (const l of LINIEN ? LINIEN.linien : []) out[l] = { signs: 0, stage: 0, doctrine: false };
     if (S.pacing !== 'karten' || !LINIEN) return out;
     for (const [id, n] of Object.entries(S.draft.stacks)) if (n > 0) for (const l of cardSigns(id)) out[l].signs++;
     for (const vid of standingVariants()) out[VAR[vid].linie].signs++;
+    for (const d of DOKTRINEN) if (cardTaken(d.id) > 0) out[d.linie].doctrine = true;
+    /* Stufe doktrinAbStufe und höher setzt eine Doktrin der Linie voraus (Teil 5, REQ-K5.08) */
     const th = C.LINIEN.zeichenStufen, top = Math.min(C.LINIEN.maxStufe, th.length);
-    for (const l in out) for (let k = 0; k < top; k++) if (out[l].signs >= th[k]) out[l].stage = k + 1;
+    for (const l in out) for (let k = 0; k < top; k++) if (out[l].signs >= th[k] && (k + 1 < C.LINIEN.doktrinAbStufe || out[l].doctrine)) out[l].stage = k + 1;
     return out;
   }
   const lines = () => mods().lines;
@@ -254,12 +258,14 @@ function create(){
   const factoryCount = () => countType('fabrik');
   // Nachtschicht (REQ-6.03, ersetzt die frühere Wirkung außerhalb der Partie): Fabriken in der Spätphase stärker
   const factoryRate  = () => C.FACTORY_BASE_RATE * mMul('factoryYield') * mMul('autoProd') * mMul('materialYield') * (phase() === 'late' ? mMul('lateYield') : 1);
+  /* Linie Wirtschaft, Stufe 1 (Teil 5): Nachbarschaftsboni zählen auch diagonale Nachbarn */
+  const nbDiagonal = () => S.pacing === 'karten' && mAdd('nbDiagonal') > 0;
   /* Nachbarschaft (REQ-6.07 a): Zahl der passenden Nachbarn eines Gebäudes auf Platz i (höchstens rule.max) bzw. für einen Typ,
      der dort stünde (Vorschau); Wert der Regel = per × Zahl */
   function neighborCount(i, type, slots = S.slots){
     const rule = NB_RULE[type];
     if (!rule) return 0;
-    let n = 0; for (const j of adjacent(i)) if (slots[j] && slots[j].type === rule.with && !slots[j].upg) n++;
+    let n = 0; for (const j of adjacent(i, nbDiagonal())) if (slots[j] && slots[j].type === rule.with && !slots[j].upg) n++;
     return Math.min(rule.max, n);
   }
   /* Zunfthaus (Sonderbau der Doktrin Zunftordnung): der Nachbarschaftsbonus dieser Fabrik wirkt im Vielfachen C.DOKTRIN.zunfthaus.nachbarFaktor */
@@ -272,7 +278,7 @@ function create(){
     const slots = S.slots.slice(); slots[i] = { type };
     const gets = NB_RULE[type] ? { rule: NB_RULE[type], n: neighborCount(i, type, slots), value: neighborValue(i, type, slots) } : null;
     const gives = [];
-    for (const j of adjacent(i)){
+    for (const j of adjacent(i, nbDiagonal())){
       const sl = S.slots[j]; if (!sl || !NB_RULE[sl.type] || NB_RULE[sl.type].with !== type) continue;
       const before = neighborValue(j, sl.type), after = neighborValue(j, sl.type, slots);
       if (after !== before) gives.push({ slot: j, type: sl.type, rule: NB_RULE[sl.type], delta: after - before });
@@ -293,7 +299,7 @@ function create(){
   const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
-  const qualityLevel = () => lv('qualitaet');
+  const qualityLevel = () => lv('qualitaet') + Math.floor(mAdd('startSmith'));       // startSmith: Linie Militär, Stufe 2 (Teil 5): Einheiten starten mit der nächsten Schmiede-Stufe
   const qualityMult  = () => Math.pow(1 + (C.FX_QUALITAET + mAdd('qualityBonus')) * mMul('smithEffect'), qualityLevel());       // smithEffect: Waffenschmiede (Teil 4)
   const hpMultP      = () => levelStrength() * qualityMult() * mMul('unitStrength');
   const dmgMultP     = () => levelStrength() * qualityMult() * mMul('unitStrength') * mMul('unitDmg');
@@ -357,7 +363,7 @@ function create(){
 
   function upCost(id){
     const u = C.UPGRADES[id];
-    let c = u.baseCost * Math.pow(u.growth, S.lvl[id]) * mMul('upgradeCost');       // upgradeCost: Linie Wirtschaft, Stufe 2 (Teil 4)
+    let c = u.baseCost * Math.pow(u.growth, S.lvl[id]) * mMul('upgradeCost') * (id === 'ausbau' ? mMul('quartiereCost') : id === 'qualitaet' ? mMul('qualitaetCost') : 1);       // quartiereCost, qualitaetCost: Zahlmeisterei, Münzschmiede (Teil 5)
     return Math.ceil(c);
   }
   const isMaxed = id => C.UPGRADES[id].max !== undefined && S.lvl[id] >= C.UPGRADES[id].max;
@@ -647,15 +653,22 @@ function create(){
   const gateBlocked = lane => S.units.some(u => u.side === 'p' && u.lane === lane && u.hp > 0 && u.x >= W - EBW - C.GATE_BLOCK_DIST);
 
   /* Kauf legt die Einheit in die Warteschlange; sie rückt mit der nächsten Welle aus (REQ-14.1/14.2) */
-  const supplyFull = () => S.queue.length >= supplyCap();
+  /* Söldner (Linie Wirtschaft, Stufe 3, Teil 5): Einheiten über dem Versorgungslimit gegen Aufschlag; sie belegen keine Versorgung (merc in der Warteschlange) */
+  const mercRule = () => S.pacing === 'karten' && mAdd('soeldner') > 0;
+  const queueSupply = () => { let n = 0; for (const q of S.queue) if (!q.merc) n++; return n; };
+  const atSupplyCap = () => queueSupply() >= supplyCap();
+  const supplyFull = () => atSupplyCap() && !mercRule();                      // mit Söldnern ist die Warteschlange nie voll
+  const unitIsMerc = () => atSupplyCap() && mercRule();
+  const unitPrice = type => Math.ceil(unitCost(type) * (atSupplyCap() && mercRule() ? C.LINIEN.soeldner.kostenFaktor : 1));
   /* Schildträger erst nach der Forschung (REQ-5.07, Zweig D) */
   const unitUnlocked = type => (!C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0) && isOpen('einheit:' + type);
   function spawn(type){
-    const cost = unitCost(ownType(type));
+    const cost = unitPrice(ownType(type)), merc = atSupplyCap() && mercRule();
     if (S.status !== 'running' || supplyFull() || S.material < cost || !unitUnlocked(type)) return false;
     S.material -= cost;
     type = ownType(type);
-    S.queue.push({ type });
+    S.queue.push(merc ? { type, merc: true } : { type });
+    if (merc) S.stats.mercs = (S.stats.mercs || 0) + 1;
     emit('unitBought', { type });
     return true;
   }
@@ -704,6 +717,7 @@ function create(){
       // eine Gruppe über alle Lanes: Armee, falls es keine gibt, sonst Nachschub (REQ-5.06)
       const g = addGroup('p', assignLanes(types, strongerLane(S.nextEnemy)), deployX());
       if (opts.boost > 0) for (const u of S.units) if (u.form === g.id){ u.hp *= 1 + opts.boost; u.maxHp *= 1 + opts.boost; u.dmg *= 1 + opts.boost; }       // Gegenstoß: stärkere Welle
+      if (opts.baseMult > 1) for (const u of S.units) if (u.form === g.id) u.baseMult = opts.baseMult;                                               // Ausbruch (Linie Verteidigung, Stufe 3): mehr Schaden an der gegnerischen Basis
       S.queue = [];
       S.lastOrder = bought;
       S.stats.maxArmy = Math.max(S.stats.maxArmy || 0, S.units.filter(u => u.side === 'p').length);
@@ -737,7 +751,7 @@ function create(){
   function counterWave(){
     if (!S.queue.length) return false;
     const keep = S.nextOwnWave;                                            // der Gegenstoß ist eine zusätzliche Welle: der regelmäßige Takt bleibt
-    launchOwnWave({ boost: mAdd('counterBoost') });
+    launchOwnWave({ boost: mAdd('counterBoost'), baseMult: mMul('counterBaseDmg') });
     S.nextOwnWave = keep;
     S.stats.counterWaves = (S.stats.counterWaves || 0) + 1;
     return true;
@@ -817,7 +831,7 @@ function create(){
   }
   function hitBase(u){
     if (!u.ranged) lunge(u);
-    if (u.side === 'p'){ damageEnemyBase(u.dmg * mMul('dmgVsBase') * (u.ranged ? mMul('rangedDmg') : 1)); FX.baseFlash.e = 0.12; }
+    if (u.side === 'p'){ damageEnemyBase(u.dmg * mMul('dmgVsBase') * (u.baseMult || 1) * (u.ranged ? mMul('rangedDmg') : 1)); FX.baseFlash.e = 0.12; }
     else {
       hitSection(u.lane, u.dmg);
       if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
@@ -1423,6 +1437,8 @@ function create(){
     }
   }
 
+  /* Lagerdeckel: Materialertrag von C.LINIEN.lager.minuten Minuten, mindestens C.LINIEN.lager.min */
+  const lagerDeckel = () => Math.max(C.LINIEN.lager.min, incomeRate() * 60 * C.LINIEN.lager.minuten);
   /* Unterhalt wird vom Material abgezogen; was fehlt, wird nicht nachgefordert (kein Minus) */
   function payUpkeep(dt){
     const paid = Math.min(Math.max(0, S.material), upkeepRate() * dt);
@@ -1442,6 +1458,11 @@ function create(){
     addProduction(matRate() * dt);
     addProduction(autoPressCps() * clickPower() * dt);
     if (S.pacing === 'karten' && mAdd('upkeep') > 0) payUpkeep(dt);
+    if (S.pacing === 'karten' && mAdd('lagerEp') > 0 && S.material > lagerDeckel()){       // Linie Wirtschaft, Stufe 2 (Teil 5): Material über dem Lagerdeckel wird zu EP
+      const over = S.material - lagerDeckel();
+      S.material -= over; S.stats.lagerMaterial = (S.stats.lagerMaterial || 0) + over;
+      gainXp(over * C.LINIEN.lager.kurs, 'lager');
+    }
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
     if (S.waveRushCd) S.waveRushCd = Math.max(0, S.waveRushCd - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
@@ -1570,7 +1591,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, variantsFor, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, variantsFor, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
