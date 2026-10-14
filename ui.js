@@ -263,14 +263,14 @@ function tipContent(id){
     case 'draftopt': {
       const d = S.pendingDraft; if (!d) return { title: '' };
       const o = G.OPT[d.options[a]], tier = G.cardTaken(o.id) + 1;
-      return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)),
+      return { title: cardName(o, tier), body: cardDesc(o, tier),
                rows: cardRows(o, [[t('tip.draft.limit'), optLimit(o)]]),
                reason: null, foot: t('tip.draft.choose') };
     }
     case 'chosen': {
       const o = G.OPT[a], tier = G.cardTaken(a);
       const rows = tier < G.tiersOf(o).length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
-      return { title: cardName(o, tier), body: t(o.descKey, optParams(o, tier)), rows: cardRows(o, rows) };
+      return { title: cardName(o, tier), body: cardDesc(o, tier), rows: cardRows(o, rows) };
     }
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
     case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };

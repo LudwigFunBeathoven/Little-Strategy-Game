@@ -18,19 +18,13 @@ const exhaust = (G, id) => { G.S.draft.stacks[id] = G.OPT[id].tiers.length; G.S.
 /* Je Bonuskarte: ein Spielstand, in dem ihre Wirkung null wäre (nicht angeboten), und einer, in dem sie wirkt (angeboten).
    Karten ohne Strukturbedingung wirken ab Spielbeginn; ihr „Wirkung null“-Zustand ist die höchste Stufe (nichts mehr zu gewinnen). */
 const CAPPED = G => { G.build('kaserne'); G.S.lvl.ausbau = 5; G.S.research.done.r_logistik = 3; G.S.research.ver++; };   // Versorgungslimit am Deckel (15)
+const GONE = { entfaellt: true };                                      // im Modus karten gestrichen (Teil 4: serienbau, bauleitung; Teil 5 K5.06: Rest), siehe tests/pool5.test.mjs
 const CASES = {
   // Wirtschaft
   bessereFabriken: { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
-  schwerePressen:  { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
-  doppelschicht:   { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
-  grossauftrag:    { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
-  rationalisierung:{ off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
-  serienbau:       { entfaellt: true },                                  // Teil 4 (REQ-S.03): im Modus karten gestrichen, siehe tests/pool4.test.mjs
-  bauleitung:      { entfaellt: true },
-  nachtschicht:    { off: G => { G.S.level = 1; }, on: G => { G.S.level = 6; } },
-  selbstlaeufer:   { off: G => { G.S.level = 1; }, on: G => { G.S.level = 3; } },
+  schwerePressen: GONE, doppelschicht: GONE, grossauftrag: GONE, rationalisierung: GONE, serienbau: GONE, bauleitung: GONE, nachtschicht: GONE, selbstlaeufer: GONE,
   handelskontor:   { off: G => {}, on: G => { open(G, 'bau:kontor'); G.build('kontor'); G.S.stats.zinsDeckel = 1; }, base: G => { G.S.level = 3; } },   // Teil 4: erst, wenn der Zinsdeckel erreicht wurde
-  kriegserfahrung: {}, kriegsanleihe: {},                                // Teil 5: Kriegserfahrung kehrt in den Pool zurück (REQ-K5.04)
+  kriegserfahrung: {}, kriegsanleihe: GONE,                              // Teil 5: Kriegserfahrung kehrt in den Pool zurück (REQ-K5.04)
   // Armee
   aushebung:       { off: CAPPED },
   grosseArmee:     { off: CAPPED },
@@ -38,18 +32,16 @@ const CASES = {
   schildwall:      { off: G => {}, on: G => { G.build('kaserne'); } },
   weitschuss: {},                                                          // Teil 5: der Werfer ist ab Start verfügbar
   langeWurfarme: {},
-  drill: {}, belagerungsgeraet: {}, vorposten: {}, sappeure: {}, veteranen: {}, taktiker: {},
+  drill: {}, belagerungsgeraet: {}, sappeure: {}, vorposten: GONE, veteranen: GONE, taktiker: GONE,
   // Basis
   turmkanoniere:   { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
-  bastion:         { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
-  scharfschuetzen: { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
-  zeugmeister:     { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
-  maurerkolonne: {}, zinnen: {}, notreserve: {}, festungsbau: {},
+  bastion: GONE, scharfschuetzen: GONE, zeugmeister: GONE, festungsbau: GONE,
+  maurerkolonne: {}, zinnen: {}, notreserve: {},
   // Automatisierung
   werkmeister:     { off: G => {}, on: G => { open(G, 'bau:schmiede'); G.build('schmiede'); } },
-  instandhaltung: {}, fliessband: {}, dauerauftrag: {},
+  instandhaltung: {}, dauerauftrag: {}, fliessband: GONE,
   // Sonderregel
-  allesAufDieMitte: {}, blitzkrieg: {}, soeldnerheer: {}, verbrannteErde: {}, gluecksritter: {},
+  allesAufDieMitte: {}, verbrannteErde: {}, gluecksritter: {}, blitzkrieg: GONE, soeldnerheer: GONE,
 };
 
 test('Jede Bonuskarte ist in der Fallliste erfasst', () => {

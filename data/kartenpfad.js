@@ -47,7 +47,11 @@ const KF_PFAD = {
   entfallen: ['r_schildtraeger', 'r_ingenieur', 'r_hoersaal'],
   /* Karten, die im Modus karten nicht im Pool sind (Teil 4): Serienbau und Bauleitung (REQ-S.03: einzige Wirkung verbilligt bzw. beschleunigt das Bauen). Im Modus standard bleiben sie unverändert.
      Kriegserfahrung kehrt mit Teil 5 zurück (REQ-K5.04, dort unter dem Namen „Lehrjahre“, Pool-Eintrag in data/draft-options.js). */
-  entfallenKarten: ['serienbau', 'bauleitung'],
+  entfallenKarten: ['serienbau', 'bauleitung',
+    /* Teil 5 (REQ-K5.06): unter der Spürbarkeitsgrenze, doppelt belegt oder zeitbezogen; je Karte die Maßnahme steht im Bericht (Inventar) */
+    'doppelschicht', 'schwerePressen', 'nachtschicht', 'kriegsanleihe', 'grossauftrag', 'rationalisierung', 'selbstlaeufer', 'fliessband',   // Wirtschaft und Automatisierung
+    'veteranen', 'taktiker', 'vorposten', 'blitzkrieg', 'soeldnerheer',                                                                         // Armee und Sonderregel
+    'festungsbau', 'bastion', 'scharfschuetzen', 'zeugmeister'],                                                                                // Basis und Automatisierung
   forschungen: [
     { id: 'r_reiter', branch: 'pfad', nameKey: 'kp.res.reiter.name', descKey: 'kp.res.reiter.desc',
       schaltetFrei: ['einheit:reiter'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },

@@ -393,7 +393,7 @@ function renderOpts(){
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const cardName = (o, tier) => G.tiersOf(o).length > 1 ? `${t(o.nameKey)} ${ROMAN[tier]}` : t(o.nameKey);
 /* Werte für die Kartentexte: Faktoren als Prozent, außer echte Vielfache; Anteile als Prozent */
-const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect', 'budgetKurs', 'dmgVsBase', 'counterBaseDmg'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus', 'variantYield', 'handelsnetz', 'ruecklage', 'counterBoost'];      // Anteile werden in Prozent gezeigt
+const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect', 'budgetKurs', 'dmgVsBase', 'counterBaseDmg', 'nbFabrik'], SHARE_STATS = ['autoRepairCost', 'autoPressEarly', 'qualityBonus', 'variantYield', 'handelsnetz', 'ruecklage', 'counterBoost'];      // Anteile werden in Prozent gezeigt
 /* Anzeigewert einer Wirkung (Karten und Forschungen gleich): Faktor, Prozent, Anteil in Prozentpunkten oder Zahl */
 const effectValue = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
   : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : e.add % 1 ? fmt2(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
@@ -414,10 +414,20 @@ function optParams(o, tier){
   if (o.condition && o.condition.value !== undefined) p.c1 = o.condition.value < 1 ? pct(o.condition.value) : o.condition.value;
   if (o.synergy) p.syn = pct(o.synergy.perCard);
   if (o.doktrin) Object.assign(p, doktrinParams(o.doktrin));
+  for (const e of tr.effect || []){                                                                      // Regeländerungen der Stufen 2 und 3 (Teil 5, REQ-K5.06): neue Schwelle c2
+    if (e.stat === 'drumsMin') p.c2 = o.condition.value + e.add;
+    if (e.stat === 'shieldMin') p.c2 = C.FORMATION_ROW_MAX + e.add;
+    if (e.stat === 'repairTh') p.c2 = pct(o.condition.value + e.add);
+  }
   p.s = C.WALL_REGEN_DELAY_S;
   return p;
 }
 const fmtNum = n => n % 1 ? fmt1(n) : fmt(n);
+/* Beschreibung einer Karte; ab Stufe 2 hat eine Karte im Modus karten einen eigenen Text für den zusätzlichen Effekt (Schlüssel „….desc.t2.karten“, Teil 5, REQ-K5.06) */
+function cardDesc(o, tier){
+  const k = `${o.descKey}.t${tier}`;
+  return t(G.S.pacing === 'karten' && KF_I18N[lang] && KF_I18N[lang][k + '.karten'] !== undefined ? k : o.descKey, optParams(o, tier));
+}
 /* Zeilen für Kartentooltips: Kategorie, Seltenheit, aktuelle Synergie */
 /* Zeichen einer Karte als Text („◆◆ Militär“); leer ohne Zeichen oder solange keine Linie Stufe 1 erreicht hat (Teil 4, REQ-S.04) */
 function signLabel(id){
@@ -522,7 +532,7 @@ function renderDraft(){
     b.type = 'button'; b.className = ['pick', 'card-pick', cardClass(o)].join(' '); b.dataset.tooltip = 'draftopt:' + i;
     const nm = document.createElement('b'); nm.textContent = cardName(o, tier);
     const k = document.createElement('span'); k.className = 'k'; k.textContent = `${t('draft.cat.' + o.category)} · ${t('draft.rarity.' + o.rarity)}`;
-    const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = t(o.descKey, optParams(o, tier));
+    const ds = document.createElement('span'); ds.className = 'd'; ds.textContent = cardDesc(o, tier);
     const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.card', { tier: optLimit(o) });
     b.append(nm, k, ds, ex);
     b.addEventListener('click', () => { if (draftLocked() || isDis(b)) return; if (G.S.pendingDraft && G.chooseDraft(i)){ chosenKey = ''; requestRender(); } });

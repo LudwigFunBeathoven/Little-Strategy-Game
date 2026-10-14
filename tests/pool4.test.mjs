@@ -76,14 +76,6 @@ test('Teil 5 (K5.04): Glücksritter hat im Modus karten wieder den EP-Nachteil (
   assert.equal(S.mMul('ownWaveInterval'), 1);
 });
 
-test('S.03: Söldnerheer im Modus karten mit Produktion × 0,8 statt × 0,6', () => {
-  const { G } = game('karten'); choose(G, 'soeldnerheer');
-  assert.equal(G.mMul('autoProd'), 0.8);
-  assert.equal(G.mMul('unitCost'), 0);
-  const { G: S } = game('standard'); choose(S, 'soeldnerheer');
-  assert.equal(S.mMul('autoProd'), 0.6);
-});
-
 test('S.03: Handelskontor wird im Modus karten erst angeboten, wenn der Zinsdeckel erreicht wurde', () => {
   const { G, C } = game('karten');
   G.S.material = 1e7; G.S.level = 3; G.S.pfad.choices = 9;

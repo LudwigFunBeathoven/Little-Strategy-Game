@@ -269,7 +269,12 @@ function create(){
     return Math.min(rule.max, n);
   }
   /* Zunfthaus (Sonderbau der Doktrin Zunftordnung): der Nachbarschaftsbonus dieser Fabrik wirkt im Vielfachen C.DOKTRIN.zunfthaus.nachbarFaktor */
-  const nbFactor = (i, type, slots = S.slots) => { const sl = slots[i]; return type === 'fabrik' && S.pacing === 'karten' && sl && sl.variant === 'zunfthaus' && !sl.upg ? C.DOKTRIN.zunfthaus.nachbarFaktor : 1; };
+  /* nbFabrik: Karte „Bessere Fabriken“, Stufe 2 und 3 (Teil 5): der Nachbarschaftsbonus aller Fabriken wirkt im Vielfachen */
+  const nbFactor = (i, type, slots = S.slots) => {
+    if (type !== 'fabrik' || S.pacing !== 'karten') return 1;
+    const sl = slots[i];
+    return mMul('nbFabrik') * (sl && sl.variant === 'zunfthaus' && !sl.upg ? C.DOKTRIN.zunfthaus.nachbarFaktor : 1);
+  };
   const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) * nbFactor(i, type, slots) : 0; };
   /* Summe der Regelwerte aller Gebäude eines Typs (Schmiede, Kaserne, Universität, Kontor gibt es je einmal) */
   const nbTotal = type => S.slots.reduce((a, sl, i) => a + (sl && sl.type === type && !sl.upg ? neighborValue(i, type) : 0), 0);
@@ -814,8 +819,8 @@ function create(){
     let dmg = u.dmg;
     if (u.side === 'p'){
       dmg *= mMul('dmgVsUnits') * (u.ranged ? mMul('rangedDmg') : 1);
-      if (u.formSize >= (OPT.kriegstrommeln ? OPT.kriegstrommeln.condition.value : Infinity)) dmg *= mMul('drumsDmg');   // Kriegstrommeln
-    } else if (!target.ranged && target.row === 0 && target.rowSize === C.FORMATION_ROW_MAX) dmg /= mMul('shieldHp');        // Schildwall
+      if (u.formSize >= (OPT.kriegstrommeln ? OPT.kriegstrommeln.condition.value + mAdd('drumsMin') : Infinity)) dmg *= mMul('drumsDmg');   // Kriegstrommeln (Stufe 3: schon ab weniger Einheiten, Teil 5)
+    } else if (!target.ranged && target.row === 0 && target.rowSize >= C.FORMATION_ROW_MAX + mAdd('shieldMin')) dmg /= mMul('shieldHp');        // Schildwall (Stufe 2: schon bei weniger Nahkämpfern je Reihe, Teil 5)
     target.hp -= dmg; target.flash = 0.12;
     // eigenes Geschoss je Wurf, vom Platz des Werfers zum Platz des Ziels (REQ-6.02)
     if (u.ranged) shot({ from: u.id, to: target.id, x0: u.x, x1: target.x, lane: u.laneF, y0: lateralOf(u), y1: lateralOf(target), t: 0, dur: 0.3 });
@@ -1174,12 +1179,13 @@ function create(){
     if (supplyCapped() && supplyOnly(tiersOf(o)[0].effect || [])) return false;       // Versorgung am Deckel (Wagnis „Volle Auslastung“): nur der Nachteil bliebe
     return true;
   }
+  const cardRemoved = id => S.pacing === 'karten' && !!PFAD && (PFAD.entfallenKarten || []).includes(id);
   /* Nach der höchsten Stufe erscheint eine Karte nicht mehr; sonst liegt genau die nächste Stufe im Pool (REQ-18.2) */
   function optionAvailable(o){
     if (o.pfad) return pfadAvailable(o);
     const n = cardTaken(o.id), tiers = tiersOf(o);
     if (S.research.banned.includes(o.id)) return false;
-    if (S.pacing === 'karten' && PFAD && (PFAD.entfallenKarten || []).includes(o.id)) return false;       // Teil 4: aus dem Pool des Modus karten gestrichen (REQ-S.02 C2, S.03)
+    if (cardRemoved(o.id)) return false;                                                                    // Teil 4 und 5: aus dem Pool des Modus karten gestrichen (REQ-S.02 C2, S.03, K5.06)
     if (o.doktrin && (S.pacing !== 'karten' || doktrinCount() >= C.DOKTRIN.max)) return false;               // Doktrinen: nur im Modus karten, höchstens C.DOKTRIN.max je Partie (Teil 5, REQ-K5.07)
     if (o.abWahl && o.abWahl > S.pfad.choices + 1) return false;
     if (n >= Math.min(tiers.length, C.CARD_MAX_TIER)) return false;
@@ -1404,7 +1410,7 @@ function create(){
   /* Automatisierungskarten (REQ-45): kaufen und reparieren selbst, sobald genug Material da ist */
   function automation(){
     const f = mAdd('autoRepairCost');
-    if (f > 0) S.sections.forEach((s, i) => { if ((s.hp > 0 || i === GATE) && s.hp < sectionMax(i) * OPT.instandhaltung.condition.value) repair(i, f); });
+    if (f > 0) S.sections.forEach((s, i) => { if ((s.hp > 0 || i === GATE) && s.hp < sectionMax(i) * (OPT.instandhaltung.condition.value + mAdd('repairTh'))) repair(i, f); });
     const smith = mAdd('autoSmith');
     if (smith > 0 && has('schmiede') && S.material >= upCost('qualitaet') * smith) buy('qualitaet');
     const fab = mAdd('autoFactory');
@@ -1415,7 +1421,7 @@ function create(){
   /* Bedingte Wirkungen */
   function applyConditionals(dt){
     const siege = mAdd('siegeDps');
-    if (siege > 0 && S.units.some(u => u.side === 'p' && u.x >= W * C.SIEGE_LANE_FRACTION)) damageEnemyBase(siege * dt);
+    if (siege > 0 && (mAdd('siegeAlways') > 0 || S.units.some(u => u.side === 'p' && u.x >= W * C.SIEGE_LANE_FRACTION))) damageEnemyBase(siege * dt);       // siegeAlways: Sappeure Stufe 2 (Teil 5)
     const charges = mAdd('emergencyRepair') - S.emergencyUsed;
     if (charges > 0){
       const th = (OPT.notreserve && OPT.notreserve.condition.value) || 0;   // Tor unter 25 %: einmal vollständig reparieren
@@ -1469,7 +1475,7 @@ function create(){
     // Maurerkolonne: stehende Mauern heilen, wenn sie WALL_REGEN_DELAY_S nicht getroffen wurden; das Tor nie (REQ-18.6)
     const wallRegen = mAdd('wallRegenPct') / 100;
     if (wallRegen > 0) S.sections.forEach((s, i) => {
-      if (i !== GATE && s.hp > 0 && S.t - s.lastHit >= C.WALL_REGEN_DELAY_S) s.hp = Math.min(sectionMax(i), s.hp + sectionMax(i) * wallRegen * dt);
+      if ((i !== GATE || mAdd('regenGate') > 0) && s.hp > 0 && S.t - s.lastHit >= C.WALL_REGEN_DELAY_S) s.hp = Math.min(sectionMax(i), s.hp + sectionMax(i) * wallRegen * dt);
     });
     // Garnison (Teil 4): stehende Mauerabschnitte heilen x Lebenspunkte je Sekunde, ohne Wartezeit; das Tor nie (wie die Maurerkolonne)
     const wallFlat = mAdd('wallRegenFlat');
@@ -1591,7 +1597,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, variantsFor, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,

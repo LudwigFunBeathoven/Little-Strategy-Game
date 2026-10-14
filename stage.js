@@ -52,7 +52,7 @@ const Stage = (() => {
   function effLine(o, tier){
     if (hasKey('kp.eff.' + o.id)) return t('kp.eff.' + o.id, optParams(o, tier));
     const l = pathLines(o);
-    return l.length ? l[0] : t(o.descKey, optParams(o, tier));
+    return l.length ? l[0] : cardDesc(o, tier);
   }
   const hasDrawback = (o, tier) => { const tiers = G.tiersOf(o); return !!(tiers[Math.min(tier, tiers.length) - 1] || {}).drawback; };
   /* Rahmenfarbe = Seltenheit, Band = Familie (Modus karten) bzw. Kategorie (Standard mit Bühne) */
@@ -185,7 +185,7 @@ const Stage = (() => {
     const i = hover >= 0 ? hover : focusI, id = d.options[i];
     if (id === undefined){ setText(el.stageDetail, t('kp.stage.hint', { n: d.options.length })); return; }
     const o = G.OPT[id], tier = G.cardTaken(id) + 1;
-    const parts = [`${cardName(o, tier)} – ${t(o.descKey, optParams(o, tier))}`, ...(o.family === 'technologie' ? pathLines(o) : []), o.pfad && (o.pfad.exklusivMit || []).length ? t('kp.card.excludesGeneric') : '', optLimit(o)].filter(Boolean);       // REQ-K2.03: nur die unmittelbare Wirkung, keine Folgekarten
+    const parts = [`${cardName(o, tier)} – ${cardDesc(o, tier)}`, ...(o.family === 'technologie' ? pathLines(o) : []), o.pfad && (o.pfad.exklusivMit || []).length ? t('kp.card.excludesGeneric') : '', optLimit(o)].filter(Boolean);       // REQ-K2.03: nur die unmittelbare Wirkung, keine Folgekarten
     setText(el.stageDetail, parts.join(' · '));
   }
 

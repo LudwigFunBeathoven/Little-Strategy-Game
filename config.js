@@ -40,11 +40,44 @@ const KF_CONFIG = {
     gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
     angebot: { basis: 3, universitaet: 4 },   // Karten je Angebot im Modus karten (REQ-P.04); Standard: DRAFT_OPTIONS_BASE / _UNIVERSITY
     pfadPlaetze: 2,             // Plätze für Pfadkarten (Technologie) je Angebot, wenn so viele ziehbar sind; der Rest sind Bonusplätze (REQ-P.04)
-    /* Teil 4 (REQ-S.03): Stufen einzelner Karten im Modus karten; sie ersetzen dort die Stufen aus data/draft-options.js (Modus standard unverändert).
-       Söldnerheer: Nachteil abgeschwächt, Produktion × 0,8 statt × 0,6. Texte: Schlüssel mit Suffix .karten (draft.<id>.desc.karten).
-       Teil 5 (REQ-K5.04): Der Glücksritter hat im Modus karten wieder den Nachteil der Bonuskarte (Stufen kosten 15 % mehr EP); die Fassung mit längerem Wellenabstand entfiel. */
+    /* Stufen einzelner Karten im Modus karten: sie ersetzen dort die Stufen aus data/draft-options.js (Modus standard unverändert). Texte: Schlüssel mit Suffix .karten (draft.<id>.desc.karten),
+       für Stufe 2 und 3 mit .t2 / .t3 (draft.<id>.desc.t2.karten).
+       Teil 5 (REQ-K5.06): Spürbarkeitsgrenze (Regeländerung oder mindestens eine Größe um 20 %) und Stufen mit neuem Effekt: Wer eine Karte zum zweiten oder dritten Mal wählt, bekommt einen zusätzlichen Effekt.
+       Regeländerungen in Stufe 2 oder 3 (sieben von dreizehn Karten): nbFabrik (Nachbarschaftsbonus der Fabriken ×), drumsMin (Trommeln wirken schon ab so vielen Einheiten weniger, add), shieldMin (Schildwall schon bei so viel weniger
+       Nahkämpfern je Reihe), siegeAlways (die Sappeure arbeiten von Anfang an), regenGate (auch das Tor regeneriert), repairTh (Instandhaltung repariert schon bei so viel mehr Lebenspunkten, Anteil), turretVsRanged (Türme × gegen Fernkämpfer).
+       Teil 5 (REQ-K5.04): Der Glücksritter hat im Modus karten wieder den Nachteil der Bonuskarte (Stufen kosten 15 % mehr EP); Söldnerheer, Blitzkrieg und weitere Karten entfallen (data/kartenpfad.js, entfallenKarten). */
     kartenTiers: {
-      soeldnerheer:  [{ effect: [{ stat: 'unitCost', mul: 0 }], drawback: [{ stat: 'autoProd', mul: 0.8 }] }],
+      bessereFabriken:   [{ effect: [{ stat: 'factoryYield', mul: 1.25 }] },
+                          { effect: [{ stat: 'factoryYield', mul: 1.6 }, { stat: 'nbFabrik', mul: 2 }] },
+                          { effect: [{ stat: 'factoryYield', mul: 2.2 }, { stat: 'nbFabrik', mul: 3 }] }],
+      kriegserfahrung:   [{ effect: [{ stat: 'xpGain', mul: 1.3 }] },
+                          { effect: [{ stat: 'xpGain', mul: 1.6 }, { stat: 'budgetKurs', mul: 1.25 }] }],
+      aushebung:         [{ effect: [{ stat: 'supply', add: 1 }], drawback: [{ stat: 'unitHp', mul: 0.9 }] },
+                          { effect: [{ stat: 'supply', add: 2 }, { stat: 'unitCost', mul: 0.9 }], drawback: [{ stat: 'unitHp', mul: 0.8 }] }],
+      drill:             [{ effect: [{ stat: 'attackCd', mul: 0.8 }] },
+                          { effect: [{ stat: 'attackCd', mul: 0.7 }, { stat: 'unitHp', mul: 1.1 }] }],
+      kriegstrommeln:    [{ effect: [{ stat: 'drumsDmg', mul: 1.25 }] },
+                          { effect: [{ stat: 'drumsDmg', mul: 1.4 }] },
+                          { effect: [{ stat: 'drumsDmg', mul: 1.6 }, { stat: 'drumsMin', add: -2 }] }],
+      schildwall:        [{ effect: [{ stat: 'shieldHp', mul: 1.2 }] },
+                          { effect: [{ stat: 'shieldHp', mul: 1.35 }, { stat: 'shieldMin', add: -1 }] }],
+      belagerungsgeraet: [{ effect: [{ stat: 'dmgVsBase', mul: 1.6 }], drawback: [{ stat: 'dmgVsUnits', mul: 0.8 }] },
+                          { effect: [{ stat: 'dmgVsBase', mul: 2.2 }, { stat: 'siegeDps', add: 2 }], drawback: [{ stat: 'dmgVsUnits', mul: 0.65 }] }],
+      langeWurfarme:     [{ effect: [{ stat: 'werferRange', add: 25 }], drawback: [{ stat: 'werferHp', mul: 0.85 }] },
+                          { effect: [{ stat: 'werferRange', add: 50 }, { stat: 'rangedDmg', mul: 1.1 }], drawback: [{ stat: 'werferHp', mul: 0.7 }] }],
+      sappeure:          [{ effect: [{ stat: 'siegeDps', add: 2 }] },
+                          { effect: [{ stat: 'siegeDps', add: 5 }, { stat: 'siegeAlways', add: 1 }] }],
+      maurerkolonne:     [{ effect: [{ stat: 'wallRegenPct', add: 0.5 }] },
+                          { effect: [{ stat: 'wallRegenPct', add: 1 }] },
+                          { effect: [{ stat: 'wallRegenPct', add: 2 }, { stat: 'regenGate', add: 1 }] }],
+      turmkanoniere:     [{ effect: [{ stat: 'turretDmg', mul: 1.4 }] },
+                          { effect: [{ stat: 'turretDmg', mul: 1.8 }, { stat: 'towerRange', mul: 1.25 }] },
+                          { effect: [{ stat: 'turretDmg', mul: 2.5 }, { stat: 'towerRange', mul: 1.5 }, { stat: 'turretVsRanged', mul: 2 }] }],
+      zinnen:            [{ effect: [{ stat: 'wallHp', mul: 1.25 }] },
+                          { effect: [{ stat: 'wallHp', mul: 1.5 }, { stat: 'repairCost', mul: 0.5 }] }],
+      instandhaltung:    [{ effect: [{ stat: 'autoRepairCost', add: 0.8 }] },
+                          { effect: [{ stat: 'autoRepairCost', add: 0.65 }] },
+                          { effect: [{ stat: 'autoRepairCost', add: 0.5 }, { stat: 'repairTh', add: 0.3 }] }],
     },
   },
   /* Teil 4 (REQ-S.04, S.05), Teil 5 (REQ-K5.08): Strategielinien (Militär, Wirtschaft, Verteidigung) und Gebäude-Aufwertung, nur im Modus karten.
