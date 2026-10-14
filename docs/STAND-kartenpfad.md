@@ -224,3 +224,11 @@ Auslegung zur Bestätigung: „Kurzname“ gab es im Code bisher nicht. Ich lege
 7. „Vollständig abgewehrte Gegnerwelle“: alle Einheiten einer Gegnerwelle und ihre wartenden Nachzügler sind gefallen (je Welle, nicht „Feld leer“); Alarmeinheiten zählen nicht.
 8. `?druck=hoch` vergrößert die Zahl der Einheiten regulärer Wellen ab Minute 4 um den Faktor (gerundet, Deckel `ENEMY_WAVE_MAX` × Faktor); die Belagerungswelle bleibt unberührt.
 9. Schwer: Schwellen ab Wahl 2 = Fahrplan × 2 statt „leicht höher“. Die Messung zeigt, dass kleinere Faktoren (1,6; 1,8) die Wahl 3 um 50 bis 62 s vorziehen; ein Faktor 2 hält alle Wahlen im Median höchstens 40 s vor der Zielzeit. Grund: Auf Schwer zählt jeder Abschuss 1,8-fach (`xpMult`).
+
+
+# Teil 5: Grundausstattung, Doktrinen und Pacing aus dem Spielfluss (`docs/anforderungen-kartenpfad-5.md`, Bericht `docs/bericht-kartenpfad-5.md`)
+
+## Umsetzung
+| Inkrement | Inhalt |
+|---|---|
+| N.0 | K5.01 Basismessung vor allen Änderungen (Stand nach Teil 4): `tools/sim-p5.mjs --suite felder` (450 Partien schneller Bot, 3 Grade × 3 Profile, 50 je Feld): Siegquote, Dauer, Wahlen, längste Lücke zwischen zwei Wahlen, EP je Minute (0–4, 4–8, 8–12, 12+ min), Anteile der EP-Quellen, Hörsaal (Stufen, Kosten, EP je Minute), Fabriken im Raster. Dreimal gemessen: Stand nach Teil 4 (`reports/kartenpfad5-basis-felder.*`), Fahrplan aus (`…-fahrplan-aus.*`, `zielzeitIstFrist: false` ohne Höchstabstand), Linien-Bots mit `?druck=hoch` (`…-basis-linien.*`, `tools/sim-p4.mjs`). Neue Kennzahl `S.stats.xpTower` (EP aus Turm-Abschüssen). |

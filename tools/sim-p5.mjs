@@ -1,0 +1,128 @@
+// Klammerfront – Messung für Kartenpfad Teil 5 (REQ-K5.01, K5.10).
+// Aufruf:  node tools/sim-p5.mjs --suite felder [--runs 50] [--json reports/kartenpfad5-basis.json] [--label "Fahrplan aus"]
+//   Filter: --diffs leicht,normal,schwer  --profiles aktiv,durchschnitt,gelegentlich  --strategy einheiten-zuerst|gierig  --linie militaer|wirtschaft|verteidigung  --druck hoch
+//   felder  Siegquote, Dauer, Wahlen je Partie, längste Lücke zwischen zwei Wahlen, EP je Minute in den Abschnitten 0–4, 4–8, 8–12, 12+ min,
+//           Anteile der EP-Quellen, Hörsaal (Stufen, Kosten, Ertrag), Fabriken im Raster; 3 Grade × 3 Profile, schneller Bot, gleiche Seeds in allen Feldern
+// „Fahrplan aus“ (Teil 4): KF_OVERRIDE='{"KARTEN":{"fahrplan":{"zielzeitIstFrist":false},"maxAbstand":1000000000}}' node tools/sim-p5.mjs …
+// Die Simulation misst Stärke, nicht Spielspaß.
+import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { availableParallelism } from 'node:os';
+import { writeFileSync } from 'node:fs';
+
+const EP_AT = [240, 480, 720];                                              // Grenzen der Abschnitte 0–4, 4–8, 8–12 min (Sekunden Spielzeit)
+const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
+  xpPassive: r.xpPassive, xpBounty: r.xpBounty, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
+  wallLost: r.wallLost, lineT: r.lineT, signs: r.signs, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers });
+
+if (!isMainThread){
+  const { playGame } = await import('./sim-bot.mjs');
+  parentPort.postMessage(workerData.jobs.map(j => Object.assign(SLIM(playGame(j)), { suite: j.suite, variant: j.variant, druckName: j.druckName, arm: j.arm })));
+} else {
+  process.env.KF_PACING = 'karten';
+  const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
+  const RUNS = Number(arg('runs', 50)), SUITE = arg('suite', 'felder'), JSON_OUT = arg('json', null), EZ = arg('strategy', 'einheiten-zuerst'), LABEL = arg('label', '');
+  const seedOf = (k, r) => (5000 + r * 7919 + k * 104729) >>> 0;
+  const { loadCore } = await import('./load-core.mjs');
+  const core = loadCore(), C = core.KF_CONFIG;
+  const DIFFS = arg('diffs', 'leicht,normal,schwer').split(','), PROFILES = arg('profiles', 'aktiv,durchschnitt,gelegentlich').split(',');
+  const LINIE = arg('linie', null), DRUCK = arg('druck', 'aus');
+  const base = { pacing: 'karten' };
+  const jobs = [];
+  if (SUITE === 'felder')
+    for (const diff of DIFFS) for (const profile of PROFILES) for (let r = 0; r < RUNS; r++)
+      jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: LINIE ? undefined : 'militaer', linie: LINIE || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, sampleXp: EP_AT, seed: seedOf(2, r) });
+
+  const n = Math.max(1, Math.min(availableParallelism(), 8));
+  const sorted = jobs.map((j, i) => ({ j, i })).sort((a, b) => (b.j.strategy === 'gierig') - (a.j.strategy === 'gierig'));
+  const chunks = Array.from({ length: n }, () => []);
+  sorted.forEach((x, i) => chunks[i % n].push(x.j));
+  const t0 = Date.now();
+  const results = (await Promise.all(chunks.filter(c => c.length).map(c => new Promise((res, rej) => {
+    const w = new Worker(new URL(import.meta.url), { workerData: { jobs: c } }); w.on('message', res); w.on('error', rej);
+  })))).flat();
+  process.stderr.write(`fertig in ${Math.round((Date.now() - t0) / 1000)} s, ${results.length} Partien\n\n`);
+
+  const cmp = (x, y) => x < y ? -1 : x > y ? 1 : 0;
+  const sortN = a => [...a].sort(cmp);
+  const median = a => { if (!a.length) return null; const s = sortN(a); return s[Math.floor(s.length / 2)]; };
+  const pct = (a, p) => { if (!a.length) return null; const s = sortN(a); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
+  const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const mm = t => t == null || !Number.isFinite(t) ? '–' : `${Math.floor(Math.round(t) / 60)}:${String(Math.round(t) % 60).padStart(2, '0')}`;
+  const pc = (a, b) => b ? Math.round(1000 * a / b) / 10 : null;
+  const f1 = x => x == null ? '–' : (Math.round(x * 10) / 10).toFixed(1);
+  const f0 = x => x == null ? '–' : String(Math.round(x));
+
+  /* EP je Minute in den Abschnitten 0–4, 4–8, 8–12, 12+ min: Partien, die den Abschnitt höchstens 30 s berühren, zählen nicht; endet die Partie im Abschnitt, gilt die tatsächliche Dauer */
+  const BOUNDS = [0, ...EP_AT, Infinity];
+  function epRates(r){
+    const out = [], at = k => k === 0 ? 0 : k <= EP_AT.length ? r.xpAt[k - 1] : r.xpTotal;
+    for (let k = 0; k < BOUNDS.length - 1; k++){
+      const a = BOUNDS[k], b = BOUNDS[k + 1];
+      if (r.t < a + 30){ out.push(null); continue; }
+      const end = Math.min(r.t, b), xe = r.t < b || b === Infinity ? r.xpTotal : r.xpAt[k], xs = k === 0 ? 0 : r.xpAt[k - 1];
+      out.push(xe == null || xs == null ? null : (xe - xs) / ((end - a) / 60));
+    }
+    return out;
+  }
+  /* Lücken zwischen den Erscheinungszeiten der Wahlen (Start = 0); luecke = größte Lücke vor der letzten Wahl, mitEnde schließt die Zeit von der letzten Wahl bis zum Ende ein */
+  function gaps(r){
+    const ts = r.wahlen.map(w => w.t); let prev = 0, mx = 0;
+    for (const t of ts){ mx = Math.max(mx, t - prev); prev = t; }
+    return { luecke: mx, mitEnde: Math.max(mx, r.t - prev) };
+  }
+  const HOERSAAL_COST = (() => { const h = core.KF_RESEARCH.find(x => x.id === 'r_hoersaal'); let s = 0; return h.tiers.map(t => (s += t.cost)); })();
+  /* Hörsaal: Fertigstellung je Stufe aus researchTimes, Material bis zur erreichten Stufe, EP je Minute ab Fertigstellung der ersten Stufe */
+  function hoersaal(r){
+    const ev = r.researchTimes.filter(x => x.id === 'r_hoersaal').sort((a, b) => a.tier - b.tier);
+    if (!ev.length) return null;
+    const t1 = ev[0].t;
+    return { stufe: ev[ev.length - 1].tier, t: ev.map(e => e.t), kosten: HOERSAAL_COST[ev[ev.length - 1].tier - 1], epMin: r.t > t1 + 20 ? r.xpPassive / ((r.t - t1) / 60) : null };
+  }
+
+  const stat = rs => {
+    const won = rs.filter(r => r.status === 'won');
+    const gridAt = t => rs.map(r => r.grid && r.grid[t]).filter(Boolean);
+    const fab = t => gridAt(t).map(g => g.types.fabrik || 0);
+    const rates = rs.map(epRates), g = rs.map(gaps), hs = rs.map(hoersaal);
+    const withH = hs.filter(Boolean);
+    const sum = f => rs.reduce((a, r) => a + f(r), 0), total = sum(r => r.xpTotal);
+    return { n: rs.length, siegquote: pc(won.length, rs.length), niederlagen: pc(rs.filter(r => r.status === 'lost').length, rs.length), patt: pc(rs.filter(r => r.status === 'running').length, rs.length),
+      siegMedian: median(won.map(r => r.t)), dauerMedian: median(rs.map(r => r.t)), dauerP90: pct(rs.map(r => r.t), 0.9),
+      wahlenMedian: median(rs.map(r => r.wahlen.length)), wahlenMittel: mean(rs.map(r => r.wahlen.length)), freieWahlenMittel: mean(rs.map(r => r.freeChoices || 0)),
+      lueckeMedian: median(g.map(x => x.luecke)), lueckeP90: pct(g.map(x => x.luecke), 0.9), lueckeEndeMedian: median(g.map(x => x.mitEnde)), lueckeEndeP90: pct(g.map(x => x.mitEnde), 0.9),
+      epMin: [0, 1, 2, 3].map(k => ({ median: median(rates.map(x => x[k]).filter(v => v != null)), n: rates.filter(x => x[k] != null).length })),
+      epGesamtMedian: median(rs.map(r => r.xpTotal)),
+      quellen: { einheiten: total ? (sum(r => r.xpKill - r.xpTower)) / total : null, tuerme: total ? sum(r => r.xpTower) / total : null, hoersaal: total ? sum(r => r.xpPassive) / total : null, beute: total ? sum(r => r.xpBounty) / total : null },
+      hoersaal: { anteil: pc(withH.length, rs.length), stufe: [1, 2, 3].map(k => pc(withH.filter(h => h.stufe >= k).length, rs.length)), t1Median: median(withH.map(h => h.t[0])),
+        kostenMedian: median(withH.map(h => h.kosten)), epMinMedian: median(withH.map(h => h.epMin).filter(v => v != null)), epMinMittel: mean(withH.map(h => h.epMin).filter(v => v != null)) },
+      fabrikenMedian: { 300: median(fab(300)), 600: median(fab(600)) }, fabrikenMittel: { 300: mean(fab(300)), 600: mean(fab(600)) },
+      mauerVerlustMedian: median(rs.map(r => r.wallLost)) };
+  };
+  const report = { suite: SUITE, runs: RUNS, label: LABEL, strategy: EZ, felder: [] };
+  if (SUITE === 'felder'){
+    const rows = [];
+    for (const diff of DIFFS) for (const profile of PROFILES){
+      const rs = results.filter(r => r.suite === 'felder' && r.diff === diff && r.profile === profile);
+      const s = stat(rs); rows.push({ diff, profile, ...s }); report.felder.push({ diff, profile, ...s });
+    }
+    console.log(`FELDMESSUNG Teil 5 (${EZ}${LINIE ? ', Linie ' + LINIE : ''}${DRUCK === 'hoch' ? ', druck=hoch' : ''}, ${RUNS} Partien je Feld, Modus karten${LABEL ? ', ' + LABEL : ''})\n`);
+    console.log('| Grad | Profil | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median (Mittel) | längste Lücke Median / P90 (s) | Lücke inkl. Ende Median / P90 (s) | Fabriken Min 5 / 10 (Median) |');
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|');
+    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.siegquote} % | ${x.niederlagen} % | ${x.patt} % | ${mm(x.dauerMedian)} | ${mm(x.dauerP90)} | ${x.wahlenMedian} (${f1(x.wahlenMittel)}) | ${f0(x.lueckeMedian)} / ${f0(x.lueckeP90)} | ${f0(x.lueckeEndeMedian)} / ${f0(x.lueckeEndeP90)} | ${x.fabrikenMedian[300] ?? '–'} / ${x.fabrikenMedian[600] ?? '–'} |`);
+    console.log('\nEP je Minute (Median; Partien im Abschnitt in Klammern)\n');
+    console.log('| Grad | Profil | 0–4 min | 4–8 min | 8–12 min | 12+ min | EP gesamt (Median) |');
+    console.log('|---|---|---|---|---|---|---|');
+    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.epMin.map(e => `${f1(e.median)} (${e.n})`).join(' | ')} | ${f0(x.epGesamtMedian)} |`);
+    console.log('\nEP-Quellen (Anteil am EP-Ertrag über alle Partien des Feldes)\n');
+    console.log('| Grad | Profil | Einheiten | Türme | Hörsaal | Beute (Tutorial) |');
+    console.log('|---|---|---|---|---|---|');
+    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${(100 * x.quellen.einheiten).toFixed(1)} % | ${(100 * x.quellen.tuerme).toFixed(1)} % | ${(100 * x.quellen.hoersaal).toFixed(1)} % | ${(100 * x.quellen.beute).toFixed(1)} % |`);
+    console.log('\nHörsaal (Anteil der Partien mit Stufe 1 / 2 / 3; Fertigstellung Stufe 1; Material bis zur erreichten Stufe; EP je Minute ab Fertigstellung)\n');
+    console.log('| Grad | Profil | Partien mit Hörsaal | Stufe 1 / 2 / 3 | Stufe 1 fertig (Median) | Kosten (Median) | EP je Minute (Median / Mittel) |');
+    console.log('|---|---|---|---|---|---|---|');
+    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.hoersaal.anteil} % | ${x.hoersaal.stufe.map(v => v + ' %').join(' / ')} | ${mm(x.hoersaal.t1Median)} | ${f0(x.hoersaal.kostenMedian)} | ${f1(x.hoersaal.epMinMedian)} / ${f1(x.hoersaal.epMinMittel)} |`);
+  }
+  if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
+    xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
+    grid: r.grid, wallLost: r.wallLost, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })) })) }));
+}

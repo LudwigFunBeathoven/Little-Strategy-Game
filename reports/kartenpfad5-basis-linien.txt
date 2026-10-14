@@ -1,0 +1,20 @@
+fertig in 252 s, 200 Partien
+
+LINIEN-BOTS Teil 4 (einheiten-zuerst, normal/durchschnitt, 50 Partien je Zeile, Modus karten)
+
+Bot          | Druck | Siege | Nied. | offen | Dauer Median | Stufe 1 (Anteil, Median) | Stufe 2 (Anteil, Median) | Stufe 3 (Anteil, Median) | Fabriken ohne Variante Min 5/10 | Mauer-Verlust (Mittel) | Turm-Abschüsse | Gegenstöße | Schlüsselkarten-Angebote (Median) / gewählt
+ohne         | hoch  |  100% |    0% |    0% |        11:44 | –                        | –                        | –                        | 6.0/5.3 |     48 |    0.0 |   0.4 | 3 / 0.4
+militaer     | hoch  |  100% |    0% |    0% |        12:21 | 100 % 3:10               | 100 % 3:45               | 100 % 5:55               | 5.9/5.4 |    106 |    0.0 |   0.0 | 3 / 1.9
+wirtschaft   | hoch  |   82% |   18% |    0% |        15:47 | 100 % 3:12               | 98 % 5:55                | 98 % 8:05                | 0.0/0.0 |    598 |    0.0 |   0.0 | 5 / 1.7
+verteidigung | hoch  |   96% |    0% |    4% |        23:57 | 100 % 3:10               | 100 % 3:45               | 100 % 5:55               | 6.2/5.5 |   1335 |   18.3 |  34.3 | 7 / 2.3
+
+Varianten (Anteil der Partien, in denen mindestens eine Variante dieses Typs fertig wurde; je Bot) und mittlere Zahl fertiger Varianten
+ohne         hoch  {}  Mittel 0.0
+militaer     hoch  {"werkstatt":1,"exerzierplatz":1,"waffenschmiede":0.76}  Mittel 4.3
+wirtschaft   hoch  {"manufaktur":1}  Mittel 6.9
+verteidigung hoch  {"wachstube":1,"garnison":1,"ruestkammer":0.98}  Mittel 5.1
+
+Stufen aller Linien je Bot (Anteil der Partien, Median in s): ohne/hoch: M1 100% 4:50, M2 86% 8:50, M3 18% 9:10 · W1 48% 9:10, W2 4% 12:05, W3 0% – · V1 58% 9:10, V2 12% 11:06, V3 6% 12:46
+  militaer/hoch: M1 100% 3:10, M2 100% 3:45, M3 100% 5:55 · W1 0% –, W2 0% –, W3 0% – · V1 12% 11:05, V2 0% –, V3 0% –
+  wirtschaft/hoch: M1 72% 13:30, M2 12% 20:55, M3 2% 10:15 · W1 100% 3:12, W2 98% 5:55, W3 98% 8:05 · V1 6% 20:57, V2 0% –, V3 0% –
+  verteidigung/hoch: M1 96% 12:25, M2 74% 20:10, M3 24% 23:11 · W1 64% 20:55, W2 26% 23:15, W3 10% 24:41 · V1 100% 3:10, V2 100% 3:45, V3 100% 5:55

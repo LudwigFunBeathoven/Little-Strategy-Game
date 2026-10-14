@@ -1042,6 +1042,7 @@ function create(){
       if (u.side === 'e'){
         const xp = C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult * (u.towerKill ? mMul('towerKillXp') : 1);
         S.stats.xpKill = (S.stats.xpKill || 0) + xp;
+        if (u.towerKill) S.stats.xpTower = (S.stats.xpTower || 0) + xp;                      // Kennzahl: EP aus Turm-Abschüssen (Teil 5, REQ-K5.01)
         gainXp(xp);
         S.kills++;
         if (u.towerKill && S.pacing === 'karten'){                                            // Turm-Abschuss (Teil 4): Zähler, Material der Linie Verteidigung

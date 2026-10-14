@@ -1,0 +1,57 @@
+fertig in 113 s, 450 Partien
+
+FELDMESSUNG Teil 5 (einheiten-zuerst, 50 Partien je Feld, Modus karten, Stand nach Teil 4)
+
+| Grad | Profil | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median (Mittel) | längste Lücke Median / P90 (s) | Lücke inkl. Ende Median / P90 (s) | Fabriken Min 5 / 10 (Median) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| leicht | aktiv | 100 % | 0 % | 0 % | 11:02 | 15:14 | 9 (9.9) | 85 / 90 | 85 / 90 | 6 / 5 |
+| leicht | durchschnitt | 100 % | 0 % | 0 % | 11:30 | 12:10 | 10 (9.5) | 90 / 90 | 90 / 90 | 6 / 5 |
+| leicht | gelegentlich | 100 % | 0 % | 0 % | 13:34 | 14:14 | 12 (11.6) | 90 / 90 | 90 / 90 | 6 / 5 |
+| normal | aktiv | 100 % | 0 % | 0 % | 10:44 | 11:24 | 9 (8.9) | 86 / 87 | 86 / 87 | 6 / 5 |
+| normal | durchschnitt | 100 % | 0 % | 0 % | 11:49 | 12:12 | 10 (9.9) | 85 / 86 | 85 / 86 | 6 / 6 |
+| normal | gelegentlich | 100 % | 0 % | 0 % | 14:00 | 14:30 | 12 (11.7) | 85 / 86 | 85 / 86 | 6 / 5 |
+| schwer | aktiv | 100 % | 0 % | 0 % | 9:53 | 10:48 | 8 (8.2) | 100 / 100 | 100 / 100 | 6 / 5 |
+| schwer | durchschnitt | 74 % | 26 % | 0 % | 11:06 | 11:51 | 9 (7.3) | 100 / 100 | 100 / 100 | 6 / 5 |
+| schwer | gelegentlich | 40 % | 60 % | 0 % | 1:52 | 14:36 | 1 (5.4) | 61 / 100 | 69 / 100 | 6 / 5 |
+
+EP je Minute (Median; Partien im Abschnitt in Klammern)
+
+| Grad | Profil | 0–4 min | 4–8 min | 8–12 min | 12+ min | EP gesamt (Median) |
+|---|---|---|---|---|---|---|
+| leicht | aktiv | 15.4 (50) | 33.2 (50) | 47.3 (50) | 523.4 (11) | 316 |
+| leicht | durchschnitt | 23.9 (50) | 31.6 (50) | 41.7 (50) | 21.0 (1) | 347 |
+| leicht | gelegentlich | 29.7 (50) | 17.4 (50) | 49.3 (50) | 31.2 (43) | 430 |
+| normal | aktiv | 23.1 (50) | 33.8 (50) | 46.0 (50) | – (0) | 360 |
+| normal | durchschnitt | 39.5 (50) | 27.2 (50) | 40.8 (50) | 901.6 (2) | 426 |
+| normal | gelegentlich | 66.5 (50) | 8.9 (50) | 51.8 (50) | 30.9 (45) | 570 |
+| schwer | aktiv | 139.0 (50) | 65.8 (50) | 102.4 (48) | – (0) | 1036 |
+| schwer | durchschnitt | 225.0 (50) | 54.9 (37) | 82.4 (37) | 33.0 (1) | 1339 |
+| schwer | gelegentlich | 76.8 (50) | 208.1 (20) | 109.6 (20) | 33.0 (19) | 144 |
+
+EP-Quellen (Anteil am EP-Ertrag über alle Partien des Feldes)
+
+| Grad | Profil | Einheiten | Türme | Hörsaal | Beute (Tutorial) |
+|---|---|---|---|---|---|
+| leicht | aktiv | 82.3 % | 0.0 % | 17.7 % | 0.0 % |
+| leicht | durchschnitt | 56.5 % | 0.0 % | 43.5 % | 0.0 % |
+| leicht | gelegentlich | 64.7 % | 0.0 % | 35.3 % | 0.0 % |
+| normal | aktiv | 60.6 % | 0.0 % | 39.4 % | 0.0 % |
+| normal | durchschnitt | 76.1 % | 0.0 % | 23.9 % | 0.0 % |
+| normal | gelegentlich | 69.8 % | 0.0 % | 30.2 % | 0.0 % |
+| schwer | aktiv | 90.1 % | 0.0 % | 9.9 % | 0.0 % |
+| schwer | durchschnitt | 92.8 % | 0.0 % | 7.2 % | 0.0 % |
+| schwer | gelegentlich | 94.9 % | 0.0 % | 5.1 % | 0.0 % |
+
+Hörsaal (Anteil der Partien mit Stufe 1 / 2 / 3; Fertigstellung Stufe 1; Material bis zur erreichten Stufe; EP je Minute ab Fertigstellung)
+
+| Grad | Profil | Partien mit Hörsaal | Stufe 1 / 2 / 3 | Stufe 1 fertig (Median) | Kosten (Median) | EP je Minute (Median / Mittel) |
+|---|---|---|---|---|---|---|
+| leicht | aktiv | 100 % | 100 % / 100 % / 64 % | 3:30 | 2580 | 20.0 / 21.1 |
+| leicht | durchschnitt | 100 % | 100 % / 100 % / 36 % | 3:40 | 1020 | 19.4 / 19.9 |
+| leicht | gelegentlich | 100 % | 100 % / 100 % / 84 % | 4:08 | 2580 | 20.0 / 20.9 |
+| normal | aktiv | 100 % | 100 % / 100 % / 38 % | 3:32 | 1020 | 19.4 / 19.9 |
+| normal | durchschnitt | 100 % | 100 % / 100 % / 32 % | 3:51 | 1020 | 19.2 / 19.0 |
+| normal | gelegentlich | 100 % | 100 % / 100 % / 80 % | 5:00 | 2580 | 19.9 / 20.0 |
+| schwer | aktiv | 100 % | 100 % / 100 % / 24 % | 3:16 | 1020 | 18.9 / 18.1 |
+| schwer | durchschnitt | 74 % | 74 % / 74 % / 22 % | 4:38 | 1020 | 18.4 / 18.3 |
+| schwer | gelegentlich | 40 % | 40 % / 40 % / 36 % | 7:41 | 2580 | 21.4 / 21.6 |
