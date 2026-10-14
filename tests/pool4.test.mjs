@@ -61,24 +61,19 @@ test('S.03: kein Inhalt des Modus karten wirkt allein auf Baukosten', () => {
   for (const id of REMOVED_CARDS.concat(REMOVED_RESEARCH)) assert.ok(removed.has(id), `${id} steht in der Streichliste`);
 });
 
-test('S.02 C2: Glücksritter verlängert den Wellenabstand und ändert keine EP-Schwelle (karten); Standard unverändert', () => {
+test('Teil 5 (K5.04): Glücksritter hat im Modus karten wieder den EP-Nachteil (Stufen kosten 15 % mehr EP), keinen Wellenabstand mehr', () => {
   const { G, C } = game('karten');
   const need = [1, 2, 5].map(n => G.xpNeed(n));
   choose(G, 'gluecksritter');
-  assert.deepEqual([1, 2, 5].map(n => G.xpNeed(n)), need, 'keine EP-Schwelle ändert sich');
-  assert.equal(G.mMul('xpNeed'), 1);
-  assert.equal(G.mMul('ownWaveInterval'), C.KARTEN.kartenTiers.gluecksritter[0].drawback[0].mul);
-  assert.equal(G.mMul('ownWaveInterval'), 1.25, 'Abstand der eigenen Wellen +25 %');
+  assert.equal(G.mMul('xpNeed'), 1.15, 'Stufen kosten 15 % mehr EP');
+  assert.deepEqual([1, 2, 5].map(n => G.xpNeed(n)), need.map(x => x * 1.15), 'jede EP-Schwelle steigt um 15 %');
+  assert.equal(G.mMul('ownWaveInterval'), 1, 'der Wellenabstand bleibt');
   assert.equal(G.mAdd('draftSize'), 1);
-  // tatsächlicher Wellenabstand
-  const a = game('karten').G, b = game('karten').G;
-  choose(b, 'gluecksritter');
-  assert.ok(Math.abs(b.ownWaveInterval() / a.ownWaveInterval() - 1.25) < 1e-9, `Wellenabstand ${b.ownWaveInterval()} vs ${a.ownWaveInterval()}`);
-  const { G: S, C: SC } = game('standard');
+  assert.equal(C.KARTEN.kartenTiers.gluecksritter, undefined, 'keine eigene Fassung im Modus karten');
+  const { G: S } = game('standard');
   choose(S, 'gluecksritter');
-  assert.equal(S.mMul('xpNeed'), 1.15, 'Standard: Stufen kosten 15 % mehr EP');
+  assert.equal(S.mMul('xpNeed'), 1.15, 'Standard: wie bisher');
   assert.equal(S.mMul('ownWaveInterval'), 1);
-  assert.equal(SC.KARTEN.kartenTiers.gluecksritter[0].drawback[0].stat, 'ownWaveInterval');
 });
 
 test('S.03: Söldnerheer im Modus karten mit Produktion × 0,8 statt × 0,6', () => {
@@ -127,33 +122,4 @@ test('Teil 5 (REQ-K5.02): Kaserne und Werfer sind ab Start da; Versorgung steigt
   for (const r of P.forschungen) for (const t of r.tiers) assert.ok(!(t.effect || []).some(e => e.stat === 'supply' || e.stat === 'supplyMult'), `${r.id} gibt Versorgung`);
   assert.equal(H.supplyCap(), C.SUPPLY_CAP_START);
   assert.equal(G.pacingKeys().gesperrt.filter(k => k === 'bau:kaserne' || k === 'einheit:werfer').length, 0, 'weder Kaserne noch Werfer gesperrt');
-});
-
-test('S.02 C3: Schwellen je Grad überschreiben nur den betroffenen Grad', () => {
-  const base = game('karten').C.KARTEN.fahrplan.schwellen, n = 4;
-  const sum = st => st.slice(0, n).reduce((a, b) => a + b, 0);
-  const tweak = C => { C.KARTEN.schwellenGrad = { schwer: base.map(x => x * 2) }; };
-  const ref = ['leicht', 'normal'].map(d => game('karten', 3, d).G.xpNeed(n));
-  const schwer = game('karten', 3, 'schwer', tweak).G, leicht = game('karten', 3, 'leicht', tweak).G, normal = game('karten', 3, 'normal', tweak).G;
-  assert.equal(Math.round(schwer.xpNeed(n)), Math.round(sum(base.map(x => x * 2))), 'Schwer nutzt eigene Schwellen');
-  assert.equal(Math.round(leicht.xpNeed(n)), Math.round(ref[0]), 'Leicht unverändert');
-  assert.equal(Math.round(normal.xpNeed(n)), Math.round(ref[1]), 'Normal unverändert');
-  assert.equal(Math.round(leicht.xpNeed(n)), Math.round(sum(base)));
-});
-
-test('S.02 C3: Tabelle der Schwellen für Schwer: erste Schwelle wie der Fahrplan, die übrigen höher; Leicht und Normal ohne eigene Tabelle', () => {
-  const { C } = game('karten');
-  const base = C.KARTEN.fahrplan.schwellen, sw = C.KARTEN.schwellenGrad.schwer;
-  assert.equal(sw.length, base.length);
-  assert.equal(sw[0], base[0], 'Wahl 1 unverändert (die erste Karte muss vor der ersten großen Welle kommen)');
-  for (let i = 1; i < base.length; i++) assert.ok(sw[i] > base[i], `Schritt ${i + 1} höher als im Fahrplan`);
-  assert.equal(C.KARTEN.schwellenGrad.leicht, undefined);
-  assert.equal(C.KARTEN.schwellenGrad.normal, undefined);
-  // im Spiel: Schwer braucht für Wahl 3 mehr EP als Normal, Leicht und Normal gleich viel
-  const need = d => Math.round(game('karten', 3, d).G.xpNeed(3));
-  assert.ok(need('schwer') > need('normal'));
-  assert.equal(need('leicht'), need('normal'));
-  // Standardmodus: Tabelle wirkt nicht
-  const { G: S } = game('standard', 3, 'schwer');
-  assert.equal(Math.round(S.xpNeed(3)), Math.round(game('standard', 3, 'normal').G.xpNeed(3)));
 });

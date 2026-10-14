@@ -32,7 +32,7 @@ const Session = (() => {
     P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
           switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit, pressure: S.druck || 'aus' }, visible: [], discovered: {},
-          lines: {}, variants: [], wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
+          lines: {}, variants: [], xpBySource: {}, wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
     visibleAt = new Map(); discoveredAt = new Map();
     lastSample = S.t; lastPhase = G.phase(); draftActs = { rerolled: 0, banned: 0 }; doneSeen = 0; unlockSeen = new Set();
   }
@@ -55,6 +55,7 @@ const Session = (() => {
       const ls = G.lineState();
       for (const l in ls){ const x = P.lines[l] || (P.lines[l] = { signs: 0, stage: 0, t1: null, t2: null, t3: null }); x.signs = ls[l].signs; x.stage = ls[l].stage; for (let k = 1; k <= 3; k++) if (x['t' + k] === null && ls[l].stage >= k) x['t' + k] = +S.t.toFixed(1); }
       P.variants = (S.stats.variants || []).slice();
+      P.xpBySource = Object.fromEntries(Object.entries(S.stats.xpSrc || {}).map(([k, v]) => [k, Math.round(v)]));       // Teil 5 (REQ-K5.10): EP je Quelle (Abschuss, Turm, Basisschaden, abgewehrte Welle, Forschungsbudget …)
       const hp = S.sections.map(s => s.hp);
       if (P.wallPrev) hp.forEach((v, i) => { if (v < P.wallPrev[i]) P.wallHpLost += P.wallPrev[i] - v; });
       P.wallPrev = hp;
@@ -93,7 +94,7 @@ const Session = (() => {
       const d = G.S.pendingDraft, id = d && d.options[i];
       const ok = choose(i);
       // Kartenpfad (REQ-KP.09): gewählte Karte mit Alternativen, Bedenkzeit (ms seit dem ersten Öffnen der Bühne dieser Wahl), Neu ziehen und Bannen
-      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, sollS: G.sollZeit ? G.sollZeit(d.level) : null, erschienenS: (((G.S.stats.wahlen || []).find(x => x.n === d.level)) || {}).t ?? null, chosen: id, offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, hover: Stage.on() ? Stage.takeHover() : null, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
+      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, erschienenS: (((G.S.stats.wahlen || []).find(x => x.n === d.level)) || {}).t ?? null, chosen: id, offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, hover: Stage.on() ? Stage.takeHover() : null, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
       return ok;
     };
     const tick = G.tick;

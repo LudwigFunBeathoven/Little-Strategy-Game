@@ -17,40 +17,31 @@ const KF_CONFIG = {
   PACING: {},
   /* Kartenpfad (REQ-KP.02, KP.06): Angebot im Modus 'karten'; Startwerte, per Simulation zu kalibrieren */
   KARTEN: {
-    /* Wahl-Fahrplan (REQ-P.02): Zielzeit je Wahl in Sekunden Spielzeit (Profil „durchschnitt“, Normal); ab Wahl 11 je takt Sekunden später.
-       Eine Wahl wird fällig, sobald die EP-Schwelle erreicht ist (schwellen: EP-Schritt je Wahl; über das Tabellenende gilt der letzte Schritt), spätestens zur Zielzeit der Wahl,
-       spätestens maxAbstand nach der letzten Wahl; frühestens minAbstand nach der letzten Wahl (die EP darüber bleiben erhalten). Gleich auf allen Schwierigkeitsgraden.
-       Warum die Zielzeit zugleich die späteste Fälligkeit ist: Die Mitte der Partie bringt kaum EP (die Belagerung hält die Gegnerwellen auf); allein nach EP und Höchstabstand
-       verfehlten die Wahlen ab Nr. 8 den Fahrplan um bis zu 100 s (Bericht kartenpfad-3). Die EP belohnen Spiel über dem Referenzniveau, die Zeit sichert den Takt.
-       Kalibrierung: node tools/fahrplan-kalibrieren.mjs --profile aktiv,durchschnitt --modus obergrenze --x1 43.
-       Wahl 1: 43 EP (die erste Karte muss auf Schwer vor der ersten großen Welle kommen); ab Wahl 2: größter EP-Stand aller Referenzpartien (200 Partien, aktiv und durchschnitt) zur Zielzeit. */
-    fahrplan: {
-      ziele: [90, 160, 225, 290, 355, 420, 485, 550, 615, 680],
-      takt: 65,
-      minAbstand: 45,
-      zielzeitIstFrist: true,     // false = Fälligkeit allein nach EP-Schwelle und Höchstabstand, wie in REQ-P.02 beschrieben (Vergleichsmessung im Bericht)
-      schwellen: [43, 187, 205, 190, 250, 310, 445, 460, 540, 535, 500],
-    },
+    /* Kartenwahlen aus dem Spielfluss (Teil 5, REQ-K5.03): Eine Wahl wird fällig, sobald die EP die Schwelle der nächsten Wahl erreichen; die abgelaufene Spielzeit löst keine Wahl aus.
+       Schwelle (kumuliert) der Wahl n = Summe der Schritte 1 … n; Schritt k = start × wachstum^(k−1) × schwellenFaktor[Grad] (die Kurve ist für alle Grade gleich, der Faktor je Grad ist
+       nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
+       Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
+    schwellen: { start: 50, wachstum: 1.03 },
+    schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
+    minAbstand: 45,
+    /* EP-Quellen aus dem Spielfluss neben den Abschüssen (Teil 5, REQ-K5.03): Schaden an der gegnerischen Basis und vollständig abgewehrte Gegnerwellen. Die Mitte der Partie bringt sonst kaum EP,
+       weil die Belagerung die regulären Gegnerwellen aufhält (Befund 4.1). */
+    epBasis: { proProzent: 4 },                  // EP je 1 % der Lebenspunkte der gegnerischen Basis, die eigene Einheiten und Karten abtragen
+    epWelle: { basis: 4, proEinheit: 2 },        // EP je vollständig abgewehrter Gegnerwelle: basis + proEinheit × Zahl der Einheiten dieser Welle (größere Wellen bringen mehr)
+    xpMult: { leicht: 1, normal: 1, schwer: 1 }, // EP je Abschuss je Grad (ersetzt im Modus karten DIFFICULTY.xpMult: mehr Gegner bringen mehr EP, ein Ausgleich über den Faktor entfällt)
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,
-    basisFaktor: { leicht: 5.5, normal: 5.5, schwer: 3.0 },   // Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer; eine Zahl gilt für alle Grade).
-                                // Vorher 3,5 für alle. Normal/durchschnitt jetzt 11:56 mit 10 Wahlen; Schwer 3,0, sonst reicht das 90. Perzentil der Dauer von „gelegentlich“ über 20 min (Bericht kartenpfad-3)
+    basisFaktor: { leicht: 8.0, normal: 10.5, schwer: 7.5 },   // Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer).
+                                // Teil 5 (REQ-K5.03): Ziel etwa 15 Minuten bei 12–16 Wahlen (Normal, „durchschnitt“); vorher 5,5 / 5,5 / 3,0 bei etwa 11:50. Leicht liefert weniger Abschüsse (kleinere Wellen), Schwer mehr.
     gewichte: {},               // optionale Überschreibung der Grundgewichte einzelner Pfadkarten { id: gewicht } (Versuche; sonst gilt gewicht aus data/kartenpfad.js)
-    maxAbstand: 100,            // Höchstabstand: steht nach so vielen Sekunden Spielzeit seit der letzten Wahl keine an, wird die nächste fällig (REQ-KP.06, P.02)
     angebot: { basis: 3, universitaet: 4 },   // Karten je Angebot im Modus karten (REQ-P.04); Standard: DRAFT_OPTIONS_BASE / _UNIVERSITY
     pfadPlaetze: 2,             // Plätze für Pfadkarten (Technologie) je Angebot, wenn so viele ziehbar sind; der Rest sind Bonusplätze (REQ-P.04)
-    /* Teil 4 (REQ-S.02 C2, REQ-S.03): Stufen einzelner Karten im Modus karten; sie ersetzen dort die Stufen aus data/draft-options.js (Modus standard unverändert).
-       Glücksritter: Nachteil „Abstand der eigenen Wellen +25 %“ statt „Stufen kosten 15 % mehr EP“ (die EP-Schwellen bleiben unberührt).
-       Söldnerheer: Nachteil abgeschwächt, Produktion × 0,8 statt × 0,6. Texte: Schlüssel mit Suffix .karten (draft.<id>.desc.karten). */
+    /* Teil 4 (REQ-S.03): Stufen einzelner Karten im Modus karten; sie ersetzen dort die Stufen aus data/draft-options.js (Modus standard unverändert).
+       Söldnerheer: Nachteil abgeschwächt, Produktion × 0,8 statt × 0,6. Texte: Schlüssel mit Suffix .karten (draft.<id>.desc.karten).
+       Teil 5 (REQ-K5.04): Der Glücksritter hat im Modus karten wieder den Nachteil der Bonuskarte (Stufen kosten 15 % mehr EP); die Fassung mit längerem Wellenabstand entfiel. */
     kartenTiers: {
-      gluecksritter: [{ effect: [{ stat: 'draftSize', add: 1 }], drawback: [{ stat: 'ownWaveInterval', mul: 1.25 }] }],
       soeldnerheer:  [{ effect: [{ stat: 'unitCost', mul: 0 }], drawback: [{ stat: 'autoProd', mul: 0.8 }] }],
     },
-    /* Teil 4 (REQ-S.02 C3): eigene EP-Schwellen je Schwierigkeitsgrad (ersetzen fahrplan.schwellen; Zielzeiten und Abstände gelten für alle). Leicht und Normal ohne Eintrag. */
-    /* Schwer: Schritte ab Wahl 2 = Schritte des Fahrplans × 2 (Wahl 1 unverändert, 43 EP: die erste Karte muss vor der ersten großen Welle kommen). Auf Schwer zählt jeder Abschuss
-       1,8-fach (DIFFICULTY.schwer.xpMult, Normal 1,0), darum kamen die Wahlen 2 bis 4 bis zu 84 s vor ihrer Zielzeit. Messung Schwer/durchschnitt, 60 Partien: Abweichung des Medians
-       −40/−36/−40/−7 s (Wahl 1–4), danach 0 (vorher −40/−65/−84/−52/−17). Faktor 1,6 ließ Wahl 3 bei −62 s, Faktor 1,8 bei −50 s (Bericht kartenpfad-4). */
-    schwellenGrad: { schwer: [43, 374, 410, 380, 500, 620, 890, 920, 1080, 1070, 1000] },
   },
   /* Teil 4 (REQ-S.04, S.05): Strategielinien (Militär, Wirtschaft, Verteidigung) und Gebäude-Aufwertung, nur im Modus karten.
      Jede Karte und jede Gebäude-Variante trägt null, ein oder zwei Zeichen (data/linien.js); es zählen gewählte Karten und stehende, fertige Varianten (je Variantentyp einmal).

@@ -362,7 +362,7 @@ function playGameInner({ diff, seed, profile, strategy = 'gierig', clickPolicy =
     built: stats.built, demolished: stats.demolished,
     offered: stats.offered, picked: stats.picked, draftTimes: stats.draftTimes, offers: stats.offers,
     wallFall, maxArmy: S.stats.maxArmy || 0, research: Object.keys(S.research.done), uni: !!stats.built.universitaet,
-    xpPassive: S.stats.xpPassive || 0, xpKill: S.stats.xpKill || 0, xpTower: S.stats.xpTower || 0, xpBounty: S.stats.xpBounty || 0, xpTotal: S.xpTotal, fightShare: S.stats.armyTime ? (S.stats.fightTime || 0) / S.stats.armyTime : null,
+    xpPassive: S.stats.xpPassive || 0, xpKill: S.stats.xpKill || 0, xpTower: S.stats.xpTower || 0, xpBounty: S.stats.xpBounty || 0, xpTotal: S.xpTotal, xpSrc: S.stats.xpSrc || {}, fightShare: S.stats.armyTime ? (S.stats.fightTime || 0) / S.stats.armyTime : null,
     prod: S.stats ? S.stats.prod : null, level: S.level ?? null,
     cards: Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0), waves: S.stats.waves || 0, wavesFull: S.stats.wavesFull || 0,
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,

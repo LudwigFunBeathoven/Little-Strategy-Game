@@ -11,7 +11,7 @@ import { writeFileSync } from 'node:fs';
 
 const EP_AT = [240, 480, 720];                                              // Grenzen der Abschnitte 0–4, 4–8, 8–12 min (Sekunden Spielzeit)
 const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
-  xpPassive: r.xpPassive, xpBounty: r.xpBounty, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
+  xpPassive: r.xpPassive, xpBounty: r.xpBounty, xpSrc: r.xpSrc, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
   wallLost: r.wallLost, lineT: r.lineT, signs: r.signs, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers });
 
 if (!isMainThread){
@@ -79,6 +79,7 @@ if (!isMainThread){
     return { stufe: ev[ev.length - 1].tier, t: ev.map(e => e.t), kosten: HOERSAAL_COST[ev[ev.length - 1].tier - 1], epMin: r.t > t1 + 20 ? r.xpPassive / ((r.t - t1) / 60) : null };
   }
 
+  const SRC = ['kill', 'tower', 'base', 'wave', 'budget', 'passive', 'bounty'];       // EP-Quellen (core.js, gainXp)
   const stat = rs => {
     const won = rs.filter(r => r.status === 'won');
     const gridAt = t => rs.map(r => r.grid && r.grid[t]).filter(Boolean);
@@ -92,7 +93,7 @@ if (!isMainThread){
       lueckeMedian: median(g.map(x => x.luecke)), lueckeP90: pct(g.map(x => x.luecke), 0.9), lueckeEndeMedian: median(g.map(x => x.mitEnde)), lueckeEndeP90: pct(g.map(x => x.mitEnde), 0.9),
       epMin: [0, 1, 2, 3].map(k => ({ median: median(rates.map(x => x[k]).filter(v => v != null)), n: rates.filter(x => x[k] != null).length })),
       epGesamtMedian: median(rs.map(r => r.xpTotal)),
-      quellen: { einheiten: total ? (sum(r => r.xpKill - r.xpTower)) / total : null, tuerme: total ? sum(r => r.xpTower) / total : null, hoersaal: total ? sum(r => r.xpPassive) / total : null, beute: total ? sum(r => r.xpBounty) / total : null },
+      quellen: Object.fromEntries(SRC.map(k => [k, total ? sum(r => (r.xpSrc && r.xpSrc[k]) || 0) / total : null])),
       hoersaal: { anteil: pc(withH.length, rs.length), stufe: [1, 2, 3].map(k => pc(withH.filter(h => h.stufe >= k).length, rs.length)), t1Median: median(withH.map(h => h.t[0])),
         kostenMedian: median(withH.map(h => h.kosten)), epMinMedian: median(withH.map(h => h.epMin).filter(v => v != null)), epMinMittel: mean(withH.map(h => h.epMin).filter(v => v != null)) },
       fabrikenMedian: { 300: median(fab(300)), 600: median(fab(600)) }, fabrikenMittel: { 300: mean(fab(300)), 600: mean(fab(600)) },
@@ -114,13 +115,16 @@ if (!isMainThread){
     console.log('|---|---|---|---|---|---|---|');
     for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.epMin.map(e => `${f1(e.median)} (${e.n})`).join(' | ')} | ${f0(x.epGesamtMedian)} |`);
     console.log('\nEP-Quellen (Anteil am EP-Ertrag über alle Partien des Feldes)\n');
-    console.log('| Grad | Profil | Einheiten | Türme | Hörsaal | Beute (Tutorial) |');
-    console.log('|---|---|---|---|---|---|');
-    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${(100 * x.quellen.einheiten).toFixed(1)} % | ${(100 * x.quellen.tuerme).toFixed(1)} % | ${(100 * x.quellen.hoersaal).toFixed(1)} % | ${(100 * x.quellen.beute).toFixed(1)} % |`);
-    console.log('\nHörsaal (Anteil der Partien mit Stufe 1 / 2 / 3; Fertigstellung Stufe 1; Material bis zur erreichten Stufe; EP je Minute ab Fertigstellung)\n');
-    console.log('| Grad | Profil | Partien mit Hörsaal | Stufe 1 / 2 / 3 | Stufe 1 fertig (Median) | Kosten (Median) | EP je Minute (Median / Mittel) |');
-    console.log('|---|---|---|---|---|---|---|');
-    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.hoersaal.anteil} % | ${x.hoersaal.stufe.map(v => v + ' %').join(' / ')} | ${mm(x.hoersaal.t1Median)} | ${f0(x.hoersaal.kostenMedian)} | ${f1(x.hoersaal.epMinMedian)} / ${f1(x.hoersaal.epMinMittel)} |`);
+    console.log('| Grad | Profil | Abschüsse (Einheiten) | Türme | Basisschaden | abgewehrte Wellen | Forschungsbudget | Hörsaal |');
+    console.log('|---|---|---|---|---|---|---|---|');
+    const pc1 = v => v == null ? '–' : (100 * v).toFixed(1) + ' %';
+    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${pc1(x.quellen.kill)} | ${pc1(x.quellen.tower)} | ${pc1(x.quellen.base)} | ${pc1(x.quellen.wave)} | ${pc1(x.quellen.budget)} | ${pc1(x.quellen.passive)} |`);
+    if (rows.some(x => x.hoersaal.anteil > 0)){
+      console.log('\nHörsaal (Anteil der Partien mit Stufe 1 / 2 / 3; Fertigstellung Stufe 1; Material bis zur erreichten Stufe; EP je Minute ab Fertigstellung)\n');
+      console.log('| Grad | Profil | Partien mit Hörsaal | Stufe 1 / 2 / 3 | Stufe 1 fertig (Median) | Kosten (Median) | EP je Minute (Median / Mittel) |');
+      console.log('|---|---|---|---|---|---|---|');
+      for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.hoersaal.anteil} % | ${x.hoersaal.stufe.map(v => v + ' %').join(' / ')} | ${mm(x.hoersaal.t1Median)} | ${f0(x.hoersaal.kostenMedian)} | ${f1(x.hoersaal.epMinMedian)} / ${f1(x.hoersaal.epMinMittel)} |`);
+    }
   }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
     xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,

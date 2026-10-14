@@ -115,7 +115,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   const { ctx, p } = await open('pacing=karten');
   await levelUp(p, 2); await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
-  await p.evaluate(() => { __kf.C.KARTEN.fahrplan.minAbstand = 0; });           // ohne Mindestabstand (REQ-P.02) folgt die zweite Wahl sofort, wie vor Teil 3
+  await p.evaluate(() => { __kf.C.KARTEN.minAbstand = 0; });           // ohne Mindestabstand (REQ-P.02) folgt die zweite Wahl sofort, wie vor Teil 3
   await p.evaluate(() => document.querySelectorAll('.kcard')[0].click()); await settle(p, 150);
   const mid = await p.evaluate(() => ({ fades: [...document.querySelectorAll('#stageFly .kcard')].length }));
   await p.waitForFunction(() => __kf.G.S.pendingLevels === 1, null, { timeout: 2000 });
@@ -166,7 +166,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   s = await v(); check(s.cards, 'K2.04: Reiter Karten, sobald eine Wahl ansteht');
   // Forschung: nur geöffnete sind sichtbar
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 3000 });
-  await p.evaluate(() => document.querySelectorAll('.kcard')[0].click()); await settle(p, 900);
+  await p.evaluate(() => { const cs = [...document.querySelectorAll('.kcard')]; (cs.find(c => c.classList.contains('fam-bonus')) || cs[0]).click(); }); await settle(p, 900);       // eine Bonuskarte: sie öffnet keine Forschung
   await p.evaluate(() => __kf.selectTab('uni')); await settle(p, 200);
   const res = await p.evaluate(() => ({ closed: [...document.querySelectorAll('#panel-uni .opt')].filter(e => e.checkVisibility() && e.dataset.tooltip === 'res:r_reiter').length,
     aria: [...document.querySelectorAll('#panel-uni .opt')].filter(e => e.checkVisibility()).map(e => e.dataset.tooltip) }));
@@ -270,12 +270,12 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   await d.ctx.close();
 }
 
-/* ---------- P.06: Protokoll je Wahl mit Zielzeit des Fahrplans und tatsächlicher Zeit ---------- */
+/* ---------- P.06, Teil 5 (REQ-K5.10): Protokoll je Wahl mit tatsächlicher Zeit und EP je Quelle ---------- */
 {
   const { ctx, p, errs } = await open('pacing=karten&debug=1');
-  await p.evaluate(() => { __kf.sessionReset(); });
+  await p.evaluate(() => { __kf.sessionReset(); __kf.C.KARTEN.minAbstand = 1; });
   for (let k = 1; k <= 2; k++){
-    await p.evaluate(() => { const G = __kf.G; G.S.t = Math.max(G.S.t, G.sollZeit(G.S.level + 1) - 0.02); });
+    await p.evaluate(() => { const G = __kf.G; G.S.t += 2; G.gainXp(G.xpNeed(G.S.level + 1) - G.S.xpTotal + 1, 'wave'); });
     await p.waitForFunction(() => !!__kf.G.S.pendingDraft, null, { timeout: 4000 });
     await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 4000 });
     await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked') && document.querySelectorAll('.kcard').length > 0, null, { timeout: 4000 });
@@ -284,7 +284,9 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
     await settle(p, 300);
   }
   const d = await p.evaluate(() => __kf.session().drafts.map(x => ({ level: x.level, sollS: x.sollS, erschienenS: x.erschienenS, t: x.t })));
-  check(d.length === 2 && d[0].sollS === 90 && d[1].sollS === 160 && d.every(x => x.erschienenS != null && Math.abs(x.erschienenS - x.sollS) < 1.5), `P.06: Protokoll nennt Zielzeit und tatsächliche Zeit je Wahl ${JSON.stringify(d)}`);
+  check(d.length === 2 && d.every(x => x.sollS === undefined && x.erschienenS != null && x.t >= x.erschienenS), `P.06: Protokoll nennt das tatsächliche Erscheinen je Wahl, keine Zielzeit ${JSON.stringify(d)}`);
+  const xs = await p.evaluate(() => __kf.session().xpBySource);
+  check(xs && xs.wave > 0, `K5.10: Protokoll nennt EP je Quelle ${JSON.stringify(xs)}`);
   check(errs.length === 0, `P.06: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }

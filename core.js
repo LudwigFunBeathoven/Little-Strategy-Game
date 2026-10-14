@@ -88,8 +88,8 @@ function freshState(diff, seed){
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
     druck: null,                      // Testschalter ?druck=hoch (Teil 4, REQ-S.08): null | 'hoch'; verstärkt die regulären Gegnerwellen ab C.DRUCK.hoch.abMinute
-    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, free: 0, lastPickT: 0, sinceKey: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
-    clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0,
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, sinceKey: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0, waveSize: {},       // waveSize: Zahl der Einheiten je Gegnerwelle für die EP der abgewehrten Welle (Modus karten, Teil 5)
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
     level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
@@ -319,43 +319,25 @@ function create(){
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
   const PHASES       = ['early', 'mid', 'late'];
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
-  const freeLevels   = () => (S.pfad && S.pfad.free) || 0;       // Stufen aus dem Mindesttempo: sie verschieben die EP-Schwellen nicht (REQ-KP.06)
-  /* Modus karten: Wahl-Fahrplan (REQ-P.02). Die EP-Schwelle der Wahl n steht als Schritt in KARTEN.fahrplan.schwellen (Referenzlauf, tools/referenzlauf.mjs);
-     über das Ende der Tabelle hinaus gilt der letzte Schritt weiter. Standard unverändert. */
-  const fahrplan = () => S.pacing === 'karten' ? C.KARTEN.fahrplan : null;
+  /* Modus karten (Teil 5, REQ-K5.03): Kartenwahlen aus dem Spielfluss. Die EP-Schwelle der Wahl n ist die Summe der Schritte 1 … n der Kurve C.KARTEN.schwellen
+     (Schritt k = start × wachstum^(k−1), je Grad mit schwellenFaktor); die abgelaufene Spielzeit löst nie eine Wahl aus. Standard unverändert. */
   function xpSum(n){
-    const f = fahrplan();
-    if (!f) return xpForLevel(n);
-    const st = (C.KARTEN.schwellenGrad && C.KARTEN.schwellenGrad[S.diff]) || f.schwellen; let s = 0;
-    for (let k = 1; k <= n; k++) s += st[Math.min(k, st.length) - 1];
+    if (S.pacing !== 'karten') return xpForLevel(n);
+    const k = C.KARTEN.schwellen, f = (C.KARTEN.schwellenFaktor && C.KARTEN.schwellenFaktor[S.diff]) ?? 1;
+    let s = 0;
+    for (let i = 1; i <= n; i++) s += k.start * Math.pow(k.wachstum, i - 1) * f;
     return s;
   }
-  /* Zielzeit der Wahl n in Sekunden Spielzeit (Fahrplan; ab dem Ende der Tabelle je takt Sekunden später) */
-  function sollZeit(n){
-    const f = fahrplan(); if (!f) return null;
-    return n <= f.ziele.length ? f.ziele[n - 1] : f.ziele[f.ziele.length - 1] + (n - f.ziele.length) * f.takt;
-  }
-  /* Mindestabstand (REQ-P.02): eine fällige Wahl erscheint frühestens minAbstand Sekunden nach der letzten; die EP darüber bleiben erhalten */
-  const draftReady = () => { const f = fahrplan(); return !f || !S.stats.wahlen || S.t - S.pfad.lastPickT >= f.minAbstand; };      // vor der ersten Wahl gibt es keinen Mindestabstand
-  /* Fälligkeit der nächsten Wahl ohne EP (Mindesttempo): spätestens zur Zielzeit des Fahrplans, spätestens maxAbstand nach der letzten Wahl, frühestens minAbstand nach ihr */
-  function dueTime(){
-    const f = fahrplan(); if (!f) return null;
-    const due = Math.min(f.zielzeitIstFrist === false ? Infinity : sollZeit(S.level + 1), S.pfad.lastPickT + C.KARTEN.maxAbstand);
-    return S.stats.wahlen ? Math.max(due, S.pfad.lastPickT + f.minAbstand) : due;
-  }
-  const xpNeed       = n => xpSum(n - freeLevels()) * mMul('xpNeed');
-  /* Fortschritt zur nächsten Kartenwahl. Standard: EP-Anteil. Modus karten (REQ-P.02): das Kartensymbol füllt sich nach EP oder nach Zeit, je nachdem, was weiter ist;
-     etaS = Sekunden bis zur spätestens fälligen Wahl (Fahrplan), bei aufgeschobener Wahl bis zum Mindestabstand. */
+  /* Mindestabstand (Modus karten): eine fällige Wahl erscheint frühestens minAbstand Sekunden nach der letzten; die EP darüber bleiben erhalten. Er verzögert nur. */
+  const draftReady = () => S.pacing !== 'karten' || !S.stats.wahlen || S.t - S.pfad.lastPickT >= C.KARTEN.minAbstand;      // vor der ersten Wahl gibt es keinen Mindestabstand
+  const xpNeed       = n => xpSum(n) * mMul('xpNeed');
+  /* EP je Abschuss: im Modus karten je Grad aus C.KARTEN.xpMult (mehr Gegner bringen mehr EP), sonst DIFFICULTY.xpMult */
+  const xpMult       = () => S.pacing === 'karten' && C.KARTEN.xpMult && C.KARTEN.xpMult[S.diff] !== undefined ? C.KARTEN.xpMult[S.diff] : C.DIFFICULTY[S.diff].xpMult;
+  /* Fortschritt zur nächsten Kartenwahl: EP-Anteil. Modus karten: ist die Wahl fällig, durch den Mindestabstand aber aufgeschoben, steht der Balken voll. */
   const xpProgress   = () => {
     const need = xpNeed(S.level + 1) - xpNeed(S.level), cur = S.xpTotal - xpNeed(S.level);
-    const f = fahrplan();
-    if (!f) return { level: S.level, cur, need, frac: Math.max(0, Math.min(1, cur / need)), etaS: null, timed: false };
-    const waiting = S.pendingLevels > 0 && !S.pendingDraft;               // Wahl fällig, aber durch den Mindestabstand aufgeschoben
-    const due = dueTime(), start = S.stats.wahlen ? S.pfad.lastPickT : 0;
-    const timeFrac = (S.t - start) / Math.max(1, due - start);
-    const frac = waiting ? 1 : Math.max(0, Math.min(1, Math.max(cur / need, timeFrac)));
-    const etaS = waiting ? Math.max(0, S.pfad.lastPickT + f.minAbstand - S.t) : Math.max(0, due - S.t);
-    return { level: S.level, cur: waiting ? need : cur, need, frac, etaS, timed: true };
+    const waiting = S.pacing === 'karten' && S.pendingLevels > 0 && !S.pendingDraft;
+    return { level: S.level, cur: waiting ? need : cur, need, frac: waiting ? 1 : Math.max(0, Math.min(1, cur / need)) };
   };
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
@@ -689,6 +671,7 @@ function create(){
     // Die Belagerungswelle rückt immer vollständig aus.
     const siege = S.nextEnemySiege;
     if (siege){ S.siegeDone = true; S.siegeWaveT = S.t; log('log.siege'); }
+    if (S.pacing === 'karten') S.waveSize[S.waveNo + 1] = enemy.length;                       // für die EP der abgewehrten Welle (Teil 5)
     let field = S.units.filter(u => u.side === 'e').length;
     const now = [];
     for (const q of enemy){
@@ -713,6 +696,8 @@ function create(){
   function onWaveRepelled(w){
     if (S.pacing !== 'karten') return;
     S.stats.wavesRepelled = (S.stats.wavesRepelled || 0) + 1;
+    const size = S.waveSize[w]; delete S.waveSize[w];
+    if (size) gainXp(C.KARTEN.epWelle.basis + C.KARTEN.epWelle.proEinheit * size, 'wave');            // abgewehrte Welle: EP, größere Wellen bringen mehr (Teil 5, REQ-K5.03)
     if (mAdd('counterWave') > 0 && !S.hold) counterWave();
     emit('waveRepelled', { wave: w });
   }
@@ -773,9 +758,17 @@ function create(){
     if (u.ranged) shot({ from: u.id, to: target.id, x0: u.x, x1: target.x, lane: u.laneF, y0: lateralOf(u), y1: lateralOf(target), t: 0, dur: 0.3 });
     else lunge(u);
   }
+  /* Schaden an der gegnerischen Basis (alle Quellen). Modus karten (Teil 5, REQ-K5.03): Jedes Prozent ihrer Lebenspunkte bringt EP (C.KARTEN.epBasis); der Takt sammelt, flushBaseXp schreibt gut. */
+  let baseAcc = 0;
+  function damageEnemyBase(dmg){ S.enemyBaseHp -= dmg; if (S.pacing === 'karten') baseAcc += dmg; }
+  function flushBaseXp(){
+    if (baseAcc <= 0) return;
+    const pct = 100 * baseAcc / diffCfg().enemyBaseHp; baseAcc = 0;
+    gainXp(pct * C.KARTEN.epBasis.proProzent, 'base');
+  }
   function hitBase(u){
     if (!u.ranged) lunge(u);
-    if (u.side === 'p'){ S.enemyBaseHp -= u.dmg * mMul('dmgVsBase') * (u.ranged ? mMul('rangedDmg') : 1); FX.baseFlash.e = 0.12; }
+    if (u.side === 'p'){ damageEnemyBase(u.dmg * mMul('dmgVsBase') * (u.ranged ? mMul('rangedDmg') : 1)); FX.baseFlash.e = 0.12; }
     else {
       hitSection(u.lane, u.dmg);
       if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
@@ -1040,10 +1033,10 @@ function create(){
       u.dead = true;
       if (u.home === GATE) lostMid.add(u.form);
       if (u.side === 'e'){
-        const xp = C.UNITS[u.type].bounty * bountyMult() * diffCfg().xpMult * (u.towerKill ? mMul('towerKillXp') : 1);
+        const xp = C.UNITS[u.type].bounty * bountyMult() * xpMult() * (u.towerKill ? mMul('towerKillXp') : 1);
         S.stats.xpKill = (S.stats.xpKill || 0) + xp;
         if (u.towerKill) S.stats.xpTower = (S.stats.xpTower || 0) + xp;                      // Kennzahl: EP aus Turm-Abschüssen (Teil 5, REQ-K5.01)
-        gainXp(xp);
+        gainXp(xp, u.towerKill ? 'tower' : 'kill');
         S.kills++;
         if (u.towerKill && S.pacing === 'karten'){                                            // Turm-Abschuss (Teil 4): Zähler, Material der Linie Verteidigung
           S.stats.towerKills = (S.stats.towerKills || 0) + 1;
@@ -1079,7 +1072,13 @@ function create(){
     S.sections.forEach((s, i) => { if (!S.revealed['repair_' + i] && s.hp < sectionMax(i)) S.revealed['repair_' + i] = true; });
   }
   /* ---------- EP-Stufen und Draft (REQ-02, REQ-5.02) ---------- */
-  function gainXp(b){
+  /* EP aus einer Quelle ('kill', 'tower', 'base', 'wave', 'budget', 'passive', 'bounty'). Modus karten (Teil 5, REQ-K5.04): Lehrjahre (xpGain) wirkt auf alle EP-Quellen;
+     Abschüsse tragen den Faktor schon in ihrem Wert (bountyMult), die Kriegsbeute des Tutorials bleibt unberührt. Zähler je Quelle für Bericht und Protokoll. */
+  function gainXp(b, src){
+    if (S.pacing === 'karten'){
+      if (src !== 'kill' && src !== 'tower' && src !== 'bounty') b *= mMul('xpGain');
+      const m = S.stats.xpSrc = S.stats.xpSrc || {}; m[src || 'other'] = (m[src || 'other'] || 0) + b;
+    }
     S.xp += b; S.xpTotal += b;
     while (S.xpTotal >= xpNeed(S.level + 1)){
       S.level++; S.pendingLevels++;
@@ -1203,8 +1202,8 @@ function create(){
       if (options.some(id => OPT[id].schluessel)){ S.pfad.sinceKey = 0; S.stats.keyOffers = (S.stats.keyOffers || 0) + 1; }
       else if (S.pfad.choices + 1 >= C.LINIEN.schluessel.abWahl) S.pfad.sinceKey++;
     }
-    if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Zielzeit des Fahrplans, Erscheinen, Wahl (REQ-P.06)
-      const d = S.pendingDraft; (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, soll: sollZeit(d.level), t: Math.round(S.t * 10) / 10, tp: null });
+    if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Nummer, Erscheinen, Wahl (REQ-P.06)
+      const d = S.pendingDraft; (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, t: Math.round(S.t * 10) / 10, tp: null });
     }
   }
   /* Neu ziehen (REQ-5.07): alle Optionen der offenen Wahl neu ziehen, je Wahl höchstens mAdd('rerolls')-mal */
@@ -1341,7 +1340,7 @@ function create(){
   /* Bedingte Wirkungen */
   function applyConditionals(dt){
     const siege = mAdd('siegeDps');
-    if (siege > 0 && S.units.some(u => u.side === 'p' && u.x >= W * C.SIEGE_LANE_FRACTION)) S.enemyBaseHp -= siege * dt;
+    if (siege > 0 && S.units.some(u => u.side === 'p' && u.x >= W * C.SIEGE_LANE_FRACTION)) damageEnemyBase(siege * dt);
     const charges = mAdd('emergencyRepair') - S.emergencyUsed;
     if (charges > 0){
       const th = (OPT.notreserve && OPT.notreserve.condition.value) || 0;   // Tor unter 25 %: einmal vollständig reparieren
@@ -1374,12 +1373,6 @@ function create(){
     S.stats.prod[phase()].time += dt;
     // Aufgeschobene Wahl (Mindestabstand, REQ-P.02) erscheint, sobald der Abstand erreicht ist
     if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
-    // Mindesttempo (REQ-KP.06, P.02): ist die Wahl nach dem Fahrplan fällig (Zielzeit oder Höchstabstand), erscheint sie ohne EP; die EP-Schwellen der folgenden Wahlen bleiben unverändert
-    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels === 0 && !S.hold && !S.firstBounty && S.t >= dueTime()){          // im Tutorial (Schonfrist, Kriegsbeute) kommt die erste Wahl über die Kriegsbeute
-      S.level++; S.pfad.free++; S.pendingLevels++; S.stats.freeChoices = (S.stats.freeChoices || 0) + 1;
-      log('log.freeChoice', { n: S.level });
-      offerDraft();
-    }
     addMaterial(matRate() * dt);
     addMaterial(autoPressCps() * clickPower() * dt);
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
@@ -1407,7 +1400,7 @@ function create(){
     progressVariants(dt);
     // Hörsaal: passiver EP-Ertrag (REQ-5.07, Zweig A); Kennzahl Anteil am EP-Ertrag (REQ-5.08)
     const xpPassive = mAdd('xpPassive') * dt;
-    if (xpPassive > 0){ S.stats.xpPassive = (S.stats.xpPassive || 0) + xpPassive; gainXp(xpPassive); }
+    if (xpPassive > 0){ S.stats.xpPassive = (S.stats.xpPassive || 0) + xpPassive; gainXp(xpPassive, 'passive'); }
     if (S.t >= S.nextOwnWave) launchOwnWave();
     if (S.hold && S.t >= S.hold.maxS) releaseHold();     // Schonfrist läuft spätestens nach maxS aus (REQ-T.03)
     if (S.t >= S.nextWave && !S.hold) launchWave();
@@ -1428,6 +1421,7 @@ function create(){
     spawnEnemies();
     updateArmies(dt);
     applyConditionals(dt);
+    flushBaseXp();
     checkReveals();
     if (listeners.length || S.firstBounty){
       const present = S.enemyQueue.length > 0 || S.units.some(u => u.side === 'e' && u.hp > 0);
@@ -1436,7 +1430,7 @@ function create(){
         if (S.firstBounty){
           S.firstBounty = false;
           const gap = xpNeed(1) - S.xpTotal;                 // Schwelle der ersten Kartenwahl
-          if (gap > 0){ S.stats.xpBounty = gap; gainXp(gap); emit('xpBounty', { n: gap }); }
+          if (gap > 0){ S.stats.xpBounty = gap; gainXp(gap, 'bounty'); emit('xpBounty', { n: gap }); }
         }
         emit('enemyWaveDefeated', { waveNo: S.waveNo });
       }
@@ -1514,7 +1508,7 @@ function create(){
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     offerDraft, chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
-    phase, xpProgress, sollZeit, gainXp, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    phase, xpProgress, gainXp, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,
