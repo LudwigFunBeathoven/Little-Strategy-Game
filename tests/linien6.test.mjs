@@ -38,8 +38,9 @@ test('K6.02: im Modus karten gibt es kein Zeichen, keine Linienstufe und keine L
 
 test('K6.02: Doktrinen und Varianten tragen eine Kategorie statt eines Zeichens', () => {
   const { G, L, core } = game();
-  for (const d of core.KF_DOKTRINEN) assert.ok(['militaer', 'wirtschaft', 'verteidigung'].includes(d.kat), d.id);
-  for (const v of L.varianten){ assert.ok(['militaer', 'wirtschaft', 'verteidigung'].includes(v.kat), v.id); assert.equal(v.linie, undefined); }
+  const KATS = ['militaer', 'wirtschaft', 'verteidigung'], ok = k => [].concat(k).length >= 1 && [].concat(k).length <= 2 && [].concat(k).every(x => KATS.includes(x));       // Teil 6: Mischdoktrinen tragen eine Liste mit zwei Kategorien
+  for (const d of core.KF_DOKTRINEN) assert.ok(ok(d.kat), d.id);
+  for (const v of L.varianten){ assert.ok(ok(v.kat), v.id); assert.equal(v.linie, undefined); }
   assert.ok(G.VARIANTS.length === L.varianten.length);
 });
 

@@ -165,6 +165,8 @@ function buildPanels(){
     if (to >= 0){ e.preventDefault(); gridEls.forEach((g, k) => { g.btn.tabIndex = k === to ? 0 : -1; }); gridEls[to].btn.focus(); }
   });
   for (const id in C.UPGRADES) optEls[id] = makeOpt($(GROUP_BOX[C.UPGRADES[id].group]), '', 'upg:' + id, () => G.buy(id));
+  optEls.trade_ep = makeOpt($('optsKontor'), '', 'trade:ep', () => G.tradeMaterialToXp());
+  optEls.trade_mat = makeOpt($('optsKontor'), '', 'trade:mat', () => G.tradeXpToMaterial());       // Doktrin Freihandel (Teil 6)
   for (const id in C.UNITS) if (!C.UNITS[id].replacement) optEls['unit_' + id] = makeOpt($('optsUnits'), 'unit', 'unit:' + id, () => G.spawn(id));
   for (let i = 0; i < C.LANE_COUNT; i++) optEls['repair_' + i] = makeOpt($('optsRepair'), '', 'repair:' + i, () => G.repair(i));
   ctxRepairOpt = makeOpt($('ctxRepair'), '', 'repair:' + C.GATE_LANE, () => { if (sel && sel.kind === 'section') G.repair(sel.lane); });
@@ -370,10 +372,17 @@ function renderOpts(){
     setText(el.expl, explUpgrade(id));
     setDis(el.btn, !G.canBuy(id));
   }
+  for (const [key, dir] of [['trade_ep', 'ep'], ['trade_mat', 'material']]){                                    // Doktrin Freihandel (Teil 6, REQ-K6.05): Tausch im Kontor
+    const el = optEls[key], on = G.freihandel() && G.has('kontor'), F = C.DOKTRIN.freihandel;
+    setHidden(el.btn, !on); if (!on) continue;
+    setText(el.label, t(dir === 'ep' ? 'trade.toXp' : 'trade.toMat'));
+    setText(el.expl, dir === 'ep' ? t('ex.trade.toXp', { a: fmtNum(F.stapelMaterial), b: fmtNum(F.stapelMaterial * F.kursEp) }) : t('ex.trade.toMat', { a: fmtNum(F.stapelEp), b: fmtNum(F.stapelEp * F.kursMaterial) }));
+    setDis(el.btn, !!G.tradeBlock(dir));
+  }
   for (const id in C.UNITS){
     if (C.UNITS[id].replacement) continue;                                     // Ersatzeinheiten haben keinen eigenen Knopf (REQ-KP.05)
     const spec = C.UNITS[id], el = optEls['unit_' + id];
-    setHidden(el.btn, !G.unitUnlocked(id) && !(!Disc.on() && S.pacing === 'karten' && G.unitSource(id) && G.sourceReachable(G.unitSource(id))));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
+    setHidden(el.btn, !G.unitUnlocked(id) && !G.unitDoctrineBlock(id) && !(!Disc.on() && S.pacing === 'karten' && G.unitSource(id) && G.sourceReachable(G.unitSource(id))));       // gesperrte Einheiten bleiben sichtbar, ausgegraut (REQ-KP.01)
     setHidden(el.kbd, false); setText(el.kbd, spec.key);
     setText(el.label, t(`unit.${G.ownType(id)}.name`));
     const open = G.unitUnlocked(id);                                          // gesperrt sichtbar: keine Marke „neu“, erst nach der Freischaltung
@@ -399,10 +408,17 @@ const FACTOR_STATS = ['supplyMult', 'ownWaveInterval', 'smithEffect', 'budgetKur
 const effectValue = e => e.mul !== undefined ? (FACTOR_STATS.includes(e.stat) ? fmtNum(e.mul) : pct(Math.abs(e.mul - 1)))
   : e.add !== undefined ? (SHARE_STATS.includes(e.stat) ? pct(e.add) : e.add % 1 ? fmt2(e.add) : fmtNum(e.add)) : e.seconds !== undefined ? e.seconds : '';
 /* Werte für die Texte der Sonderbauten und Doktrinen (Teil 5): nb = Faktor des Zunfthauses, bd = Mehrschaden der Bastion in Prozent, g = Grenze der Doktrin, s1, s2 = Wirkungen ihres Sonderbaus */
-function sonderbauParams(){ return { nb: fmtNum(C.DOKTRIN.zunfthaus.nachbarFaktor), bd: pct(C.DOKTRIN.bastion.schadenFaktor - 1) }; }
+function sonderbauParams(){
+  const D = C.DOKTRIN, F = D.freihandel;
+  return { nb: fmtNum(D.zunfthaus.nachbarFaktor), bd: pct(D.bastion.schadenFaktor - 1),
+    fsm: fmtNum(F.stapelMaterial), fe: fmtNum(F.stapelMaterial * F.kursEp), fse: fmtNum(F.stapelEp), fmt: fmtNum(F.stapelEp * F.kursMaterial),       // Freihandel: Stapel und Kurse (Teil 6, REQ-K6.05)
+    rv: fmtNum(D.raubbau.verfallS / 60), rs: D.raubbau.stufen, mv: D.fabrikmiliz.intervalS };                                                // Raubbau (Verfall in Minuten, Stufen), Fabrikmiliz (Takt in Sekunden)
+}
 function doktrinParams(d){
   const p = Object.assign({}, sonderbauParams());
   if (d.grenze) p.g = d.grenze.max;
+  for (const e of d.drawback || []) if (e.stat === 'towerMax') p.tw = e.add;                                // Freihandel: höchste Turmstufe
+  for (const e of d.effect || []) if (e.stat === 'zermuerbung') p.zr = pct(e.add);                         // Zermürbung: Anteil der Lebenspunkte
   const v = d.sonderbau && G.VAR[d.sonderbau];
   if (v) v.effect.forEach((e, i) => { p['s' + (i + 1)] = effectValue(e); });
   return p;
@@ -782,7 +798,7 @@ function renderPanels(){
     setText(g.label, t('grid.cell', { n: i + 1 }));
     // Raster: Gebäude mit ihrem aktuellen Nachbarschaftsbonus (REQ-6.07 a)
     const nbv = sl ? G.neighborValue(i, sl.type) : 0, rule = sl ? G.NEIGHBORS.find(r => r.building === sl.type) : null;
-    setText(g.expl, sl ? slotName(sl) + (sl.upg ? ' · ' + t('variant.cell', { s: Math.max(0, Math.ceil(C.AUFWERTUNG.dauerS - sl.upg.t)) }) : '') + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') : t('grid.free'));
+    setText(g.expl, sl ? slotName(sl) + (sl.upg ? ' · ' + t('variant.cell', { s: Math.max(0, Math.ceil(C.AUFWERTUNG.dauerS - sl.upg.t)) }) : '') + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') + (G.raubbauFactor(sl) !== 1 ? ' · ' + t('raubbau.cell', { f: fmt2(G.raubbauFactor(sl)) }) : '') : t('grid.free'));
     g.btn.classList.toggle('built', !!sl);
     g.btn.setAttribute('aria-selected', String(!!sel && sel.kind === 'plot' && sel.i === i));
   }

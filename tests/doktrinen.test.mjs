@@ -18,19 +18,24 @@ const finish = (G, secs = 11) => { for (let k = 0; k < secs * 20; k++){ idle(G);
 const upgrade = (G, i, vid) => { G.S.t = Math.max(G.S.t, 200); G.S.material = 1e7; assert.ok(G.upgradeBuilding(i, vid), `${vid}: ${G.variantBlock(i, vid)}`); finish(G); assert.equal(G.S.slots[i].variant, vid); };
 const offered = (G, id) => G.optionAvailable(G.OPT[id]);
 
-test('K5.07: sechs Doktrinen, zwei je Kategorie, eine Stufe, Wirkung und Einschränkung', () => {
+test('K5.07/K6.05: mindestens zwölf Doktrinen mit gültiger Kategorie, eine Stufe, Wirkung und Einschränkung', () => {
   const { G, L, D, C } = game();
-  assert.equal(JSON.stringify(D.map(d => d.id).sort()), JSON.stringify([...IDS].sort()));
+  assert.ok(D.length >= 12, `Zahl der Doktrinen ${D.length}`);
+  for (const id of IDS) assert.ok(D.some(d => d.id === id), `${id} bleibt erhalten`);
+  assert.equal(new Set(D.map(d => d.id)).size, D.length, 'Kennungen eindeutig');
   assert.equal(C.DOKTRIN.max, 2);
-  for (const k of ['militaer', 'wirtschaft', 'verteidigung']) assert.equal(D.filter(d => d.kat === k).length, 2, k);
+  const kats = d => [].concat(d.kat);
+  for (const k of ['militaer', 'wirtschaft', 'verteidigung']) assert.ok(D.filter(d => kats(d).includes(k)).length >= 3, `Kategorie ${k}`);
   for (const d of D){
     const o = G.OPT[d.id];
     assert.equal(o.family, 'doktrin'); assert.equal(o.tiers.length, 1); assert.equal(o.abWahl, C.DOKTRIN.abWahl);
-    assert.equal(d.kat, LINE[d.id]);
+    assert.ok(kats(d).length >= 1 && kats(d).length <= 2 && kats(d).every(k => C.KATEGORIEN.liste.includes(k)), `${d.id}: Kategorie`);
+    assert.equal(JSON.stringify(o.kat), JSON.stringify(d.kat), `${d.id}: Karte trägt die Kategorie`);
     assert.ok((d.drawback && d.drawback.length) || d.grenze, `${d.id}: bindende Einschränkung`);
     assert.ok((d.effect && d.effect.length) || d.sonderbau, `${d.id}: Effekt oder Sonderbau`);
-    if (d.sonderbau){ const v = G.VAR[d.sonderbau]; assert.ok(v, `${d.id}: Sonderbau ${d.sonderbau}`); assert.equal(v.doktrin, d.id); assert.equal(v.kat, d.kat); }
+    if (d.sonderbau){ const v = G.VAR[d.sonderbau]; assert.ok(v, `${d.id}: Sonderbau ${d.sonderbau}`); assert.equal(v.doktrin, d.id); assert.equal(JSON.stringify(v.kat), JSON.stringify(d.kat)); }
   }
+  for (const id of IDS) assert.equal(D.find(d => d.id === id).kat, LINE[id], `${id}: Kategorie der bisherigen Doktrin`);
 });
 
 test('K5.07: Doktrinen erscheinen erst ab Wahl 3, nur im Modus karten und nur mit Wirkung', () => {
@@ -59,7 +64,7 @@ test('K5.07: eine dritte Doktrin wird nie angeboten', () => {
   assert.equal(G.doktrinCount(), 2);
   for (const id of IDS) assert.equal(offered(G, id), false, `${id} nach der zweiten Doktrin`);
   for (let n = 0; n < 60; n++){ G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.lastPickT = -1e9; G.offerDraft(); assert.ok(!G.S.pendingDraft.options.some(id => G.OPT[id].doktrin), 'kein Doktrin-Angebot'); G.S.pfad.choices++; }
-  assert.equal(G.doktrinDue(), false);
+  assert.equal(G.doktrinChance(), false);
 });
 
 test('K5.07: Sonderbauten gibt es nur mit ihrer Doktrin', () => {
@@ -193,53 +198,25 @@ test('K5.07 Ausfall: nach jeder abgewehrten Welle rückt ein Gegenstoß mit +100
   for (const u of mine){ assert.ok(Math.abs(u.dmg / base.dmg - 2) < 1e-6, 'Schaden +100 %'); assert.ok(Math.abs(u.maxHp / base.hp - 2) < 1e-6, 'Leben +100 %'); assert.equal(u.baseMult, 2, 'Ausbruch: doppelter Schaden an der gegnerischen Basis (Teil 6)'); }
 });
 
-/* ---------- Angebotsausgleich ---------- */
+/* ---------- Angebot (Zufallsfaktor: tests/doktrinen6.test.mjs) ---------- */
 function richState(seed){
   const { G, C } = game('karten', seed);
   place(G, 'kaserne', 0); place(G, 'universitaet', 1); place(G, 'fabrik', 2); G.S.level = 5; G.S.t = 200;
   return { G, C };
 }
-test('K5.07: ab Wahl 3 enthält spätestens jedes dritte Angebot eine Doktrin (solange noch Platz ist)', () => {
-  let maxGap = 0, offers = 0, withDok = 0;
-  for (let seed = 1; seed <= 40; seed++){
-    const { G } = richState(seed);
-    let gap = 0;
-    for (let n = 1; n <= 14; n++){
-      G.S.pfad.choices = n - 1; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.lastPickT = -1e9;
-      G.offerDraft();
-      const ids = G.S.pendingDraft.options, dok = ids.filter(id => G.OPT[id].doktrin);
-      assert.ok(dok.length <= 1, 'höchstens eine Doktrin je Angebot');
-      if (n < 3){ assert.equal(dok.length, 0, `Wahl ${n}: keine Doktrin vor Wahl 3`); continue; }
-      offers++; if (dok.length){ withDok++; gap = 0; } else { gap++; maxGap = Math.max(maxGap, gap); }
-      assert.ok(gap <= 2, `Seed ${seed}, Wahl ${n}: ${gap} Angebote in Folge ohne Doktrin`);
-    }
-  }
-  assert.ok(maxGap <= 2); assert.ok(withDok / offers > 0.3, `Anteil der Angebote mit Doktrin ${(withDok / offers).toFixed(2)}`);
-});
-
-test('K5.07: ohne Doktrin mit Wirkung kein Zwang; der Zähler läuft ab Wahl 3', () => {
-  const { G } = game();
-  G.S.pfad.choices = 2; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.level = 5;
-  G.offerDraft();
-  assert.ok(!G.S.pendingDraft.options.some(id => G.OPT[id].doktrin));
-  assert.equal(G.S.pfad.sinceDoktrin, 1);
-  G.S.pendingDraft = null; G.S.pfad.choices = 3; G.offerDraft(); assert.equal(G.S.pfad.sinceDoktrin, 2);
-  assert.equal(G.S.stats.doktrinOffers, undefined);
-});
-
-test('K5.07: Bann einer fälligen Doktrin ersetzt sie durch eine andere Doktrin', () => {
+test('K5.07: Bann einer gewürfelten Doktrin ersetzt sie durch eine andere Doktrin', () => {
   const { G } = richState(3);
-  G.S.pfad.choices = 6; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.sinceDoktrin = 2; G.S.pfad.lastPickT = -1e9;
+  G.S.pfad.choices = 6; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.pDoktrin = 1; G.S.pfad.lastPickT = -1e9;
   G.offerDraft();
   const i = G.S.pendingDraft.options.findIndex(id => G.OPT[id].doktrin);
-  assert.ok(i >= 0); assert.equal(G.S.pendingDraft.doktrinForced, true);
+  assert.ok(i >= 0); assert.equal(G.S.pendingDraft.doktrinRoll, true);
   G.S.research.done.r_bann = 1; G.S.research.ver++;
   assert.ok(G.banOption(i)); assert.ok(G.S.pendingDraft.options.some(id => G.OPT[id].doktrin), 'wieder eine Doktrin im Angebot');
 });
 
 test('K5.07: Wahl einer Doktrin steht im Protokoll (stats.doktrinen) und zählt als Karte', () => {
   const { G } = richState(5);
-  G.S.pfad.choices = 3; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.sinceDoktrin = 2; G.S.pfad.lastPickT = -1e9;
+  G.S.pfad.choices = 3; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.pDoktrin = 1; G.S.pfad.lastPickT = -1e9;
   G.offerDraft();
   const i = G.S.pendingDraft.options.findIndex(id => G.OPT[id].doktrin); assert.ok(i >= 0);
   const id = G.S.pendingDraft.options[i];
@@ -258,7 +235,7 @@ test('K5.07: Texte der Doktrinen und Sonderbauten in de und en; Wirkungszeile h�
   for (const lang of ['de', 'en']){
     const T = I[lang], fill = (s, p) => s.replace(/\{(\w+)\}/g, (_, k) => { assert.ok(k in p, `${lang}: Platzhalter {${k}} in „${s}“ ohne Wert`); return String(p[k]); });
     for (const d of D){
-      const p = { nb: C.DOKTRIN.zunfthaus.nachbarFaktor, bd: pct(C.DOKTRIN.bastion.schadenFaktor - 1) };
+      const p = { nb: C.DOKTRIN.zunfthaus.nachbarFaktor, bd: pct(C.DOKTRIN.bastion.schadenFaktor - 1), fsm: 200, fe: 16, fse: 20, fmt: 120, tw: 1, rv: 3, rs: 4, mv: 60, zr: 25 };
       if (d.grenze) p.g = d.grenze.max;
       (d.effect || []).forEach((e, i) => { p['e' + (i + 1)] = e.stat === 'ownWaveInterval' ? num(e.mul) : e.stat === 'counterBoost' ? pct(e.add) : val(e); });
       (d.drawback || []).forEach((e, i) => { p['d' + (i + 1)] = val(e); p['d' + (i + 1) + 'p'] = e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : val(e); });

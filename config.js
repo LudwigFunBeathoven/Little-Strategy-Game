@@ -97,16 +97,27 @@ const KF_CONFIG = {
   SOELDNER: { kostenFaktor: 1.5 },
   /* Teil 5 (REQ-K5.07): Doktrinen (data/doktrinen.js) ersetzen die Schlüsselkarten aus Teil 4; nur im Modus karten.
      max: höchstens so viele Doktrinen je Partie, danach erscheinen keine weiteren. abWahl: erste Wahl mit einer Doktrin im Angebot;
-     spaetestensJe: spätestens in jeder n-ten Wahl liegt eine Doktrin auf einem Bonusplatz (solange noch eine fehlt); gewicht: Grundgewicht im Angebot. Die Wirkungen der Doktrinen stehen in data/doktrinen.js,
-     die der Sonderbauten in data/varianten.js.
+     p: Zufallsfaktor (Teil 6, REQ-K6.04): Ab Wahl abWahl hat jedes Angebot die Chance p, eine Doktrin zu enthalten (sie belegt einen Bonusplatz, nie zwei in einem Angebot). Startwert p.start;
+     nach jedem Angebot ohne Doktrin steigt p um p.schritt, nach einem Angebot mit Doktrin fällt p auf p.start zurück. Es gibt keine festen Doktrin-Momente.
+     gewicht: Grundgewicht im Angebot (die führende Kategorie zieht mit dem Faktor KATEGORIEN.gewichtVorne). Die Wirkungen der Doktrinen stehen in data/doktrinen.js, die der Sonderbauten in data/varianten.js.
      sonderbau.kostenFaktor: Kosten der Aufwertung zum Sonderbau × Baukosten des Grundgebäudes (statt AUFWERTUNG.kostenFaktor).
      zunfthaus.nachbarFaktor: Der Nachbarschaftsbonus eines fertigen Zunfthauses (Fabrik neben Fabrik) wirkt in diesem Vielfachen.
-     bastion: feuert wie ein Turm in die Lane seiner Spalte (links Lane 0, Mitte Lane 1, rechts Lane 2) mit schadenFaktor × Turmschaden der Stufe max(grundStufe, Turm der Lane); gleiche Kadenz und Reichweite wie die Türme. */
+     bastion: feuert wie ein Turm in die Lane seiner Spalte (links Lane 0, Mitte Lane 1, rechts Lane 2) mit schadenFaktor × Turmschaden der Stufe max(grundStufe, Turm der Lane); gleiche Kadenz und Reichweite wie die Türme.
+     Neue Doktrinen (Teil 6, REQ-K6.05):
+     freihandel: Im Kontor lässt sich ein Stapel Material (stapelMaterial) gegen EP zum Kurs kursEp tauschen (EP je Material) und ein Stapel EP (stapelEp, höchstens der Fortschritt zur nächsten Wahl) gegen Material zum Kurs
+       kursMaterial (Material je EP); kursEp × kursMaterial < 1, damit sich der Tausch im Kreis nicht lohnt. Einschränkung (Stat towerMax): Türme bleiben auf Stufe 1, ihre Ausbauten sind gesperrt.
+     raubbau: Jede Fabrik hat stufen Ertragsstufen, zusammen ein Mehrertrag von bonus (1 = ×2); alle verfallS Sekunden verfällt eine Stufe, ein Neubau erneuert sie. (Fabriken haben sonst keine Ausbaustufen: Auslegung.)
+     fabrikmiliz: Alle intervalS Sekunden stellt jede Fabrik einen Läufer ohne Versorgung (er rückt mit der nächsten eigenen Welle aus).
+     zermuerbung: Gegnerische Einheiten, die näher als reichweite an die eigene Basis kommen, verlieren einmalig den Anteil mAdd('zermuerbung') ihrer Lebenspunkte. */
   DOKTRIN: {
-    max: 2, abWahl: 3, spaetestensJe: 3, gewicht: 8,
+    max: 2, abWahl: 3, gewicht: 8, p: { start: 0.15, schritt: 0.15 },
     sonderbau: { kostenFaktor: 3 },
     zunfthaus: { nachbarFaktor: 3 },
     bastion: { schadenFaktor: 1.5, grundStufe: 2 },
+    freihandel: { kursEp: 0.08, kursMaterial: 6, stapelMaterial: 200, stapelEp: 20 },
+    raubbau: { bonus: 1, stufen: 4, verfallS: 180 },
+    fabrikmiliz: { intervalS: 60 },
+    zermuerbung: { reichweite: 200 },
   },
   /* Teil 6 (REQ-K6.03): Kategorien statt Strategielinien. Jede Karte gehört zu einer der drei Kategorien (liste), ist neutral oder zählt als Brücke für zwei; Doktrinen und Brücken zählen für ihre Kategorien.
      Zählregel: jede gewählte Karte zählt einmal, jede weitere Stufe derselben Karte ebenfalls, eine Doktrin doktrin-mal. Synergiekarten (data/karten6.js: Zähler, Verstärker, Brücken) zählen höchstens deckel Karten einer Kategorie

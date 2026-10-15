@@ -37,4 +37,30 @@ const KF_DOKTRINEN = [
   { id: 'ausfall', kat: 'verteidigung', sonderbau: null, effect: [{ stat: 'counterWave', add: 1 }, { stat: 'counterBoost', add: 1 }, { stat: 'counterBaseDmg', mul: 2 }], drawback: [{ stat: 'repairCost', mul: 2 }],
     wirkt: { building: 'kaserne' },
     nameKey: 'doctrine.ausfall.name', descKey: 'doctrine.ausfall.desc' },
+
+  /* ---------- Teil 6 (REQ-K6.05): sechs neue Doktrinen, dazu Zermürbung (Soll) ----------
+     Neue Größen: runnerCost (Kosten der Läufer ×), onlyRunners (nur Läufer kaufbar), freihandel (Tausch im Kontor), towerMax (höchste Turmstufe), raubbau (Ertragsstufen der Fabriken), raubbauVerfall (nur als Markierung der Einschränkung),
+     fabrikMiliz (Läufer aus den Fabriken), zermuerbung (Anteil der Lebenspunkte, den Gegner vor der Mauer verlieren). Mischformen tragen eine Liste in kat und zählen für beide Kategorien. */
+  { id: 'elite', kat: 'militaer', sonderbau: null, effect: [{ stat: 'unitHp', mul: 2 }, { stat: 'unitDmg', mul: 2 }], drawback: [{ stat: 'supplyMult', mul: 0.5 }],
+    wirkt: { building: 'kaserne' },
+    nameKey: 'doctrine.elite.name', descKey: 'doctrine.elite.desc' },
+  { id: 'massenaufgebot', kat: 'militaer', sonderbau: null, effect: [{ stat: 'runnerCost', mul: 0.5 }, { stat: 'extraUnit', add: 1 }], drawback: [{ stat: 'onlyRunners', add: 1 }],
+    wirkt: { building: 'kaserne' },
+    nameKey: 'doctrine.massenaufgebot.name', descKey: 'doctrine.massenaufgebot.desc' },
+  { id: 'freihandel', kat: 'wirtschaft', sonderbau: null, effect: [{ stat: 'freihandel', add: 1 }], drawback: [{ stat: 'towerMax', add: 1 }],
+    wirkt: { building: 'kontor' },
+    nameKey: 'doctrine.freihandel.name', descKey: 'doctrine.freihandel.desc' },
+  { id: 'raubbau', kat: 'wirtschaft', sonderbau: null, effect: [{ stat: 'raubbau', add: 1 }], drawback: [{ stat: 'raubbauVerfall', add: 1 }],
+    wirkt: { building: 'fabrik' },
+    nameKey: 'doctrine.raubbau.name', descKey: 'doctrine.raubbau.desc' },
+  /* Der Name „Kriegswirtschaft“ gehört der Brückenkarte (data/karten6.js); die Doktrin heißt Fabrikmiliz */
+  { id: 'fabrikmiliz', kat: ['wirtschaft', 'militaer'], sonderbau: null, effect: [{ stat: 'fabrikMiliz', add: 1 }], drawback: [{ stat: 'materialYield', mul: 0.7 }],
+    wirkt: { building: 'fabrik' },
+    nameKey: 'doctrine.fabrikmiliz.name', descKey: 'doctrine.fabrikmiliz.desc' },
+  { id: 'grenzfeste', kat: ['wirtschaft', 'verteidigung'], sonderbau: null, effect: [{ stat: 'towerKillMaterial', add: 3 }], drawback: [],
+    grenze: { max: 5, typen: ['fabrik'] }, wirkt: { tower: true },
+    nameKey: 'doctrine.grenzfeste.name', descKey: 'doctrine.grenzfeste.desc' },
+  { id: 'zermuerbung', kat: 'verteidigung', sonderbau: null, effect: [{ stat: 'zermuerbung', add: 0.25 }], drawback: [{ stat: 'quartiereCost', mul: 1.5 }],
+    wirkt: { tower: true },
+    nameKey: 'doctrine.zermuerbung.name', descKey: 'doctrine.zermuerbung.desc' },
 ];

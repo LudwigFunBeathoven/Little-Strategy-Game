@@ -97,8 +97,9 @@ function freshState(diff, seed){
     siegeWaveT: Math.ceil(C.SIEGE_MINUTE * 60 / C.WAVE_INTERVAL_S) * C.WAVE_INTERVAL_S, siegeAnnouncedAt: null, siegeDone: false, enemyQueue: [], queue: [], units: [], nextId: 1,
     turretCd: {}, enemyTurretCd: 0,
     druck: null,                      // Testschalter ?druck=hoch (Teil 4, REQ-S.08): null | 'hoch'; verstärkt die regulären Gegnerwellen ab C.DRUCK.hoch.abMinute
-    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, sinceDoktrin: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, pDoktrin: C.DOKTRIN.p.start },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     budget: 0,                        // Forschungsbudget (Teil 5): Index in C.KARTEN.budget.stufen
+    milizT: 0,                        // Doktrin Fabrikmiliz (Teil 6): Zeit seit dem letzten Aufgebot
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0, waveSize: {},       // waveSize: Zahl der Einheiten je Gegnerwelle für die EP der abgewehrten Welle (Modus karten, Teil 5)
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
@@ -269,7 +270,14 @@ function create(){
   const countType = type => S.slots.filter(s => s && s.type === type && !s.upg).length;
   const standingCount = type => S.slots.filter(s => s && s.type === type).length;       // auch Gebäude in Aufwertung: sie belegen den Platz
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
-  const lv = id => (C.BUILDINGS.includes(C.UPGRADES[id].group) && !has(C.UPGRADES[id].group)) ? 0 : S.lvl[id];
+  /* Doktrin Freihandel (Teil 6, REQ-K6.05): Türme bleiben auf Stufe towerMax, ihre Ausbauten (Reichweite, Feuerrate) sind gesperrt; die Einschränkung gilt auch für Türme, die schon höher stehen (wirksame Stufe) */
+  const towerCap = () => S.pacing === 'karten' && mAdd('towerMax') > 0 ? mAdd('towerMax') : Infinity;
+  const lv = id => {
+    const u = C.UPGRADES[id], base = (C.BUILDINGS.includes(u.group) && !has(u.group)) ? 0 : S.lvl[id], cap = towerCap();
+    return cap < Infinity && u.tower !== undefined ? Math.min(base, u.base === 'turm' ? cap : 0) : base;
+  };
+  /* gesperrter Turmausbau: die Doktrin, die ihn sperrt, sonst null */
+  const towerBlocked = id => { const u = C.UPGRADES[id], cap = towerCap(); return cap < Infinity && u.tower !== undefined && (u.base !== 'turm' || S.lvl[id] >= cap) ? DOK.freihandel : null; };
   const baseFactor   = () => { const b = C.KARTEN.basisFaktor; return typeof b === 'object' ? b[S.diff] ?? 1 : b; };       // Zahl oder Tabelle je Schwierigkeitsgrad
   /* Modus karten: längere Partien über die gegnerische Basis (basisFaktor); KARTEN.gegner überschreibt Werte des Grades nur in diesem Modus (Teil 5, REQ-K5.02: Schwer soll nicht mühelos gewonnen werden) */
   const diffCfg      = () => {
@@ -326,7 +334,11 @@ function create(){
     if (!sl.variant || sl.upg || S.pacing !== 'karten' || !VAR[sl.variant]) return 0;
     return VAR[sl.variant].effect.reduce((a, e) => a + (e.stat === 'variantYield' ? e.add : 0), 0);
   };
-  const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) : 0), 0);
+  /* Doktrin Raubbau (Teil 6, REQ-K6.05): jede Fabrik startet mit R.stufen Ertragsstufen (Mehrertrag R.bonus zusammen), alle R.verfallS Sekunden verfällt eine; sl.raubT0 = Zeitpunkt, seit dem die Fabrik zählt (ein Neubau erneuert sie) */
+  const raubbauOn = () => S.pacing === 'karten' && mAdd('raubbau') > 0;
+  const raubbauStufen = sl => { const R = C.DOKTRIN.raubbau; return Math.max(0, R.stufen - Math.floor(Math.max(0, S.t - (sl.raubT0 ?? S.t)) / R.verfallS)); };
+  const raubbauFactor = sl => raubbauOn() && sl && sl.type === 'fabrik' ? 1 + C.DOKTRIN.raubbau.bonus * raubbauStufen(sl) / C.DOKTRIN.raubbau.stufen : 1;
+  const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) * raubbauFactor(sl) : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
   const qualityLevel = () => lv('qualitaet') + Math.floor(mAdd('startSmith'));       // startSmith: Karte Rekrutenzug Stufe II (Teil 6, vorher Linie Militär Stufe 2): Einheiten starten mit der nächsten Schmiede-Stufe
@@ -358,7 +370,8 @@ function create(){
   const enemyDmgMult = () => 1 + diffCfg().dmgGrowth * S.t / 60 + postSiege();
   const siegeIn      = () => S.siegeDone ? null : Math.max(0, S.siegeWaveT - S.t);
   const siegeAnnounced = () => !S.siegeDone && S.siegeAnnouncedAt !== null;
-  const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost') * (1 + nbTotal('schmiede'))));
+  const isRunner     = type => (C.UNITS[type].base || type) === 'laeufer';
+  const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost') * (isRunner(type) ? mMul('runnerCost') : 1) * (1 + nbTotal('schmiede'))));       // runnerCost: Doktrin Massenaufgebot (Teil 6)
   const spawnX       = () => PBW + mAdd('spawnOffset');
   const unitRange    = (side, type) => C.UNITS[type].range + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
   const PHASES       = ['early', 'mid', 'late'];
@@ -407,7 +420,7 @@ function create(){
     if (u.needs && S.lvl[u.needs] <= 0) return false;
     return true;
   }
-  const canBuy = id => S.status === 'running' && isAvailable(id) && !stageSource(id) && !isMaxed(id) && !noEffect(id) && S[C.UPGRADES[id].cur] >= upCost(id);
+  const canBuy = id => S.status === 'running' && isAvailable(id) && !stageSource(id) && !isMaxed(id) && !noEffect(id) && !towerBlocked(id) && S[C.UPGRADES[id].cur] >= upCost(id);
   const builtCount = () => S.slots.filter(Boolean).length;
   /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
   // Die erste Fabrik ist gratis (REQ-44)
@@ -449,6 +462,30 @@ function create(){
   function setBudget(i){
     if (S.pacing !== 'karten' || !has('universitaet') || !(i >= 0 && i < C.KARTEN.budget.stufen.length)) return false;
     S.budget = i; return true;
+  }
+  /* Doktrin Freihandel (Teil 6, REQ-K6.05): im Kontor Material gegen EP und EP gegen Material tauschen, je ein Stapel (C.DOKTRIN.freihandel). Der Tausch von EP gegen Material kostet Fortschritt zur nächsten Wahl
+     (nie unter den Stand der erreichten Stufe); kursEp × kursMaterial < 1: der Tausch im Kreis verliert. */
+  const freihandel = () => S.pacing === 'karten' && mAdd('freihandel') > 0;
+  const FH = C.DOKTRIN.freihandel;
+  const xpFortschritt = () => S.xpTotal - xpNeed(S.level);                                   // EP über dem Stand der erreichten Stufe (tauschbar)
+  function tradeBlock(dir){
+    if (S.status !== 'running') return 'notRunning';
+    if (!freihandel()) return 'notAvailable';
+    if (!has('kontor')) return 'noKontor';
+    if (dir === 'ep') return S.material < FH.stapelMaterial ? 'material' : null;
+    return xpFortschritt() < FH.stapelEp ? 'xp' : null;
+  }
+  function tradeMaterialToXp(){
+    if (tradeBlock('ep')) return false;
+    S.material -= FH.stapelMaterial; S.stats.tradeMaterial = (S.stats.tradeMaterial || 0) + FH.stapelMaterial;
+    gainXp(FH.stapelMaterial * FH.kursEp, 'trade');
+    return true;
+  }
+  function tradeXpToMaterial(){
+    if (tradeBlock('material')) return false;
+    S.xpTotal -= FH.stapelEp; S.xp -= FH.stapelEp; S.stats.tradeXp = (S.stats.tradeXp || 0) + FH.stapelEp;
+    addMaterial(FH.stapelEp * FH.kursMaterial, 'trade');
+    return true;
   }
   /* Materialertrag je Sekunde nach Abzug des Forschungsbudgets (Anzeige) */
   /* Unterhalt (Doktrin Stehendes Heer, Teil 5): jede eigene Einheit auf dem Feld kostet mAdd('upkeep') Material je Minute */
@@ -696,7 +733,9 @@ function create(){
   const unitIsMerc = () => atSupplyCap() && mercRule();
   const unitPrice = type => Math.ceil(unitCost(type) * (atSupplyCap() && mercRule() ? C.SOELDNER.kostenFaktor : 1));
   /* Schildträger erst nach der Forschung (REQ-5.07, Zweig D) */
-  const unitUnlocked = type => (!C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0) && isOpen('einheit:' + type);
+  /* Doktrin Massenaufgebot (Teil 6, REQ-K6.05): nur Läufer (und ihr Ersatz) sind kaufbar; gibt die Doktrin zurück, die die Einheit sperrt */
+  const unitDoctrineBlock = type => S.pacing === 'karten' && mAdd('onlyRunners') > 0 && !isRunner(type) ? DOK.massenaufgebot : null;
+  const unitUnlocked = type => (!C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0) && isOpen('einheit:' + type) && !unitDoctrineBlock(type);
   function spawn(type){
     const cost = unitPrice(ownType(type)), merc = atSupplyCap() && mercRule();
     if (S.status !== 'running' || supplyFull() || S.material < cost || !unitUnlocked(type)) return false;
@@ -1135,6 +1174,8 @@ function create(){
       if ((rear - g.x) * dirTo(g.side) <= 0.5){ mergeInto(main, g); relayout = true; }
     }
     if (relayout) layoutAll();
+    const zer = S.pacing === 'karten' ? mAdd('zermuerbung') : 0;                     // Doktrin Zermürbung (Teil 6): gegnerische Einheiten verlieren einmalig Lebenspunkte, sobald sie nah an die eigene Basis kommen
+    if (zer > 0) for (const u of S.units) if (u.side === 'e' && !u.worn && u.hp > 0 && u.x <= PBW + C.DOKTRIN.zermuerbung.reichweite){ u.worn = true; u.hp = Math.max(1, u.hp - u.maxHp * zer); u.flash = 0.12; S.stats.zermuerbt = (S.stats.zermuerbt || 0) + 1; }
     resolveCombat(dt);                                                  // Lane-Index nach der Bewegung, einmal je Tick
     // Gruppen, die in diesem Schritt eine Einheit der Mitte verloren haben (für die Ausnahme Mitte)
     const lostMid = new Set(), repelledCheck = new Set();
@@ -1286,9 +1327,9 @@ function create(){
     const base = o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) : o.doktrin ? C.DOKTRIN.gewicht : cardWeight(o), lead = katLead();
     return lead && katsOf(o).includes(lead) ? base * KAT.gewichtVorne : base;
   };
-  /* Angebotsausgleich: ab Wahl abWahl erscheint spätestens in jeder spaetestensJe-ten Wahl eine Doktrin, solange noch eine fehlt (sie belegt einen Bonusplatz) */
-  const doktrinDue = () => S.pacing === 'karten' && doktrinCount() < C.DOKTRIN.max && S.pfad.choices + 1 >= C.DOKTRIN.abWahl && S.pfad.sinceDoktrin >= C.DOKTRIN.spaetestensJe - 1;
-  function drawOptionsKarten(k){
+  /* Zufallsfaktor der Doktrinen (Teil 6, REQ-K6.04): ob für die nächste Wahl eine Doktrin gewürfelt werden darf (ab Wahl abWahl, solange noch Platz für eine Doktrin ist) */
+  const doktrinChance = () => S.pacing === 'karten' && doktrinCount() < C.DOKTRIN.max && S.pfad.choices + 1 >= C.DOKTRIN.abWahl;
+  function drawOptionsKarten(k, withDoktrin){
     const pool = ALL_OPTIONS.filter(optionAvailable);
     const pf = pool.filter(isPathFamily), rest = pool.filter(o => !isPathFamily(o));
     const out = [];
@@ -1296,7 +1337,7 @@ function create(){
     const slots = Math.min(C.KARTEN.pfadPlaetze, pf.length, k);
     while (out.length < slots && pf.length) take(pickWeighted(pf, weightKarten), pf);
     const doks = rest.filter(o => o.doktrin);
-    if (doktrinDue() && doks.length && out.length < k) take(pickWeighted(doks, weightKarten), rest);
+    if (withDoktrin && doks.length && out.length < k) take(pickWeighted(doks, weightKarten), rest);
     while (out.length < k && rest.length){
       const hasWag = out.some(o => o.family === 'wagnis'), hasLeg = out.some(o => o.rarity === 'legendary'), hasDok = out.some(o => o.doktrin);
       const cand = rest.filter(o => !(o.family === 'wagnis' && hasWag) && !(o.rarity === 'legendary' && hasLeg) && !(o.doktrin && hasDok));
@@ -1319,12 +1360,17 @@ function create(){
     return out.map(o => o.id);
   }
   function offerDraft(){
-    const options = S.pacing === 'karten' ? drawOptionsKarten(draftSize()) : drawOptions(draftSize());
+    // Zufallsfaktor (Teil 6, REQ-K6.04): Ab Wahl abWahl würfelt jedes Angebot mit der Chance pDoktrin eine Doktrin (ein Bonusplatz); die Zahl steigt nach jedem Angebot ohne Doktrin und fällt nach einem mit Doktrin zurück
+    const karten = S.pacing === 'karten', wahl = S.pfad.choices + 1, chance = doktrinChance(), p = S.pfad.pDoktrin;
+    const roll = chance ? rnd() < p : false;
+    const options = karten ? drawOptionsKarten(draftSize(), roll) : drawOptions(draftSize());
     if (!options.length){ S.pendingLevels = 0; return; }
-    S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0, doktrinForced: doktrinDue() };       // doktrinForced: eine Doktrin war fällig (Bann behält sie)
-    if (S.pacing === 'karten'){                                              // Angebote mit Doktrin zählen; ohne eine seit Wahl abWahl läuft der Zähler bis zur erzwungenen (Teil 5, REQ-K5.07)
-      if (options.some(id => OPT[id].doktrin)){ S.pfad.sinceDoktrin = 0; S.stats.doktrinOffers = (S.stats.doktrinOffers || 0) + 1; (S.stats.doktrinOfferWahlen = S.stats.doktrinOfferWahlen || []).push(S.pfad.choices + 1); }       // Nummern der Wahlen mit Doktrin im Angebot (Kennzahl, Teil 6)
-      else if (S.pfad.choices + 1 >= C.DOKTRIN.abWahl) S.pfad.sinceDoktrin++;
+    S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0, doktrinRoll: roll };       // doktrinRoll: die Doktrin wurde gewürfelt (Neu ziehen und Bann behalten sie)
+    if (karten){
+      const mit = options.some(id => OPT[id].doktrin);
+      if (chance) (S.stats.doktrinP = S.stats.doktrinP || []).push({ n: wahl, p: Math.round(p * 1000) / 1000, roll, mit });       // Protokoll: p je Wahl (Teil 6, REQ-K6.08)
+      if (mit){ S.pfad.pDoktrin = C.DOKTRIN.p.start; S.stats.doktrinOffers = (S.stats.doktrinOffers || 0) + 1; (S.stats.doktrinOfferWahlen = S.stats.doktrinOfferWahlen || []).push(wahl); }       // Nummern der Wahlen mit Doktrin im Angebot (Kennzahl)
+      else if (chance) S.pfad.pDoktrin = Math.min(1, Math.round((p + C.DOKTRIN.p.schritt) * 1000) / 1000);
     }
     if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Nummer, Erscheinen, Wahl (REQ-P.06)
       const d = S.pendingDraft; (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, t: Math.round(S.t * 10) / 10, tp: null });
@@ -1334,7 +1380,7 @@ function create(){
   const rerollsLeft = () => S.pendingDraft ? Math.max(0, mAdd('rerolls') - (S.pendingDraft.rerolled || 0)) : 0;
   function rerollDraft(){
     if (!S.pendingDraft || rerollsLeft() <= 0) return false;
-    const options = S.pacing === 'karten' ? drawOptionsKarten(draftSize()) : drawOptions(draftSize());
+    const options = S.pacing === 'karten' ? drawOptionsKarten(draftSize(), !!S.pendingDraft.doktrinRoll) : drawOptions(draftSize());
     if (!options.length) return false;
     S.pendingDraft.options = options; S.pendingDraft.rerolled = (S.pendingDraft.rerolled || 0) + 1;
     return true;
@@ -1358,9 +1404,10 @@ function create(){
     const total = cands.reduce((a, o) => a + wt(o), 0);
     let repl = null;
     if (cands.length){ let r = rnd() * total, k = 0; while (k < cands.length - 1 && r >= wt(cands[k])){ r -= wt(cands[k]); k++; } repl = cands[k].id; }
-    // war eine Doktrin fällig und die gebannte die einzige im Angebot, tritt eine andere Doktrin an ihre Stelle (Teil 5, REQ-K5.07)
-    if (S.pacing === 'karten' && OPT[d.options[i]].doktrin && d.doktrinForced && !rest.some(id => OPT[id].doktrin)){
-      const kp = pool.filter(o => o.doktrin); if (kp.length) repl = pickWeighted(kp, weightKarten).id;
+    // war eine Doktrin gewürfelt und die gebannte die einzige im Angebot, tritt eine andere Doktrin an ihre Stelle (Teil 5, REQ-K5.07; Teil 6: Zufallsfaktor)
+    if (S.pacing === 'karten' && OPT[d.options[i]].doktrin && d.doktrinRoll && !rest.some(id => OPT[id].doktrin)){
+      const kp = pool.filter(o => o.doktrin), kpOther = needOther ? kp.filter(o => !katsOf(o).includes(lead)) : kp;       // Regel der Fremdkategorie geht vor: bleibt sonst kein Doktrin-Ersatz außerhalb der führenden Kategorie, tritt die Ersatzkarte aus cands an
+      if (kpOther.length) repl = pickWeighted(kpOther, weightKarten).id;
     }
     d.options = repl ? d.options.map((id, k) => k === i ? repl : id) : rest;
     return true;
@@ -1541,6 +1588,15 @@ function create(){
     }
     progressResearch(dt);
     progressVariants(dt);
+    if (raubbauOn()) for (const sl of S.slots) if (sl && sl.type === 'fabrik' && sl.raubT0 === undefined) sl.raubT0 = S.t;         // Doktrin Raubbau: die Fabrik zählt ab jetzt (Neubau und Bestand)
+    if (S.pacing === 'karten' && mAdd('fabrikMiliz') > 0){                                                                       // Doktrin Fabrikmiliz (Teil 6): jede Fabrik stellt alle intervalS Sekunden einen Läufer ohne Versorgung
+      S.milizT += dt;
+      while (S.milizT >= C.DOKTRIN.fabrikmiliz.intervalS){
+        S.milizT -= C.DOKTRIN.fabrikmiliz.intervalS;
+        const n = countType('fabrik'); for (let i = 0; i < n; i++) S.queue.push({ type: ownType('laeufer'), merc: true });
+        S.stats.milizUnits = (S.stats.milizUnits || 0) + n;
+      }
+    }
     // Hörsaal: passiver EP-Ertrag (REQ-5.07, Zweig A); Kennzahl Anteil am EP-Ertrag (REQ-5.08)
     const xpPassive = mAdd('xpPassive') * dt;
     if (xpPassive > 0){ S.stats.xpPassive = (S.stats.xpPassive || 0) + xpPassive; gainXp(xpPassive, 'passive'); }
@@ -1646,7 +1702,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,

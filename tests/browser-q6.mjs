@@ -133,6 +133,50 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   await ctx.close();
 }
 
+/* ---------- K6.05: neue Doktrinen in der Oberfläche (Tausch im Kontor, gesperrte Einheiten und Türme, Raubbau am Platz) ---------- */
+{
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=0'); await calm(p);
+  await p.evaluate(() => { const G = __kf.G; G.S.t = 200; G.S.material = 5000; G.buildAt(0, 'kontor'); G.buildAt(1, 'fabrik'); G.buildAt(2, 'kaserne'); G.S.lvl.turm_0 = 3; __kf.selectTab('build'); __kf.selectPlot(0); __kf.requestRender(); }); await settle(p, 300);
+  const vTrade = async () => p.evaluate(() => [...document.querySelectorAll('[data-tooltip^="trade:"]')].filter(e => !e.hidden && e.checkVisibility()).map(e => e.innerText.replace(/\s+/g, ' ')));
+  check((await vTrade()).length === 0, 'K6.05 Freihandel: ohne Doktrin keine Tauschknöpfe');
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.freihandel = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 300);
+  const tr = await p.evaluate(() => [...document.querySelectorAll('[data-tooltip^="trade:"]')].map(e => ({ tip: e.dataset.tooltip, hidden: e.hidden || !e.checkVisibility(), text: e.innerText.replace(/\s+/g, ' '), expl: !!e.querySelector('.expl') && e.querySelector('.expl').textContent.trim().length > 0, dis: e.getAttribute('aria-disabled') })));
+  check(tr.length === 2 && tr.every(x => !x.hidden && x.expl), `K6.05 Freihandel: zwei Tauschknöpfe mit Erklärzeile ${show(tr)}`);
+  check(tr.find(x => x.tip === 'trade:ep').dis !== 'true', 'K6.05 Freihandel: Material → EP ist mit Material frei');
+  check(tr.find(x => x.tip === 'trade:mat').dis === 'true', 'K6.05 Freihandel: EP → Material ist ohne tauschbare EP gesperrt');
+  const tip = await tipOf(p, '[data-tooltip="trade:mat"]');
+  check(/EP/.test(tip) && /Fortschritt|Wahl|Stufe/.test(tip), `K6.05 Freihandel: Tooltip nennt den Grund ${show(tip)}`);
+  const x0 = await p.evaluate(() => ({ m: __kf.G.S.material, x: __kf.G.S.xpTotal }));
+  await p.click('[data-tooltip="trade:ep"]'); await settle(p, 200);
+  const x1 = await p.evaluate(() => ({ m: __kf.G.S.material, x: __kf.G.S.xpTotal }));
+  check(x1.m < x0.m && x1.x > x0.x, `K6.05 Freihandel: Klick tauscht Material gegen EP ${show([x0, x1])}`);
+  // Turmausbau gesperrt, auch im Bestand
+  await p.evaluate(() => { __kf.selectTab('wall'); __kf.requestRender(); }); await settle(p, 300);
+  const tw = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="upg:reichweite_0"]'); return e ? { dis: e.getAttribute('aria-disabled'), tip: e.dataset.tooltip } : null; });
+  check(!tw || tw.dis === 'true', `K6.05 Freihandel: Turmausbau gesperrt ${show(tw)}`);
+  const ttip = tw ? await tipOf(p, '[data-tooltip="upg:reichweite_0"]') : 'Freihandel';
+  check(/Freihandel/.test(ttip), `K6.05 Freihandel: Tooltip nennt die Doktrin ${show(ttip)}`);
+  // Massenaufgebot: andere Einheiten gesperrt, mit Grund
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.freihandel = 0; G.S.draft.stacks.massenaufgebot = 1; G.S.draft.ver++; __kf.selectTab('army'); __kf.requestRender(); }); await settle(p, 300);
+  const un = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="unit:werfer"]'); return e ? { hidden: e.hidden || !e.checkVisibility(), dis: e.getAttribute('aria-disabled') } : null; });
+  check(un && !un.hidden && un.dis === 'true', `K6.05 Massenaufgebot: Werfer sichtbar, aber gesperrt ${show(un)}`);
+  const utip = await tipOf(p, '[data-tooltip="unit:werfer"]');
+  check(/Massenaufgebot/.test(utip), `K6.05 Massenaufgebot: Tooltip nennt die Doktrin ${show(utip)}`);
+  const ul = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="unit:laeufer"]'); return e ? e.getAttribute('aria-disabled') : 'fehlt'; });
+  check(ul !== 'true', 'K6.05 Massenaufgebot: Läufer bleiben kaufbar');
+  // Raubbau: Faktor am Platz
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.massenaufgebot = 0; G.S.draft.stacks.raubbau = 1; G.S.draft.ver++; G.tick(0.05); __kf.selectTab('build'); __kf.clearSelection(); __kf.requestRender(); }); await settle(p, 300);
+  const cell = await p.evaluate(() => document.body.innerText.replace(/\s+/g, ' '));
+  check(/Raubbau ×2/.test(cell), 'K6.05 Raubbau: der Platz der Fabrik nennt den Faktor');
+  await p.evaluate(() => __kf.setLang('en')); await settle(p, 300);
+  const en = await p.evaluate(() => document.body.innerText.replace(/\s+/g, ' '));
+  check(/Overexploitation|Raubbau/.test(en) === true, 'K6.05: englische Texte vorhanden');
+  const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
+  check(JSON.stringify(audit.tips) === '[]' && JSON.stringify(audit.expl) === '[]', `K6.05: Tooltip- und Erklärzeilen-Audit leer ${show(audit)}`);
+  check(errs.length === 0, `K6.05: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- Standardmodus: nichts davon ---------- */
 {
   const { ctx, p, errs } = await open('pacing=standard');

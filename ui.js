@@ -138,6 +138,7 @@ function previewUpgrade(id){
 }
 /* Erklärzeile unter jedem Kaufknopf: Wirkung · Kosten (REQ-20.1) */
 function explUpgrade(id){
+  if (G.towerBlocked(id)) return t('opt.towerCap');
   if (G.isMaxed(id)) return t('opt.max');
   if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || lockedText();
   if (G.noEffect(id)) return t('opt.noSupply');
@@ -145,6 +146,7 @@ function explUpgrade(id){
   return t('ex.line', { effect: `${label} ${change}`, cost: costText(C.UPGRADES[id].cur, G.upCost(id)) });
 }
 function explUnit(id){
+  if (G.unitDoctrineBlock(id)) return t('unit.reason.doctrine', { name: t(G.unitDoctrineBlock(id).nameKey) });
   if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src) || lockedText(); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: G.S.queue.length, max: G.supplyCap() });   // Grund der Sperre (REQ-14.2)
   const own = G.ownType(id), hp = G.unitStats('p', own).hp;
@@ -183,6 +185,7 @@ function buildReason(block, cost, type){
 function upgradeReason(id){
   const S = G.S, u = C.UPGRADES[id];
   if (S.status !== 'running') return t('tip.notRunning');
+  if (G.towerBlocked(id)) return t('tip.towerCap', { name: t(G.towerBlocked(id).nameKey), n: G.mAdd('towerMax') });
   if (G.isMaxed(id)) return t('tip.maxed');
   if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || lockedText();
   if (G.noEffect(id)) return t('tip.noSupply', { n: C.SUPPLY_CAP_MAX });
@@ -202,6 +205,7 @@ function repairReason(i){
 function unitReason(id){
   const S = G.S, c = G.unitPrice(G.ownType(id));
   if (S.status !== 'running') return t('tip.notRunning');
+  if (G.unitDoctrineBlock(id)) return t('unit.reason.doctrine', { name: t(G.unitDoctrineBlock(id).nameKey) });
   if (!G.unitUnlocked(id)){ const src = G.unitSource(id); return (src && sourceLabel(src)) || lockedText(); }
   if (G.supplyFull()) return t('tip.supplyFull', { n: S.queue.length, max: G.supplyCap() });
   if (S.material < c) return missing('material', c, S.material);
@@ -271,6 +275,12 @@ function tipContent(id){
       const o = G.OPT[a], tier = G.cardTaken(a);
       const rows = tier < G.tiersOf(o).length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
       return { title: cardName(o, tier), body: cardDesc(o, tier), rows: cardRows(o, rows) };
+    }
+    case 'trade': {                                                                // Doktrin Freihandel (Teil 6, REQ-K6.05): Tausch im Kontor
+      const dir = a === 'ep' ? 'ep' : 'material', F = C.DOKTRIN.freihandel, blk = G.tradeBlock(dir);
+      const why = !blk ? null : blk === 'material' ? missing('material', F.stapelMaterial, S.material) : blk === 'xp' ? t('trade.reason.xp', { n: fmtNum(F.stapelEp) }) : blk === 'noKontor' ? t('tip.needsBuilding', { name: t('bld.kontor.name') }) : t('tip.notRunning');
+      return { title: t(dir === 'ep' ? 'trade.toXp' : 'trade.toMat'), body: t('tip.trade.body', { a: fmtNum(F.stapelMaterial), b: fmtNum(F.stapelMaterial * F.kursEp), c: fmtNum(F.stapelEp), d: fmtNum(F.stapelEp * F.kursMaterial) }),
+               rows: [[t('trade.progress'), `${fmt(Math.max(0, G.xpFortschritt()))} EP`]], reason: why };
     }
     case 'kat': {                                                                  // Karten je Kategorie (Teil 6, REQ-K6.03)
       const c = G.katCounts(), lead = G.katLead();
