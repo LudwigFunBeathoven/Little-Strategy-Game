@@ -1454,6 +1454,29 @@ function create(){
     if (!r || r.branch !== 'pfad') return;
     for (const key of r.schaltetFrei || []) if (!key.startsWith('stufe:') && unlockKey(key)) log('log.unlockedKey', { what: '@' + keyNameKey(key) });
     for (const [from, to] of Object.entries(r.ersetzt || {})) replaceUnit(from, to);
+    if (r.weiter) applyWeiter(r);
+  }
+  /* Weiterentwicklung (Teil 6, REQ-K6.06): Grundvarianten und laufende Aufwertungen zu Grundvarianten aller Gebäude des Bereichs entfallen, ohne Erstattung (die bezahlten Kosten fallen aus dem Erstattungswert);
+     Sonderbauten der Doktrinen, Ausbaustufen und das Gebäude selbst bleiben. Danach sind die Grundvarianten auf Basis der Weiterentwicklung wieder wählbar (variantsFor, Kosten wie bisher). */
+  const grundVariante = vid => !!VAR[vid] && !VAR[vid].doktrin;
+  const weiterResearch = type => RESEARCH.find(r => r.weiter && r.weiter.bereich === type) || null;
+  const weiterDone = type => { const r = weiterResearch(type); return S.pacing === 'karten' && !!r && researchTier(r.id) > 0; };
+  /* Zahl der Varianten, die der Abschluss der Forschung r ersetzt (Tooltip „Ersetzt N Varianten“): stehende Grundvarianten und laufende Aufwertungen zu ihnen */
+  const weiterErsetzt = id => {
+    const r = RES[id], type = r && r.weiter && r.weiter.bereich;
+    return type ? S.slots.filter(sl => sl && sl.type === type && ((sl.variant && grundVariante(sl.variant)) || (sl.upg && grundVariante(sl.upg.to)))).length : 0;
+  };
+  function applyWeiter(r){
+    const type = r.weiter.bereich, n = weiterErsetzt(r.id);
+    for (const sl of S.slots){
+      if (!sl || sl.type !== type) continue;
+      if (sl.variant && grundVariante(sl.variant)){ sl.paid = Math.max(0, (sl.paid || 0) - variantCost(sl.variant)); delete sl.variant; }
+      if (sl.upg && grundVariante(sl.upg.to)){ sl.paid = Math.max(0, (sl.paid || 0) - variantCost(sl.upg.to)); delete sl.upg; }
+    }
+    S.slotVer++;
+    (S.stats.weiter = S.stats.weiter || []).push({ id: r.id, bereich: type, t: +S.t.toFixed(1), ersetzt: n });       // Protokoll: Zeitpunkt und Zahl der ersetzten Varianten (REQ-K6.08)
+    log('log.weiter', { building: '@bld.' + type + '.name', name: '@' + r.nameKey, n });
+    emit('buildingEvolved', { type, research: r.id, replaced: n });
   }
   function startResearch(id){
     if (researchBlock(id)) return false;
@@ -1466,7 +1489,7 @@ function create(){
   function progressResearch(dt){
     if (!S.research.active.length || !has('universitaet')) return;
     // Universität neben Fabriken forscht schneller (Nachbarschaft, REQ-6.07 a): Forschungszeit × (1 + Regelwert)
-    const speed = 1 / Math.max(0.1, 1 + nbTotal('universitaet'));
+    const speed = 1 / Math.max(0.1, 1 + nbTotal('universitaet')) / mMul('researchTime');       // researchTime: Weiterentwicklung Buchdruck (Teil 6): wirkt auch auf laufende Forschungen
     for (const a of S.research.active) a.t += dt * speed;
     const done = S.research.active.filter(a => a.t >= a.timeS);
     if (!done.length) return;
@@ -1702,7 +1725,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, weiterDone, weiterErsetzt, weiterResearch, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,

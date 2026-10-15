@@ -321,7 +321,8 @@ function tipContent(id){
       // Wirkung als Vorher/Nachher (REQ-6.06)
       if (next) rows.push([t('tip.research.before'), n ? researchParams(r, n).e1 : '–'], [t('tip.research.after'), researchParams(r, n + 1).e1]);
       if (next) rows.push([t('tip.cost'), costText('material', next.cost)], [t('research.time'), t('research.seconds', { s: next.timeS })]);
-      return { title: researchName(r, Math.min(n + 1, r.tiers.length)), body: t(r.descKey, researchParams(r, Math.min(n + 1, r.tiers.length))) + ' ' + t('research.branchOf.' + r.branch),
+      const ers = r.weiter && !n ? G.weiterErsetzt(a) : null;       // Weiterentwicklung (Teil 6): vorab nennen, wie viele Varianten sie ersetzt
+      return { title: researchName(r, Math.min(n + 1, r.tiers.length)), body: t(r.descKey, researchParams(r, Math.min(n + 1, r.tiers.length))) + (ers === null ? '' : ' ' + t(ers === 0 ? 'tip.weiter.none' : ers === 1 ? 'tip.weiter.one' : 'tip.weiter.many', { n: ers })) + ' ' + t('research.branchOf.' + r.branch),
                rows, reason: researchReason(a) }; }
     case 'reroll': return { title: t('draft.reroll'), body: t('tip.draft.reroll', { n: G.rerollsLeft() }) };
     case 'ban': { const d = S.pendingDraft; const id = d && d.options[a];
