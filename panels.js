@@ -240,7 +240,7 @@ function variantReason(block, vid){
 function updateVariantPicks(){
   for (const p of vpicks){
     const block = G.variantBlock(p.i, p.vid), v = G.VAR[p.vid], why = variantReason(block, p.vid);
-    setText(p.ex, t('ex.variant', { effect: t(`var.${p.vid}.eff`, variantParams(v)), cost: costText('material', G.variantCost(p.vid)), s: C.LINIEN.aufwertung.dauerS }));
+    setText(p.ex, t('ex.variant', { effect: t(`var.${p.vid}.eff`, variantParams(v)), cost: costText('material', G.variantCost(p.vid)), s: C.AUFWERTUNG.dauerS }));
     setText(p.w, why || ''); setHidden(p.w, !why);
     setDis(p.b, !!block);
   }
@@ -275,7 +275,7 @@ function renderContext(){
   } else if (sl){
     const vt = variantTarget(sl), vd = sl.variant && G.VAR[sl.variant];
     setText($('ctxTitle'), t('ctx.building', { name: slotName(sl), n: sel.i + 1 }));
-    setText($('ctxText'), vt ? t('variant.progress', { name: t(vt.nameKey), s: Math.max(0, Math.ceil(C.LINIEN.aufwertung.dauerS - sl.upg.t)) })
+    setText($('ctxText'), vt ? t('variant.progress', { name: t(vt.nameKey), s: Math.max(0, Math.ceil(C.AUFWERTUNG.dauerS - sl.upg.t)) })
       : `${t(`bld.${sl.type}.desc`)} ${bldEffect(sl.type, true)}.` + (vd ? ' ' + t(vd.descKey, variantParams(vd)) : ''));
   } else if (sec !== null){
     setText($('ctxTitle'), t('repair.' + sec));
@@ -420,7 +420,7 @@ function optParams(o, tier){
     if (e.stat === 'shieldMin') p.c2 = C.FORMATION_ROW_MAX + e.add;
     if (e.stat === 'repairTh') p.c2 = pct(o.condition.value + e.add);
   }
-  p.s = C.WALL_REGEN_DELAY_S;
+  p.s = C.WALL_REGEN_DELAY_S; p.m = C.LAGER.minuten; p.so = pct(C.SOELDNER.kostenFaktor - 1);       // Lagerdeckel in Minuten Ertrag und Söldner-Aufschlag in Prozent (Teil 6, Karten Lagerzehnt und Söldnertruppe)
   return p;
 }
 const fmtNum = n => n % 1 ? fmt1(n) : fmt(n);
@@ -430,15 +430,8 @@ function cardDesc(o, tier){
   return t(G.S.pacing === 'karten' && KF_I18N[lang] && KF_I18N[lang][k + '.karten'] !== undefined ? k : o.descKey, optParams(o, tier));
 }
 /* Zeilen für Kartentooltips: Kategorie, Seltenheit, aktuelle Synergie */
-/* Zeichen einer Karte als Text („◆◆ Militär“); leer ohne Zeichen oder solange keine Linie Stufe 1 erreicht hat (Teil 4, REQ-S.04) */
-function signLabel(id){
-  const s = G.cardSigns(id);
-  if (!s.length || G.S.pacing !== 'karten' || !Disc.shows('hud:lines')) return '';
-  return '\u25C6'.repeat(s.length) + ' ' + t(`line.${s[0]}.name`);
-}
 function cardRows(o, extra){
   const rows = [[t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.rarity'), t('draft.rarity.' + o.rarity)], ...extra];
-  if (signLabel(o.id)) rows.push([t('tip.variant.line'), signLabel(o.id)]);
   if (o.synergy){
     const n = G.categoryCount(o.category) + (G.cardTaken(o.id) ? 0 : 1);
     rows.push([t('tip.draft.synergy'), '+' + pct(o.synergy.perCard * n) + ' %']);
@@ -765,7 +758,7 @@ function renderPanels(){
     setText(g.label, t('grid.cell', { n: i + 1 }));
     // Raster: Gebäude mit ihrem aktuellen Nachbarschaftsbonus (REQ-6.07 a)
     const nbv = sl ? G.neighborValue(i, sl.type) : 0, rule = sl ? G.NEIGHBORS.find(r => r.building === sl.type) : null;
-    setText(g.expl, sl ? slotName(sl) + (sl.upg ? ' · ' + t('variant.cell', { s: Math.max(0, Math.ceil(C.LINIEN.aufwertung.dauerS - sl.upg.t)) }) : '') + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') : t('grid.free'));
+    setText(g.expl, sl ? slotName(sl) + (sl.upg ? ' · ' + t('variant.cell', { s: Math.max(0, Math.ceil(C.AUFWERTUNG.dauerS - sl.upg.t)) }) : '') + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') : t('grid.free'));
     g.btn.classList.toggle('built', !!sl);
     g.btn.setAttribute('aria-selected', String(!!sel && sel.kind === 'plot' && sel.i === i));
   }

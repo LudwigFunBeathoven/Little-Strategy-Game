@@ -248,8 +248,8 @@ function tipContent(id){
     }
     case 'variant': {
       const i = Number(a), v = G.VAR[b];
-      const rows = [[t('tip.cost'), costText('material', G.variantCost(b))], [t('tip.variant.dur'), `${C.LINIEN.aufwertung.dauerS} s`]];
-      if (Disc.shows('hud:lines')) rows.push([t('tip.variant.line'), t(`line.${v.linie}.name`)]);
+      const rows = [[t('tip.cost'), costText('material', G.variantCost(b))], [t('tip.variant.dur'), `${C.AUFWERTUNG.dauerS} s`]];
+      rows.push([t('tip.variant.kat'), t(`kat.${v.kat}.name`)]);
       return { title: t(v.nameKey), body: t(v.descKey, variantParams(v)) + ' ' + t('variant.once'), rows, reason: variantReason(G.variantBlock(i, b), b) };
     }
     case 'budget': {                                                              // Forschungsbudget (Teil 5, REQ-K5.05)

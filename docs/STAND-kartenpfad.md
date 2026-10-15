@@ -259,3 +259,16 @@ Auslegung zur Bestätigung: „Kurzname“ gab es im Code bisher nicht. Ich lege
 16. **Forschungsbudget (K5.05) bleibt bei Kurs 0,08.** Kurs 0,12 und 0,16 bringen nicht mehr Wahlen (+2 und +1), nur einen höheren Anteil der Budget-EP; der Mindestabstand begrenzt die Wahlen.
 17. **Fabrik-Kriterium (K5.09)** gilt für die Linien-Bots; der Bot ohne Linie wertet nie auf und hält 5 reine Fabriken.
 18. **„Angebote mit Doktrin“ (K5.07)** zählt Wahlen, in deren Angebot mindestens eine Doktrin liegt (höchstens eine je Angebot), bis zur zweiten gewählten Doktrin.
+
+## Teil 6: Synergien, Doktrinen und Weiterentwicklungen (Branch `exp/kartenpfad`, REQ-K6.01 – K6.08, Spielstand-Version 11)
+Anforderungen: `docs/anforderungen-kartenpfad-6.md`; Bericht folgt in `docs/bericht-kartenpfad-6.md`. Commits `Q.<n>: <Inhalt>`.
+
+| Inkrement | Inhalt |
+|---|---|
+| Q.0 | K6.01/K6.08 Anforderungen abgelegt; Fehler „Zunfthaus trotz mehr als vier Fabriken“ behoben: Die Einschränkung einer Doktrin gilt ab der Wahl auch für den Bestand (`doctrineExcess`, `variantExcess`, `variantBlock` meldet `excess`, Erklärzeile „Reiße zuerst N Fabriken ab.“; Test `tests/einschraenkung6.test.mjs`, 6 Tests). Der Bot reißt überzählige Fabriken für den Sonderbau ab. Messwerkzeuge: `tools/bedienelemente.mjs` (sichtbare Bedienelemente bei Minute 1 und 10, Playwright), Kennzahl „erstes Angebot mit Doktrin“ (`S.stats.doktrinOfferWahlen`, `tools/sim-p5.mjs`). Basismessung nach Teil 5 (gleiche Seeds): `reports/kartenpfad6-basis-felder.json`, `-basis-doktrin.json`, `-bedienelemente-basis.json`. |
+| Q.1 | K6.02 Strategielinien entfallen im Modus karten: Zeichen, Linienstufen, die Anzeige „Linien“ in der Leiste, die Linienhinweise, die Gewichtung nach führender Linie (`lineState`, `cardSigns`, `C.LINIEN`, `data/linien.js` entfernt; `data/varianten.js` hält nur noch die Gebäude-Varianten, Feld `kat` statt `linie`; `C.AUFWERTUNG`, `C.LAGER`, `C.SOELDNER`). Sechs Regeln der Linienstufen sind Karten in `data/karten6.js` (Querverbindung, Lagerzehnt, Söldnertruppe [Wirtschaft + Militär, selten], Rekrutenzug [Stufe II: Schmiede-Stufe], Durchbruch [selten], Plünderung); „Ausbruch“ ist Teil der Doktrin Ausfall (`counterBaseDmg` × 2). Spielstand-Version 11. Tests: `tests/linien6.test.mjs`, `tests/aufwertung.test.mjs` (Gebäude-Aufwertung aus Teil 4, ohne Zeichen); Browser `tests/browser-q6.mjs` (vorher `browser-l4.mjs`). `tools/sim-p4.mjs` und `tools/bericht-p4.mjs` (Linien-Bots) entfernt; Linien-Bots heißen Kategorie-Bots (`kat`). |
+
+## Auslegungen Teil 6 (zur Bestätigung durch den PO)
+1. **Ausbruch (Linie Verteidigung, Stufe 3) wird Teil der Doktrin Ausfall (K6.02).** Die Anforderung nennt „Ausbruch“ als „entfällt oder wird Kartenstufe“. Ausfall trägt den Gegenstoß schon; Gegenstoß-Einheiten richten jetzt zusätzlich den doppelten Schaden an der gegnerischen Basis an. Ausfall wird damit stärker (Ziel: Doktrinen ausbauen).
+2. **„Neue Einheiten starten mit einer Schmiede-Stufe mehr“ (Linie Militär, Stufe 2) wird Stufe II der Karte Rekrutenzug (K6.02).** Wer die Karte ein zweites Mal wählt, bekommt die Regel zusätzlich zum Läufer je Welle.
+3. **Auslegung 3 aus Teil 5 entfällt (K6.01):** Die Grenze der Zunftordnung gilt für den Bestand; der Bestand bleibt stehen (kein Zwangsabriss), aber der Sonderbau ist gesperrt, bis die Grenze erfüllt ist.

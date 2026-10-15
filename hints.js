@@ -5,7 +5,7 @@
 const KF_HINTS = (() => {
 'use strict';
 const DYN = /^disc:[a-z0-9_:.-]+$/i;                                                                            // REQ-K2.06: Hinweise auf neu auftauchende Elemente, je Element einmal
-const IDS = ['buildings', 'research', 'demolish', 'siege', 'wall', 'tower', 'smithy', 'kontor', 'neighbors', 'variante', 'linie_militaer', 'linie_wirtschaft', 'linie_verteidigung'];   // Start und erste Welle erklärt das Tutorial (REQ-T.05)
+const IDS = ['buildings', 'research', 'demolish', 'siege', 'wall', 'tower', 'smithy', 'kontor', 'neighbors', 'variante'];   // Start und erste Welle erklärt das Tutorial (REQ-T.05)
 
 function create(storage, key){
   let seen = load();

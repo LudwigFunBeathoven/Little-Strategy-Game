@@ -232,7 +232,6 @@
            background:repeating-linear-gradient(45deg, var(--brass-ink) 0 6px, var(--brass) 6px 12px);}
   .kcard.back-up .kc-face{visibility:hidden;} .kcard.back-up .kc-back{display:flex;}
   .kc-risk{color:var(--rust); font-weight:600;}
-  .kc-sign{font-weight:600; letter-spacing:.02em;} .kc-sign[data-line="militaer"]{color:var(--rust);} .kc-sign[data-line="wirtschaft"]{color:var(--brass);} .kc-sign[data-line="verteidigung"]{color:var(--steel);}
   .stage-fly{position:absolute; inset:0; pointer-events:none;}
   body.stage-leaving .stage{background:transparent; transition:background .25s ease-out;}
   @keyframes fxglow{0%,100%{box-shadow:0 0 0 0 rgba(176,138,30,0);} 30%{box-shadow:0 0 0 8px rgba(176,138,30,.7);} 60%{box-shadow:0 0 0 3px rgba(176,138,30,.45);}}
@@ -269,10 +268,6 @@
   .hud{display:flex; align-items:stretch; gap:0; padding:0 10px; border-bottom:1px solid var(--rule); background:var(--surface); overflow:hidden;}
   .hud-item{display:flex; flex-direction:column; justify-content:center; gap:1px; padding:4px 12px; border-right:1px solid var(--rule); min-width:0; white-space:nowrap;}
   .hud-item[hidden]{display:none;}
-  .lc-row{display:flex; flex-direction:column; align-items:flex-start;}
-  .lc{display:inline-flex; gap:6px; align-items:baseline; line-height:1.25; white-space:nowrap;} .lc[hidden]{display:none;}
-  .lc b{font-size:13px; font-weight:500;} .lc i{font-style:normal; color:var(--ink-soft); font-size:11.5px;}
-  .lc[data-line="militaer"] b{color:var(--rust);} .lc[data-line="wirtschaft"] b{color:var(--brass);} .lc[data-line="verteidigung"] b{color:var(--steel);}
   .hud-l{font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);}
   .hud-item{position:relative;}
   .hud-item > b{font-size:18px; font-weight:500; line-height:1.1; min-width:4ch;}
@@ -434,7 +429,6 @@
       <span class="wall-row gate"><span class="w-n" data-i18n="hud.gates"></span><span class="bar steel thin"><i id="barP1"></i></span><b class="num" id="hpP1"></b></span>
       <span class="wall-row"><span class="w-n" data-i18n="hud.wall2s"></span><span class="bar steel thin"><i id="barP2"></i></span><b class="num" id="hpP2"></b></span></div>
     <div class="hud-item" data-tooltip="hud:army"><span class="hud-l" data-i18n="hud.army"></span><b id="armyState"></b></div>
-    <div class="hud-item hud-lines" id="hudLines" data-tooltip="hud:lines" hidden><span class="hud-l" data-i18n="hud.lines"></span><span class="lc-row" id="lineRow"></span></div>
     <div class="hud-item" data-tooltip="hud:time"><span class="hud-l"><span id="diffLabel"></span></span><b class="num" id="clock">0:00</b><span class="hud-s" id="eraLabel"></span></div>
     <button class="hud-draft" id="draftBtn" type="button" data-tooltip="draftBtn" hidden><span class="btn-label" data-i18n="hud.draft"></span><span class="expl"></span></button>
     <div class="hud-menu">
@@ -592,7 +586,8 @@
 <script src="data/draft-options.js"></script>
 <script src="data/kartenpfad.js"></script>
 <script src="data/doktrinen.js"></script>
-<script src="data/linien.js"></script>
+<script src="data/varianten.js"></script>
+<script src="data/karten6.js"></script>
 <script src="data/research.js"></script>
 <script src="data/neighbors.js"></script>
 <script src="data/tutorial-steps.js"></script>

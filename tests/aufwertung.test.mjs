@@ -1,22 +1,20 @@
-// Tests Kartenpfad Teil 4, REQ-S.04 (Strategielinien, Zeichen, Stufen) und REQ-S.05 (Gebäude-Aufwertung zu Varianten).
+// Tests Kartenpfad Teil 4, REQ-S.05 (Gebäude-Aufwertung zu Varianten); seit Teil 6 ohne Strategielinien und Zeichen (REQ-K6.02).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCore } from '../tools/load-core.mjs';
 
 function game(pacing = 'karten', seed = 7, diff = 'normal', tweak = null){
-  const { KlammerCore, KF_CONFIG, KF_LINIEN } = loadCore();
+  const { KlammerCore, KF_CONFIG, KF_VARIANTEN } = loadCore();
   if (tweak) tweak(KF_CONFIG);
   const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { pacing });
   G.S.sections.forEach(s => { s.hp = 1e9; });
   G.S.material = 1e7;
-  return { G, C: KF_CONFIG, L: KF_LINIEN };
+  return { G, C: KF_CONFIG, L: KF_VARIANTEN };
 }
 const pick = (G, ...ids) => { for (const id of ids) G.S.draft.stacks[id] = (G.S.draft.stacks[id] || 0) + 1; G.S.draft.ver++; };
 const place = (G, type, i) => { G.S.material = 1e7; G.unlockKey('bau:' + type); assert.ok(G.buildAt(i, type), `${type} bauen`); };
 const finish = (G, secs = 11) => { for (let k = 0; k < secs * 20; k++){ G.S.pendingDraft = null; G.S.pendingLevels = 0; G.S.pfad.lastPickT = G.S.t; G.S.sections.forEach(x => { x.hp = 1e9; }); G.tick(0.05); } };
-const signs = (G, l) => G.lineState()[l].signs;
 
-/* ---------- Zeichen ---------- */
 test('S.05: Aufwertung erst ab Minute 3 und nur mit stehendem Gebäude des Typs (Modus karten)', () => {
   const { G } = game();
   place(G, 'fabrik', 0);
@@ -48,12 +46,10 @@ test('S.05: Kosten = zweifache Baukosten des Grundgebäudes, Aufwertung dauert 1
   assert.equal(G.S.slots[0].variant, 'manufaktur'); assert.ok(!G.S.slots[0].upg);
   assert.equal(G.variantBlock(0, 'werkstatt'), 'done', 'endgültig');
   assert.equal(G.upgradeBuilding(0, 'werkstatt'), false);
-  // Abriss: halbe Summe aus Baukosten und Aufwertung zurück, Platz frei, Zeichen weg
+  // Abriss: halbe Summe aus Baukosten und Aufwertung zurück, Platz frei
   const paid = G.S.slots[0].paid, m = G.S.material;
-  assert.equal(signs(G, 'wirtschaft'), 1);
   assert.ok(G.demolish(0)); assert.equal(G.S.slots[0], null);
   assert.equal(G.S.material, m + Math.floor(paid * C.REFUND_RATE));
-  assert.equal(signs(G, 'wirtschaft'), 0, 'Zeichen entfällt mit dem Abriss');
   G.S.material = 1e6; assert.ok(G.buildAt(0, 'fabrik'), 'Neubau möglich'); assert.equal(G.S.slots[0].variant, undefined);
 });
 
@@ -95,9 +91,9 @@ test('S.05: Manufaktur wirkt je Gebäude, Werkstatt und die übrigen Varianten e
   assert.ok(Math.abs(G.matRate() / r0 - (1 + 2 * (1 + yield1)) / 3) < 1e-6, `Mehrertrag je Manufaktur: ${G.matRate() / r0}`);
 });
 
-test('S.05: Spielstand-Version 10 und Zustand der Aufwertung im Spielstand', () => {
+test('S.05: Spielstand-Version 11 und Zustand der Aufwertung im Spielstand', () => {
   const { G } = game();
-  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 10);
+  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 11);
   place(G, 'fabrik', 0); G.S.t = 200; G.S.material = 1e6; G.upgradeBuilding(0, 'manufaktur');
   const snap = JSON.parse(JSON.stringify(G.snapshot()));
   assert.ok(snap.slots[0].upg);
@@ -106,7 +102,7 @@ test('S.05: Spielstand-Version 10 und Zustand der Aufwertung im Spielstand', () 
   assert.equal(H.S.slots[0].variant, 'manufaktur');
 });
 
-/* ---------- Wirkung der Stufen und Varianten im Spiel ---------- */
+/* ---------- Wirkung der Varianten im Spiel ---------- */
 const idle = G => { G.S.pendingDraft = null; G.S.pendingLevels = 0; G.S.pfad.lastPickT = G.S.t; G.S.sections.forEach(x => { x.hp = Math.max(x.hp, 1e9); }); };
 
 test('S.05 Varianten: Wachstube, Garnison, Waffenschmiede, Rüstkammer wirken wie beschrieben', () => {
@@ -115,9 +111,8 @@ test('S.05 Varianten: Wachstube, Garnison, Waffenschmiede, Rüstkammer wirken wi
   const q0 = G.qualityMult(), w0 = G.sectionMax(0), t0 = G.mMul('turretDmg');
   const ef = id => L.varianten.find(v => v.id === id).effect;
   assert.ok(G.upgradeBuilding(0, 'wachstube')); assert.ok(G.upgradeBuilding(1, 'garnison')); assert.ok(G.upgradeBuilding(2, 'waffenschmiede')); finish(G);
-  assert.equal(G.lineState().verteidigung.stage, 1, 'Wachstube und Garnison: zwei Zeichen');
   assert.ok(Math.abs(G.mMul('turretDmg') / t0 - ef('wachstube')[0].mul) < 1e-9, 'Wachstube: Turmschaden');
-  assert.equal(G.mAdd('towerKillMaterial'), ef('wachstube')[1].add + 1, 'Wachstube und Stufe 1 der Verteidigung: Material je Turm-Abschuss');
+  assert.equal(G.mAdd('towerKillMaterial'), ef('wachstube')[1].add, 'Wachstube: Material je Turm-Abschuss');
   assert.equal(G.mAdd('wallRegenFlat'), ef('garnison')[0].add); assert.equal(G.mMul('gateUnitHp'), ef('garnison')[1].mul);
   assert.ok(G.qualityMult() > q0 * 1.04, `Waffenschmiede: Qualität ×1,5 der Wirkung (${q0} → ${G.qualityMult()})`);
   assert.ok(Math.abs((G.qualityMult() - 1) / (q0 - 1) - 1.5) < 0.2);

@@ -6,6 +6,6 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "simulate": "node tools/simulate.mjs",
-    "test:browser": "node tests/browser-check.mjs && node tests/browser-k2.mjs && node tests/browser-k2-standard.mjs && node tests/browser-l4.mjs && node tests/browser-n5.mjs"
+    "test:browser": "node tests/browser-check.mjs && node tests/browser-k2.mjs && node tests/browser-k2-standard.mjs && node tests/browser-q6.mjs && node tests/browser-n5.mjs"
   }
 }

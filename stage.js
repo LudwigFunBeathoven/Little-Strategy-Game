@@ -83,8 +83,6 @@ const Stage = (() => {
       dots.textContent = '●'.repeat(tier) + '○'.repeat(G.tiersOf(o).length - tier);
       foot.append(dots);
       if (hasDrawback(o, tier)){ const r = document.createElement('span'); r.className = 'kc-risk'; r.textContent = t('kp.card.drawback'); foot.appendChild(r); }
-      const signs = signLabel(o.id);                                       // Zeichen der Linie erst nach der ersten Linienstufe (Teil 4, REQ-S.04)
-      if (signs){ const sg = document.createElement('span'); sg.className = 'kc-sign'; sg.dataset.line = G.cardSigns(o.id)[0]; sg.textContent = signs; foot.appendChild(sg); }
       const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.kp.card', { tier: optLimit(o) });
       face.append(head, nm, art, ds, foot, ex);
       const back = document.createElement('span'); back.className = 'kc-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = '\u25C6';

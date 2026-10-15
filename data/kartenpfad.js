@@ -3,7 +3,7 @@
    Teil 5 (Leitsatz des PO): Die Grundlagen jeder Strategie sind ohne Karte verfügbar (Fabrik, Kaserne, Mauer, Türme, Schmiede, Universität, Kontor, Läufer, Werfer samt ihren Ausbaustufen);
    Karten öffnen eine Strategie. Die Bau-Karten (Echtes Militär, Festungsbau, Metallverarbeitung, Gelehrte, Handel) entfallen.
    Felder einer Karte:
-     id, familie    Kennung; 'technologie' | 'wagnis' (die Familie 'bonus' sind die Karten aus data/draft-options.js, die Familie 'doktrin' steht in data/doktrinen.js)
+     id, kat, familie   Kennung; Kategorie (Teil 6, REQ-K6.03: 'wirtschaft' | 'militaer' | 'verteidigung', ohne Eintrag neutral); 'technologie' | 'wagnis' (die Familie 'bonus' sind die Karten aus data/draft-options.js, die Familie 'doktrin' steht in data/doktrinen.js)
      rarity         'common' | 'rare' | 'legendary' (Anzeige); gewicht = Grundgewicht im Angebot (relativ zu den anderen Pfadkarten)
      abWahl         frühestens ab der n-ten Kartenwahl im Angebot
      benoetigt      Liste: Karten-Ids, Forschungs-Ids oder 'gebaut:<gebäude>', die vorhanden sein müssen
@@ -16,21 +16,21 @@
 const KF_PFAD = {
   karten: [
     /* ---------- Technologie: öffnet Forschungsoptionen in der Universität (REQ-KP.04); erscheint, sobald eine Universität steht (Teil 5, REQ-K5.02) ---------- */
-    { id: 'fortgeschritteneTaktiken', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    { id: 'fortgeschritteneTaktiken', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
       exklusivMit: ['ballistik'], oeffnetForschung: ['r_reiter', 'r_schild'],
       nameKey: 'kp.card.fortgeschritteneTaktiken.name', descKey: 'kp.card.fortgeschritteneTaktiken.desc', tiers: [{ effect: [] }] },
-    { id: 'ballistik', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    { id: 'ballistik', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
       exklusivMit: ['fortgeschritteneTaktiken'], oeffnetForschung: ['r_armbrust', 'r_katapult'],
       nameKey: 'kp.card.ballistik.name', descKey: 'kp.card.ballistik.desc', tiers: [{ effect: [] }] },
-    { id: 'eiserneKlingen', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    { id: 'eiserneKlingen', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
       oeffnetForschung: ['r_eisenwaffen'],
       nameKey: 'kp.card.eiserneKlingen.name', descKey: 'kp.card.eiserneKlingen.desc', tiers: [{ effect: [] }] },
     /* Teil 5: Mauer-, Turm- und Ausbaustufen gehören zur Grundausstattung; Befestigungskunde öffnet stattdessen zwei Forschungen mit eigener Wirkung (Vorschlag, zur Bestätigung) */
-    { id: 'befestigungskunde', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    { id: 'befestigungskunde', kat: 'verteidigung', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
       oeffnetForschung: ['r_wehrgang', 'r_schiessscharten'],
       nameKey: 'kp.card.befestigungskunde.name', descKey: 'kp.card.befestigungskunde.desc', tiers: [{ effect: [] }] },
     /* ---------- Wagnis: spielverändernd mit Nachteil, dauerhaft (REQ-KP.07); Fernkämpfer und Armee setzen eine Kaserne voraus ---------- */
-    { id: 'glaskanonen', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['gebaut:kaserne'],
+    { id: 'glaskanonen', kat: 'militaer', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['gebaut:kaserne'],
       nameKey: 'kp.card.glaskanonen.name', descKey: 'kp.card.glaskanonen.desc',
       tiers: [{ effect: [{ stat: 'rangedDmg', mul: 2 }], drawback: [{ stat: 'rangedHpOne', add: 1 }] }] },
     { id: 'volleAuslastung', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['gebaut:kaserne'],

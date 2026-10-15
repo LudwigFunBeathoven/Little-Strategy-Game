@@ -7,7 +7,7 @@
 'use strict';
 function KF_BROWSER_BOT(G, profile, hooks){
   const C = KF_CONFIG, o = Object.assign({ cps: 1.5, every: 1, cap: 22, useWall: true }, profile), h = hooks || {};
-  const pickFirst = () => { if (h.draft) h.draft(G); const i = KF_BROWSER_BOT.pfadPick(G, G.S.pendingDraft.options, o.pfad, o.linie); G.chooseDraft(i === null ? 0 : i); };
+  const pickFirst = () => { if (h.draft) h.draft(G); const i = KF_BROWSER_BOT.pfadPick(G, G.S.pendingDraft.options, o.pfad, o.kat); G.chooseDraft(i === null ? 0 : i); };
   const build = (slot, type) => { if (G.buildAt(slot, type) && h.built) h.built(type); };
   let clickAcc = 0, actAcc = 0, mix = 0;
   const PRIO = ['presse', 'ausbau', 'qualitaet', 'turm_0', 'turm_2', 'mauer'];
@@ -30,12 +30,12 @@ function KF_BROWSER_BOT(G, profile, hooks){
       const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
-    // Forschungsbudget (Teil 5, REQ-K5.10): feste Regel je Linie – Militär 0 %, Wirtschaft 50 %, Verteidigung 25 %; ohne Linie und Angabe 0 %; o.budget überschreibt (Stufe 0, 1, 2)
+    // Forschungsbudget (Teil 5, REQ-K5.10): feste Regel je Kategorie-Bot – Militär 0 %, Wirtschaft 50 %, Verteidigung 25 %; ohne Kategorie und Angabe 0 %; o.budget überschreibt (Stufe 0, 1, 2)
     if (G.pacing() === 'karten' && G.has('universitaet')){
-      const want = o.budget !== undefined ? o.budget : o.linie ? KF_BROWSER_BOT.LINIEN_BUDGET[o.linie] : 0;
+      const want = o.budget !== undefined ? o.budget : o.kat ? KF_BROWSER_BOT.KAT_BUDGET[o.kat] : 0;
       if (G.budgetStufe() !== want) G.setBudget(want);
     }
-    if (o.linie && G.pacing() === 'karten') KF_BROWSER_BOT.aufwerten(G, o.linie, h);       // Linien-Bot (Teil 4): Gebäude zu Varianten seiner Linie aufwerten
+    if (o.kat && G.pacing() === 'karten') KF_BROWSER_BOT.aufwerten(G, o.kat, h);       // Kategorie-Bot (Teil 4, ab Teil 6 nach Kategorie): Gebäude zu Varianten seiner Kategorie aufwerten
     if (!o.noUpgrades){
       for (const id of PRIO) if (C.UPGRADES[id] && (o.useWall || !/^(turm|mauer)/.test(id))) G.buy(id);
       const pr = KF_BROWSER_BOT.pfadResearch(G), r = pr ? G.RES[pr] : G.RESEARCH.find(x => G.researchBlock(x.id) === null);
@@ -76,11 +76,11 @@ KF_BROWSER_BOT.pfadResearch = function(G){
   if (G.pacing() !== 'karten') return null;
   return KF_BROWSER_BOT.PFAD_RESEARCH.find(id => G.RES[id] && G.researchBlock(id) === null) || null;
 };
-KF_BROWSER_BOT.pfadPick = function(G, offer, variant, linie){
+KF_BROWSER_BOT.pfadPick = function(G, offer, variant, kat){
   if (G.pacing() !== 'karten') return null;
-  if (linie){                                                              // Linien-Bot (Teil 4, REQ-S.09): zuerst die Karte mit den meisten Zeichen der eigenen Linie
+  if (kat){                                                                // Kategorie-Bot (Teil 6, REQ-K6.08): zuerst die Karte mit den meisten Treffern in der eigenen Kategorie (eine Doktrin zählt doppelt)
     let bestI = null, score = 0;
-    offer.forEach((id, i) => { const s = G.cardSigns(id).filter(l => l === linie).length; if (s > score){ score = s; bestI = i; } });
+    offer.forEach((id, i) => { const o = G.OPT[id], s = [].concat((o && o.kat) || []).filter(k => k === kat).length * (o && o.doktrin ? 2 : 1); if (s > score){ score = s; bestI = i; } });
     if (bestI !== null) return bestI;
   }
   const order = KF_BROWSER_BOT.PFAD_ORDER[variant || 'militaer'] || KF_BROWSER_BOT.PFAD_ORDER.militaer;
@@ -89,17 +89,17 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, linie){
   return best;
 };
 
-/* Gebäude-Aufwertung (Teil 4, REQ-S.05): Der Linien-Bot wertet jedes Gebäude, für das seine Linie eine Variante hat, auf, sobald das Material mit Rücklage reicht.
+/* Gebäude-Aufwertung (Teil 4, REQ-S.05): Der Kategorie-Bot wertet jedes Gebäude, für das seine Kategorie eine Variante hat, auf, sobald das Material mit Rücklage reicht.
    Fabriken werden nur zur Manufaktur mehrfach aufgewertet (Ertrag je Gebäude); jede andere Variante wirkt einmal, ein zweites Gebäude brächte nichts. */
-KF_BROWSER_BOT.LINIEN_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Linien-Bot (0, 25, 50 %)
-KF_BROWSER_BOT.LINIEN_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Linien-Bots
+KF_BROWSER_BOT.KAT_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Kategorie-Bot (0, 25, 50 %)
+KF_BROWSER_BOT.KAT_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Kategorie-Bots
 KF_BROWSER_BOT.MEHRFACH = ['manufaktur', 'zunfthaus', 'bastion'];       // Varianten, deren Wirkung je Gebäude gilt
-KF_BROWSER_BOT.aufwerten = function(G, linie, hooks){
+KF_BROWSER_BOT.aufwerten = function(G, kat, hooks){
   const S = G.S;
   for (let i = 0; i < S.slots.length; i++){
     const sl = S.slots[i];
     if (!sl || sl.upg) continue;
-    const cands = G.variantsFor(i).filter(x => x.linie === linie), v = cands.find(x => x.doktrin) || cands[0];       // Sonderbau der gewählten Doktrin zuerst; er löst eine Grundvariante ab (Teil 5)
+    const cands = G.variantsFor(i).filter(x => x.kat === kat), v = cands.find(x => x.doktrin) || cands[0];       // Sonderbau der gewählten Doktrin zuerst; er löst eine Grundvariante ab (Teil 5)
     if (!v) continue;
     // Einschränkung der Doktrin gilt auch für den Bestand (Teil 6, REQ-K6.01): der Bot reißt überzählige Fabriken ab (zuerst ohne Variante, von hinten), damit der Sonderbau frei wird
     if (v.doktrin && G.variantBlock(i, v.id) === 'excess'){

@@ -169,7 +169,7 @@ test('Tutorial: Schonfrist und Kriegsbeute: die erste Wahl kommt über die erste
 
 test('REQ-K5.04 Suchtest: keine Wirkung in data/ oder config.js bezieht sich auf Zielzeit, Zeitplan der Wahlen oder Höchstabstand', () => {
   const root = new URL('../', import.meta.url);
-  for (const f of ['config.js', 'data/draft-options.js', 'data/research.js', 'data/kartenpfad.js', 'data/doktrinen.js', 'data/linien.js', 'data/neighbors.js']){
+  for (const f of ['config.js', 'data/draft-options.js', 'data/research.js', 'data/kartenpfad.js', 'data/doktrinen.js', 'data/varianten.js', 'data/karten6.js', 'data/neighbors.js']){
     const text = readFileSync(new URL(f, root), 'utf8');
     for (const word of ['zielzeit', 'fahrplan', 'maxabstand', 'höchstabstand', 'zielzeitIstFrist', 'schwellenGrad', 'mindesttempo']) assert.ok(!text.toLowerCase().includes(word.toLowerCase()), `${f} enthält „${word}“`);
   }

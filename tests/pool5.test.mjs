@@ -16,10 +16,10 @@ const pool = G => G.ALL_OPTIONS.filter(o => !o.doktrin && !G.cardRemoved(o.id));
 const REMOVED = ['serienbau', 'bauleitung', 'doppelschicht', 'schwerePressen', 'nachtschicht', 'kriegsanleihe', 'grossauftrag', 'rationalisierung', 'selbstlaeufer', 'fliessband',
   'veteranen', 'taktiker', 'vorposten', 'blitzkrieg', 'soeldnerheer', 'festungsbau', 'bastion', 'scharfschuetzen', 'zeugmeister'];
 
-test('K5.06: der Pool des Modus karten hat 25 bis 30 Karten (ohne Doktrinen); die gestrichenen Karten sind nicht darin', () => {
+test('K5.06/K6.03: der Pool des Modus karten hat höchstens 38 Karten (ohne Doktrinen); die gestrichenen Karten sind nicht darin', () => {
   const { G, P } = game();
   const ids = pool(G).map(o => o.id);
-  assert.ok(ids.length >= 25 && ids.length <= 30, `Karten im Pool: ${ids.length}`);
+  assert.ok(ids.length >= 25 && ids.length <= 38, `Karten im Pool: ${ids.length}`);
   for (const id of REMOVED){ assert.ok(!ids.includes(id), `${id} gestrichen`); assert.ok(P.entfallenKarten.includes(id), `${id} steht in entfallenKarten`); }
   // nie angeboten: auch nicht mit allen Voraussetzungen
   G.S.level = 8; G.S.pfad.choices = 9; G.build('kaserne'); G.build('fabrik'); G.S.lvl.turm_0 = 2;
@@ -29,7 +29,7 @@ test('K5.06: der Pool des Modus karten hat 25 bis 30 Karten (ohne Doktrinen); di
 });
 
 /* Spürbarkeitsgrenze: eine Regeländerung oder mindestens eine Größe um 20 % */
-const RULE_STATS = new Set(['allMid', 'scorchedEarth', 'draftSize', 'emergencyRepair', 'standingOrder', 'autoSmith', 'autoRepairCost', 'siegeDps', 'wallRegenPct', 'grant', 'extraUnit', 'supply', 'werferRange', 'rareBonus']);
+const RULE_STATS = new Set(['nbDiagonal', 'lagerEp', 'soeldner', 'startSmith', 'towerKillMaterial', 'allMid', 'scorchedEarth', 'draftSize', 'emergencyRepair', 'standingOrder', 'autoSmith', 'autoRepairCost', 'siegeDps', 'wallRegenPct', 'grant', 'extraUnit', 'supply', 'werferRange', 'rareBonus']);
 test('K5.06: jede Karte erfüllt die Spürbarkeitsgrenze (Regeländerung oder mindestens eine Größe um 20 %)', () => {
   const { G, C } = game();
   const noticeable = (o, tiers) => {
@@ -62,11 +62,6 @@ test('K5.06: Stufen mit neuem Effekt; bei mindestens der Hälfte der Karten mit 
     if (tiers.slice(1).some(t => stats(t).some(s => NEW_RULES.includes(s)))) rules++;
   }
   assert.ok(rules >= multi.length / 2, `Regeländerungen in Stufe 2 oder 3: ${rules} von ${multi.length}`);
-});
-
-test('K5.06: Bonuskarten tragen keine Linienzeichen', () => {
-  const { G } = game();
-  for (const o of pool(G)) assert.equal(G.cardSigns(o.id).length, 0, o.id);
 });
 
 test('K5.04: keine Wirkung bezieht sich auf Zielzeit, Fahrplan oder Höchstabstand (Suche in data/ und config.js)', async () => {

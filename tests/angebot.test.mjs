@@ -42,6 +42,13 @@ const CASES = {
   instandhaltung: {}, dauerauftrag: {}, fliessband: GONE,
   // Sonderregel
   allesAufDieMitte: {}, verbrannteErde: {}, gluecksritter: {}, blitzkrieg: GONE, soeldnerheer: GONE,
+  // Teil 6 (REQ-K6.02): übernommene Regeln der Linienstufen
+  querverbindung:  { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
+  lagerzehnt:      { off: G => { G.S.level = 1; } },
+  soeldnertruppe:  { off: G => {}, on: G => { G.build('kaserne'); } },
+  rekrutenzug:     { off: G => {}, on: G => { G.build('kaserne'); } },
+  durchbruch: {},
+  pluenderung:     { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
 };
 
 test('Jede Bonuskarte ist in der Fallliste erfasst', () => {
@@ -85,6 +92,7 @@ const ZERO = {   // unabhängige Bewertung: wäre die Wirkung im Spielstand null
   kriegstrommeln: G => G.supplyCap() < 5, schildwall: G => G.supplyCap() < 5,
   weitschuss: G => !['werfer', 'armbrust', 'katapult'].some(t => G.isOpen('einheit:' + t)),
   langeWurfarme: G => !G.isOpen('einheit:werfer'),
+  querverbindung: G => !hasB(G, 'fabrik'), lagerzehnt: G => G.S.level < 2, soeldnertruppe: G => !hasB(G, 'kaserne'), rekrutenzug: G => !hasB(G, 'kaserne'), pluenderung: G => !(G.S.lvl.turm_0 > 0 || G.S.lvl.turm_2 > 0),
   turmkanoniere: G => !(G.S.lvl.turm_0 > 0 || G.S.lvl.turm_2 > 0), bastion: G => !(G.S.lvl.turm_0 > 0 || G.S.lvl.turm_2 > 0),
   scharfschuetzen: G => !(G.S.lvl.turm_0 > 0 || G.S.lvl.turm_2 > 0), zeugmeister: G => !(G.S.lvl.turm_0 > 0 || G.S.lvl.turm_2 > 0),
 };

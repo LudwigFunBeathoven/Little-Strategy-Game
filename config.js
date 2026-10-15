@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.2-kartenpfad-5',
-  SAVE_KEY: 'klammerfront.save.v10',         // Branch: eigene, höhere Spielstand-Version als main (7); 10 mit Teil 5 (Grundausstattung, Doktrinen, Pacing aus dem Spielfluss): ältere Spielstände werden verworfen
+  VERSION: '0.9.2-kartenpfad-6',
+  SAVE_KEY: 'klammerfront.save.v11',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -82,46 +82,28 @@ const KF_CONFIG = {
                           { effect: [{ stat: 'autoRepairCost', add: 0.5 }, { stat: 'repairTh', add: 0.3 }] }],
     },
   },
-  /* Teil 4 (REQ-S.04, S.05), Teil 5 (REQ-K5.08): Strategielinien (Militär, Wirtschaft, Verteidigung) und Gebäude-Aufwertung, nur im Modus karten.
-     Zeichen tragen nur Doktrinen (drei, C.DOKTRIN.zeichen) und Gebäude-Varianten (eines je Variantentyp, Grundvariante oder Sonderbau); Bonus-, Technologie- und Wagnis-Karten tragen keine (data/linien.js).
-     Stufe n einer Linie gilt ab zeichenStufen[n − 1] Zeichen; die Regeln der Stufen 1 bis n wirken zusammen. Stufe doktrinAbStufe und höher setzt mindestens eine gewählte Doktrin der Linie voraus.
-     Stufen sind Regeländerungen statt Prozent-Boni; eine Wirkung steht wie bei den Karten als { stat, mul | add }, neue Größen:
-       extraUnit (zusätzliche Läufer je eigener Welle, braucht die Kaserne), startSmith (Einheiten starten mit so vielen Schmiede-Stufen mehr), dmgVsBase (Schaden eigener Einheiten an der gegnerischen Basis ×),
-       nbDiagonal (Nachbarschaftsboni zählen auch diagonale Nachbarn), lagerEp (Material über dem Lagerdeckel wird zu EP), soeldner (Einheiten über dem Versorgungslimit gegen Aufschlag, ohne Versorgung),
-       towerKillMaterial (Material je EP-Wert eines Turm-Abschusses), counterWave (nach jeder vollständig abgewehrten Gegnerwelle rückt sofort eine eigene Welle aus),
-       counterBoost (Stärkezuschlag dieser Welle), counterBaseDmg (Schaden der Gegenstoß-Einheiten an der gegnerischen Basis ×).
-     lager: Der Lagerdeckel ist der Materialertrag von minuten Minuten (mindestens min); Material darüber wird zu EP zum Kurs kurs (EP je Material) – Auslegung, im Spiel gab es keinen Lagerdeckel.
-     soeldner: Aufschlag auf die Kosten einer Einheit, die über dem Versorgungslimit angeworben wird. */
-  LINIEN: {
-    zeichenStufen: [2, 4, 6],
-    maxStufe: 3,
-    doktrinAbStufe: 3,
-    stufen: {
-      militaer:     [[{ stat: 'extraUnit', add: 1 }],
-                     [{ stat: 'startSmith', add: 1 }],
-                     [{ stat: 'dmgVsBase', mul: 2 }]],
-      wirtschaft:   [[{ stat: 'nbDiagonal', add: 1 }],
-                     [{ stat: 'lagerEp', add: 1 }],
-                     [{ stat: 'soeldner', add: 1 }]],
-      verteidigung: [[{ stat: 'towerKillMaterial', add: 1 }],
-                     [{ stat: 'counterWave', add: 1 }],
-                     [{ stat: 'counterBoost', add: 0.5 }, { stat: 'counterBaseDmg', mul: 2 }]],
-    },
-    lager: { minuten: 3, min: 1500, kurs: 0.08 },
-    soeldner: { kostenFaktor: 1.5 },
-    /* Gebäude-Aufwertung: Kosten = kostenFaktor × Baukosten des Grundgebäudes (Fabrik: FACTORY_BASE_COST), Dauer in Sekunden Spielzeit (das Gebäude wirkt währenddessen nicht),
-       sichtbar ab Minute abMinute, sobald ein Gebäude des Typs steht */
-    aufwertung: { kostenFaktor: 2, dauerS: 10, abMinute: 3 },
-  },
+  /* Teil 6 (REQ-K6.02): Die Strategielinien aus Teil 4 und 5 entfallen (Zeichen, Linienstufen, Linienanzeige). Ihre Regeländerungen sind Karten (data/karten6.js):
+     Querverbindung (Nachbarschaftsboni auch diagonal), Lagerzehnt (Material über dem Lagerdeckel wird zu EP), Söldnertruppe, Rekrutenzug (mit „Neue Einheiten starten mit einer Schmiede-Stufe mehr“ in Stufe II),
+     Durchbruch, Plünderung; „Ausbruch“ gehört zur Doktrin Ausfall. Neue Spielgrößen im Kartentext (stat): extraUnit (zusätzliche Läufer je eigener Welle, braucht die Kaserne), startSmith (Einheiten starten mit so vielen
+     Schmiede-Stufen mehr), dmgVsBase (Schaden eigener Einheiten an der gegnerischen Basis ×), nbDiagonal (Nachbarschaftsboni zählen auch diagonale Nachbarn), lagerEp (Material über dem Lagerdeckel wird zu EP),
+     soeldner (Einheiten über dem Versorgungslimit gegen Aufschlag, ohne Versorgung), towerKillMaterial (Material je EP-Wert eines Turm-Abschusses), counterWave (nach jeder vollständig abgewehrten Gegnerwelle rückt sofort
+     eine eigene Welle aus), counterBoost (Stärkezuschlag dieser Welle), counterBaseDmg (Schaden der Gegenstoß-Einheiten an der gegnerischen Basis ×).
+     AUFWERTUNG (Gebäude-Aufwertung, Teil 4): Kosten = kostenFaktor × Baukosten des Grundgebäudes (Fabrik: FACTORY_BASE_COST), Dauer in Sekunden Spielzeit (das Gebäude wirkt währenddessen nicht),
+     sichtbar ab Minute abMinute, sobald ein Gebäude des Typs steht.
+     LAGER: Der Lagerdeckel ist der Materialertrag von minuten Minuten (mindestens min); Material darüber wird zu EP zum Kurs kurs (EP je Material) – Auslegung, im Spiel gab es keinen Lagerdeckel.
+     SOELDNER: Aufschlag auf die Kosten einer Einheit, die über dem Versorgungslimit angeworben wird. */
+  AUFWERTUNG: { kostenFaktor: 2, dauerS: 10, abMinute: 3 },
+  LAGER: { minuten: 3, min: 1500, kurs: 0.08 },
+  SOELDNER: { kostenFaktor: 1.5 },
   /* Teil 5 (REQ-K5.07): Doktrinen (data/doktrinen.js) ersetzen die Schlüsselkarten aus Teil 4; nur im Modus karten.
-     max: höchstens so viele Doktrinen je Partie, danach erscheinen keine weiteren. zeichen: Zeichen der Linie je Doktrin. abWahl: erste Wahl mit einer Doktrin im Angebot;
-     spaetestensJe: spätestens in jeder n-ten Wahl liegt eine Doktrin auf einem Bonusplatz (solange noch eine fehlt). vornAb, gewichtVorne: wer eine Linie führt (mindestens vornAb Zeichen),
-     zieht ihre Doktrinen mit mehrfachem Gewicht; gewicht: Grundgewicht im Angebot. Die Wirkungen der Doktrinen stehen in data/doktrinen.js, die der Sonderbauten in data/linien.js.
-     sonderbau.kostenFaktor: Kosten der Aufwertung zum Sonderbau × Baukosten des Grundgebäudes (statt LINIEN.aufwertung.kostenFaktor).
+     max: höchstens so viele Doktrinen je Partie, danach erscheinen keine weiteren. abWahl: erste Wahl mit einer Doktrin im Angebot;
+     spaetestensJe: spätestens in jeder n-ten Wahl liegt eine Doktrin auf einem Bonusplatz (solange noch eine fehlt); gewicht: Grundgewicht im Angebot. Die Wirkungen der Doktrinen stehen in data/doktrinen.js,
+     die der Sonderbauten in data/varianten.js.
+     sonderbau.kostenFaktor: Kosten der Aufwertung zum Sonderbau × Baukosten des Grundgebäudes (statt AUFWERTUNG.kostenFaktor).
      zunfthaus.nachbarFaktor: Der Nachbarschaftsbonus eines fertigen Zunfthauses (Fabrik neben Fabrik) wirkt in diesem Vielfachen.
      bastion: feuert wie ein Turm in die Lane seiner Spalte (links Lane 0, Mitte Lane 1, rechts Lane 2) mit schadenFaktor × Turmschaden der Stufe max(grundStufe, Turm der Lane); gleiche Kadenz und Reichweite wie die Türme. */
   DOKTRIN: {
-    max: 2, zeichen: 3, abWahl: 3, spaetestensJe: 3, vornAb: 2, gewichtVorne: 3, gewicht: 8,
+    max: 2, abWahl: 3, spaetestensJe: 3, gewicht: 8,
     sonderbau: { kostenFaktor: 3 },
     zunfthaus: { nachbarFaktor: 3 },
     bastion: { schadenFaktor: 1.5, grundStufe: 2 },

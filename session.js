@@ -32,7 +32,7 @@ const Session = (() => {
     P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
           switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit, pressure: S.druck || 'aus' }, visible: [], discovered: {},
-          lines: {}, variants: [], xpBySource: {}, wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
+          variants: [], xpBySource: {}, wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
     visibleAt = new Map(); discoveredAt = new Map();
     lastSample = S.t; lastPhase = G.phase(); draftActs = { rerolled: 0, banned: 0 }; doneSeen = 0; unlockSeen = new Set();
   }
@@ -50,10 +50,8 @@ const Session = (() => {
     // abgeschlossene Forschungen mit Zeitpunkt (Kartenpfad, REQ-KP.09)
     const done = S.stats.researchDone || [];
     while (doneSeen < done.length){ P.researchDone.push({ t: done[doneSeen].t, id: done[doneSeen].id, tier: done[doneSeen].tier }); doneSeen++; }
-    // Teil 4: Strategielinien (Zeichen, Stufe, Zeitpunkt der Stufen), Gebäude-Varianten, verlorene Lebenspunkte der Mauer
+    // Teil 4: Gebäude-Varianten, verlorene Lebenspunkte der Mauer (Teil 6: ohne Strategielinien)
     if (S.pacing === 'karten'){
-      const ls = G.lineState();
-      for (const l in ls){ const x = P.lines[l] || (P.lines[l] = { signs: 0, stage: 0, t1: null, t2: null, t3: null }); x.signs = ls[l].signs; x.stage = ls[l].stage; for (let k = 1; k <= 3; k++) if (x['t' + k] === null && ls[l].stage >= k) x['t' + k] = +S.t.toFixed(1); }
       P.variants = (S.stats.variants || []).slice();
       P.xpBySource = Object.fromEntries(Object.entries(S.stats.xpSrc || {}).map(([k, v]) => [k, Math.round(v)]));       // Teil 5 (REQ-K5.10): EP je Quelle (Abschuss, Turm, Basisschaden, abgewehrte Welle, Forschungsbudget …)
       P.doktrinen = (S.stats.doktrinen || []).slice(); P.doktrinAngebote = S.stats.doktrinOffers || 0; P.unterhalt = Math.round(S.stats.upkeep || 0);       // Teil 5 (REQ-K5.07): gewählte Doktrinen mit Wahl und Zeitpunkt, Angebote mit Doktrin, gezahlter Unterhalt

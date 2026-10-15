@@ -1,13 +1,13 @@
-// Tests Kartenpfad Teil 5, REQ-K5.07: Doktrinen und Sonderbauten (ersetzen die Schlüsselkarten aus Teil 4).
+// Tests Kartenpfad Teil 5, REQ-K5.07: Doktrinen und Sonderbauten (ersetzen die Schlüsselkarten aus Teil 4); Teil 6: Kategorien statt Linien und Zeichen.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCore } from '../tools/load-core.mjs';
 
 function game(pacing = 'karten', seed = 7, diff = 'normal'){
-  const { KlammerCore, KF_CONFIG, KF_LINIEN, KF_DOKTRINEN } = loadCore();
+  const { KlammerCore, KF_CONFIG, KF_VARIANTEN, KF_DOKTRINEN } = loadCore();
   const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { pacing });
   G.S.sections.forEach(s => { s.hp = 1e9; }); G.S.material = 1e7; G.S.nextWave = 1e9; G.S.nextOwnWave = 1e9;
-  return { G, C: KF_CONFIG, L: KF_LINIEN, D: KF_DOKTRINEN };
+  return { G, C: KF_CONFIG, L: KF_VARIANTEN, D: KF_DOKTRINEN };
 }
 const IDS = ['zunftordnung', 'stiftung', 'stehendesHeer', 'vorstoss', 'bollwerk', 'ausfall'];
 const LINE = { zunftordnung: 'wirtschaft', stiftung: 'wirtschaft', stehendesHeer: 'militaer', vorstoss: 'militaer', bollwerk: 'verteidigung', ausfall: 'verteidigung' };
@@ -18,19 +18,18 @@ const finish = (G, secs = 11) => { for (let k = 0; k < secs * 20; k++){ idle(G);
 const upgrade = (G, i, vid) => { G.S.t = Math.max(G.S.t, 200); G.S.material = 1e7; assert.ok(G.upgradeBuilding(i, vid), `${vid}: ${G.variantBlock(i, vid)}`); finish(G); assert.equal(G.S.slots[i].variant, vid); };
 const offered = (G, id) => G.optionAvailable(G.OPT[id]);
 
-test('K5.07: sechs Doktrinen, zwei je Linie, je drei Zeichen ihrer Linie, eine Stufe, Wirkung und Einschränkung', () => {
+test('K5.07: sechs Doktrinen, zwei je Kategorie, eine Stufe, Wirkung und Einschränkung', () => {
   const { G, L, D, C } = game();
   assert.equal(JSON.stringify(D.map(d => d.id).sort()), JSON.stringify([...IDS].sort()));
-  assert.equal(C.DOKTRIN.max, 2); assert.equal(C.DOKTRIN.zeichen, 3);
-  for (const l of L.linien) assert.equal(D.filter(d => d.linie === l).length, 2, l);
+  assert.equal(C.DOKTRIN.max, 2);
+  for (const k of ['militaer', 'wirtschaft', 'verteidigung']) assert.equal(D.filter(d => d.kat === k).length, 2, k);
   for (const d of D){
     const o = G.OPT[d.id];
     assert.equal(o.family, 'doktrin'); assert.equal(o.tiers.length, 1); assert.equal(o.abWahl, C.DOKTRIN.abWahl);
-    assert.deepEqual([].concat(L.zeichen[d.id]), Array(C.DOKTRIN.zeichen).fill(LINE[d.id]), `${d.id}: drei Zeichen`);
-    assert.equal(d.linie, LINE[d.id]);
+    assert.equal(d.kat, LINE[d.id]);
     assert.ok((d.drawback && d.drawback.length) || d.grenze, `${d.id}: bindende Einschränkung`);
     assert.ok((d.effect && d.effect.length) || d.sonderbau, `${d.id}: Effekt oder Sonderbau`);
-    if (d.sonderbau){ const v = G.VAR[d.sonderbau]; assert.ok(v, `${d.id}: Sonderbau ${d.sonderbau}`); assert.equal(v.doktrin, d.id); assert.equal(v.linie, d.linie); }
+    if (d.sonderbau){ const v = G.VAR[d.sonderbau]; assert.ok(v, `${d.id}: Sonderbau ${d.sonderbau}`); assert.equal(v.doktrin, d.id); assert.equal(v.kat, d.kat); }
   }
 });
 
@@ -86,10 +85,9 @@ test('K5.07 Zunftordnung: Zunfthaus mit dreifachem Nachbarschaftsbonus; höchste
   for (const i of [0, 1, 3, 4]) place(G, 'fabrik', i);                         // 2×2-Block: je zwei Nachbarn
   const per = 0.06;
   pick(G, 'zunftordnung');
-  const r0 = G.matRate();                                                    // mit den drei Zeichen der Doktrin erreicht die Linie Wirtschaft Stufe 1 (Material +10 %)
-  assert.equal(G.lineState().wirtschaft.stage, 1);
+  const r0 = G.matRate();
   upgrade(G, 0, 'zunfthaus');
-  const n = G.neighborCount(0, 'fabrik'), gain = G.factoryRate() * per * n * (C.DOKTRIN.zunfthaus.nachbarFaktor - 1);        // die Linie Wirtschaft zählt seit Stufe 1 auch diagonale Nachbarn
+  const n = G.neighborCount(0, 'fabrik'), gain = G.factoryRate() * per * n * (C.DOKTRIN.zunfthaus.nachbarFaktor - 1);
   assert.ok(Math.abs(G.matRate() - (r0 + gain)) < 1e-9, `Ertrag ${G.matRate()} gegen ${r0 + gain}`);
   // Grenze: vier Plätze belegt
   assert.equal(G.buildBlock(2, 'fabrik'), 'limit');
@@ -189,19 +187,10 @@ test('K5.07 Ausfall: nach jeder abgewehrten Welle rückt ein Gegenstoß mit +100
   const f = G.addFormation('e', 0, ['laeufer'], 60); for (const u of G.S.units) if (u.form === f.id){ u.wave = 5; u.hp = 1; }
   for (let i = 0; i < 3; i++) G.spawn('laeufer');
   for (let i = 0; i < 200 && G.S.units.some(u => u.side === 'e'); i++){ idle(G); G.S.nextWave = 1e9; G.S.nextOwnWave = 1e9; G.tick(0.05); }
-  assert.equal(G.S.stats.counterWaves, 1, 'ohne Linienstufe');
+  assert.equal(G.S.stats.counterWaves, 1);
   const mine = G.S.units.filter(u => u.side === 'p'); assert.equal(mine.length, 3);
   const base = G.unitStats('p', 'laeufer');
-  for (const u of mine){ assert.ok(Math.abs(u.dmg / base.dmg - 2) < 1e-6, 'Schaden +100 %'); assert.ok(Math.abs(u.maxHp / base.hp - 2) < 1e-6, 'Leben +100 %'); }
-});
-
-test('K5.07: Doktrin trägt drei Zeichen der Linie; zwei Doktrinen derselben Linie reichen für Stufe 2', () => {
-  const { G } = game();
-  pick(G, 'bollwerk');
-  assert.equal(G.lineState().verteidigung.signs, 3); assert.equal(G.lineState().verteidigung.stage, 1);
-  pick(G, 'ausfall');
-  assert.equal(G.lineState().verteidigung.signs, 6);
-  assert.equal(G.lineState().militaer.signs, 0);
+  for (const u of mine){ assert.ok(Math.abs(u.dmg / base.dmg - 2) < 1e-6, 'Schaden +100 %'); assert.ok(Math.abs(u.maxHp / base.hp - 2) < 1e-6, 'Leben +100 %'); assert.equal(u.baseMult, 2, 'Ausbruch: doppelter Schaden an der gegnerischen Basis (Teil 6)'); }
 });
 
 /* ---------- Angebotsausgleich ---------- */
@@ -236,23 +225,6 @@ test('K5.07: ohne Doktrin mit Wirkung kein Zwang; der Zähler läuft ab Wahl 3',
   assert.equal(G.S.pfad.sinceDoktrin, 1);
   G.S.pendingDraft = null; G.S.pfad.choices = 3; G.offerDraft(); assert.equal(G.S.pfad.sinceDoktrin, 2);
   assert.equal(G.S.stats.doktrinOffers, undefined);
-});
-
-test('K5.07: führt der Spieler eine Linie, ziehen ihre Doktrinen mit höherem Gewicht', () => {
-  const count = lead => {
-    let hits = 0, n = 0;
-    for (let seed = 1; seed <= 200; seed++){
-      const { G } = richState(seed);
-      if (lead) pick(G, 'stehendesHeer');                              // drei Zeichen Militär: die Linie führt
-      G.S.pfad.choices = 6; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.pfad.sinceDoktrin = 2; G.S.pfad.lastPickT = -1e9;
-      G.offerDraft();
-      if (G.S.pendingDraft.options.includes('vorstoss')) hits++;
-      n++;
-    }
-    return hits / n;
-  };
-  const lead = count(true), none = count(false);
-  assert.ok(lead > none * 1.5, `mit Führung des Militärs häufiger: ${lead} gegen ${none}`);
 });
 
 test('K5.07: Bann einer fälligen Doktrin ersetzt sie durch eine andere Doktrin', () => {

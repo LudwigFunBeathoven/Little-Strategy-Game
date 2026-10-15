@@ -1,4 +1,4 @@
-// Browser-Prüfung Kartenpfad Teil 4 (REQ-S.04, S.05): Gebäude-Aufwertung am Gebäude, Strategielinien in der Leiste. Braucht Playwright (nicht Teil des Projekts).
+// Browser-Prüfung Kartenpfad Teil 4 und 6 (REQ-S.05, K6.01 – K6.08): Gebäude-Aufwertung am Gebäude, keine Strategielinien, Kategorien und Synergiekarten. Braucht Playwright (nicht Teil des Projekts).
 let chromium;
 try { ({ chromium } = await import('playwright')); }
 catch (e) { console.log('Playwright nicht installiert – Prüfung übersprungen.'); process.exit(0); }
@@ -67,46 +67,30 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   await run(p, 11); await settle(p, 300);
   const done = await p.evaluate(() => ({ variant: __kf.G.S.slots[0].variant, title: document.querySelector('#ctxTitle').textContent, cell: document.querySelectorAll('#plotGrid button')[0].innerText.replace(/\s+/g, ' '), picks: document.querySelectorAll('#ctxVariants .pick').length }));
   check(done.variant === 'manufaktur' && /Manufaktur/.test(done.title) && /Manufaktur/.test(done.cell) && done.picks === 0, `S.05: Variante steht, keine weitere Aufwertung angeboten ${show(done)}`);
-  check(!(await vis(p, '#hudLines')), 'S.04: vor Stufe 1 ist kein Linienelement sichtbar');
+  check(!(await vis(p, '#hudLines')), 'K6.02: kein Linienelement in der Leiste');
   check(errs.length === 0, `S.05: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }
 
-/* ---------- S.04: Linien in der Leiste ---------- */
+/* ---------- K6.02: keine Strategielinien; Doktrin und übernommene Karten ohne Zeichen ---------- */
 {
   const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1'); await calm(p);
-  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.drill = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 250);
-  check(!(await vis(p, '#hudLines')), 'S.04: Karten ohne Zeichen: keine Linie sichtbar');
-  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.stehendesHeer = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 400);       // Doktrin: drei Zeichen
-  const hud = await p.evaluate(() => ({ vis: !!document.querySelector('#hudLines') && document.querySelector('#hudLines').checkVisibility(), text: document.querySelector('#lineRow').innerText.replace(/\s+/g, ' ') }));
-  check(hud.vis && /Militär 1/.test(hud.text) && /3\/4/.test(hud.text), `S.04: Linie Militär Stufe 1 erscheint mit Zeichen bis zur nächsten Stufe ${show(hud)}`);
-  const lh = await hintLike(p, /Linie Militär/);
-  check(/Linie Militär, Stufe 1/.test(lh) && /Läufer/.test(lh), `S.04: Hinweis „Militär Stufe 1“ mit einer Zeile Wirkung ${show(lh)}`);
-  const tip = await tipOf(p, '#hudLines');
-  check(/Linien/.test(tip) && /Läufer/.test(tip) && /Doktrin/.test(tip), `S.04: Tooltip der Linienanzeige ${show(tip)}`);
-  const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
-  check(JSON.stringify(audit.tips) === '[]' || (audit.tips && audit.tips.length === 0), `Tooltip-Audit leer ${show(audit.tips)}`);
-  check(JSON.stringify(audit.expl) === '[]' || (audit.expl && audit.expl.length === 0), `Erklärzeilen-Audit leer ${show(audit.expl)}`);
-  // Sprache en
-  await p.evaluate(() => __kf.setLang('en')); await settle(p, 300);
-  const en = await p.evaluate(() => document.querySelector('#lineRow').innerText.replace(/\s+/g, ' '));
-  check(/Military 1/.test(en), `S.04: englische Texte ${show(en)}`);
-  check(errs.length === 0, `S.04: keine Konsolenfehler${show(errs)}`);
-  await ctx.close();
-}
-
-/* ---------- S.04: Zeichen an den Karten erst nach der ersten Linienstufe ---------- */
-{
-  const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1');
+  await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.stehendesHeer = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; __kf.requestRender(); }); await settle(p, 400);
+  check(!(await vis(p, '#hudLines')) && (await p.evaluate(() => !document.querySelector('#hudLines') && !document.querySelector('#lineRow'))), 'K6.02: keine Linienanzeige, auch nicht nach einer Doktrin');
+  const hint = await p.evaluate(() => !document.querySelector('#hintBox').hidden ? document.querySelector('#hintText').textContent : '');
+  check(!/Linie/.test(hint), `K6.02: kein Linienhinweis ${show(hint)}`);
   let lvl = 0; const offer = ids => p.evaluate(([ids, lv]) => { const G = __kf.G; G.S.pendingDraft = { level: lv, options: ids, rerolled: 0 }; G.S.pendingLevels = Math.max(1, G.S.pendingLevels); __kf.requestRender(); }, [ids, ++lvl]);
-  await offer(['vorstoss', 'drill', 'glaskanonen']); await settle(p, 1500);
-  const before = await p.evaluate(() => [...document.querySelectorAll('.kcard .kc-sign')].map(e => e.textContent));
-  check(before.length === 0, `S.04: vor Stufe 1 kein Zeichen an den Karten ${show(before)}`);
-  await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = null; G.S.draft.stacks.stehendesHeer = 1; G.S.draft.ver++; });
-  await offer(['vorstoss', 'drill', 'glaskanonen']); await settle(p, 1500);
-  const after = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(e => (e.querySelector('.kc-sign') || {}).textContent || ''));
-  check(/◆◆◆ Militär/.test(after[0]) && after[1] === '' && after[2] === '', `S.04: nach Stufe 1: drei Zeichen an der Doktrin, keines an Drill und Glaskanonen ${show(after)}`);
-  check(errs.length === 0, `S.04 Karten: keine Konsolenfehler${show(errs)}`);
+  await offer(['vorstoss', 'rekrutenzug', 'durchbruch']); await settle(p, 1500);
+  const cards = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(e => ({ sign: !!e.querySelector('.kc-sign'), name: (e.querySelector('.kc-name') || {}).textContent, desc: (e.querySelector('.kc-desc') || {}).textContent })));
+  check(cards.length === 3 && cards.every(c => !c.sign), `K6.02: kein Zeichen an den Karten ${show(cards)}`);
+  check(/Rekrutenzug/.test(cards[1].name) && /Läufer/.test(cards[1].desc) && /Durchbruch/.test(cards[2].name), `K6.02: übernommene Karten mit Wirkungszeile ${show(cards)}`);
+  const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
+  check(JSON.stringify(audit.tips) === '[]', `Tooltip-Audit leer ${show(audit.tips)}`);
+  check(JSON.stringify(audit.expl) === '[]', `Erklärzeilen-Audit leer ${show(audit.expl)}`);
+  await p.evaluate(() => __kf.setLang('en')); await settle(p, 400);
+  const en = await p.evaluate(() => [...document.querySelectorAll('.kcard .kc-name')].map(e => e.textContent));
+  check(/Recruit levy/.test(en[1]) && /Breakthrough/.test(en[2]), `K6.02: englische Namen ${show(en)}`);
+  check(errs.length === 0, `K6.02: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }
 
