@@ -30,16 +30,14 @@ const CASES = {
   grosseArmee:     { off: CAPPED },
   kriegstrommeln:  { off: G => {}, on: G => { G.build('kaserne'); } },        // Teil 5: Versorgung 5 gibt es mit der Kaserne (3 + 2), ohne Karte
   schildwall:      { off: G => {}, on: G => { G.build('kaserne'); } },
-  weitschuss: {},                                                          // Teil 5: der Werfer ist ab Start verfügbar
-  langeWurfarme: {},
-  drill: {}, belagerungsgeraet: {}, sappeure: {}, vorposten: GONE, veteranen: GONE, taktiker: GONE,
+  weitschuss: GONE, langeWurfarme: GONE,                                   // Teil 6 (REQ-K6.03): Pool höchstens 38 Karten, siehe tests/kategorien6.test.mjs
+  drill: {}, belagerungsgeraet: {}, sappeure: GONE, vorposten: GONE, veteranen: GONE, taktiker: GONE,
   // Basis
   turmkanoniere:   { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
   bastion: GONE, scharfschuetzen: GONE, zeugmeister: GONE, festungsbau: GONE,
-  maurerkolonne: {}, zinnen: {}, notreserve: {},
+  maurerkolonne: {}, zinnen: GONE, notreserve: GONE,
   // Automatisierung
-  werkmeister:     { off: G => {}, on: G => { open(G, 'bau:schmiede'); G.build('schmiede'); } },
-  instandhaltung: {}, dauerauftrag: {}, fliessband: GONE,
+  werkmeister: GONE, instandhaltung: GONE, dauerauftrag: {}, fliessband: GONE,
   // Sonderregel
   allesAufDieMitte: {}, verbrannteErde: {}, gluecksritter: {}, blitzkrieg: GONE, soeldnerheer: GONE,
   // Teil 6 (REQ-K6.02): übernommene Regeln der Linienstufen
@@ -48,6 +46,15 @@ const CASES = {
   soeldnertruppe:  { off: G => {}, on: G => { G.build('kaserne'); } },
   rekrutenzug:     { off: G => {}, on: G => { G.build('kaserne'); } },
   durchbruch: {},
+  // Teil 6 (REQ-K6.03): Synergiekarten erscheinen erst mit zwei Karten ihrer Kategorie (synergieAb); darunter ist ihre Wirkung zu klein
+  gilde:            { off: G => { G.S.draft.stacks.bessereFabriken = 0; G.S.draft.ver++; }, on: G => { G.S.draft.stacks.bessereFabriken = 1; G.S.draft.stacks.kriegserfahrung = 1; G.S.draft.ver++; } },
+  waffenbrueder:    { off: G => {}, on: G => { G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
+  wehrverband:      { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; G.S.draft.stacks.maurerkolonne = 1; G.S.draft.stacks.verbrannteErde = 1; G.S.draft.ver++; } },
+  bauordnung:       { off: G => {}, on: G => { G.S.draft.stacks.bessereFabriken = 1; G.S.draft.stacks.kriegserfahrung = 1; G.S.draft.ver++; } },
+  sammelruf:        { off: G => {}, on: G => { G.build('kaserne'); G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
+  kriegswirtschaft: { off: G => {}, on: G => { G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
+  wehrhandel:       { off: G => {}, on: G => { G.S.draft.stacks.maurerkolonne = 1; G.S.draft.stacks.verbrannteErde = 1; G.S.draft.ver++; } },
+  grenzwacht:       { off: G => {}, on: G => { G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
   pluenderung:     { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
 };
 
@@ -120,7 +127,7 @@ test('1.000 Angebote in zufälligen Spielständen: keine angebotene Bonuskarte h
     for (const o of ids){ if (o.pfad) continue; checked++; if (ZERO[o.id]) assert.equal(ZERO[o.id](G), false, `${o.id} im Pool trotz Wirkung null (Seed ${seed})`); }
     offers++;
   }
-  assert.equal(offers, 1000); assert.ok(checked > 20000, `geprüfte Karten: ${checked}`);
+  assert.equal(offers, 1000); assert.ok(checked > 15000, `geprüfte Karten: ${checked}`);       // Teil 6: kleinerer Pool (7 Karten gestrichen, Synergiekarten erscheinen selten)
 });
 
 /* ---------- Kartentitel ---------- */

@@ -108,6 +108,11 @@ const KF_CONFIG = {
     zunfthaus: { nachbarFaktor: 3 },
     bastion: { schadenFaktor: 1.5, grundStufe: 2 },
   },
+  /* Teil 6 (REQ-K6.03): Kategorien statt Strategielinien. Jede Karte gehört zu einer der drei Kategorien (liste), ist neutral oder zählt als Brücke für zwei; Doktrinen und Brücken zählen für ihre Kategorien.
+     Zählregel: jede gewählte Karte zählt einmal, jede weitere Stufe derselben Karte ebenfalls, eine Doktrin doktrin-mal. Synergiekarten (data/karten6.js: Zähler, Verstärker, Brücken) zählen höchstens deckel Karten einer Kategorie
+     und erscheinen erst, wenn synergieAb Karten ihrer Kategorie gewählt sind (damit der Zähler ab drei Karten spürbar ist). Führende Kategorie: mindestens vorsprung Karten Vorsprung vor der zweiten; ihre Karten und Doktrinen
+     haben im Angebot das gewichtVorne-fache Ziehgewicht. Jedes Angebot mit drei oder mehr Karten enthält mindestens eine Karte außerhalb der führenden Kategorie. poolMax: Obergrenze des Pools ohne Doktrinen (Test). */
+  KATEGORIEN: { liste: ['wirtschaft', 'militaer', 'verteidigung'], doktrin: 2, deckel: 8, synergieAb: 2, vorsprung: 2, gewichtVorne: 2, poolMax: 38 },
   /* Teil 4 (REQ-S.08): Testschalter ?druck=hoch (Standard aus). Verstärkt die regulären Gegnerwellen ab Minute abMinute um faktor (Zahl der Einheiten); die Druckkurve selbst
      bleibt unverändert, bis der Spieltest Daten liefert (Entscheidung B4). Die Belagerungswelle bleibt unberührt. */
   DRUCK: { hoch: { abMinute: 4, faktor: 1.3 } },
@@ -214,6 +219,7 @@ const KF_CONFIG = {
     hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
     inhaltSymbole: { bau: '\u2302', einheit: '\u25B2', stufe: '\u21E7', forschung: '\u2697' },   // Symbole für Inhalte auf den Karten (Gebäude, Einheit, Ausbaustufe, Forschung)
     symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0', doktrin: '\u2691' },
+    katSymbole: { wirtschaft: '\u25CE', militaer: '\u2694', verteidigung: '\u2616' },       // Kategorien der Karten (Teil 6, REQ-K6.03)
   },
 
   /* Tutorial „Erste Schritte“ (REQ-T.01 – T.04): Schritte in data/tutorial-steps.js, Texte in den Sprachdateien */

@@ -272,6 +272,11 @@ function tipContent(id){
       const rows = tier < G.tiersOf(o).length ? [[t('tip.draft.next'), cardName(o, tier + 1)]] : [[t('tip.draft.limit'), t('draft.maxed')]];
       return { title: cardName(o, tier), body: cardDesc(o, tier), rows: cardRows(o, rows) };
     }
+    case 'kat': {                                                                  // Karten je Kategorie (Teil 6, REQ-K6.03)
+      const c = G.katCounts(), lead = G.katLead();
+      return { title: t('kat.counts.title'), body: t('tip.kat.counts', { d: C.KATEGORIEN.doktrin, max: C.KATEGORIEN.deckel, lead: C.KATEGORIEN.vorsprung }),
+               rows: C.KATEGORIEN.liste.map(k => [t(`kat.${k}.name`), String(c[k]) + (lead === k ? ' · ' + t('tip.kat.lead') : '')]) };
+    }
     case 'new':   return { title: t('hdr.newGame'), body: t('tip.new.body') };
     case 'lang':  return { title: t('lang.' + a), body: t('tip.lang.body') };
     case 'diff':  return { title: t(`diff.${a}.name`), body: t(`diff.${a}.desc`) };

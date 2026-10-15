@@ -56,7 +56,7 @@ const Stage = (() => {
   }
   const hasDrawback = (o, tier) => { const tiers = G.tiersOf(o); return !!(tiers[Math.min(tier, tiers.length) - 1] || {}).drawback; };
   /* Rahmenfarbe = Seltenheit, Band = Familie (Modus karten) bzw. Kategorie (Standard mit Bühne) */
-  const bandWord = o => o.pfad || o.doktrin ? t('kp.fam.' + o.family) : G.S.pacing === 'karten' ? t('kp.fam.bonus') : t('draft.cat.' + o.category);
+  const bandWord = o => o.pfad || o.doktrin ? t('kp.fam.' + o.family) : G.S.pacing === 'karten' ? (katLabel(o) || t('kp.fam.bonus')) : t('draft.cat.' + o.category);       // Modus karten: Bonuskarten zeigen ihre Kategorie (Teil 6)
 
   function build(d){
     const list = el.stageCards; list.innerHTML = '';
@@ -78,14 +78,18 @@ const Stage = (() => {
       const nm = document.createElement('b'); nm.className = 'kc-name'; nm.textContent = cardName(o, tier);
       const art = document.createElement('span'); art.className = 'kc-art'; art.setAttribute('aria-hidden', 'true'); art.textContent = symbol(o);
       const ds = document.createElement('span'); ds.className = 'kc-desc'; ds.textContent = effLine(o, tier);
+      const now = o.synergie && G.S.pacing === 'karten' ? G.synergieNow(o.id, G.cardTaken(o.id) === 0) : null;           // Synergiekarten: aktueller Wert auf der Karte (Teil 6, REQ-K6.03)
+      let nowEl = null; if (now){ nowEl = document.createElement('span'); nowEl.className = 'kc-now'; nowEl.textContent = t('kat.now', { v: synergieValueText(now) }); }
       const foot = document.createElement('span'); foot.className = 'kc-foot';
       const dots = document.createElement('span'); dots.className = 'kc-tier'; dots.setAttribute('aria-hidden', 'true');
       dots.textContent = '●'.repeat(tier) + '○'.repeat(G.tiersOf(o).length - tier);
       foot.append(dots);
       if (hasDrawback(o, tier)){ const r = document.createElement('span'); r.className = 'kc-risk'; r.textContent = t('kp.card.drawback'); foot.appendChild(r); }
       const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.kp.card', { tier: optLimit(o) });
-      face.append(head, nm, art, ds, foot, ex);
-      const back = document.createElement('span'); back.className = 'kc-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = '\u25C6';
+      const kl = G.S.pacing === 'karten' ? katLabel(o) : '';                                                              // Kategorie am Fuß der Karte (Teil 6, REQ-K6.03)
+      if (kl){ const kc = document.createElement('span'); kc.className = 'kc-kat'; kc.dataset.kat = G.katsOf(o)[0]; kc.textContent = G.katsOf(o).map(k => K.katSymbole[k]).join('') + '\uFE0E ' + kl; foot.appendChild(kc); }
+      face.append(head, nm, art, ds, ...(nowEl ? [nowEl] : []), foot, ex);
+      const back = document.createElement('span'); back.className = 'kc-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = o.doktrin ? K.symbole.doktrin + '\uFE0E' : '\u25C6';       // Doktrinen haben eine eigene Rückseite (Teil 6, REQ-K6.04)
       b.append(face, back);
       b.addEventListener('click', () => choose(i));
       b.addEventListener('pointerenter', () => { hover = i; hoverStop(); hoverI = i; hoverAt = performance.now(); detail(); });

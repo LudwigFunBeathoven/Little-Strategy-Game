@@ -21,4 +21,24 @@ const KF_KARTEN6 = [
     tiers: [{ effect: [{ stat: 'dmgVsBase', mul: 2 }] }] },                                                       // frühere Linie Militär, Stufe 3: doppelter Schaden an der gegnerischen Basis
   { id: 'pluenderung', category: 'basis', kat: 'verteidigung', rarity: 'common', nameKey: 'draft.pluenderung.name', descKey: 'draft.pluenderung.desc', wirkt: { tower: true },
     tiers: [{ effect: [{ stat: 'towerKillMaterial', add: 1 }] }] },                                               // frühere Linie Verteidigung, Stufe 1: Abschüsse durch Türme bringen Material
+
+  /* ---------- Synergiekarten (REQ-K6.03): Wirkung nach der Zahl gewählter Karten einer Kategorie (höchstens KATEGORIEN.deckel; sie erscheinen ab KATEGORIEN.synergieAb Karten der Kategorie) ----------
+     Zähler (zaehler): Wirkung wächst mit der Zahl der Karten der eigenen Kategorie. Verstärker (verstaerker): vervielfacht eine Mechanik (fix: fester Wert, perN + add: je perN Karten add).
+     Brücke (bruecke): gehört zu zwei Kategorien (kat ist eine Liste, die Karte zählt für beide) und wirkt nach den Karten der Kategorie zaehlt. perCard: Faktor je Karte (mul = 1 + perCard × Karten). */
+  { id: 'gilde', category: 'wirtschaft', kat: 'wirtschaft', rarity: 'common', nameKey: 'draft.gilde.name', descKey: 'draft.gilde.desc', wirkt: { building: 'fabrik' },
+    synergie: { art: 'zaehler', zaehlt: 'wirtschaft', stat: 'materialYield', perCard: 0.08 }, tiers: [{ effect: [] }] },
+  { id: 'waffenbrueder', category: 'armee', kat: 'militaer', rarity: 'common', nameKey: 'draft.waffenbrueder.name', descKey: 'draft.waffenbrueder.desc',
+    synergie: { art: 'zaehler', zaehlt: 'militaer', stat: 'unitDmg', perCard: 0.07 }, tiers: [{ effect: [] }] },      // 7 statt 5 % je Karte: Spürbarkeitsgrenze (ab drei Karten mindestens 20 %)
+  { id: 'wehrverband', category: 'basis', kat: 'verteidigung', rarity: 'common', nameKey: 'draft.wehrverband.name', descKey: 'draft.wehrverband.desc', wirkt: { tower: true },
+    synergie: { art: 'zaehler', zaehlt: 'verteidigung', stat: 'turretDmg', perCard: 0.08 }, tiers: [{ effect: [] }] },
+  { id: 'bauordnung', category: 'wirtschaft', kat: 'wirtschaft', rarity: 'common', nameKey: 'draft.bauordnung.name', descKey: 'draft.bauordnung.desc', wirkt: { building: 'fabrik' },
+    synergie: { art: 'verstaerker', zaehlt: 'wirtschaft', fix: { stat: 'nbAll', mul: 2 } }, tiers: [{ effect: [] }] },
+  { id: 'sammelruf', category: 'armee', kat: 'militaer', rarity: 'common', nameKey: 'draft.sammelruf.name', descKey: 'draft.sammelruf.desc', wirkt: { building: 'kaserne' },
+    synergie: { art: 'verstaerker', zaehlt: 'militaer', stat: 'extraUnit', perN: 2, add: 1 }, tiers: [{ effect: [] }] },
+  { id: 'kriegswirtschaft', category: 'wirtschaft', kat: ['wirtschaft', 'militaer'], rarity: 'rare', nameKey: 'draft.kriegswirtschaft.name', descKey: 'draft.kriegswirtschaft.desc',
+    synergie: { art: 'bruecke', zaehlt: 'militaer', stat: 'unitCost', perCard: -0.05 }, tiers: [{ effect: [] }] },
+  { id: 'wehrhandel', category: 'wirtschaft', kat: ['wirtschaft', 'verteidigung'], rarity: 'rare', nameKey: 'draft.wehrhandel.name', descKey: 'draft.wehrhandel.desc', wirkt: { building: 'fabrik' },
+    synergie: { art: 'bruecke', zaehlt: 'verteidigung', stat: 'materialYield', perCard: 0.03 }, tiers: [{ effect: [] }] },
+  { id: 'grenzwacht', category: 'basis', kat: ['militaer', 'verteidigung'], rarity: 'rare', nameKey: 'draft.grenzwacht.name', descKey: 'draft.grenzwacht.desc',
+    synergie: { art: 'bruecke', zaehlt: 'militaer', stat: 'wallHp', perCard: 0.05 }, tiers: [{ effect: [] }] },
 ];

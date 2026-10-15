@@ -10,7 +10,7 @@ const OPTIONS = (typeof KF_DRAFT_OPTIONS !== 'undefined') ? KF_DRAFT_OPTIONS : [
 /* Kartenpfad (REQ-KP.01, KP.02): Pfadkarten aus data/kartenpfad.js sind Optionen mit Familie; im Pool nur im Pacing-Modus 'karten' (drawOptions, optionAvailable).
    Aus ihren Datensätzen entstehen die Sperren (Schlüssel) und Upgrade-Stufen des Modus 'karten' samt ihrer Quelle (Karte oder Forschung). */
 const PFAD = (typeof KF_PFAD !== 'undefined') ? KF_PFAD : null;
-const PFAD_OPTIONS = PFAD ? PFAD.karten.map(k => ({ id: k.id, category: k.familie, family: k.familie, rarity: k.rarity || 'common', nameKey: k.nameKey, descKey: k.descKey, tiers: k.tiers, pfad: k })) : [];
+const PFAD_OPTIONS = PFAD ? PFAD.karten.map(k => ({ id: k.id, category: k.familie, family: k.familie, rarity: k.rarity || 'common', kat: k.kat, nameKey: k.nameKey, descKey: k.descKey, tiers: k.tiers, pfad: k })) : [];
 /* Doktrinen (Teil 5, REQ-K5.07): aus data/doktrinen.js; Karten der Familie 'doktrin' mit einer Stufe, Wirkung und Einschränkung über dieselbe Pipeline wie die Karten */
 const DOKTRINEN = (typeof KF_DOKTRINEN !== 'undefined') ? KF_DOKTRINEN : [];
 const DOK = Object.fromEntries(DOKTRINEN.map(d => [d.id, d]));
@@ -156,6 +156,8 @@ function create(){
       // Synergie (REQ-45): stärker mit der Zahl gewählter Karten der eigenen Kategorie, die Karte selbst eingeschlossen
       const syn = OPT[id].synergy;
       if (syn) mul[syn.stat] = (mul[syn.stat] ?? 1) * (1 + synergyValue(id));
+      // Synergiekarten des Teils 6 (REQ-K6.03): Zähler, Verstärker und Brücken wirken nach der Zahl der Karten einer Kategorie
+      if (OPT[id].synergie && S.pacing === 'karten') for (const e of synergieEffects(id)) apply(e);
     }
     // Gebäude-Varianten (REQ-S.05): Wirkung je Variantentyp einmal (variantYield gilt je Gebäude, siehe matRate)
     for (const vid of standingVariants()) for (const e of VAR[vid].effect) if (e.stat !== 'variantYield') apply(e);
@@ -173,6 +175,37 @@ function create(){
   const categoryCount = cat => Object.keys(S.draft.stacks).filter(id => S.draft.stacks[id] > 0 && OPT[id] && OPT[id].category === cat).length;
   const synergyValue = id => { const o = OPT[id]; return o && o.synergy && cardTaken(id) > 0 ? o.synergy.perCard * categoryCount(o.category) : 0; };
   const mAdd = stat => mods().add[stat] ?? 0;
+
+  /* ---------- Kategorien und Synergiekarten (Teil 6, REQ-K6.03) ----------
+     Jede gewählte Karte zählt einmal für ihre Kategorie (Feld kat; eine Liste mit zwei Kategorien ist eine Brücke und zählt für beide), jede weitere Stufe derselben Karte ebenfalls, eine Doktrin KATEGORIEN.doktrin-mal.
+     Nur im Modus karten. Synergiekarten (Feld synergie) zählen höchstens KATEGORIEN.deckel Karten der Kategorie, die sie zählen (zaehlt). */
+  const KAT = C.KATEGORIEN;
+  const katsOf = o => o && o.kat ? [].concat(o.kat) : [];
+  function katCounts(){
+    const c = Object.fromEntries(KAT.liste.map(k => [k, 0]));
+    if (S.pacing !== 'karten') return c;
+    for (const [id, n] of Object.entries(S.draft.stacks)){
+      const o = OPT[id]; if (!o || !(n > 0)) continue;
+      const w = Math.min(n, tiersOf(o).length) * (o.doktrin ? KAT.doktrin : 1);
+      for (const k of katsOf(o)) c[k] += w;
+    }
+    return c;
+  }
+  /* führende Kategorie: mindestens KATEGORIEN.vorsprung Karten Vorsprung vor der zweiten; sonst null */
+  function katLead(){
+    const c = katCounts(), s = KAT.liste.slice().sort((a, b) => c[b] - c[a] || KAT.liste.indexOf(a) - KAT.liste.indexOf(b));
+    return c[s[0]] - c[s[1]] >= KAT.vorsprung ? s[0] : null;
+  }
+  /* Wirkung einer Synergiekarte nach dem aktuellen Stand; plus = die Karte würde gerade gewählt (zählt selbst mit, für die Anzeige auf der Bühne) */
+  function synergieNow(id, plus = false){
+    const o = OPT[id], sy = o && o.synergie; if (!sy) return null;
+    const own = plus && cardTaken(id) === 0 && katsOf(o).includes(sy.zaehlt) ? 1 : 0;
+    const n = Math.min(KAT.deckel, (katCounts()[sy.zaehlt] || 0) + own);
+    if (sy.fix) return { n, art: sy.art, effects: [sy.fix], value: sy.fix.mul, kind: 'factor' };
+    if (sy.perN) { const add = Math.floor(n / sy.perN) * sy.add; return { n, art: sy.art, effects: [{ stat: sy.stat, add }], value: add, kind: 'count' }; }
+    return { n, art: sy.art, effects: [{ stat: sy.stat, mul: 1 + sy.perCard * n }], value: sy.perCard * n, kind: 'percent' };
+  }
+  const synergieEffects = id => { const s = synergieNow(id); return s ? s.effects : []; };
 
   /* ---------- Pacing (REQ-KP.01): Freischaltungen, Upgrade-Stufen, Einheitenersatz ----------
      Im Modus 'standard' (oder ohne Eintrag in C.PACING) ist nichts gesperrt. */
@@ -267,7 +300,7 @@ function create(){
     const sl = slots[i];
     return mMul('nbFabrik') * (sl && sl.variant === 'zunfthaus' && !sl.upg ? C.DOKTRIN.zunfthaus.nachbarFaktor : 1);
   };
-  const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) * nbFactor(i, type, slots) : 0; };
+  const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) * nbFactor(i, type, slots) * (S.pacing === 'karten' ? mMul('nbAll') : 1) : 0; };       // nbAll: Karte Bauordnung (Teil 6)
   /* Summe der Regelwerte aller Gebäude eines Typs (Schmiede, Kaserne, Universität, Kontor gibt es je einmal) */
   const nbTotal = type => S.slots.reduce((a, sl, i) => a + (sl && sl.type === type && !sl.upg ? neighborValue(i, type) : 0), 0);
   /* Vorschau für Platz i und Typ: was das Gebäude dort erhielte und welchen Nachbarn es etwas gäbe */
@@ -1183,6 +1216,7 @@ function create(){
     const n = cardTaken(o.id), tiers = tiersOf(o);
     if (S.research.banned.includes(o.id)) return false;
     if (o.nurKarten && S.pacing !== 'karten') return false;                                                  // Karten des Teils 6 gibt es nur im Modus karten (data/karten6.js)
+    if (o.synergie && (katCounts()[o.synergie.zaehlt] || 0) < KAT.synergieAb) return false;                    // Synergiekarten erst mit genug Karten ihrer Kategorie (spürbar ab drei Karten, REQ-K6.03)
     if (cardRemoved(o.id)) return false;                                                                    // Teil 4 und 5: aus dem Pool des Modus karten gestrichen (REQ-S.02 C2, S.03, K5.06)
     if (o.doktrin && (S.pacing !== 'karten' || doktrinCount() >= C.DOKTRIN.max)) return false;               // Doktrinen: nur im Modus karten, höchstens C.DOKTRIN.max je Partie (Teil 5, REQ-K5.07)
     if (o.abWahl && o.abWahl > S.pfad.choices + 1) return false;
@@ -1247,7 +1281,11 @@ function create(){
     while (i < list.length - 1 && r >= w(list[i])){ r -= w(list[i]); i++; }
     return list[i];
   };
-  const weightKarten = o => o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) : o.doktrin ? C.DOKTRIN.gewicht : cardWeight(o);
+  /* Teil 6 (REQ-K6.03): Karten und Doktrinen der führenden Kategorie ziehen mit mehrfachem Gewicht */
+  const weightKarten = o => {
+    const base = o.pfad ? (C.KARTEN.gewichte[o.id] ?? o.pfad.gewicht) : o.doktrin ? C.DOKTRIN.gewicht : cardWeight(o), lead = katLead();
+    return lead && katsOf(o).includes(lead) ? base * KAT.gewichtVorne : base;
+  };
   /* Angebotsausgleich: ab Wahl abWahl erscheint spätestens in jeder spaetestensJe-ten Wahl eine Doktrin, solange noch eine fehlt (sie belegt einen Bonusplatz) */
   const doktrinDue = () => S.pacing === 'karten' && doktrinCount() < C.DOKTRIN.max && S.pfad.choices + 1 >= C.DOKTRIN.abWahl && S.pfad.sinceDoktrin >= C.DOKTRIN.spaetestensJe - 1;
   function drawOptionsKarten(k){
@@ -1266,6 +1304,17 @@ function create(){
       take(pickWeighted(cand, weightKarten), rest);
     }
     while (out.length < k && pf.length) take(pickWeighted(pf, weightKarten), pf);       // Bonuskarten erschöpft: Pfadkarten füllen auf
+    // Teil 6 (REQ-K6.03): ein Angebot mit drei oder mehr Karten enthält mindestens eine Karte außerhalb der führenden Kategorie (ein Bonusplatz wird getauscht)
+    const lead = katLead();
+    if (k >= 3 && lead && out.length >= 3 && out.every(o => katsOf(o).includes(lead))){
+      const i = out.map(o => !isPathFamily(o) && !o.doktrin).lastIndexOf(true);
+      if (i >= 0){
+        const others = out.filter((_, j) => j !== i);
+        const hasWag = others.some(o => o.family === 'wagnis'), hasLeg = others.some(o => o.rarity === 'legendary'), hasDok = others.some(o => o.doktrin);
+        const cand = rest.filter(o => !katsOf(o).includes(lead) && !(o.family === 'wagnis' && hasWag) && !(o.rarity === 'legendary' && hasLeg) && !(o.doktrin && hasDok));
+        if (cand.length) out[i] = pickWeighted(cand, weightKarten);
+      }
+    }
     for (let i = out.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
     return out.map(o => o.id);
   }
@@ -1302,9 +1351,13 @@ function create(){
     const hasWag = rest.some(id => OPT[id] && OPT[id].family === 'wagnis');
     const hasDok = rest.some(id => OPT[id] && OPT[id].doktrin);
     const pool = (S.pacing === 'karten' ? ALL_OPTIONS : OPTIONS).filter(o => optionAvailable(o) && !rest.includes(o.id) && !(S.pacing === 'karten' && (isPathFamily(o) || (hasWag && o.family === 'wagnis') || (hasDok && o.doktrin))));       // Bann tauscht nur Bonusplätze (REQ-P.04)
-    const total = pool.reduce((a, o) => a + cardWeight(o), 0);
+    // Teil 6 (REQ-K6.03): bliebe das Angebot sonst ganz in der führenden Kategorie, kommt die Ersatzkarte aus einer anderen
+    const lead = katLead(), needOther = S.pacing === 'karten' && lead && d.options.length >= 3 && rest.every(id => katsOf(OPT[id]).includes(lead));
+    const cands = needOther && pool.some(o => !katsOf(o).includes(lead)) ? pool.filter(o => !katsOf(o).includes(lead)) : pool;
+    const wt = S.pacing === 'karten' ? weightKarten : cardWeight;
+    const total = cands.reduce((a, o) => a + wt(o), 0);
     let repl = null;
-    if (pool.length){ let r = rnd() * total, k = 0; while (k < pool.length - 1 && r >= cardWeight(pool[k])){ r -= cardWeight(pool[k]); k++; } repl = pool[k].id; }
+    if (cands.length){ let r = rnd() * total, k = 0; while (k < cands.length - 1 && r >= wt(cands[k])){ r -= wt(cands[k]); k++; } repl = cands[k].id; }
     // war eine Doktrin fällig und die gebannte die einzige im Angebot, tritt eine andere Doktrin an ihre Stelle (Teil 5, REQ-K5.07)
     if (S.pacing === 'karten' && OPT[d.options[i]].doktrin && d.doktrinForced && !rest.some(id => OPT[id].doktrin)){
       const kp = pool.filter(o => o.doktrin); if (kp.length) repl = pickWeighted(kp, weightKarten).id;
@@ -1592,7 +1645,7 @@ function create(){
     get S(){ return S; }, set S(v){ S = v; }, FX,
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
-    addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
+    addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,

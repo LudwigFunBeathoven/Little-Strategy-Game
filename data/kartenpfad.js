@@ -51,7 +51,9 @@ const KF_PFAD = {
     /* Teil 5 (REQ-K5.06): unter der Spürbarkeitsgrenze, doppelt belegt oder zeitbezogen; je Karte die Maßnahme steht im Bericht (Inventar) */
     'doppelschicht', 'schwerePressen', 'nachtschicht', 'kriegsanleihe', 'grossauftrag', 'rationalisierung', 'selbstlaeufer', 'fliessband',   // Wirtschaft und Automatisierung
     'veteranen', 'taktiker', 'vorposten', 'blitzkrieg', 'soeldnerheer',                                                                         // Armee und Sonderregel
-    'festungsbau', 'bastion', 'scharfschuetzen', 'zeugmeister'],                                                                                // Basis und Automatisierung
+    'festungsbau', 'bastion', 'scharfschuetzen', 'zeugmeister',                                                                                  // Basis und Automatisierung
+    /* Teil 6 (REQ-K6.03): Pool höchstens 38 Karten ohne Doktrinen; gestrichen wurden die schwächsten und die, deren Wirkung eine neue Karte übernimmt (Vorschlag im Bericht) */
+    'weitschuss', 'sappeure', 'zinnen', 'notreserve', 'werkmeister', 'instandhaltung', 'langeWurfarme'],
   forschungen: [
     { id: 'r_reiter', branch: 'pfad', nameKey: 'kp.res.reiter.name', descKey: 'kp.res.reiter.desc',
       schaltetFrei: ['einheit:reiter'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },

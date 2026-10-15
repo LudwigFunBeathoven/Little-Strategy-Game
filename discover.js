@@ -28,6 +28,7 @@ const Disc = (() => {
     'hud:army':    { when: S => S.ownWaveNo >= 1 },
     'hud:interest': { when: () => G.has('kontor') },
     'hud:neighbor': { when: S => S.slots.filter(Boolean).length >= 2 },
+    'cards:kat':   { when: S => Object.keys(S.draft.stacks).some(id => S.draft.stacks[id] > 0 && G.OPT[id] && G.OPT[id].synergie) },        // Teil 6 (REQ-K6.03): Karten je Kategorie erst nach der ersten Synergiekarte
   };
   let latch = new Map(), latchFor = null;
   function shows(key){

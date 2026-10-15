@@ -34,6 +34,12 @@ test('K5.06: jede Karte erfüllt die Spürbarkeitsgrenze (Regeländerung oder mi
   const { G, C } = game();
   const noticeable = (o, tiers) => {
     if (o.pfad) return true;                                   // Technologie öffnet Forschungen, Wagnis ändert Regeln mit Nachteil
+    if (o.synergie){                                           // Teil 6: Zähler ab drei Karten der Kategorie mindestens 20 %; Brücken erreichen es mit dem Deckel; Verstärker ändern eine Regel
+      const sy = o.synergie;
+      if (sy.art === 'zaehler') return Math.abs(sy.perCard) * 3 >= 0.2 - 1e-9;
+      if (sy.art === 'bruecke') return Math.abs(sy.perCard) * C.KATEGORIEN.deckel >= 0.2 - 1e-9;
+      return true;
+    }
     return (tiers[0].effect || []).some(e => {
       if (e.mul !== undefined) return e.mul >= 1.2 - 1e-9 || e.mul <= 0.8 + 1e-9;
       if (e.add !== undefined){

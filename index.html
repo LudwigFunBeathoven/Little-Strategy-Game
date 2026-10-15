@@ -247,6 +247,11 @@
   .kc-unlock, .kc-needs{display:block; margin-top:4px; font-size:11.5px; color:var(--ink);} .kc-needs{color:var(--ink-faint);}
   .fam-bonus{--fam:var(--brass);} .fam-bau{--fam:var(--steel);} .fam-technologie{--fam:var(--cat-automatisierung);} .fam-wagnis{--fam:var(--rust);} .fam-doktrin{--fam:var(--gold);}
   .stage .kcard.fam-bau, .stage .kcard.fam-technologie, .stage .kcard.fam-wagnis, .stage .kcard.fam-bonus, .stage .kcard.fam-doktrin{--cat:var(--fam);}
+  .kc-kat{font-weight:600; letter-spacing:.02em;} .kc-kat[data-kat="militaer"], .kat-chip[data-kat="militaer"]{color:var(--rust);} .kc-kat[data-kat="wirtschaft"], .kat-chip[data-kat="wirtschaft"]{color:var(--brass);} .kc-kat[data-kat="verteidigung"], .kat-chip[data-kat="verteidigung"]{color:var(--steel);}
+  .kc-now{font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:600; color:var(--ink);}
+  .kat-counts{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; margin:6px 0 2px;} .kat-counts[hidden]{display:none;} .kat-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .kat-chip{font-size:13px; font-weight:500;} .kat-chip.lead{text-decoration:underline; text-underline-offset:3px;}
+  .kcard.rar-doktrin .kc-back{background:repeating-linear-gradient(45deg, var(--gold) 0 6px, var(--brass-ink) 6px 12px); color:var(--bg);}
   .kc-foot{display:flex; justify-content:space-between; align-items:center; font-family:"IBM Plex Mono", monospace; font-size:11px; color:var(--ink-faint);}
   .kcard .expl{font-size:10px;}
   @media (prefers-reduced-motion: reduce){ .stage-cards .kcard{animation:none; transition:none;} .card-sym.pulse{animation:none;} .fx-glow{animation:none; outline:3px solid var(--brass);} .disc-in{animation:none;} }
@@ -536,6 +541,7 @@
           </div>
           <h3 class="sub" data-i18n="panel.levels"></h3>
           <div class="chosen" id="chosen"></div>
+          <div class="kat-counts" id="katCounts" data-tooltip="kat:counts" hidden><span class="hud-l" data-i18n="kat.counts.title"></span><span class="kat-row" id="katCountsRow"></span></div>
           <p class="hint" id="collHint" hidden></p>
           <h3 class="sub" id="pathHead" hidden data-i18n="kp.path.head"></h3>
           <ul class="pathlist" id="pathList" hidden></ul>

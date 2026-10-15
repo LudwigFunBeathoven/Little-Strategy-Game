@@ -414,6 +414,7 @@ function optParams(o, tier){
   (tr.drawback || []).forEach((e, i) => { p['d' + (i + 1)] = val(e); if (e.mul !== undefined) p['d' + (i + 1) + 'p'] = pct(Math.abs(e.mul - 1)); });
   if (o.condition && o.condition.value !== undefined) p.c1 = o.condition.value < 1 ? pct(o.condition.value) : o.condition.value;
   if (o.synergy) p.syn = pct(o.synergy.perCard);
+  if (o.synergie){ p.syn = pct(Math.abs(o.synergie.perCard || 0)); p.max = C.KATEGORIEN.deckel; if (o.synergie.fix) p.e1 = fmtNum(o.synergie.fix.mul); }       // Synergiekarten (Teil 6, REQ-K6.03)
   if (o.doktrin) Object.assign(p, doktrinParams(o.doktrin));
   for (const e of tr.effect || []){                                                                      // Regeländerungen der Stufen 2 und 3 (Teil 5, REQ-K5.06): neue Schwelle c2
     if (e.stat === 'drumsMin') p.c2 = o.condition.value + e.add;
@@ -430,8 +431,18 @@ function cardDesc(o, tier){
   return t(G.S.pacing === 'karten' && KF_I18N[lang] && KF_I18N[lang][k + '.karten'] !== undefined ? k : o.descKey, optParams(o, tier));
 }
 /* Zeilen für Kartentooltips: Kategorie, Seltenheit, aktuelle Synergie */
+/* Kategorie einer Karte (Teil 6, REQ-K6.03): Name, bei einer Brücke beide („Wirtschaft + Militär“); leer bei neutralen Karten */
+const katLabel = o => G.katsOf(o).map(k => t(`kat.${k}.name`)).join(' + ');
+/* aktueller Wert einer Synergiekarte als Text: Prozent, Zahl oder Faktor */
+const synergieValueText = s => s.kind === 'percent' ? (s.value < 0 ? '\u2212' : '+') + pct(Math.abs(s.value)) + ' %' : s.kind === 'count' ? '+' + fmtNum(s.value) : '\u00D7' + fmtNum(s.value);
 function cardRows(o, extra){
-  const rows = [[t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.rarity'), t('draft.rarity.' + o.rarity)], ...extra];
+  const karten = G.S.pacing === 'karten';
+  const rows = [karten ? [t('tip.draft.kat'), katLabel(o) || t('kat.neutral.name')] : [t('tip.draft.category'), t('draft.cat.' + o.category)], [t('tip.draft.rarity'), t('draft.rarity.' + o.rarity)], ...extra];
+  if (karten && o.synergie){
+    const s = G.synergieNow(o.id, G.cardTaken(o.id) === 0);
+    rows.push([t('tip.draft.art'), t('kat.art.' + o.synergie.art)]);
+    if (s) rows.push([t('tip.draft.synergy'), t('kat.now', { v: synergieValueText(s) })]);
+  }
   if (o.synergy){
     const n = G.categoryCount(o.category) + (G.cardTaken(o.id) ? 0 : 1);
     rows.push([t('tip.draft.synergy'), '+' + pct(o.synergy.perCard * n) + ' %']);
@@ -485,6 +496,7 @@ function renderChosen(){
     }
   }
   chosenKey = key;
+  renderKatCounts();
   const box = $('chosen'); box.innerHTML = '';
   const ids = Object.keys(st).filter(id => st[id] > 0);
   if (!ids.length){ const e = document.createElement('span'); e.className = 'hint'; e.textContent = t('level.none'); box.appendChild(e); return; }
@@ -498,6 +510,18 @@ function renderChosen(){
     const b = document.createElement('b'); b.textContent = cardName(o, st[id]);
     tag.appendChild(b);
     box.appendChild(tag);
+  }
+}
+/* Karten je Kategorie im Reiter Karten (Teil 6, REQ-K6.03): erst sichtbar, wenn die erste Synergiekarte gewählt ist (Entdecken) */
+function renderKatCounts(){
+  const el = $('katCounts'), show = G.S.pacing === 'karten' && Disc.shows('cards:kat');
+  setHidden(el, !show);
+  if (!show) return;
+  const c = G.katCounts(), lead = G.katLead(), row = $('katCountsRow'); row.innerHTML = '';
+  for (const k of C.KATEGORIEN.liste){
+    const chip = document.createElement('span'); chip.className = 'kat-chip' + (lead === k ? ' lead' : ''); chip.dataset.kat = k;
+    chip.textContent = `${C.KARTENBUEHNE.katSymbole[k]}\uFE0E ${t('kat.counts.item', { name: t(`kat.${k}.name`), n: c[k] })}`;
+    row.appendChild(chip);
   }
 }
 function renderDraft(){
