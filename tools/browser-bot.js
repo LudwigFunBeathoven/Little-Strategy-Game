@@ -101,6 +101,11 @@ KF_BROWSER_BOT.aufwerten = function(G, linie, hooks){
     if (!sl || sl.upg) continue;
     const cands = G.variantsFor(i).filter(x => x.linie === linie), v = cands.find(x => x.doktrin) || cands[0];       // Sonderbau der gewählten Doktrin zuerst; er löst eine Grundvariante ab (Teil 5)
     if (!v) continue;
+    // Einschränkung der Doktrin gilt auch für den Bestand (Teil 6, REQ-K6.01): der Bot reißt überzählige Fabriken ab (zuerst ohne Variante, von hinten), damit der Sonderbau frei wird
+    if (v.doktrin && G.variantBlock(i, v.id) === 'excess'){
+      const cand = S.slots.map((x, k) => ({ x, k })).filter(e => e.x && e.x.type === 'fabrik' && !e.x.upg && e.k !== i).sort((p, q) => (!!p.x.variant - !!q.x.variant) || (q.k - p.k));
+      for (let n = G.variantExcess(v.id); n > 0 && cand.length; n--) G.demolish(cand.shift().k);
+    }
     if (!KF_BROWSER_BOT.MEHRFACH.includes(v.id) && S.slots.some(x => x && (x.variant === v.id || (x.upg && x.upg.to === v.id)))) continue;
     if (G.variantBlock(i, v.id) !== null || S.material < G.variantCost(v.id) * 1.5) continue;
     if (G.upgradeBuilding(i, v.id) && hooks && hooks.variant) hooks.variant(v.id);

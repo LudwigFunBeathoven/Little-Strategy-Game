@@ -232,6 +232,7 @@ function variantReason(block, vid){
     case 'notRunning': return t('tip.notRunning');
     case 'upgrading': return t('variant.reason.upgrading');
     case 'done': return t('variant.reason.done');
+    case 'excess': { const n = G.variantExcess(vid); return t(n === 1 ? 'variant.reason.excess.one' : 'variant.reason.excess', { n }); }
     case 'material': return missing('material', G.variantCost(vid), G.S.material);
   }
   return null;

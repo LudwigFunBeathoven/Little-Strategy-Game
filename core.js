@@ -415,6 +415,10 @@ function create(){
     for (const d of activeDoctrines()) if (d.grenze && d.grenze.typen.includes(type) && S.slots.filter(sl => sl && d.grenze.typen.includes(sl.type)).length >= d.grenze.max) return d;
     return null;
   };
+  /* Die Einschränkung gilt ab der Wahl, auch für Gebäude, die schon stehen (Teil 6, REQ-K6.01, ersetzt Auslegung 3 aus Teil 5): Zahl der Plätze, um die die Grenze einer Doktrin überschritten ist.
+     Solange es welche gibt, ist der Sonderbau der Doktrin gesperrt (variantBlock 'excess'); neue Gebäude über der Grenze sind es ohnehin (doctrineLimit). */
+  const doctrineExcess = d => d && d.grenze ? Math.max(0, S.slots.filter(sl => sl && d.grenze.typen.includes(sl.type)).length - d.grenze.max) : 0;
+  const variantExcess = vid => { const v = VAR[vid]; return v && v.doktrin && S.pacing === 'karten' && cardTaken(v.doktrin) > 0 ? doctrineExcess(DOK[v.doktrin]) : 0; };
   const activeDoctrines = () => DOKTRINEN.filter(d => cardTaken(d.id) > 0);
   const doktrinCount = () => activeDoctrines().length;
 
@@ -525,6 +529,7 @@ function create(){
     if (S.pacing !== 'karten') return 'notInMode';
     if (!sl || sl.type !== v.basis) return 'noBuilding';
     if (v.doktrin && !cardTaken(v.doktrin)) return 'doctrine';
+    if (variantExcess(vid) > 0) return 'excess';                                                     // Einschränkung der Doktrin gilt auch für den Bestand (Teil 6, REQ-K6.01)
     if (sl.variant && !(v.doktrin && !VAR[sl.variant].doktrin)) return 'done';                    // ein Sonderbau löst eine Grundvariante ab, sonst bleibt die Variante endgültig (Teil 5)
     if (sl.upg) return 'upgrading';
     if (!variantVisible(v.basis)) return 'hidden';
@@ -1284,7 +1289,7 @@ function create(){
     if (!options.length){ S.pendingLevels = 0; return; }
     S.pendingDraft = { level: S.level - S.pendingLevels + 1, options, rerolled: 0, doktrinForced: doktrinDue() };       // doktrinForced: eine Doktrin war fällig (Bann behält sie)
     if (S.pacing === 'karten'){                                              // Angebote mit Doktrin zählen; ohne eine seit Wahl abWahl läuft der Zähler bis zur erzwungenen (Teil 5, REQ-K5.07)
-      if (options.some(id => OPT[id].doktrin)){ S.pfad.sinceDoktrin = 0; S.stats.doktrinOffers = (S.stats.doktrinOffers || 0) + 1; }
+      if (options.some(id => OPT[id].doktrin)){ S.pfad.sinceDoktrin = 0; S.stats.doktrinOffers = (S.stats.doktrinOffers || 0) + 1; (S.stats.doktrinOfferWahlen = S.stats.doktrinOfferWahlen || []).push(S.pfad.choices + 1); }       // Nummern der Wahlen mit Doktrin im Angebot (Kennzahl, Teil 6)
       else if (S.pfad.choices + 1 >= C.DOKTRIN.abWahl) S.pfad.sinceDoktrin++;
     }
     if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Nummer, Erscheinen, Wahl (REQ-P.06)
@@ -1603,7 +1608,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, lines, lineState, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, doktrinDue, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, cardSigns, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,

@@ -97,7 +97,7 @@ test('K5.07 Zunftordnung: Zunfthaus mit dreifachem Nachbarschaftsbonus; höchste
   assert.equal(G.doctrineLimit('fabrik').id, 'zunftordnung');
   assert.equal(G.buildBlock(2, 'kontor'), null, 'andere Gebäude bleiben baubar');
   G.demolish(4); assert.equal(G.buildBlock(4, 'fabrik'), null, 'nach einem Abriss wieder frei');
-  // schon Vorhandenes bleibt: mit sechs Fabriken vor der Wahl bleiben alle stehen, neue sind gesperrt
+  // schon Vorhandenes bleibt stehen (kein Zwangsabriss): mit sechs Fabriken vor der Wahl bleiben alle stehen, neue sind gesperrt; der Sonderbau ist erst frei, wenn die Grenze erfüllt ist (Teil 6, REQ-K6.01, tests/einschraenkung6.test.mjs)
   const h = game().G; for (let i = 0; i < 6; i++) place(h, 'fabrik', i); pick(h, 'zunftordnung');
   assert.equal(h.countType('fabrik'), 6); assert.equal(h.buildBlock(6, 'fabrik'), 'limit');
   // Standardmodus kennt die Grenze nicht

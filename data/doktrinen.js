@@ -9,6 +9,7 @@
      effect         Wirkung mit der Wahl der Doktrin (stat, mul | add) wie bei den Karten; bei Doktrinen mit Sonderbau meist leer.
      drawback       bindende Einschränkung als Wirkung (stat, mul | add); gilt mit der Wahl und bis zum Ende der Partie.
      grenze         bindende Einschränkung als Regel: { max: n, typen: [Gebäudetypen] } – höchstens n Plätze mit diesen Typen; die Aktion „Bauen“ ist sonst gesperrt, mit Erklärzeile.
+                    Teil 6 (REQ-K6.01): gilt ab der Wahl auch für den Bestand: Er bleibt stehen, aber der Sonderbau der Doktrin ist gesperrt, solange mehr Plätze stehen (Erklärzeile „Reiße zuerst N Fabriken ab.“).
      wirkt          Angebotsbedingung wie bei den Bonuskarten (data/draft-options.js): die Doktrin erscheint nur, wenn ihre Wirkung im Spielstand etwas bewirkt.
      nameKey, descKey, effKey   Texte (Präfix doctrine.); {e1} … = Werte der Wirkungen, {d1} = Wert der Einschränkung
    Namen und Werte sind Startwerte (REQ-K5.07), Kalibrierung per Simulation. */

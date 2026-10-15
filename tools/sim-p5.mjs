@@ -16,7 +16,7 @@ const EP_AT = [240, 480, 720];                                              // G
 const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
   xpPassive: r.xpPassive, xpBounty: r.xpBounty, xpSrc: r.xpSrc, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
   wallLost: r.wallLost, lineT: r.lineT, signs: r.signs, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers,
-  doktrinOffers: r.doktrinOffers, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills });
+  doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills });
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
@@ -114,7 +114,9 @@ if (!isMainThread){
       hoersaal: { anteil: pc(withH.length, rs.length), stufe: [1, 2, 3].map(k => pc(withH.filter(h => h.stufe >= k).length, rs.length)), t1Median: median(withH.map(h => h.t[0])),
         kostenMedian: median(withH.map(h => h.kosten)), epMinMedian: median(withH.map(h => h.epMin).filter(v => v != null)), epMinMittel: mean(withH.map(h => h.epMin).filter(v => v != null)) },
       fabrikenMedian: { 300: median(fab(300)), 600: median(fab(600)) }, fabrikenMittel: { 300: mean(fab(300)), 600: mean(fab(600)) },
-      mauerVerlustMedian: median(rs.map(r => r.wallLost)) };
+      mauerVerlustMedian: median(rs.map(r => r.wallLost)),
+      doktrinAngebote: { median: median(rs.map(r => r.doktrinOffers || 0)), mittel: mean(rs.map(r => r.doktrinOffers || 0)), ohneAnteil: pc(rs.filter(r => !(r.doktrinOffers > 0)).length, rs.length),
+        erstesMedian: median(rs.filter(r => (r.doktrinOfferWahlen || []).length).map(r => r.doktrinOfferWahlen[0])) } };
   };
   const report = { suite: SUITE, runs: RUNS, label: LABEL, strategy: EZ, felder: [] };
   if (SUITE === 'felder'){
@@ -127,6 +129,10 @@ if (!isMainThread){
     console.log('| Grad | Profil | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median (Mittel) | längste Lücke Median / P90 (s) | Lücke inkl. Ende Median / P90 (s) | Fabriken Min 5 / 10 (Median) |');
     console.log('|---|---|---|---|---|---|---|---|---|---|---|');
     for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.siegquote} % | ${x.niederlagen} % | ${x.patt} % | ${mm(x.dauerMedian)} | ${mm(x.dauerP90)} | ${x.wahlenMedian} (${f1(x.wahlenMittel)}) | ${f0(x.lueckeMedian)} / ${f0(x.lueckeP90)} | ${f0(x.lueckeEndeMedian)} / ${f0(x.lueckeEndeP90)} | ${x.fabrikenMedian[300] ?? '–'} / ${x.fabrikenMedian[600] ?? '–'} |`);
+    console.log('\nAngebote mit Doktrin (Bot ohne Linienwahl; Median, Mittel; erstes Angebot in Wahl; Partien ohne Doktrin-Angebot)\n');
+    console.log('| Grad | Profil | Angebote Median (Mittel) | erstes Angebot in Wahl (Median) | ohne Doktrin-Angebot |');
+    console.log('|---|---|---|---|---|');
+    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.doktrinAngebote.median} (${f1(x.doktrinAngebote.mittel)}) | ${x.doktrinAngebote.erstesMedian ?? '–'} | ${x.doktrinAngebote.ohneAnteil} % |`);
     console.log('\nEP je Minute (Median; Partien im Abschnitt in Klammern)\n');
     console.log('| Grad | Profil | 0–4 min | 4–8 min | 8–12 min | 12+ min | EP gesamt (Median) |');
     console.log('|---|---|---|---|---|---|---|');
@@ -182,20 +188,20 @@ if (!isMainThread){
     }
     report.doktrin = rows;
     console.log('\nAngebote mit Doktrin (Arm „alle“: alle sechs Doktrinen im Pool, Linien-Bot)\n');
-    console.log('| Linie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt Mittel | Erste Doktrin gewählt in Wahl (Median) | Unterhalt Median (Material) |');
-    console.log('|---|---|---|---|---|---|');
+    console.log('| Linie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt Mittel | Erste Doktrin gewählt in Wahl (Median) | Erstes Angebot mit Doktrin in Wahl (Median) | Partien ohne Doktrin-Angebot | Unterhalt Median (Material) |');
+    console.log('|---|---|---|---|---|---|---|---|');
     report.alle = [];
     for (const linie of ['militaer', 'wirtschaft', 'verteidigung']){
       const rs = results.filter(r => r.suite === 'doktrin' && r.arm === 'alle' && r.variant === linie);
       const row = { linie, siege: w(rs), angeboteMedian: median(rs.map(r => r.doktrinOffers || 0)), angeboteMittel: mean(rs.map(r => r.doktrinOffers || 0)), gewaehltMittel: mean(rs.map(r => (r.doktrinen || []).length)),
-        ersteWahlMedian: median(rs.filter(r => (r.doktrinen || []).length).map(r => r.doktrinen[0].wahl)), unterhaltMedian: median(rs.map(r => r.upkeep || 0)),
+        ersteWahlMedian: median(rs.filter(r => (r.doktrinen || []).length).map(r => r.doktrinen[0].wahl)), ersteAngebotMedian: median(rs.filter(r => (r.doktrinOfferWahlen || []).length).map(r => r.doktrinOfferWahlen[0])), ohneAngebotAnteil: pc(rs.filter(r => !(r.doktrinOffers > 0)).length, rs.length), unterhaltMedian: median(rs.map(r => r.upkeep || 0)),
         gewaehltJeDoktrin: Object.fromEntries(DOKS.map(([d]) => [d, pc(rs.filter(r => (r.doktrinen || []).some(x => x.id === d)).length, rs.length)])) };
       report.alle.push(row);
-      console.log(`| ${linie} | ${row.siege} % | ${row.angeboteMedian} (${f1(row.angeboteMittel)}) | ${f1(row.gewaehltMittel)} | ${row.ersteWahlMedian ?? '–'} | ${f0(row.unterhaltMedian)} |`);
+      console.log(`| ${linie} | ${row.siege} % | ${row.angeboteMedian} (${f1(row.angeboteMittel)}) | ${f1(row.gewaehltMittel)} | ${row.ersteWahlMedian ?? '–'} | ${row.ersteAngebotMedian ?? '–'} | ${row.ohneAngebotAnteil} % | ${f0(row.unterhaltMedian)} |`);
     }
     console.log('\nGewählt je Doktrin (Anteil der Partien):', JSON.stringify(report.alle.map(r => r.gewaehltJeDoktrin)));
   }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
-    arm: r.arm, variant: r.variant, druckName: r.druckName, doktrinen: r.doktrinen, doktrinOffers: r.doktrinOffers, upkeep: r.upkeep, towerKills: r.towerKills, variants: r.variants, xpSrc: r.xpSrc, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
+    arm: r.arm, variant: r.variant, druckName: r.druckName, doktrinen: r.doktrinen, doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, upkeep: r.upkeep, towerKills: r.towerKills, variants: r.variants, xpSrc: r.xpSrc, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
     grid: r.grid, wallLost: r.wallLost, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t) })) })) }));
 }

@@ -737,6 +737,8 @@ KF_I18N.de = {
   'variant.progress': 'Aufwertung zu {name}: noch {s} s. Das Gebäude ruht.',
   'variant.reason.upgrading': 'Das Gebäude wird bereits aufgewertet.',
   'variant.reason.done': 'Bereits aufgewertet; nur Abriss und Neubau ändern das.',
+  'variant.reason.excess': 'Reiße zuerst {n} Fabriken ab.',
+  'variant.reason.excess.one': 'Reiße zuerst eine Fabrik ab.',
   'variant.once': 'Einmalig und endgültig; Abriss und Neubau bleiben möglich.',
   'log.variantStart': '{building} auf Platz {slot} wird zu {name} aufgewertet.',
   'log.variantDone': '{name} auf Platz {slot} ist fertig.',

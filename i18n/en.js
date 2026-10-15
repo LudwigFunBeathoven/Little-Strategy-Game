@@ -737,6 +737,8 @@ KF_I18N.en = {
   'variant.progress': 'Converting to {name}: {s} s left. The building rests.',
   'variant.reason.upgrading': 'The building is already being converted.',
   'variant.reason.done': 'Already converted; only demolishing and rebuilding changes that.',
+  'variant.reason.excess': 'Demolish {n} factories first.',
+  'variant.reason.excess.one': 'Demolish one factory first.',
   'variant.once': 'Once and for all; demolishing and rebuilding stay possible.',
   'log.variantStart': '{building} on plot {slot} is being converted to {name}.',
   'log.variantDone': '{name} on plot {slot} is ready.',
