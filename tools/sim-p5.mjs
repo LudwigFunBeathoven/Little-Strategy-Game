@@ -1,4 +1,4 @@
-// Klammerfront – Messung für Kartenpfad Teil 5 (REQ-K5.01, K5.10).
+// Klammerfront – Messung für Kartenpfad Teil 5 und 6 (REQ-K5.01, K5.10, K6.08).
 // Aufruf:  node tools/sim-p5.mjs --suite felder [--runs 50] [--json reports/kartenpfad5-basis.json] [--label "Fahrplan aus"]
 //   Filter: --diffs leicht,normal,schwer  --profiles aktiv,durchschnitt,gelegentlich  --strategy einheiten-zuerst|gierig  --kat militaer|wirtschaft|verteidigung  --druck hoch
 //   budget  Paarvergleich des Forschungsbudgets (REQ-K5.05): derselbe Bot mit 0 %, 25 % und 50 %, Normal/durchschnitt (--budgetRuns, Standard 50)
@@ -16,7 +16,8 @@ const EP_AT = [240, 480, 720];                                              // G
 const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
   xpPassive: r.xpPassive, xpBounty: r.xpBounty, xpSrc: r.xpSrc, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
   wallLost: r.wallLost, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers,
-  doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills });
+  doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills,
+  weiter: r.weiter || [], katCounts: r.katCounts, synergie: r.synergie, doktrinP: r.doktrinP || [], trade: r.trade, milizUnits: r.milizUnits, zermuerbt: r.zermuerbt });
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
@@ -39,11 +40,15 @@ if (!isMainThread){
   if (SUITE === 'budget')
     for (const arm of [0, 1, 2]) for (const profile of PROFILES) for (const diff of DIFFS) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'budget', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, budget: arm, arm, sampleXp: EP_AT, seed: seedOf(7, r) });
-  const DOKS = [['zunftordnung', 'wirtschaft'], ['stiftung', 'wirtschaft'], ['stehendesHeer', 'militaer'], ['vorstoss', 'militaer'], ['bollwerk', 'verteidigung'], ['ausfall', 'verteidigung']];
+  /* Doktrin, Kategorie des Bots (Mischdoktrinen: die zuerst genannte Kategorie), Sonderbau (null: keiner); Teil 6 (REQ-K6.05) ergänzt sieben Doktrinen */
+  const DOKS = [['zunftordnung', 'wirtschaft'], ['stiftung', 'wirtschaft'], ['stehendesHeer', 'militaer'], ['vorstoss', 'militaer'], ['bollwerk', 'verteidigung'], ['ausfall', 'verteidigung'],
+    ['elite', 'militaer'], ['massenaufgebot', 'militaer'], ['freihandel', 'wirtschaft'], ['raubbau', 'wirtschaft'], ['fabrikmiliz', 'wirtschaft'], ['grenzfeste', 'verteidigung'], ['zermuerbung', 'verteidigung']];
+  const SONDERBAU = { zunftordnung: 'zunfthaus', stiftung: 'stiftungshaus', stehendesHeer: 'heerlager', bollwerk: 'bastion' };
+  const DOK_FILTER = arg('doktrinen', null) ? arg('doktrinen').split(',') : null;
   const DRUNS = Number(arg('doktrinRuns', 100)), DDIFF = arg('doktrinDiff', 'normal'), DPROF = arg('doktrinProfile', 'durchschnitt');
   if (SUITE === 'doktrin'){
     const druckOf = kat => (arg('druck', 'auto') === 'auto' ? kat === 'verteidigung' : arg('druck') === 'hoch') ? 'hoch' : undefined;
-    for (const [doc, kat] of DOKS) for (const arm of ['mit', 'ohne']) for (let r = 0; r < DRUNS; r++)
+    for (const [doc, kat] of DOKS.filter(d => !DOK_FILTER || DOK_FILTER.includes(d[0]))) for (const arm of ['mit', 'ohne']) for (let r = 0; r < DRUNS; r++)
       jobs.push({ ...base, suite: 'doktrin', diff: DDIFF, profile: DPROF, strategy: EZ, kat, variant: doc, arm, druck: druckOf(kat), banCards: DOKS.map(d => d[0]).filter(x => arm === 'ohne' || x !== doc), seed: seedOf(11, r) });
     if (arg('doktrinAlle', 'ja') !== 'nein') for (const kat of ['militaer', 'wirtschaft', 'verteidigung']) for (let r = 0; r < DRUNS; r++)
       jobs.push({ ...base, suite: 'doktrin', diff: DDIFF, profile: DPROF, strategy: EZ, kat, variant: kat, arm: 'alle', druck: druckOf(kat), seed: seedOf(11, r) });
@@ -115,6 +120,9 @@ if (!isMainThread){
         kostenMedian: median(withH.map(h => h.kosten)), epMinMedian: median(withH.map(h => h.epMin).filter(v => v != null)), epMinMittel: mean(withH.map(h => h.epMin).filter(v => v != null)) },
       fabrikenMedian: { 300: median(fab(300)), 600: median(fab(600)) }, fabrikenMittel: { 300: mean(fab(300)), 600: mean(fab(600)) },
       mauerVerlustMedian: median(rs.map(r => r.wallLost)),
+      weiter: { fabrik: pc(rs.filter(r => (r.weiter || []).some(w => w.bereich === 'fabrik')).length, rs.length), universitaet: pc(rs.filter(r => (r.weiter || []).some(w => w.bereich === 'universitaet')).length, rs.length),
+        tFabrikMedian: median(rs.map(r => (r.weiter || []).find(w => w.bereich === 'fabrik')).filter(Boolean).map(w => w.t)), tUniMedian: median(rs.map(r => (r.weiter || []).find(w => w.bereich === 'universitaet')).filter(Boolean).map(w => w.t)),
+        ersetztMittel: mean(rs.map(r => (r.weiter || []).reduce((a, w) => a + w.ersetzt, 0))), ersetztMittelMit: mean(rs.filter(r => (r.weiter || []).length).map(r => (r.weiter || []).reduce((a, w) => a + w.ersetzt, 0))) },
       doktrinAngebote: { median: median(rs.map(r => r.doktrinOffers || 0)), mittel: mean(rs.map(r => r.doktrinOffers || 0)), ohneAnteil: pc(rs.filter(r => !(r.doktrinOffers > 0)).length, rs.length),
         erstesMedian: median(rs.filter(r => (r.doktrinOfferWahlen || []).length).map(r => r.doktrinOfferWahlen[0])) } };
   };
@@ -125,7 +133,7 @@ if (!isMainThread){
       const rs = results.filter(r => r.suite === 'felder' && r.diff === diff && r.profile === profile);
       const s = stat(rs); rows.push({ diff, profile, ...s }); report.felder.push({ diff, profile, ...s });
     }
-    console.log(`FELDMESSUNG Teil 5 (${EZ}${KAT ? ', Kategorie ' + KAT : ''}${DRUCK === 'hoch' ? ', druck=hoch' : ''}, ${RUNS} Partien je Feld, Modus karten${LABEL ? ', ' + LABEL : ''})\n`);
+    console.log(`FELDMESSUNG (${EZ}${KAT ? ', Kategorie ' + KAT : ''}${DRUCK === 'hoch' ? ', druck=hoch' : ''}, ${RUNS} Partien je Feld, Modus karten${LABEL ? ', ' + LABEL : ''})\n`);
     console.log('| Grad | Profil | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median (Mittel) | längste Lücke Median / P90 (s) | Lücke inkl. Ende Median / P90 (s) | Fabriken Min 5 / 10 (Median) |');
     console.log('|---|---|---|---|---|---|---|---|---|---|---|');
     for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.siegquote} % | ${x.niederlagen} % | ${x.patt} % | ${mm(x.dauerMedian)} | ${mm(x.dauerP90)} | ${x.wahlenMedian} (${f1(x.wahlenMittel)}) | ${f0(x.lueckeMedian)} / ${f0(x.lueckeP90)} | ${f0(x.lueckeEndeMedian)} / ${f0(x.lueckeEndeP90)} | ${x.fabrikenMedian[300] ?? '–'} / ${x.fabrikenMedian[600] ?? '–'} |`);
@@ -133,6 +141,10 @@ if (!isMainThread){
     console.log('| Grad | Profil | Angebote Median (Mittel) | erstes Angebot in Wahl (Median) | ohne Doktrin-Angebot |');
     console.log('|---|---|---|---|---|');
     for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.doktrinAngebote.median} (${f1(x.doktrinAngebote.mittel)}) | ${x.doktrinAngebote.erstesMedian ?? '–'} | ${x.doktrinAngebote.ohneAnteil} % |`);
+    console.log('\nWeiterentwicklungen (Anteil der Partien; Abschluss Median; ersetzte Varianten je Partie mit Weiterentwicklung, Mittel)\n');
+    console.log('| Grad | Profil | Dampfkraft | Abschluss (Median) | Buchdruck | Abschluss (Median) | ersetzte Varianten (Mittel) |');
+    console.log('|---|---|---|---|---|---|---|');
+    for (const x of rows) console.log(`| ${x.diff} | ${x.profile} | ${x.weiter.fabrik} % | ${mm(x.weiter.tFabrikMedian)} | ${x.weiter.universitaet} % | ${mm(x.weiter.tUniMedian)} | ${f1(x.weiter.ersetztMittelMit)} |`);
     console.log('\nEP je Minute (Median; Partien im Abschnitt in Klammern)\n');
     console.log('| Grad | Profil | 0–4 min | 4–8 min | 8–12 min | 12+ min | EP gesamt (Median) |');
     console.log('|---|---|---|---|---|---|---|');
@@ -175,9 +187,9 @@ if (!isMainThread){
     console.log(`DOKTRINEN – Paarvergleich (${EZ}, ${DDIFF}/${DPROF}, ${DRUNS} Partien je Arm, gleiche Seeds, druck: ${arg('druck', 'auto') === 'auto' ? 'nur Verteidigung hoch' : arg('druck')}, Modus karten${LABEL ? ', ' + LABEL : ''})\n`);
     console.log('| Doktrin | Kategorie | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Wahlen Median mit / ohne | Mauer-Verlust mit / ohne | Turm-Abschüsse mit / ohne | Sonderbau gebaut (mit) |');
     console.log('|---|---|---|---|---|---|---|---|---|---|');
-    for (const [doc, kat] of DOKS){
+    for (const [doc, kat] of DOKS.filter(d => !DOK_FILTER || DOK_FILTER.includes(d[0]))){
       const mit = results.filter(r => r.suite === 'doktrin' && r.variant === doc && r.arm === 'mit'), ohne = results.filter(r => r.suite === 'doktrin' && r.variant === doc && r.arm === 'ohne');
-      const sb = { zunftordnung: 'zunfthaus', stiftung: 'stiftungshaus', stehendesHeer: 'heerlager', vorstoss: null, bollwerk: 'bastion', ausfall: null }[doc];
+      const sb = SONDERBAU[doc] || null;
       const gebaut = sb ? pc(mit.filter(r => (r.variants || []).some(v => v.id === sb)).length, mit.length) : null, gewaehlt = pc(mit.filter(r => (r.doktrinen || []).some(d => d.id === doc)).length, mit.length);
       const row = { doktrin: doc, kat, mit: w(mit), ohne: w(ohne), differenz: Math.round((w(mit) - w(ohne)) * 10) / 10, dauerMit: median(mit.map(r => r.t)), dauerOhne: median(ohne.map(r => r.t)), gewaehlt, sonderbauGebaut: gebaut,
         differenzWennGewaehlt: (() => { const g = mit.filter(r => (r.doktrinen || []).some(d => d.id === doc)); return g.length ? Math.round((w(g) - w(ohne)) * 10) / 10 : null; })() };
@@ -187,7 +199,7 @@ if (!isMainThread){
       console.log(`| ${doc} | ${kat} | ${row.mit} % | ${row.ohne} % | ${row.differenz > 0 ? '+' : ''}${row.differenz} | ${mm(row.dauerMit)} / ${mm(row.dauerOhne)} | ${wa(mit)} / ${wa(ohne)} | ${wl(mit)} / ${wl(ohne)} | ${tk(mit)} / ${tk(ohne)} | ${gebaut == null ? '–' : gebaut + ' %'} (gewählt ${gewaehlt} %, Differenz bei Wahl ${row.differenzWennGewaehlt == null ? '–' : (row.differenzWennGewaehlt > 0 ? '+' : '') + row.differenzWennGewaehlt}) |`);
     }
     report.doktrin = rows;
-    console.log('\nAngebote mit Doktrin (Arm „alle“: alle sechs Doktrinen im Pool, Kategorie-Bot)\n');
+    console.log('\nAngebote mit Doktrin (Arm „alle“: alle Doktrinen im Pool, Kategorie-Bot)\n');
     console.log('| Kategorie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt Mittel | Erste Doktrin gewählt in Wahl (Median) | Erstes Angebot mit Doktrin in Wahl (Median) | Partien ohne Doktrin-Angebot | Unterhalt Median (Material) |');
     console.log('|---|---|---|---|---|---|---|---|');
     report.alle = [];

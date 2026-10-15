@@ -1024,8 +1024,8 @@ for (const lang of ['de', 'en']){
   check(units.werfer.vis && units.werfer.dis === 'false', `[${lang}] Karten: Werfer ab Start verfügbar ${JSON.stringify(units.werfer)}`);
   check(units.reiter.vis && units.reiter.dis === 'true' && units.reiter.txt.includes(await srcName('r_reiter')) && units.reiter.fresh === false, `[${lang}] Karten: Reiter bleibt gesperrt, nennt die Forschung, ohne Marke „neu“`);
   await p.evaluate(() => __kf.selectTab('wall')); await p.waitForTimeout(150);
-  const wall = await p.evaluate(() => ['upg:mauer', 'upg:turm_0', 'upg:stacheln'].map(k => { const b = document.querySelector(`[data-tooltip="${k}"]`); return b && !b.hidden && b.getAttribute('aria-disabled') === 'false'; }));
-  check(wall.every(Boolean), `[${lang}] Karten: Mauerstufe, Turm und Stachelwall sind ab Start kaufbar ${JSON.stringify(wall)}`);
+  const wall = await p.evaluate(() => ['upg:mauer', 'upg:turm_0', 'upg:turm_2'].map(k => { const b = document.querySelector(`[data-tooltip="${k}"]`); return b && !b.hidden && b.getAttribute('aria-disabled') === 'false'; }));
+  check(wall.every(Boolean), `[${lang}] Karten: Mauerstufe und beide Türme sind ab Start kaufbar (Teil 6: Stachelwall, Reichweite und Feuerrate sind Karten) ${JSON.stringify(wall)}`);
   check((await p.evaluate(() => ({ t: __kf.tooltipAudit().length, e: __kf.explAudit().length }))).t === 0 && (await p.evaluate(() => __kf.explAudit().length)) === 0, `[${lang}] Karten: Tooltip und Erklärzeile an jedem Element (Startzustand)`);
   // erste Wahl mit Universität: Technologie-Karte auf der Bühne mit „Öffnet Forschung:“
   await p.evaluate(() => { const G = __kf.G; G.build('universitaet'); G.S.level = 1; G.S.pendingLevels = 1; G.S.xpTotal = G.xpNeed(1); G.S.xp = G.S.xpTotal;
@@ -1084,7 +1084,7 @@ for (const lang of ['de', 'en']){
   await p.goto(base + 'index.html?dev=1&tutorial=0&pacing=karten&entdecken=0&lang=de&difficulty=easy'); await p.waitForTimeout(400);
   await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.build('universitaet'); document.querySelector('#hintBox').hidden = true; __kf.selectTab('uni'); }); await p.waitForTimeout(250);
   const u1 = await p.evaluate(() => ({ box: !document.getElementById('resPfad').hidden, groups: [...document.querySelectorAll('#resPfad .res-group:not([hidden])')].map(g => g.textContent), dis: [...document.querySelectorAll('[data-tooltip="res:r_wehrgang"]')].map(b => b.getAttribute('aria-disabled')) }));
-  check(u1.box && u1.groups.length >= 1 && u1.groups.some(g => g.includes('Befestigungskunde') && g.includes('Öffnet mit: Karte Befestigungskunde')) && u1.groups.length === 4 && u1.dis[0] === 'true', `Universität/karten: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“ ${JSON.stringify(u1.groups)}`);
+  check(u1.box && u1.groups.length >= 1 && u1.groups.some(g => g.includes('Befestigungskunde') && g.includes('Öffnet mit: Karte Befestigungskunde')) && u1.groups.length === 6 && u1.dis[0] === 'true', `Universität/karten: Pfadforschung gruppiert nach Quellkarte, gesperrt mit „Öffnet mit: Karte …“ ${JSON.stringify(u1.groups)}`);
   await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = { level: 1, options: ['befestigungskunde', 'bessereFabriken'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0); G.startResearch('r_wehrgang'); __kf.requestRender(); });
   await p.waitForTimeout(300);
   const u2 = await p.evaluate(() => ({ run: document.getElementById('resActive').textContent, dis: document.querySelector('[data-tooltip="res:r_schiessscharten"]').getAttribute('aria-disabled'), txt: document.querySelector('[data-tooltip="res:r_schiessscharten"]').textContent }));
@@ -1094,7 +1094,7 @@ for (const lang of ['de', 'en']){
   // Sammlung mit Pfadübersicht: Status je Pfadkarte und Forschung
   await p.evaluate(() => __kf.selectTab('cards')); await p.waitForTimeout(250);
   const pl = await p.evaluate(() => [...document.querySelectorAll('#pathList li')].map(li => li.textContent));
-  check(pl.length === 13 && pl.some(x => x.includes('Befestigungskunde') && x.includes('gewählt')) && pl.some(x => x.includes('Wehrgänge') && x.includes('läuft')) && pl.some(x => x.includes('Ballistik') && x.includes('verfügbar')) && pl.some(x => x.includes('Glaskanonen') && x.includes('gesperrt')), `Sammlung/karten: Pfadübersicht mit Status (${pl.length} Einträge) ${JSON.stringify(pl.slice(0, 4))}`);
+  check(pl.length === 17 && pl.some(x => x.includes('Befestigungskunde') && x.includes('gewählt')) && pl.some(x => x.includes('Wehrgänge') && x.includes('läuft')) && pl.some(x => x.includes('Ballistik') && x.includes('verfügbar')) && pl.some(x => x.includes('Glaskanonen') && x.includes('gesperrt')), `Sammlung/karten: Pfadübersicht mit Status (${pl.length} Einträge) ${JSON.stringify(pl.slice(0, 4))}`);
   // Standardmodus: keine Pfadforschung
   const ctx2 = await b.newContext({ viewport: { width: 1280, height: 720 } }), p2 = await ctx2.newPage();
   await p2.goto(base + 'index.html?dev=1&tutorial=0&pacing=standard&lang=de&difficulty=easy'); await p2.waitForTimeout(300);
