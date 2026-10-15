@@ -15,7 +15,7 @@ const place = (G, type, i) => { G.S.material = 1e7; assert.ok(G.buildAt(i, type)
 const idle = G => { G.S.pendingDraft = null; G.S.pendingLevels = 0; G.S.pfad.lastPickT = G.S.t; G.S.sections.forEach(x => { x.hp = Math.max(x.hp, 1e9); }); };
 const WIRT = ['bessereFabriken', 'kriegserfahrung', 'querverbindung', 'lagerzehnt', 'handelskontor'];
 const MIL = ['aushebung', 'drill', 'kriegstrommeln', 'schildwall', 'belagerungsgeraet', 'dauerauftrag', 'grosseArmee', 'allesAufDieMitte'];
-const VERT = ['maurerkolonne', 'verbrannteErde', 'pluenderung', 'befestigungskunde', 'turmkanoniere'];       // die ersten beiden ändern den Turmschaden nicht
+const VERT = ['maurerkolonne', 'stachelwall', 'pluenderung', 'befestigungskunde', 'turmkanoniere'];       // die ersten beiden ändern den Turmschaden nicht
 const SYN = ['gilde', 'waffenbrueder', 'wehrverband', 'bauordnung', 'sammelruf', 'kriegswirtschaft', 'wehrhandel', 'grenzwacht'];
 
 test('K6.03: Kategorien Wirtschaft, Militär, Verteidigung; jede Karte gehört zu genau einer Kategorie, ist neutral oder zählt als Brücke für zwei', () => {
@@ -164,7 +164,7 @@ test('K6.03 Angebot: die führende Kategorie (mindestens zwei Karten Vorsprung) 
   const share = lead => {
     let v = 0, all = 0;
     for (let seed = 1; seed <= 200; seed++){
-      const { G } = offerState(seed); if (lead) pick(G, 'maurerkolonne', 'verbrannteErde');
+      const { G } = offerState(seed); if (lead) pick(G, 'maurerkolonne', 'stachelwall');
       for (const id of offerOnce(G)){ all++; if (G.katsOf(G.OPT[id]).includes('verteidigung')) v++; }
     }
     return v / all;

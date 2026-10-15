@@ -39,7 +39,7 @@ const CASES = {
   // Automatisierung
   werkmeister: GONE, instandhaltung: GONE, dauerauftrag: {}, fliessband: GONE,
   // Sonderregel
-  allesAufDieMitte: {}, verbrannteErde: {}, gluecksritter: {}, blitzkrieg: GONE, soeldnerheer: GONE,
+  allesAufDieMitte: {}, verbrannteErde: GONE, gluecksritter: {}, blitzkrieg: GONE, soeldnerheer: GONE,
   // Teil 6 (REQ-K6.02): übernommene Regeln der Linienstufen
   querverbindung:  { off: G => G.S.slots.forEach((s, i) => { if (s && s.type === 'fabrik') G.S.slots[i] = null; }) },
   lagerzehnt:      { off: G => { G.S.level = 1; } },
@@ -49,13 +49,16 @@ const CASES = {
   // Teil 6 (REQ-K6.03): Synergiekarten erscheinen erst mit zwei Karten ihrer Kategorie (synergieAb); darunter ist ihre Wirkung zu klein
   gilde:            { off: G => { G.S.draft.stacks.bessereFabriken = 0; G.S.draft.ver++; }, on: G => { G.S.draft.stacks.bessereFabriken = 1; G.S.draft.stacks.kriegserfahrung = 1; G.S.draft.ver++; } },
   waffenbrueder:    { off: G => {}, on: G => { G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
-  wehrverband:      { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; G.S.draft.stacks.maurerkolonne = 1; G.S.draft.stacks.verbrannteErde = 1; G.S.draft.ver++; } },
+  wehrverband:      { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; G.S.draft.stacks.maurerkolonne = 1; G.S.draft.stacks.stachelwall = 1; G.S.draft.ver++; } },
   bauordnung:       { off: G => {}, on: G => { G.S.draft.stacks.bessereFabriken = 1; G.S.draft.stacks.kriegserfahrung = 1; G.S.draft.ver++; } },
   sammelruf:        { off: G => {}, on: G => { G.build('kaserne'); G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
   kriegswirtschaft: { off: G => {}, on: G => { G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
-  wehrhandel:       { off: G => {}, on: G => { G.S.draft.stacks.maurerkolonne = 1; G.S.draft.stacks.verbrannteErde = 1; G.S.draft.ver++; } },
+  wehrhandel:       { off: G => {}, on: G => { G.S.draft.stacks.maurerkolonne = 1; G.S.draft.stacks.stachelwall = 1; G.S.draft.ver++; } },
   grenzwacht:       { off: G => {}, on: G => { G.S.draft.stacks.aushebung = 1; G.S.draft.stacks.drill = 1; G.S.draft.ver++; } },
   pluenderung:     { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
+  // Teil 6 (REQ-K6.07): Ausbauten als Karten
+  turmschule:      { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
+  stachelwall: {},
 };
 
 test('Jede Bonuskarte ist in der Fallliste erfasst', () => {

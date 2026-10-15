@@ -888,4 +888,14 @@ KF_I18N.en = {
   'tip.weiter.one': 'Replaces 1 variant (no refund).',
   'tip.weiter.many': 'Replaces {n} variants (no refund).',
   'log.weiter': '{building}: advancement {name} complete ({n} variants replaced).',
+  /* Part 6: building upgrades as cards (REQ-K6.07) */
+  'draft.turmschule.name': 'Tower school',
+  'draft.turmschule.desc': 'Towers: range +{e1}%, cooldown −{e2p}%. Only offered when a tower stands.',
+  'kp.eff.turmschule': 'Range +{e1}%, cooldown −{e2p}%',
+  'draft.stachelwall.name': 'Spiked wall',
+  'draft.stachelwall.desc': 'Melee attackers at the wall take the damage of {e1} spike levels per strike.',
+  'kp.eff.stachelwall': 'Walls: spike levels {e1}',
+  'draft.handelskontor.name.karten': 'Interest master',
+  'draft.handelskontor.desc.karten': 'The interest cap of the trading house rises by {e1}%. Only offered when a trading house stands.',
+  'kp.eff.handelskontor.karten': 'Trading house cap +{e1}%',
 };

@@ -61,7 +61,12 @@ const KF_PFAD = {
     'veteranen', 'taktiker', 'vorposten', 'blitzkrieg', 'soeldnerheer',                                                                         // Armee und Sonderregel
     'festungsbau', 'bastion', 'scharfschuetzen', 'zeugmeister',                                                                                  // Basis und Automatisierung
     /* Teil 6 (REQ-K6.03): Pool höchstens 38 Karten ohne Doktrinen; gestrichen wurden die schwächsten und die, deren Wirkung eine neue Karte übernimmt (Vorschlag im Bericht) */
-    'weitschuss', 'sappeure', 'zinnen', 'notreserve', 'werkmeister', 'instandhaltung', 'langeWurfarme'],
+    'weitschuss', 'sappeure', 'zinnen', 'notreserve', 'werkmeister', 'instandhaltung', 'langeWurfarme',
+    /* Teil 6 (REQ-K6.07): zwei neue Ausbau-Karten brauchen Platz im Pool (Grenze 38); gestrichen wird die Karte mit der seltensten und schwächsten Wirkung */
+    'verbrannteErde'],
+  /* Gebäude-Ausbauten, die im Modus karten entfallen, weil eine Karte sie übernimmt (Teil 6, REQ-K6.07; die Grundlagen bleiben: Turm bauen, Mauerausbau, Quartiere, Presse, Schmiede):
+     Reichweite und Feuerrate der Türme → Karte Turmschule, Stachelwall → Karte Stachelwall, Mörtelkolonne → Karte Maurerkolonne, Kontor-Ausbau (Zinseszins) → Karte Handelskontor (Stufen, Name Zinsmeister) */
+  entfallenAusbauten: ['reichweite_0', 'reichweite_2', 'kadenz_0', 'kadenz_2', 'stacheln', 'moertel', 'zinseszins'],
   forschungen: [
     { id: 'r_reiter', branch: 'pfad', nameKey: 'kp.res.reiter.name', descKey: 'kp.res.reiter.desc',
       schaltetFrei: ['einheit:reiter'], tiers: [{ cost: 320, timeS: 45, effect: [] }] },

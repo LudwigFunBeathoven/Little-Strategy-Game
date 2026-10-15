@@ -69,6 +69,9 @@ const KF_CONFIG = {
                           { effect: [{ stat: 'werferRange', add: 50 }, { stat: 'rangedDmg', mul: 1.1 }], drawback: [{ stat: 'werferHp', mul: 0.7 }] }],
       sappeure:          [{ effect: [{ stat: 'siegeDps', add: 2 }] },
                           { effect: [{ stat: 'siegeDps', add: 5 }, { stat: 'siegeAlways', add: 1 }] }],
+      handelskontor:     [{ effect: [{ stat: 'kontorCap', mul: 2 }] },                       // Teil 6 (REQ-K6.07): „Zinsmeister“ ersetzt den Ausbau Zinseszins (Deckel 20 + 4 × 20 = 100, also × 5)
+                          { effect: [{ stat: 'kontorCap', mul: 3.5 }] },
+                          { effect: [{ stat: 'kontorCap', mul: 5.5 }] }],
       maurerkolonne:     [{ effect: [{ stat: 'wallRegenPct', add: 0.5 }] },
                           { effect: [{ stat: 'wallRegenPct', add: 1 }] },
                           { effect: [{ stat: 'wallRegenPct', add: 2 }, { stat: 'regenGate', add: 1 }] }],

@@ -45,6 +45,7 @@ test('K5.06: jede Karte erfüllt die Spürbarkeitsgrenze (Regeländerung oder mi
       if (e.add !== undefined){
         if (e.stat === 'supply') return e.add / C.SUPPLY_CAP_START >= 0.2;
         if (e.stat === 'werferRange') return e.add / C.UNITS.werfer.range >= 0.2;
+        if (e.stat === 'stachelStufen') return e.add * C.FX_STACHELN_DMG / C.UNITS.laeufer.hp >= 0.2;       // Teil 6 (K6.07): Stachelschaden je Schlag gegen einen Läufer
         return RULE_STATS.has(e.stat);
       }
       return RULE_STATS.has('grant');
@@ -54,10 +55,11 @@ test('K5.06: jede Karte erfüllt die Spürbarkeitsgrenze (Regeländerung oder mi
   assert.equal(bad.length, 0, `unter der Spürbarkeitsgrenze: ${bad.join(', ')}`);
 });
 
+const AUSBAU_KARTEN = ['turmschule', 'stachelwall', 'handelskontor'];
 const NEW_RULES = ['nbFabrik', 'drumsMin', 'shieldMin', 'siegeAlways', 'regenGate', 'repairTh', 'turretVsRanged'];
 test('K5.06: Stufen mit neuem Effekt; bei mindestens der Hälfte der Karten mit Stufen ist Stufe 2 oder 3 eine Regeländerung', () => {
   const { G } = game();
-  const multi = pool(G).filter(o => G.tiersOf(o).length > 1);
+  const multi = pool(G).filter(o => G.tiersOf(o).length > 1 && !AUSBAU_KARTEN.includes(o.id));       // Teil 6 (K6.07): Ausbau-Karten sind die zusammengefassten Stufen eines Ausbaus, ihre Stufen steigern nur den Wert (Auslegung im Bericht)
   assert.ok(multi.length >= 10, `Karten mit Stufen: ${multi.length}`);
   let rules = 0;
   for (const o of multi){

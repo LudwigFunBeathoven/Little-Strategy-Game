@@ -10,6 +10,7 @@ function game(pacing = 'karten', seed = 11, diff = 'normal', opts = {}){
   G.S.sections.forEach(s => { s.hp = 1e9; });                       // keine Niederlage während der Zeitprüfung
   return { G, C: KF_CONFIG };
 }
+const neutral = G => { G.S.pendingDraft.options[0] = 'maurerkolonne'; G.chooseDraft(0); };       // eine Karte ohne Einfluss auf die EP (die Wahl hängt sonst vom Pool ab, z. B. „Alles auf die Mitte“ bringt Abschüsse)
 const immortal = G => G.S.sections.forEach(s => { s.hp = 1e9; });        // chooseDraft kappt die Lebenspunkte wieder auf das Maximum
 const run = (G, seconds, stop = () => false) => { for (let i = 0; i < 20 * seconds && !stop(); i++){ immortal(G); G.tick(0.05); } };
 const foe = (G, wave, x = 900, lane = 1, hp = 30) => { const id = G.S.nextId++; G.S.units.push({ id, side: 'e', type: 'laeufer', lane, laneF: lane, home: lane, x, hp, maxHp: hp, dmg: 0, cdMax: 1e9, cd: 1e9, flash: 0, wave, form: null, speed: 0, range: 14, ranged: false, row: 0, col: 0, rowSize: 1 }); return id; };
@@ -112,7 +113,7 @@ test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühesten
   run(G, 5);
   G.gainXp(G.xpNeed(1) - G.S.xpTotal + 1);                          // erste Wahl: kein Mindestabstand
   assert.ok(G.S.pendingDraft, 'die erste Wahl erscheint sofort');
-  G.chooseDraft(0); immortal(G);                                   // soeben gewählt
+  neutral(G); immortal(G);                                   // soeben gewählt
   const level = G.S.level;
   G.gainXp(G.xpNeed(level + 3) - G.S.xpTotal + 1);                  // drei Schwellen auf einmal
   assert.equal(G.S.pendingLevels, 3);
@@ -126,14 +127,14 @@ test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühesten
   assert.ok(G.S.pendingDraft, 'nach minAbstand erscheint die Wahl');
   assert.ok(G.S.t - t0 >= min - 0.1 && G.S.t - t0 < min + 1, `Erscheinen nach ${G.S.t - t0} s`);
   assert.ok(G.S.xpTotal >= xp, 'EP gehen nicht verloren');
-  G.chooseDraft(0); immortal(G);
+  neutral(G); immortal(G);
   assert.equal(G.S.pendingDraft, null);
   assert.equal(G.S.pendingLevels, 2);
   run(G, min - 1);
   assert.equal(G.S.pendingDraft, null);
   run(G, 2, () => G.S.pendingDraft);
   assert.ok(G.S.pendingDraft, 'zweite Wahl nach weiteren minAbstand Sekunden');
-  G.chooseDraft(0); G.chooseDraft && immortal(G);
+  neutral(G); immortal(G);
   run(G, 120);                                                      // ohne weitere EP bleibt es dabei
   assert.equal(G.S.pendingLevels, 1, 'die dritte fällige Wahl wartet auf nichts als den Abstand');
 });

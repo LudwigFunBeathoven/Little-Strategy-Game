@@ -152,9 +152,9 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   check(x1.m < x0.m && x1.x > x0.x, `K6.05 Freihandel: Klick tauscht Material gegen EP ${show([x0, x1])}`);
   // Turmausbau gesperrt, auch im Bestand
   await p.evaluate(() => { __kf.selectTab('wall'); __kf.requestRender(); }); await settle(p, 300);
-  const tw = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="upg:reichweite_0"]'); return e ? { dis: e.getAttribute('aria-disabled'), tip: e.dataset.tooltip } : null; });
-  check(!tw || tw.dis === 'true', `K6.05 Freihandel: Turmausbau gesperrt ${show(tw)}`);
-  const ttip = tw ? await tipOf(p, '[data-tooltip="upg:reichweite_0"]') : 'Freihandel';
+  const tw = await p.evaluate(() => { const e = document.querySelector('[data-tooltip="upg:turm_0"]'); return e ? { dis: e.getAttribute('aria-disabled'), hidden: e.hidden || !e.checkVisibility(), tip: e.dataset.tooltip } : null; });       // Teil 6 (K6.07): Reichweite und Feuerrate sind Karten; gesperrt bleibt die höhere Turmstufe
+  check(tw && !tw.hidden && tw.dis === 'true', `K6.05 Freihandel: Turmausbau gesperrt ${show(tw)}`);
+  const ttip = tw ? await tipOf(p, '[data-tooltip="upg:turm_0"]') : '';
   check(/Freihandel/.test(ttip), `K6.05 Freihandel: Tooltip nennt die Doktrin ${show(ttip)}`);
   // Massenaufgebot: andere Einheiten gesperrt, mit Grund
   await p.evaluate(() => { const G = __kf.G; G.S.draft.stacks.freihandel = 0; G.S.draft.stacks.massenaufgebot = 1; G.S.draft.ver++; __kf.selectTab('army'); __kf.requestRender(); }); await settle(p, 300);
@@ -199,6 +199,27 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
   check(JSON.stringify(audit.tips) === '[]' && JSON.stringify(audit.expl) === '[]', `K6.06: Tooltip- und Erklärzeilen-Audit leer ${show(audit)}`);
   check(errs.length === 0, `K6.06: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
+/* ---------- K6.07: Ausbauten als Karten (die Ausbauten entfallen im Reiter, die Karten tragen ihre Namen und Wirkungszeilen) ---------- */
+{
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=1');
+  await p.evaluate(() => { const G = __kf.G; G.S.pendingDraft = { level: 1, options: ['turmschule', 'stachelwall', 'handelskontor'], rerolled: 0 }; G.S.pendingLevels = 1; __kf.requestRender(); }); await settle(p, 1500);
+  const cards = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(e => ({ name: (e.querySelector('.kc-name') || {}).textContent, eff: (e.querySelector('.kc-desc') || {}).textContent, kat: (e.querySelector('.kc-kat') || {}).textContent })));
+  check(cards.length === 3 && /Turmschule/.test(cards[0].name) && /Stachelwall/.test(cards[1].name) && /Zinsmeister/.test(cards[2].name), `K6.07: Namen der Ausbau-Karten ${show(cards.map(c => c.name))}`);
+  check(cards.every(c => c.eff && c.eff.length > 0 && c.eff.length <= 44 && !/\{/.test(c.eff)), `K6.07: Wirkungszeilen ${show(cards.map(c => c.eff))}`);
+  await ctx.close();
+}
+{
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=0'); await calm(p);
+  await p.evaluate(() => { const G = __kf.G; G.S.t = 400; G.S.pfad.lastPickT = 400; G.S.material = 1e6; G.buildAt(0, 'kontor'); G.S.lvl.turm_0 = 1; G.S.lvl.stacheln = 0; G.S.revealed = Object.fromEntries(Object.keys(__kf.G.C ? {} : {}).map(k => [k, true])); for (const id of ['reichweite_0', 'kadenz_0', 'stacheln', 'moertel', 'zinseszins', 'mauer']) G.S.revealed[id] = true; __kf.selectTab('wall'); __kf.requestRender(); });
+  await settle(p, 400);
+  const vis2 = await p.evaluate(() => ['reichweite_0', 'kadenz_0', 'stacheln', 'moertel', 'mauer'].map(id => { const e = document.querySelector(`[data-tooltip="upg:${id}"]`); return [id, !!e && !e.hidden && e.checkVisibility()]; }));
+  check(JSON.stringify(vis2) === JSON.stringify([['reichweite_0', false], ['kadenz_0', false], ['stacheln', false], ['moertel', false], ['mauer', true]]), `K6.07: Ausbauten im Reiter Mauer entfallen, der Mauerausbau bleibt ${show(vis2)}`);
+  await p.evaluate(() => { __kf.selectTab('build'); __kf.selectPlot(0); __kf.requestRender(); }); await settle(p, 300);
+  check(!(await vis(p, '[data-tooltip="upg:zinseszins"]')), 'K6.07: Kontor-Ausbau entfällt');
+  check(errs.length === 0, `K6.07: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }
 

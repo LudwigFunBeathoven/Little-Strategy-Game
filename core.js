@@ -355,8 +355,9 @@ function create(){
   const towerBuilt   = lane => lv(towerId('turm', lane)) > 0;
   const towerActive  = lane => towerBuilt(lane) && sectionUp(lane);
   const turretDmg    = lane => C.PLAYER_TURRET.dmgPerLevel * lv(towerId('turm', lane)) * mMul('turretDmg');
-  const turretRange  = lane => (C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane))) * mMul('towerRange');
-  const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane))) * mMul('towerCd');       // towerCd: Doktrin Vorstoß (Teil 5)
+  /* rangeAusbau, cdAusbau: Karte Turmschule (Teil 6, REQ-K6.07, ersetzt die Ausbauten Reichweite und Feuerrate); die Doktrin Freihandel sperrt sie wie die Ausbauten (towerCap) */
+  const turretRange  = lane => (C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel * lv(towerId('reichweite', lane))) * mMul('towerRange') * (towerCap() === Infinity ? mMul('rangeAusbau') : 1);
+  const turretCd     = lane => C.PLAYER_TURRET.cd * Math.pow(C.PLAYER_TURRET.cdFactor, lv(towerId('kadenz', lane))) * mMul('towerCd') * (towerCap() === Infinity ? mMul('cdAusbau') : 1);       // towerCd: Doktrin Vorstoß (Teil 5)
   /* Bastion (Sonderbau der Doktrin Bollwerk, Teil 5): feuert wie ein Turm in die Lane seiner Zeile (oben Lane 0, Mitte Tor-Lane, unten Lane 2); Schaden, Reichweite und Kadenz folgen den Türmen der Lane */
   const upLv         = id => C.UPGRADES[id] ? lv(id) : 0;
   const bastionLane  = i => Math.floor(i / C.GRID_SIZE);
@@ -414,8 +415,12 @@ function create(){
   const supplyCapped = () => supplyCap() >= C.SUPPLY_CAP_MAX;
   const supplyOnly = effects => effects.length > 0 && effects.every(e => e.stat === 'supply' || e.stat === 'supplyMult');
   const noEffect = id => C.UPGRADES[id].group === 'kaserne' && supplyCapped();
+  const stachelStufen = () => lv('stacheln') + mAdd('stachelStufen');                                  // Karte Stachelwall (Teil 6, REQ-K6.07) zählt wie Stufen des Ausbaus
+  /* Ausbauten, die im Modus karten entfallen, weil eine Karte sie übernimmt (Teil 6, REQ-K6.07) */
+  const ausbauRemoved = id => S.pacing === 'karten' && !!PFAD && (PFAD.entfallenAusbauten || []).includes(id);
   function isAvailable(id){
     const u = C.UPGRADES[id];
+    if (ausbauRemoved(id)) return false;
     if (C.BUILDINGS.includes(u.group) && !has(u.group)) return false;
     if (u.needs && S.lvl[u.needs] <= 0) return false;
     return true;
@@ -908,7 +913,8 @@ function create(){
     if (u.side === 'p'){ damageEnemyBase(u.dmg * mMul('dmgVsBase') * (u.baseMult || 1) * (u.ranged ? mMul('rangedDmg') : 1)); FX.baseFlash.e = 0.12; }
     else {
       hitSection(u.lane, u.dmg);
-      if (!u.ranged && lv('stacheln') > 0){ u.hp -= C.FX_STACHELN_DMG * lv('stacheln'); u.flash = 0.12; }
+      const stachel = stachelStufen();
+      if (!u.ranged && stachel > 0){ u.hp -= C.FX_STACHELN_DMG * stachel; u.flash = 0.12; }
     }
     if (u.ranged) shot({ from: u.id, to: null, x0: u.x, x1: u.side === 'p' ? W - EBW + 8 : PBW - 8, lane: u.laneF, y0: lateralOf(u), y1: u.laneF, t: 0, dur: 0.3 });
   }
@@ -1256,6 +1262,7 @@ function create(){
     if (o.pfad) return pfadAvailable(o);
     const n = cardTaken(o.id), tiers = tiersOf(o);
     if (S.research.banned.includes(o.id)) return false;
+    if (o.turmAusbau && towerCap() < Infinity) return false;                                                 // Turmschule ersetzt die Turmausbauten; die Doktrin Freihandel sperrt sie (Teil 6, REQ-K6.07)
     if (o.nurKarten && S.pacing !== 'karten') return false;                                                  // Karten des Teils 6 gibt es nur im Modus karten (data/karten6.js)
     if (o.synergie && (katCounts()[o.synergie.zaehlt] || 0) < KAT.synergieAb) return false;                    // Synergiekarten erst mit genug Karten ihrer Kategorie (spürbar ab drei Karten, REQ-K6.03)
     if (cardRemoved(o.id)) return false;                                                                    // Teil 4 und 5: aus dem Pool des Modus karten gestrichen (REQ-S.02 C2, S.03, K5.06)
@@ -1725,7 +1732,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, weiterDone, weiterErsetzt, weiterResearch, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,

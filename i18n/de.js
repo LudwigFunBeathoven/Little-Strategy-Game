@@ -888,4 +888,14 @@ KF_I18N.de = {
   'tip.weiter.one': 'Ersetzt 1 Variante (ohne Erstattung).',
   'tip.weiter.many': 'Ersetzt {n} Varianten (ohne Erstattung).',
   'log.weiter': '{building}: Weiterentwicklung {name} abgeschlossen ({n} Varianten ersetzt).',
+  /* Teil 6: Gebäude-Ausbauten als Karten (REQ-K6.07) */
+  'draft.turmschule.name': 'Turmschule',
+  'draft.turmschule.desc': 'Türme: Reichweite +{e1} %, Abklingzeit −{e2p} %. Nur im Angebot, wenn ein Turm steht.',
+  'kp.eff.turmschule': 'Reichweite +{e1} %, Abklingzeit −{e2p} %',
+  'draft.stachelwall.name': 'Stachelwall',
+  'draft.stachelwall.desc': 'Nahkämpfer an der Mauer erleiden den Schaden von {e1} Stachelstufen pro Schlag.',
+  'kp.eff.stachelwall': 'Mauern: Stachelstufen {e1}',
+  'draft.handelskontor.name.karten': 'Zinsmeister',
+  'draft.handelskontor.desc.karten': 'Der Zinsdeckel des Kontors steigt um {e1} %. Nur im Angebot, wenn ein Kontor steht.',
+  'kp.eff.handelskontor.karten': 'Zinsdeckel des Kontors +{e1} %',
 };

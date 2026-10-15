@@ -22,6 +22,18 @@ const KF_KARTEN6 = [
   { id: 'pluenderung', category: 'basis', kat: 'verteidigung', rarity: 'common', nameKey: 'draft.pluenderung.name', descKey: 'draft.pluenderung.desc', wirkt: { tower: true },
     tiers: [{ effect: [{ stat: 'towerKillMaterial', add: 1 }] }] },                                               // frühere Linie Verteidigung, Stufe 1: Abschüsse durch Türme bringen Material
 
+  /* ---------- Gebäude-Ausbauten als Karten (REQ-K6.07): Die Ausbauten Reichweite und Feuerrate der Türme (Turmschule) und Stachelwall der Mauer entfallen im Modus karten (KF_PFAD.entfallenAusbauten);
+     ihre Karte wirkt in der letzten Stufe mindestens so stark wie alle Stufen des Ausbaus zusammen (tests/ausbauten6.test.mjs). Dazu kommen Zinsmeister (Kontor-Ausbau; Stufen der Karte Handelskontor, config.js KARTEN.kartenTiers)
+     und Maurerkolonne (Mörtelkolonne; bestehende Karte). Stufen sind Gesamtwerte, nicht Zuwächse. ---------- */
+  { id: 'turmschule', category: 'basis', kat: 'verteidigung', rarity: 'common', nameKey: 'draft.turmschule.name', descKey: 'draft.turmschule.desc', wirkt: { tower: true }, turmAusbau: true,
+    tiers: [{ effect: [{ stat: 'rangeAusbau', mul: 1.2 }, { stat: 'cdAusbau', mul: 0.8 }] },
+            { effect: [{ stat: 'rangeAusbau', mul: 1.45 }, { stat: 'cdAusbau', mul: 0.62 }] },
+            { effect: [{ stat: 'rangeAusbau', mul: 1.7 }, { stat: 'cdAusbau', mul: 0.45 }] }] },        // Ausbau: Reichweite 4 × +20 auf 120 (× 1,67), Feuerrate 5 × 0,87 (× 0,50)
+  { id: 'stachelwall', category: 'basis', kat: 'verteidigung', rarity: 'common', nameKey: 'draft.stachelwall.name', descKey: 'draft.stachelwall.desc',
+    tiers: [{ effect: [{ stat: 'stachelStufen', add: 3 }] },
+            { effect: [{ stat: 'stachelStufen', add: 5 }] },
+            { effect: [{ stat: 'stachelStufen', add: 7 }] }] },                                        // Ausbau: fünf Stufen; Stachelstufen wirken wie die Stufen des Ausbaus (4 Schaden je Stufe und Schlag)
+
   /* ---------- Synergiekarten (REQ-K6.03): Wirkung nach der Zahl gewählter Karten einer Kategorie (höchstens KATEGORIEN.deckel; sie erscheinen ab KATEGORIEN.synergieAb Karten der Kategorie) ----------
      Zähler (zaehler): Wirkung wächst mit der Zahl der Karten der eigenen Kategorie. Verstärker (verstaerker): vervielfacht eine Mechanik (fix: fester Wert, perN + add: je perN Karten add).
      Brücke (bruecke): gehört zu zwei Kategorien (kat ist eine Liste, die Karte zählt für beide) und wirkt nach den Karten der Kategorie zaehlt. perCard: Faktor je Karte (mul = 1 + perCard × Karten). */
