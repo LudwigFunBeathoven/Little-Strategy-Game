@@ -29,7 +29,7 @@ const Session = (() => {
   const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption', 'upgradeBuilding', 'setBudget'];
   function reset(){
     const S = G.S;
-    P = { format: 'klammerfront-session', formatVersion: 2, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
+    P = { format: 'klammerfront-session', formatVersion: 3, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
           switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit, pressure: S.druck || 'aus' }, visible: [], discovered: {},
           variants: [], xpBySource: {}, wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
@@ -55,6 +55,12 @@ const Session = (() => {
       P.variants = (S.stats.variants || []).slice();
       P.xpBySource = Object.fromEntries(Object.entries(S.stats.xpSrc || {}).map(([k, v]) => [k, Math.round(v)]));       // Teil 5 (REQ-K5.10): EP je Quelle (Abschuss, Turm, Basisschaden, abgewehrte Welle, Forschungsbudget …)
       P.doktrinen = (S.stats.doktrinen || []).slice(); P.doktrinAngebote = S.stats.doktrinOffers || 0; P.unterhalt = Math.round(S.stats.upkeep || 0);       // Teil 5 (REQ-K5.07): gewählte Doktrinen mit Wahl und Zeitpunkt, Angebote mit Doktrin, gezahlter Unterhalt
+      // Teil 6 (REQ-K6.08): Karten je Kategorie, Werte der Synergiekarten, Weiterentwicklungen (Zeitpunkt, ersetzte Varianten), p des Doktrin-Faktors je Wahl, Tausch und Aufgebot der Doktrinen
+      P.kategorien = G.katCounts(); P.fuehrendeKategorie = G.katLead();
+      P.synergie = Object.fromEntries(Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0 && G.OPT[k] && G.OPT[k].synergie).map(k => { const v = G.synergieNow(k); return [k, { n: v.n, wert: +v.value.toFixed(3) }]; }));
+      P.weiterentwicklungen = (S.stats.weiter || []).map(w => ({ id: w.id, bereich: w.bereich, t: w.t, ersetzteVarianten: w.ersetzt }));
+      P.doktrinP = (S.stats.doktrinP || []).slice();
+      P.doktrinEffekte = { tauschMaterial: Math.round(S.stats.tradeMaterial || 0), tauschEP: Math.round(S.stats.tradeXp || 0), milizEinheiten: S.stats.milizUnits || 0, zermuerbt: S.stats.zermuerbt || 0 };
       const hp = S.sections.map(s => s.hp);
       if (P.wallPrev) hp.forEach((v, i) => { if (v < P.wallPrev[i]) P.wallHpLost += P.wallPrev[i] - v; });
       P.wallPrev = hp;
@@ -93,7 +99,7 @@ const Session = (() => {
       const d = G.S.pendingDraft, id = d && d.options[i];
       const ok = choose(i);
       // Kartenpfad (REQ-KP.09): gewählte Karte mit Alternativen, Bedenkzeit (ms seit dem ersten Öffnen der Bühne dieser Wahl), Neu ziehen und Bannen
-      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, erschienenS: (((G.S.stats.wahlen || []).find(x => x.n === d.level)) || {}).t ?? null, chosen: id, offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, hover: Stage.on() ? Stage.takeHover() : null, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
+      if (ok && P){ P.drafts.push({ t: +G.S.t.toFixed(1), level: d.level, erschienenS: (((G.S.stats.wahlen || []).find(x => x.n === d.level)) || {}).t ?? null, chosen: id, kat: id && G.OPT[id] ? G.katsOf(G.OPT[id]) : [], offered: d.options.slice(), thinkMs: Stage.on() ? Stage.thinkMs() : draftThinkMs(), rerolled: draftActs.rerolled, banned: draftActs.banned, hover: Stage.on() ? Stage.takeHover() : null, family: G.OPT[id] ? (G.OPT[id].family || 'bonus') : null }); draftActs = { rerolled: 0, banned: 0 }; record('chooseDraft', { arg: id }); }
       return ok;
     };
     const tick = G.tick;

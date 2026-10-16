@@ -223,6 +223,25 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   await ctx.close();
 }
 
+/* ---------- K6.08: Sitzungsprotokoll Format 3 (Kategorie je gewählter Karte, Synergiewerte, Weiterentwicklungen, p je Wahl) ---------- */
+{
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=0&debug=1');
+  await p.evaluate(() => {
+    const G = __kf.G; G.S.t = 300; G.S.pfad.lastPickT = 300;
+    G.S.pendingDraft = { level: 1, options: ['bessereFabriken', 'kriegserfahrung'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0);
+    G.S.pendingDraft = { level: 2, options: ['gilde', 'drill'], rerolled: 0 }; G.S.pendingLevels = 1; G.chooseDraft(0);
+    G.S.pfad.choices = 2; G.S.pendingDraft = null; G.S.pendingLevels = 1; G.S.level = 5; G.offerDraft();
+    G.S.stats.weiter = [{ id: 'r_dampfkraft', bereich: 'fabrik', t: 400, ersetzt: 2 }]; G.tick(0.05);
+  });
+  const s = await p.evaluate(() => { const s = __kf.session(); return { fv: s.formatVersion, drafts: s.drafts.map(d => [d.chosen, d.kat]), kat: s.kategorien, syn: s.synergie, weiter: s.weiterentwicklungen, dp: s.doktrinP }; });
+  check(s.fv === 3 && JSON.stringify(s.drafts) === JSON.stringify([['bessereFabriken', ['wirtschaft']], ['gilde', ['wirtschaft']]]), `K6.08: Kategorie je gewählter Karte im Protokoll ${show(s.drafts)}`);
+  check(s.kat && s.kat.wirtschaft === 2 && s.syn && s.syn.gilde && s.syn.gilde.n === 2 && s.syn.gilde.wert > 0, `K6.08: Karten je Kategorie und Wert der Synergiekarte ${show([s.kat, s.syn])}`);
+  check(JSON.stringify(s.weiter) === JSON.stringify([{ id: 'r_dampfkraft', bereich: 'fabrik', t: 400, ersetzteVarianten: 2 }]), `K6.08: Weiterentwicklung mit Zeitpunkt und ersetzten Varianten ${show(s.weiter)}`);
+  check(Array.isArray(s.dp) && s.dp.length === 1 && s.dp[0].n === 3 && s.dp[0].p === 0.15, `K6.08: p des Doktrin-Faktors je Wahl ${show(s.dp)}`);
+  check(errs.length === 0, `K6.08: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- Standardmodus: nichts davon ---------- */
 {
   const { ctx, p, errs } = await open('pacing=standard');

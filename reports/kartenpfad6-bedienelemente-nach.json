@@ -1,0 +1,76 @@
+{
+ "hinweis": "Headless-Chromium 1280×720, je Element einmal über Leiste und alle sichtbaren Reiter",
+ "query": "pacing=karten",
+ "rows": [
+  {
+   "profile": "aktiv",
+   "diff": "normal",
+   "minute": 1,
+   "t": 62,
+   "status": "running",
+   "bedienelemente": 29,
+   "reiter": 3,
+   "jeReiter": {
+    "(Ausgangsbild)": 23,
+    "tab-build": 23,
+    "tab-wall": 17,
+    "tab-army": 17
+   },
+   "tooltips": 29
+  },
+  {
+   "profile": "aktiv",
+   "diff": "normal",
+   "minute": 10,
+   "t": 606,
+   "status": "running",
+   "bedienelemente": 54,
+   "reiter": 6,
+   "jeReiter": {
+    "(Ausgangsbild)": 21,
+    "tab-build": 26,
+    "tab-wall": 23,
+    "tab-army": 21,
+    "tab-smithy": 18,
+    "tab-uni": 34,
+    "tab-cards": 17
+   },
+   "tooltips": 54
+  },
+  {
+   "profile": "durchschnitt",
+   "diff": "normal",
+   "minute": 1,
+   "t": 62,
+   "status": "running",
+   "bedienelemente": 29,
+   "reiter": 3,
+   "jeReiter": {
+    "(Ausgangsbild)": 23,
+    "tab-build": 23,
+    "tab-wall": 17,
+    "tab-army": 17
+   },
+   "tooltips": 29
+  },
+  {
+   "profile": "durchschnitt",
+   "diff": "normal",
+   "minute": 10,
+   "t": 606,
+   "status": "running",
+   "bedienelemente": 53,
+   "reiter": 6,
+   "jeReiter": {
+    "(Ausgangsbild)": 21,
+    "tab-build": 26,
+    "tab-wall": 20,
+    "tab-army": 21,
+    "tab-smithy": 18,
+    "tab-uni": 36,
+    "tab-cards": 17
+   },
+   "tooltips": 53
+  }
+ ]
+}

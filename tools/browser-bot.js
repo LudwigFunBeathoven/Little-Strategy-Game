@@ -35,6 +35,11 @@ function KF_BROWSER_BOT(G, profile, hooks){
       const want = o.budget !== undefined ? o.budget : o.kat ? KF_BROWSER_BOT.KAT_BUDGET[o.kat] : 0;
       if (G.budgetStufe() !== want) G.setBudget(want);
     }
+    // Freihandel (Teil 6, REQ-K6.05): Material über dem Dreifachen eines Stapels wird gegen EP getauscht (höchstens zwei Stapel je Entscheidung)
+    if (G.pacing() === 'karten' && G.freihandel()){
+      const F = C.DOKTRIN.freihandel;
+      for (let k = 0; k < 2 && S.material >= 3 * F.stapelMaterial && !G.tradeBlock('ep'); k++) G.tradeMaterialToXp();
+    }
     if (o.kat && G.pacing() === 'karten') KF_BROWSER_BOT.aufwerten(G, o.kat, h);       // Kategorie-Bot (Teil 4, ab Teil 6 nach Kategorie): Gebäude zu Varianten seiner Kategorie aufwerten
     if (!o.noUpgrades){
       for (const id of PRIO) if (C.UPGRADES[id] && (o.useWall || !/^(turm|mauer)/.test(id))) G.buy(id);
@@ -71,7 +76,7 @@ KF_BROWSER_BOT.PFAD_ORDER = {
   festung:  ['befestigungskunde', 'eiserneKlingen', 'fortgeschritteneTaktiken', 'ballistik'],
 };
 /* Pfadforschung: die Bots erforschen, was ihre Karten geöffnet haben, vor der Grundforschung (REQ-KP.09) */
-KF_BROWSER_BOT.PFAD_RESEARCH = ['r_eisenwaffen', 'r_reiter', 'r_schild', 'r_wehrgang', 'r_schiessscharten'];
+KF_BROWSER_BOT.PFAD_RESEARCH = ['r_dampfkraft', 'r_buchdruck', 'r_eisenwaffen', 'r_reiter', 'r_schild', 'r_wehrgang', 'r_schiessscharten'];
 KF_BROWSER_BOT.pfadResearch = function(G){
   if (G.pacing() !== 'karten') return null;
   return KF_BROWSER_BOT.PFAD_RESEARCH.find(id => G.RES[id] && G.researchBlock(id) === null) || null;
@@ -94,6 +99,11 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, kat){
 KF_BROWSER_BOT.KAT_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Kategorie-Bot (0, 25, 50 %)
 KF_BROWSER_BOT.KAT_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Kategorie-Bots
 KF_BROWSER_BOT.MEHRFACH = ['manufaktur', 'zunfthaus', 'bastion'];       // Varianten, deren Wirkung je Gebäude gilt
+/* Weiterentwicklung eines Bereichs „geöffnet“: die Technologiekarte, die ihre Forschung öffnet, ist gewählt (Teil 6) */
+KF_BROWSER_BOT.weiterOffen = function(G, bereich){
+  const r = G.weiterResearch(bereich);
+  return !!r && G.ALL_OPTIONS.some(o => o.pfad && (o.pfad.oeffnetForschung || []).includes(r.id) && G.cardTaken(o.id) > 0);
+};
 KF_BROWSER_BOT.aufwerten = function(G, kat, hooks){
   const S = G.S;
   for (let i = 0; i < S.slots.length; i++){
@@ -101,6 +111,8 @@ KF_BROWSER_BOT.aufwerten = function(G, kat, hooks){
     if (!sl || sl.upg) continue;
     const cands = G.variantsFor(i).filter(x => x.kat === kat), v = cands.find(x => x.doktrin) || cands[0];       // Sonderbau der gewählten Doktrin zuerst; er löst eine Grundvariante ab (Teil 5)
     if (!v) continue;
+    // Teil 6 (REQ-K6.08): Ist die Weiterentwicklung geöffnet (Karte gewählt), aber nicht abgeschlossen, wartet der Bot mit dem Aufwerten dieses Bereichs; die Grundvarianten gingen sonst ohne Erstattung verloren
+    if (!v.doktrin && G.weiterResearch(v.basis) && !G.weiterDone(v.basis) && G.researchTier(G.weiterResearch(v.basis).id) === 0 && G.pacing() === 'karten' && KF_BROWSER_BOT.weiterOffen(G, v.basis)) continue;
     // Einschränkung der Doktrin gilt auch für den Bestand (Teil 6, REQ-K6.01): der Bot reißt überzählige Fabriken ab (zuerst ohne Variante, von hinten), damit der Sonderbau frei wird
     if (v.doktrin && G.variantBlock(i, v.id) === 'excess'){
       const cand = S.slots.map((x, k) => ({ x, k })).filter(e => e.x && e.x.type === 'fabrik' && !e.x.upg && e.k !== i).sort((p, q) => (!!p.x.variant - !!q.x.variant) || (q.k - p.k));
