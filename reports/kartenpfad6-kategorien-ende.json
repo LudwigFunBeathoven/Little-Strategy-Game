@@ -1,0 +1,208 @@
+{
+ "diff": "normal",
+ "profile": "durchschnitt",
+ "druck": "aus",
+ "runs": 50,
+ "result": {
+  "militaer": {
+   "n": 50,
+   "karten": {
+    "militaer": {
+     "median": 13,
+     "mittel": 12.92
+    },
+    "wirtschaft": {
+     "median": 1,
+     "mittel": 1.32
+    },
+    "verteidigung": {
+     "median": 1,
+     "mittel": 0.98
+    }
+   },
+   "eigeneMedian": 13,
+   "fuehrend": {
+    "militaer": 1,
+    "wirtschaft": 0,
+    "verteidigung": 0
+   },
+   "synergie": {
+    "waffenbrueder": {
+     "anteil": 0.42,
+     "wertMedian": 0.56,
+     "nMedian": 8
+    },
+    "sammelruf": {
+     "anteil": 0.52,
+     "wertMedian": 4,
+     "nMedian": 8
+    },
+    "gilde": {
+     "anteil": 0,
+     "wertMedian": null,
+     "nMedian": null
+    },
+    "bauordnung": {
+     "anteil": 0,
+     "wertMedian": null,
+     "nMedian": null
+    },
+    "wehrverband": {
+     "anteil": 0,
+     "wertMedian": null,
+     "nMedian": null
+    }
+   }
+  },
+  "wirtschaft": {
+   "n": 50,
+   "karten": {
+    "militaer": {
+     "median": 6,
+     "mittel": 6.44
+    },
+    "wirtschaft": {
+     "median": 17,
+     "mittel": 17.04
+    },
+    "verteidigung": {
+     "median": 4,
+     "mittel": 3.78
+    }
+   },
+   "eigeneMedian": 17,
+   "fuehrend": {
+    "militaer": 0,
+    "wirtschaft": 1,
+    "verteidigung": 0
+   },
+   "synergie": {
+    "waffenbrueder": {
+     "anteil": 0.2,
+     "wertMedian": 0.56,
+     "nMedian": 8
+    },
+    "sammelruf": {
+     "anteil": 0.16,
+     "wertMedian": 4,
+     "nMedian": 8
+    },
+    "gilde": {
+     "anteil": 0.9,
+     "wertMedian": 0.64,
+     "nMedian": 8
+    },
+    "bauordnung": {
+     "anteil": 0.96,
+     "wertMedian": 2,
+     "nMedian": 8
+    },
+    "wehrverband": {
+     "anteil": 0.16,
+     "wertMedian": 0.4,
+     "nMedian": 5
+    }
+   }
+  },
+  "verteidigung": {
+   "n": 50,
+   "karten": {
+    "militaer": {
+     "median": 4,
+     "mittel": 3.78
+    },
+    "wirtschaft": {
+     "median": 3,
+     "mittel": 3.56
+    },
+    "verteidigung": {
+     "median": 19,
+     "mittel": 18.04
+    }
+   },
+   "eigeneMedian": 19,
+   "fuehrend": {
+    "militaer": 0,
+    "wirtschaft": 0,
+    "verteidigung": 1
+   },
+   "synergie": {
+    "waffenbrueder": {
+     "anteil": 0.06,
+     "wertMedian": 0.35000000000000003,
+     "nMedian": 5
+    },
+    "sammelruf": {
+     "anteil": 0.04,
+     "wertMedian": 2,
+     "nMedian": 4
+    },
+    "gilde": {
+     "anteil": 0.12,
+     "wertMedian": 0.48,
+     "nMedian": 6
+    },
+    "bauordnung": {
+     "anteil": 0.1,
+     "wertMedian": 2,
+     "nMedian": 6
+    },
+    "wehrverband": {
+     "anteil": 0.96,
+     "wertMedian": 0.64,
+     "nMedian": 8
+    }
+   }
+  },
+  "ohne": {
+   "n": 50,
+   "karten": {
+    "militaer": {
+     "median": 7,
+     "mittel": 7.48
+    },
+    "wirtschaft": {
+     "median": 5,
+     "mittel": 5.22
+    },
+    "verteidigung": {
+     "median": 4,
+     "mittel": 4.3
+    }
+   },
+   "eigeneMedian": null,
+   "fuehrend": {
+    "militaer": 0.52,
+    "wirtschaft": 0.1,
+    "verteidigung": 0.02
+   },
+   "synergie": {
+    "waffenbrueder": {
+     "anteil": 0.3,
+     "wertMedian": 0.49000000000000005,
+     "nMedian": 7
+    },
+    "sammelruf": {
+     "anteil": 0.32,
+     "wertMedian": 4,
+     "nMedian": 8
+    },
+    "gilde": {
+     "anteil": 0.16,
+     "wertMedian": 0.56,
+     "nMedian": 7
+    },
+    "bauordnung": {
+     "anteil": 0.26,
+     "wertMedian": 2,
+     "nMedian": 6
+    },
+    "wehrverband": {
+     "anteil": 0.26,
+     "wertMedian": 0.4,
+     "nMedian": 5
+    }
+   }
+  }
+ }
+}
