@@ -6,7 +6,7 @@ Doktrinen im Paarvergleich 100 Partien je Arm (Normal) und 50 je Arm (Schwer, si
 „Vorher“ ist der Stand von `exp/kartenpfad` nach Teil 5 (Commit `40de382`), gemessen in Q.0 mit denselben Seeds.
 
 ## Ergebnis
-Alle acht Anforderungen sind umgesetzt, K6.07 (Soll) mit vier von vier bis sechs Ausbauten: @@TESTS@@ Der Modus `standard` ist unverändert (Golden-Test), die Spielstand-Version steht auf 11.
+Alle acht Anforderungen sind umgesetzt, K6.07 (Soll) mit vier von vier bis sechs Ausbauten: 413 Unit-Tests und 629 Browser-Prüfpunkte (fünf Suiten) sind grün. Der Modus `standard` ist unverändert (Golden-Test), die Spielstand-Version steht auf 11.
 Der Bot ohne Kategorie erreicht die Zielwerte aus Teil 5 weiter: Normal, „durchschnitt“ braucht 15 Wahlen und 15:01 min (vorher 14 und 13:35), Schwer, „durchschnitt“ gewinnt 88 % (vorher 86 %), die Doktrin erscheint im Median in 5 Angeboten und zuerst in Wahl 4 (vorher 4 und 5);
 die sichtbaren Bedienelemente bei Minute 10 sinken von 62 / 59 auf 54 / 53.
 Zwei Zielwerte verfehle ich: Die Mediane der Partiedauer der drei Kategorie-Bots liegen auf Normal 9:11 min auseinander (Ziel 3 min, nach Teil 5 waren es 3:28), und die Patt-Quote liegt mit `?druck=hoch` bei 2,3 % (Bot ohne Kategorie und Verteidigungs-Bot; Ziel höchstens 2 %).
@@ -95,7 +95,112 @@ Ohne Doktrinen und Brücken stehen 16 Militär-, 9 Wirtschafts- und 7 Verteidigu
 Grundlagen ohne Karte: Turm bauen, Mauerausbau, Quartiere (Kaserne-Ausbau), Presse, Schmiede bis Stufe 3 (`tests/ausbauten6.test.mjs`).
 Gestrichen für Platz im Pool: Weitschuss, Sappeure, Zinnen, Notreserve, Werkmeister, Instandhaltung, Lange Wurfarme (Teil 6, K6.03) und Verbrannte Erde (K6.07); Vorschlag, der PO kann tauschen (`KF_PFAD.entfallenKarten`).
 
-@@TABELLEN@@
+## Kennzahlen der Serie
+Tabellen aus `node tools/bericht-p6.mjs`; Rohdaten unter `reports/kartenpfad6-*`. Der Bot ohne Kategorie ist der vierte Bot der Anforderung (Pfadreihenfolge, kein Budget).
+
+### Bot ohne Kategorie: vorher (nach Teil 5) und nachher (50 Partien je Feld, gleiche Seeds)
+
+| Grad | Profil | Siege vorher → nachher | Patt nachher | Dauer Median vorher → nachher | Wahlen Median vorher → nachher | Doktrin-Angebote Median (erstes in Wahl) | Partien ohne Doktrin-Angebot |
+|---|---|---|---|---|---|---|---|
+| Leicht | aktiv | 100 → 100 % | 0 % | 12:45 → 12:46 | 11 → 11 | 4 (4) | 0 % |
+| Leicht | durchschnitt | 100 → 100 % | 0 % | 14:13 → 15:00 | 12 → 12 | 5 (4) | 0 % |
+| Leicht | gelegentlich | 100 → 96 % | 4 % | 19:23 → 19:43 | 15 → 15 | 5 (4) | 0 % |
+| Normal | aktiv | 100 → 100 % | 0 % | 12:58 → 13:49 | 12 → 13 | 4 (4) | 0 % |
+| Normal | durchschnitt | 100 → 100 % | 0 % | 13:35 → 15:01 | 14 → 15 | 5 (4) | 0 % |
+| Normal | gelegentlich | 100 → 90 % | 2 % | 20:21 → 18:48 | 18 → 16 | 6 (5) | 0 % |
+| Schwer | aktiv | 100 → 100 % | 0 % | 12:18 → 12:00 | 15 → 15 | 5 (4) | 0 % |
+| Schwer | durchschnitt | 86 → 88 % | 0 % | 13:19 → 12:49 | 17 → 16 | 5 (4) | 12 % |
+| Schwer | gelegentlich | 0 → 0 % | 0 % | 1:29 → 1:29 | 0 → 0 | 0 (–) | 100 % |
+
+### Bot ohne Kategorie mit `?druck=hoch` (Normal, Schwer)
+
+| Grad | Profil | Siege | Patt | Dauer Median | Wahlen Median |
+|---|---|---|---|---|---|
+| Normal | aktiv | 100 % | 0 % | 13:50 | 13 |
+| Normal | durchschnitt | 98 % | 0 % | 15:21 | 15 |
+| Normal | gelegentlich | 82 % | 14 % | 19:17 | 17 |
+| Schwer | aktiv | 100 % | 0 % | 12:25 | 15 |
+| Schwer | durchschnitt | 88 % | 0 % | 12:40 | 16 |
+| Schwer | gelegentlich | 0 % | 0 % | 1:29 | 0 |
+
+### Kategorie-Bots (Profil durchschnitt, 50 Partien je Zeile)
+
+| Grad | Druck | Bot | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median | Dampfkraft / Buchdruck (Anteil, Abschluss Median) | ersetzte Varianten je Partie mit Weiterentwicklung |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Normal | aus | Militär | 100 % | 0 % | 0 % | 11:38 | 15:21 | 12 | 2 % 14:06 / 2 % 8:58 | 0,5 |
+| Normal | aus | Wirtschaft | 98 % | 2 % | 0 % | 17:11 | 21:30 | 21 | 60 % 14:31 / 60 % 15:18 | 3,1 |
+| Normal | aus | Verteidigung | 100 % | 0 % | 0 % | 20:49 | 23:51 | 21 | 28 % 16:59 / 36 % 18:27 | 0,3 |
+| Normal | hoch | Militär | 100 % | 0 % | 0 % | 11:26 | 15:31 | 12 | 4 % 15:12 / 0 % – | 1,0 |
+| Normal | hoch | Wirtschaft | 94 % | 2 % | 4 % | 17:24 | 27:10 | 22 | 74 % 14:11 / 72 % 15:13 | 2,3 |
+| Normal | hoch | Verteidigung | 88 % | 0 % | 12 % | 22:22 | 30:00 | 24 | 46 % 20:10 / 44 % 22:06 | 0,3 |
+| Schwer | aus | Militär | 84 % | 14 % | 2 % | 10:01 | 12:42 | 12 | 2 % 10:58 / 2 % 18:16 | 0,0 |
+| Schwer | aus | Wirtschaft | 86 % | 14 % | 0 % | 16:07 | 21:21 | 20 | 64 % 13:26 / 62 % 14:00 | 2,0 |
+| Schwer | aus | Verteidigung | 90 % | 10 % | 0 % | 17:24 | 22:14 | 21 | 36 % 15:52 / 40 % 14:51 | 0,5 |
+| Schwer | hoch | Militär | 86 % | 14 % | 0 % | 10:12 | 12:50 | 12 | 0 % – / 8 % 10:33 | 0,0 |
+| Schwer | hoch | Wirtschaft | 84 % | 16 % | 0 % | 15:41 | 25:00 | 20 | 58 % 13:28 / 58 % 14:18 | 2,2 |
+| Schwer | hoch | Verteidigung | 88 % | 10 % | 2 % | 18:20 | 24:55 | 21 | 40 % 17:59 / 34 % 13:40 | 0,3 |
+
+Spannweite der Dauer-Mediane (größter minus kleinster Bot): normal/aus 9:11, normal/hoch 10:56, schwer/aus 7:23, schwer/hoch 8:08
+
+### Kategorie-Bots, alle Profile (ohne Druck)
+
+| Grad | Profil | Militär Siege / Dauer / Wahlen | Wirtschaft Siege / Dauer / Wahlen | Verteidigung Siege / Dauer / Wahlen |
+|---|---|---|---|---|
+| Normal | aktiv | 100 % / 11:08 / 11 | 98 % / 16:29 / 20 | 100 % / 15:58 / 17 |
+| Normal | durchschnitt | 100 % / 11:38 / 12 | 98 % / 17:11 / 21 | 100 % / 20:49 / 21 |
+| Normal | gelegentlich | 100 % / 11:34 / 12 | 86 % / 17:37 / 22 | 94 % / 19:37 / 20 |
+| Schwer | aktiv | 96 % / 10:02 / 12 | 98 % / 14:41 / 19 | 100 % / 13:55 / 18 |
+| Schwer | durchschnitt | 84 % / 10:01 / 12 | 86 % / 16:07 / 20 | 90 % / 17:24 / 21 |
+| Schwer | gelegentlich | 0 % / 1:29 / 0 | 0 % / 1:29 / 0 | 0 % / 1:29 / 0 |
+
+### Doktrinen im Paarvergleich (Normal, durchschnitt, 100 Partien je Arm, gleiche Seeds)
+
+| Doktrin | Kategorie des Bots | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Wahlen Median mit / ohne | Mauerverlust mit / ohne | Turm-Abschüsse mit / ohne | gewählt (Arm mit) | Sonderbau gebaut |
+|---|---|---|---|---|---|---|---|---|---|---|
+| zunftordnung | wirtschaft | 100 % | 100 % | 0 | 16:17 / 15:56 | 20 / 20 | 53 / 6 | 0.6 / 0.3 | 100 % | 100 % |
+| stiftung | wirtschaft | 99 % | 100 % | -1 | 15:57 / 15:56 | 20 / 20 | 82 / 6 | 0.5 / 0.3 | 100 % | 100 % |
+| stehendesHeer | militaer | 100 % | 100 % | 0 | 11:55 / 10:57 | 12 / 11 | 55 / 82 | 0.3 / 0.3 | 100 % | 100 % |
+| vorstoss | militaer | 100 % | 100 % | 0 | 11:33 / 10:57 | 12 / 11 | 68 / 82 | 0.3 / 0.3 | 100 % | – |
+| bollwerk | verteidigung | 85 % | 96 % | -11 | 24:28 / 23:06 | 26 / 26 | 106 / 57 | 37.2 / 25 | 100 % | 100 % |
+| ausfall | verteidigung | 100 % | 96 % | +4 | 20:19 / 23:06 | 22 / 26 | 31 / 57 | 4.7 / 25 | 100 % | – |
+| elite | militaer | 100 % | 100 % | 0 | 9:42 / 10:57 | 11 / 11 | 18 / 82 | 0.3 / 0.3 | 100 % | – |
+| massenaufgebot | militaer | 100 % | 100 % | 0 | 12:05 / 10:57 | 12 / 11 | 54 / 82 | 0.4 / 0.3 | 100 % | – |
+| freihandel | wirtschaft | 97 % | 100 % | -3 | 20:20 / 15:56 | 26 / 20 | 137 / 6 | 0.4 / 0.3 | 100 % | – |
+| raubbau | wirtschaft | 100 % | 100 % | 0 | 14:56 / 15:56 | 18 / 20 | 17 / 6 | 0.3 / 0.3 | 100 % | – |
+| fabrikmiliz | wirtschaft | 99 % | 100 % | -1 | 16:47 / 15:56 | 21 / 20 | 24 / 6 | 0.4 / 0.3 | 100 % | – |
+| grenzfeste | verteidigung | 91 % | 96 % | -5 | 23:20 / 23:06 | 26 / 26 | 165 / 57 | 29.5 / 25 | 100 % | – |
+| zermuerbung | verteidigung | 87 % | 96 % | -9 | 24:20 / 23:06 | 27 / 26 | 86 / 57 | 38.8 / 25 | 100 % | – |
+
+### Angebote mit Doktrin (Normal; Arm „alle“: alle 13 Doktrinen im Pool, Kategorie-Bot)
+
+| Kategorie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt (Mittel) | erstes Angebot in Wahl (Median) | erste Doktrin gewählt in Wahl (Median) | Partien ohne Angebot |
+|---|---|---|---|---|---|---|
+| militaer | 100 % | 3 (3,1) | 1,5 | 4 | 5 | 0 % |
+| wirtschaft | 99 % | 3 (3,7) | 2,0 | 4 | 6 | 0 % |
+| verteidigung | 89 % | 4 (4,1) | 1,9 | 4 | 5 | 0 % |
+
+Gewählt je Doktrin (Anteil der Partien je Kategorie-Bot: Militär / Wirtschaft / Verteidigung):
+
+zunftordnung 0 / 31 / 2 %, stiftung 0 / 29 / 0 %, stehendesHeer 25 / 1 / 0 %, vorstoss 31 / 4 / 1 %, bollwerk 0 / 0 / 40 %, ausfall 0 / 1 / 45 %, elite 44 / 3 / 3 %, massenaufgebot 24 / 0 / 2 %, freihandel 0 / 31 / 2 %, raubbau 0 / 29 / 0 %, fabrikmiliz 29 / 31 / 3 %, grenzfeste 1 / 38 / 53 %, zermuerbung 0 / 0 / 38 %
+
+### Karten je Kategorie bei Partieende (normal, durchschnitt, druck aus, 50 Partien je Bot; Median, Mittel in Klammern)
+
+| Bot | Militär | Wirtschaft | Verteidigung | führende Kategorie (Anteil der Partien: Militär / Wirtschaft / Verteidigung) |
+|---|---|---|---|---|
+| Militär | 13 (12,9) | 1 (1,3) | 1 (1,0) | 100 % / 0 % / 0 % |
+| Wirtschaft | 6 (6,4) | 17 (17,0) | 4 (3,8) | 0 % / 100 % / 0 % |
+| Verteidigung | 4 (3,8) | 3 (3,6) | 19 (18,0) | 0 % / 0 % / 100 % |
+| ohne Kategorie | 7 (7,5) | 5 (5,2) | 4 (4,3) | 52 % / 10 % / 2 % |
+
+### Synergiekarten am Partieende (Anteil der Partien mit der Karte · Wert im Median · gezählte Karten im Median)
+
+| Bot | waffenbrueder | sammelruf | gilde | bauordnung | wehrverband |
+|---|---|---|---|---|---|
+| Militär | 42 % · +56 % · 8 | 52 % · +4 Läufer · 8 | 0 % | 0 % | 0 % |
+| Wirtschaft | 20 % · +56 % · 8 | 16 % · +4 Läufer · 8 | 90 % · +64 % · 8 | 96 % · ×2,0 · 8 | 16 % · +40 % · 5 |
+| Verteidigung | 6 % · +35 % · 5 | 4 % · +2 Läufer · 4 | 12 % · +48 % · 6 | 10 % · ×2,0 · 6 | 96 % · +64 % · 8 |
+| ohne Kategorie | 30 % · +49 % · 7 | 32 % · +4 Läufer · 8 | 16 % · +56 % · 7 | 26 % · ×2,0 · 6 | 26 % · +40 % · 5 |
+
 
 ## Auffälligkeiten (berichtet, nicht wegbalanciert)
 1. **Die Kategorie-Bots enden weit auseinander, weil nur Militär die Basis beschleunigt.** Normal, „durchschnitt“: Militär 11:38, Wirtschaft 17:11, Verteidigung 20:49 min (nach Teil 5: 10:32, 14:12, 13:35). Alle drei Bots wählen ihre Kategorie stur; die Karten, die den Schaden an der gegnerischen Basis erhöhen
