@@ -1,5 +1,17 @@
 # Änderungen
 
+## v0.9.2-kartenpfad-6 – Branch `exp/kartenpfad`, Teil 6 (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad-6.md`, Bericht `docs/bericht-kartenpfad-6.md`, Testleitfaden `docs/testleitfaden-kartenpfad-6.md`. **Spielstand-Version 11: ältere Spielstände werden verworfen.** Der Modus `standard` ist unverändert (Golden-Test `tests/unveraendert.test.mjs`).
+- **Fehler behoben (Zunfthaus):** Die Einschränkung einer Doktrin gilt ab der Wahl, auch für Gebäude, die schon stehen; der Sonderbau bleibt gesperrt, bis die Grenze erfüllt ist.
+- **Strategielinien entfallen:** keine Zeichen, keine Linienstufen, keine Anzeige „Linien“. Die Regeln der Linienstufen sind Karten (Querverbindung, Lagerzehnt, Söldnertruppe, Rekrutenzug, Durchbruch, Plünderung); „Ausbruch“ gehört zur Doktrin Ausfall.
+- **Kategorien und Synergiekarten:** Jede Karte trägt eine Kategorie (Wirtschaft, Militär, Verteidigung; Brücken zählen für zwei). Acht Synergiekarten wirken nach der Zahl der Karten einer Kategorie (höchstens acht zählen) und zeigen ihren Wert auf der Karte. Die führende Kategorie erscheint doppelt so oft; jedes Angebot enthält eine Karte einer anderen Kategorie. Pool: 38 Karten ohne Doktrinen.
+- **Doktrinen:** Statt „spätestens jede dritte Wahl“ würfelt jedes Angebot ab Wahl 3 mit 15 % eine Doktrin (+15 Prozentpunkte je Angebot ohne Doktrin). Sieben neue Doktrinen (Elite, Massenaufgebot, Freihandel, Raubbau, Fabrikmiliz, Grenzfeste, Zermürbung), 13 insgesamt, höchstens zwei je Partie.
+- **Weiterentwicklungen:** Dampfkraft (Fabriken werden zu Dampfmühlen: Ertrag +40 %, Klickertrag ×2) und Buchdruck (Forschungen halb so lang, Budgetkurs ×1,5) ersetzen die Grundvarianten des Gebäudes ohne Erstattung; Sonderbauten bleiben. Der Tooltip der Forschung nennt die Zahl der ersetzten Varianten.
+- **Ausbauten als Karten:** Turmschule, Stachelwall, Zinsmeister (Handelskontor) und Maurerkolonne ersetzen die Ausbauten Reichweite, Feuerrate, Stachelwall, Mörtelkolonne und Kontor-Ausbau. Verbrannte Erde ist gestrichen.
+- **Protokoll Format 3:** Kategorie je gewählter Karte, Karten je Kategorie, Werte der Synergiekarten, Weiterentwicklungen, p des Doktrin-Faktors je Wahl.
+- **Bots und Messung:** Kategorie-Bots statt Linien-Bots; `tools/messung-p6.mjs`, `tools/bedienelemente.mjs`. Sichtbare Bedienelemente bei Minute 10: 54 / 53 (vorher 62 / 59).
+- Behoben nebenbei: Pfadforschungen zeigten im Tooltip den rohen Schlüssel `research.branchOf.pfad`.
+
 ## v0.9.2-kartenpfad-5 – Branch `exp/kartenpfad`, Teil 5 (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-5.md`, Bericht `docs/bericht-kartenpfad-5.md`, Testleitfaden `docs/testleitfaden-kartenpfad-5.md`. **Spielstand-Version 10: ältere Spielstände werden verworfen.** Der Modus `standard` ist unverändert (Golden-Test).
 - **Grundausstattung ab Start:** Fabrik, Kaserne, Schmiede, Universität, Kontor, Läufer, Werfer, Türme und alle Ausbauten gibt es ohne Karte; die Bau-Karten (auch Echtes Militär) entfallen. Die Versorgung wächst nur durch Kauf (Kaserne-Ausbau „Quartiere“, +2 je Stufe) oder Doktrin. Befestigungskunde öffnet zwei neue Forschungen (Wehrgang, Schießscharten).
