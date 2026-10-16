@@ -183,6 +183,36 @@ Gewählt je Doktrin (Anteil der Partien je Kategorie-Bot: Militär / Wirtschaft 
 
 zunftordnung 0 / 31 / 2 %, stiftung 0 / 29 / 0 %, stehendesHeer 25 / 1 / 0 %, vorstoss 31 / 4 / 1 %, bollwerk 0 / 0 / 40 %, ausfall 0 / 1 / 45 %, elite 44 / 3 / 3 %, massenaufgebot 24 / 0 / 2 %, freihandel 0 / 31 / 2 %, raubbau 0 / 29 / 0 %, fabrikmiliz 29 / 31 / 3 %, grenzfeste 1 / 38 / 53 %, zermuerbung 0 / 0 / 38 %
 
+### Doktrinen im Paarvergleich (Schwer, durchschnitt, 50 Partien je Arm, gleiche Seeds)
+
+| Doktrin | Kategorie des Bots | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Wahlen Median mit / ohne | Mauerverlust mit / ohne | Turm-Abschüsse mit / ohne | gewählt (Arm mit) | Sonderbau gebaut |
+|---|---|---|---|---|---|---|---|---|---|---|
+| zunftordnung | wirtschaft | 94 % | 94 % | 0 | 16:20 / 15:41 | 21 / 20 | 539 / 539 | 10.7 / 10.7 | 94 % | 94 % |
+| stiftung | wirtschaft | 94 % | 94 % | 0 | 16:36 / 15:41 | 21 / 20 | 539 / 539 | 10.7 / 10.7 | 94 % | 92 % |
+| stehendesHeer | militaer | 92 % | 92 % | 0 | 10:18 / 10:11 | 13 / 12 | 569 / 591 | 10.8 / 10.8 | 92 % | 92 % |
+| vorstoss | militaer | 90 % | 92 % | -2 | 10:01 / 10:11 | 12 / 12 | 585 / 591 | 10.8 / 10.8 | 92 % | – |
+| bollwerk | verteidigung | 94 % | 96 % | -2 | 17:34 / 16:41 | 22 / 21 | 665 / 569 | 34.9 / 14.8 | 96 % | 96 % |
+| ausfall | verteidigung | 96 % | 96 % | 0 | 16:13 / 16:41 | 20 / 21 | 525 / 569 | 11.8 / 14.8 | 96 % | – |
+| elite | militaer | 92 % | 92 % | 0 | 8:55 / 10:11 | 11 / 12 | 556 / 591 | 10.8 / 10.8 | 92 % | – |
+| massenaufgebot | militaer | 90 % | 92 % | -2 | 10:36 / 10:11 | 13 / 12 | 618 / 591 | 10.8 / 10.8 | 92 % | – |
+| freihandel | wirtschaft | 88 % | 94 % | -6 | 21:02 / 15:41 | 27 / 20 | 741 / 539 | 11 / 10.7 | 94 % | – |
+| raubbau | wirtschaft | 94 % | 94 % | 0 | 15:27 / 15:41 | 19 / 20 | 547 / 539 | 10.7 / 10.7 | 94 % | – |
+| fabrikmiliz | wirtschaft | 94 % | 94 % | 0 | 16:49 / 15:41 | 21 / 20 | 557 / 539 | 10.7 / 10.7 | 94 % | – |
+| grenzfeste | verteidigung | 94 % | 96 % | -2 | 16:53 / 16:41 | 21 / 21 | 603 / 569 | 24.6 / 14.8 | 96 % | – |
+| zermuerbung | verteidigung | 96 % | 96 % | 0 | 16:39 / 16:41 | 21 / 21 | 567 / 569 | 16.9 / 14.8 | 96 % | – |
+
+### Angebote mit Doktrin (Schwer; Arm „alle“: alle 13 Doktrinen im Pool, Kategorie-Bot)
+
+| Kategorie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt (Mittel) | erstes Angebot in Wahl (Median) | erste Doktrin gewählt in Wahl (Median) | Partien ohne Angebot |
+|---|---|---|---|---|---|---|
+| militaer | 90 % | 3 (2,9) | 1,4 | 4 | 6 | 8 % |
+| wirtschaft | 92 % | 3 (3,5) | 1,9 | 4 | 6 | 6 % |
+| verteidigung | 92 % | 4 (3,9) | 1,8 | 4 | 6 | 4 % |
+
+Gewählt je Doktrin (Anteil der Partien je Kategorie-Bot: Militär / Wirtschaft / Verteidigung):
+
+zunftordnung 0 / 28 / 0 %, stiftung 0 / 30 / 2 %, stehendesHeer 28 / 2 / 2 %, vorstoss 24 / 2 / 2 %, bollwerk 0 / 2 / 38 %, ausfall 0 / 0 / 36 %, elite 22 / 0 / 2 %, massenaufgebot 28 / 0 / 2 %, freihandel 0 / 14 / 2 %, raubbau 0 / 28 / 0 %, fabrikmiliz 36 / 36 / 2 %, grenzfeste 2 / 44 / 46 %, zermuerbung 0 / 0 / 48 %
+
 ### Karten je Kategorie bei Partieende (normal, durchschnitt, druck aus, 50 Partien je Bot; Median, Mittel in Klammern)
 
 | Bot | Militär | Wirtschaft | Verteidigung | führende Kategorie (Anteil der Partien: Militär / Wirtschaft / Verteidigung) |
@@ -215,6 +245,7 @@ zunftordnung 0 / 31 / 2 %, stiftung 0 / 29 / 0 %, stehendesHeer 25 / 1 / 0 %, vo
    Bei Partien von 17 min nützt eine Dampfmühle nach 14:31 min wenig (+40 % Ertrag für die letzten drei Minuten); der Verlust der Manufakturen trifft früher. Frage 4 im Testleitfaden prüft, ob Menschen warten.
 5. **Doktrinen im Paarvergleich (Normal).** Elite macht die Partie schneller (9:42 gegen 10:57 min, Mauerverlust 18 gegen 82). Bollwerk (−11 pp), Zermürbung (−9 pp), Grenzfeste (−5 pp) und Freihandel (−3 pp) verlieren Siege und Zeit, alle mit dem Verteidigungs- bzw. Wirtschafts-Bot und teils mit `?druck=hoch`;
    Freihandel dehnt die Partie von 15:56 auf 20:20 min und kostet Mauer (137 gegen 6). Die Bots nutzen den Tausch nur mit Überschuss. Die Einschränkung ist dort die eigentliche Wirkung; ob sie sich als Entscheidung anfühlt, zeigt der Spieltest.
+   Schwer (50 Partien je Arm): Elite wieder schneller (8:55 gegen 10:11 min), Freihandel −6 pp bei 21:02 gegen 15:41 min; alle übrigen Differenzen höchstens ±2 pp.
    Die Differenzen in der Siegquote sind klein, weil Normal fast nur Siege liefert; Dauer, Wahlen und Mauerverlust tragen die Aussage (Auffälligkeit aus Teil 5, unverändert).
 6. **Pool nach Kategorie ungleich.** Ohne Brücken und Doktrinen: Militär 16, Wirtschaft 9, Verteidigung 7 Karten. Das erklärt zum Teil, warum der Verteidigungs-Bot seine Karten früher aufbraucht: Er wählt seine Kategorie-Karten in 58–71 % der Angebote, die Doktrinen in 100 %. Die Wahlrate ist für Kategorie-Bots deshalb kein Maß (Hinweis zu K5.06).
 7. **Wahlraten (Bot ohne Kategorie).** Alle Teil-6-Karten liegen zwischen 5 und 60 %; außerhalb liegen nur drei Technologie-Karten der Pfadreihenfolge (Fortgeschrittene Taktiken 100 %, Eiserne Klingen 92 %, Befestigungskunde 73 %, unverändert gegenüber Teil 5).

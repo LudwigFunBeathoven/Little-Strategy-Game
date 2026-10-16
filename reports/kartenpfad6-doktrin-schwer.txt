@@ -1,0 +1,29 @@
+fertig in 1897 s, 1450 Partien
+
+DOKTRINEN – Paarvergleich (einheiten-zuerst, schwer/durchschnitt, 50 Partien je Arm, gleiche Seeds, druck: nur Verteidigung hoch, Modus karten)
+
+| Doktrin | Kategorie | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Wahlen Median mit / ohne | Mauer-Verlust mit / ohne | Turm-Abschüsse mit / ohne | Sonderbau gebaut (mit) |
+|---|---|---|---|---|---|---|---|---|---|
+| zunftordnung | wirtschaft | 94 % | 94 % | 0 | 16:20 / 15:41 | 21 / 20 | 539 / 539 | 10.7 / 10.7 | 94 % (gewählt 94 %, Differenz bei Wahl +6) |
+| stiftung | wirtschaft | 94 % | 94 % | 0 | 16:36 / 15:41 | 21 / 20 | 539 / 539 | 10.7 / 10.7 | 92 % (gewählt 94 %, Differenz bei Wahl +6) |
+| stehendesHeer | militaer | 92 % | 92 % | 0 | 10:18 / 10:11 | 13 / 12 | 569 / 591 | 10.8 / 10.8 | 92 % (gewählt 92 %, Differenz bei Wahl +8) |
+| vorstoss | militaer | 90 % | 92 % | -2 | 10:01 / 10:11 | 12 / 12 | 585 / 591 | 10.8 / 10.8 | – (gewählt 92 %, Differenz bei Wahl +5.8) |
+| bollwerk | verteidigung | 94 % | 96 % | -2 | 17:34 / 16:41 | 22 / 21 | 665 / 569 | 34.9 / 14.8 | 96 % (gewählt 96 %, Differenz bei Wahl +1.9) |
+| ausfall | verteidigung | 96 % | 96 % | 0 | 16:13 / 16:41 | 20 / 21 | 525 / 569 | 11.8 / 14.8 | – (gewählt 96 %, Differenz bei Wahl +4) |
+| elite | militaer | 92 % | 92 % | 0 | 8:55 / 10:11 | 11 / 12 | 556 / 591 | 10.8 / 10.8 | – (gewählt 92 %, Differenz bei Wahl +8) |
+| massenaufgebot | militaer | 90 % | 92 % | -2 | 10:36 / 10:11 | 13 / 12 | 618 / 591 | 10.8 / 10.8 | – (gewählt 92 %, Differenz bei Wahl +5.8) |
+| freihandel | wirtschaft | 88 % | 94 % | -6 | 21:02 / 15:41 | 27 / 20 | 741 / 539 | 11.0 / 10.7 | – (gewählt 94 %, Differenz bei Wahl -0.4) |
+| raubbau | wirtschaft | 94 % | 94 % | 0 | 15:27 / 15:41 | 19 / 20 | 547 / 539 | 10.7 / 10.7 | – (gewählt 94 %, Differenz bei Wahl +6) |
+| fabrikmiliz | wirtschaft | 94 % | 94 % | 0 | 16:49 / 15:41 | 21 / 20 | 557 / 539 | 10.7 / 10.7 | – (gewählt 94 %, Differenz bei Wahl +6) |
+| grenzfeste | verteidigung | 94 % | 96 % | -2 | 16:53 / 16:41 | 21 / 21 | 603 / 569 | 24.6 / 14.8 | – (gewählt 96 %, Differenz bei Wahl +1.9) |
+| zermuerbung | verteidigung | 96 % | 96 % | 0 | 16:39 / 16:41 | 21 / 21 | 567 / 569 | 16.9 / 14.8 | – (gewählt 96 %, Differenz bei Wahl +4) |
+
+Angebote mit Doktrin (Arm „alle“: alle Doktrinen im Pool, Kategorie-Bot)
+
+| Kategorie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt Mittel | Erste Doktrin gewählt in Wahl (Median) | Erstes Angebot mit Doktrin in Wahl (Median) | Partien ohne Doktrin-Angebot | Unterhalt Median (Material) |
+|---|---|---|---|---|---|---|---|
+| militaer | 90 % | 3 (2.9) | 1.4 | 6 | 4 | 8 % | 0 |
+| wirtschaft | 92 % | 3 (3.5) | 1.9 | 6 | 4 | 6 % | 0 |
+| verteidigung | 92 % | 4 (3.9) | 1.8 | 6 | 4 | 4 % | 0 |
+
+Gewählt je Doktrin (Anteil der Partien): [{"zunftordnung":0,"stiftung":0,"stehendesHeer":28,"vorstoss":24,"bollwerk":0,"ausfall":0,"elite":22,"massenaufgebot":28,"freihandel":0,"raubbau":0,"fabrikmiliz":36,"grenzfeste":2,"zermuerbung":0},{"zunftordnung":28,"stiftung":30,"stehendesHeer":2,"vorstoss":2,"bollwerk":2,"ausfall":0,"elite":0,"massenaufgebot":0,"freihandel":14,"raubbau":28,"fabrikmiliz":36,"grenzfeste":44,"zermuerbung":0},{"zunftordnung":0,"stiftung":2,"stehendesHeer":2,"vorstoss":2,"bollwerk":38,"ausfall":36,"elite":2,"massenaufgebot":2,"freihandel":2,"raubbau":0,"fabrikmiliz":2,"grenzfeste":46,"zermuerbung":48}]

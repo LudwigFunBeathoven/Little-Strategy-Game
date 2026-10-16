@@ -51,7 +51,8 @@ for (const diff of ['normal', 'schwer']) for (const profile of ['aktiv', 'durchs
 
 for (const [name, titel] of [['doktrin-normal', 'Normal'], ['doktrin-schwer', 'Schwer']]){
   const d = load(name); if (!d || !d.doktrin) continue;
-  console.log(`\n### Doktrinen im Paarvergleich (${titel}, durchschnitt, ${d.runs === undefined ? '' : ''}100 Partien je Arm, gleiche Seeds)\n`);
+  const armN = (d.roh || []).filter(r => r.arm === 'mit' && r.variant === d.doktrin[0].doktrin).length;       // Partien je Arm
+  console.log(`\n### Doktrinen im Paarvergleich (${titel}, durchschnitt, ${armN} Partien je Arm, gleiche Seeds)\n`);
   console.log(row('Doktrin', 'Kategorie des Bots', 'Siege mit', 'Siege ohne', 'Differenz (pp)', 'Dauer Median mit / ohne', 'Wahlen Median mit / ohne', 'Mauerverlust mit / ohne', 'Turm-Abschüsse mit / ohne', 'gewählt (Arm mit)', 'Sonderbau gebaut'));
   console.log('|---|---|---|---|---|---|---|---|---|---|---|');
   for (const x of d.doktrin) console.log(row(x.doktrin, x.kat, `${x.mit} %`, `${x.ohne} %`, `${x.differenz > 0 ? '+' : ''}${x.differenz}`, `${mm(x.dauerMit)} / ${mm(x.dauerOhne)}`, `${x.wahlenMit} / ${x.wahlenOhne}`, `${x.mauerMit} / ${x.mauerOhne}`, `${x.turmMit} / ${x.turmOhne}`, x.gewaehlt == null ? '–' : `${x.gewaehlt} %`, x.sonderbauGebaut == null ? '–' : `${x.sonderbauGebaut} %`));
