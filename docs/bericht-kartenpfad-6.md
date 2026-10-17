@@ -6,12 +6,13 @@ Doktrinen im Paarvergleich 100 Partien je Arm (Normal) und 50 je Arm (Schwer, si
 „Vorher“ ist der Stand von `exp/kartenpfad` nach Teil 5 (Commit `40de382`), gemessen in Q.0 mit denselben Seeds.
 
 ## Ergebnis
-Alle acht Anforderungen sind umgesetzt, K6.07 (Soll) mit vier von vier bis sechs Ausbauten: 413 Unit-Tests und 629 Browser-Prüfpunkte (fünf Suiten) sind grün. Der Modus `standard` ist unverändert (Golden-Test), die Spielstand-Version steht auf 11.
+Alle acht Anforderungen sind umgesetzt, K6.07 (Soll) mit vier von vier bis sechs Ausbauten: 415 Unit-Tests und 629 Browser-Prüfpunkte (fünf Suiten) sind grün. Der Modus `standard` ist unverändert (Golden-Test), die Spielstand-Version steht auf 11.
 Der Bot ohne Kategorie erreicht die Zielwerte aus Teil 5 weiter: Normal, „durchschnitt“ braucht 15 Wahlen und 15:01 min (vorher 14 und 13:35), Schwer, „durchschnitt“ gewinnt 88 % (vorher 86 %), die Doktrin erscheint im Median in 5 Angeboten und zuerst in Wahl 4 (vorher 4 und 5);
 die sichtbaren Bedienelemente bei Minute 10 sinken von 62 / 59 auf 54 / 53.
 Zwei Zielwerte verfehle ich: Die Mediane der Partiedauer der drei Kategorie-Bots liegen auf Normal 9:11 min auseinander (Ziel 3 min, nach Teil 5 waren es 3:28), und die Patt-Quote liegt mit `?druck=hoch` bei 2,3 % (Bot ohne Kategorie und Verteidigungs-Bot; Ziel höchstens 2 %).
 Beides hat dieselbe Ursache: Nur Militär-Karten beschleunigen die Zerstörung der gegnerischen Basis. Gibt man dem Verteidigungs- oder Wirtschafts-Bot Durchbruch (doppelter Schaden an der Basis) von Beginn an, sinkt seine Dauer von 20:35 auf 12:17 bzw. von 17:11 auf 11:57 min.
 Ob und wie die beiden anderen Kategorien einen Abschluss bekommen, ist eine Entscheidung des PO (Abschnitt „Offen für den PO“); ich habe nichts nachgestellt.
+Nachtrag Debugging: Testspiele auf Branch und `main` fanden einen Fehler in der Formation (hintere Reihen außerhalb des Feldes); er ist auf dem Branch behoben, für `main` liegt ein Vorschlag vor (Abschnitt „Debugging und Testspiele“).
 
 ## Zielwerte im Überblick (REQ-K6.08)
 | Kennzahl | Zielwert | Ergebnis |
@@ -251,6 +252,62 @@ zunftordnung 0 / 28 / 0 %, stiftung 0 / 30 / 2 %, stehendesHeer 28 / 2 / 2 %, vo
 7. **Wahlraten (Bot ohne Kategorie).** Alle Teil-6-Karten liegen zwischen 5 und 60 %; außerhalb liegen nur drei Technologie-Karten der Pfadreihenfolge (Fortgeschrittene Taktiken 100 %, Eiserne Klingen 92 %, Befestigungskunde 73 %, unverändert gegenüber Teil 5).
 8. **Einmaliger Zeitüberschuss in der Browser-Prüfung.** Ein Lauf von `tests/browser-check.mjs` brach im Tutorial-Schritt „Karte“ mit einem Zeitüberschuss (120 s) ab; derselbe Lauf wiederholt war grün (406 Prüfpunkte). Eine Ursache habe ich nicht gefunden. Die Maschine war zu dieser Zeit mit weiteren Läufen belegt.
 
+## Debugging und Testspiele (nach Teil 6, Branch und `main`)
+Geprüft wurden `exp/kartenpfad` (Stand nach Q.6) und `main` (0.9.2, Commit `73e1590`, eigener Checkout). Werkzeuge, beide neu im Repo und auch gegen einen Checkout von `main` lauffähig:
+`tools/testspiele.mjs` (Testspiele ohne Browser mit Invarianten-Prüfung in jedem Takt) und `tools/testspiel-browser.mjs` (Testspiel in der echten Oberfläche mit Text- und Tooltip-Prüfung).
+
+### Ergebnis
+Ein Fehler in der Spiellogik, behoben auf dem Branch, in `main` vorhanden: Die hinteren Reihen großer Formationen standen außerhalb des Spielfelds.
+Sonst habe ich in 270 Testspielen ohne Browser und 10 Testspielen in der Oberfläche keinen Fehler gefunden: keine Ausnahme, keine Konsolenmeldung, kein roher Textschlüssel, kein „undefined“, „NaN“ oder offener Platzhalter, keine verletzte Invariante.
+Die Patt-Partien mit `?druck=hoch` sind kein Programmfehler, sondern ein Gleichgewicht aus starker Verteidigung und gedeckeltem Gegner (Befund 2).
+
+### Befunde
+| Nr. | Befund | Art | Stand |
+|---|---|---|---|
+| 1 | **Formationen außerhalb des Feldes.** Die Reihen einer Formation liegen im Abstand `ROW_GAP` (16) hinter der Front. Hält der Gegner mit einer großen Armee an seiner Basis (Front x = 956), stehen ab der vierten Reihe Einheiten hinter dem Feldende (x = 1000), in den Testspielen bis x = 1 084. Das sind fast immer Fernkämpfer: unsichtbar hinter der Basis, für Nahkämpfer unerreichbar, mit 105 Reichweite selbst aber feuernd. Kartenpfad, Bot ohne Kategorie: 12 von 54 Partien, 0,15 % der Takte; mit Kategorie-Bots in fast jeder langen Partie. Im Standardmodus und in `main` in 54 Partien nie erreicht, weil die Armeen dort kleiner und die Partien kürzer sind. | Fehler (Kern, gemeinsamer Code) | **behoben auf dem Branch**: Die Position jeder Reihe wird auf das Feld begrenzt (`layoutAll` in `core.js`). Regressionstest `tests/feldgrenze.test.mjs`; er schlägt ohne die Korrektur in beiden Modi fehl, auch gegen `main`. Golden-Test unverändert; Bot ohne Kategorie mit gleichen Werten (Normal 15:01, Schwer 88 %); alle 415 Unit-Tests und 629 Browser-Prüfpunkte grün. **`main`: offen** (Vorschlag Patch 0.9.3, Entscheidung des PO). |
+| 2 | **Ursache der Patts mit `?druck=hoch`** (Verteidigungs-Bot, Normal, nachgespielt mit Seed 420352): Bis Minute 16 belagert die eigene Armee die gegnerische Basis und senkt sie von 273 000 auf 122 000. Die Belagerungswelle (45 Einheiten) bricht die Belagerung. Danach schickt der Gegner seine Einheiten einzeln: Sobald auf dem Feld ein Platz unter `maxField` (24 auf Normal) frei wird, rückt eine Einheit als eigene Gruppe aus. Der Strom einzelner Einheiten hält die eigene Armee in der Feldmitte (x ≈ 390–460); die Basis verliert von Minute 16 bis 30 keinen Punkt mehr. Umgekehrt halten Mauer (2 700–3 100 Lebenspunkte) und Türme jeden Angriff. Die Korrektur aus Befund 1 ändert daran nichts (12 → 14 % offen, im Rahmen des Zufalls). | Balance (Belagerung, außerhalb von Teil 6) | berichtet. Ansätze für die Runde zu Belagerung und Druckkurve: wartende Gegner in Gruppen statt einzeln schicken; `maxField` nach Minute 20 wachsen lassen; Schaden an der Basis für Verteidigung (siehe Auffälligkeit 1). |
+| 3 | **Fabrikmiliz ohne Obergrenze.** Die Läufer der Fabrikmiliz brauchen keine Versorgung. In einer Partie mit sechs Fabriken (Wirtschafts-Bot, `?druck=hoch`, 21 min) standen bis zu 69 eigene Einheiten auf dem Feld oder in der Warteschlange, bei 15 Versorgung. Die Leistung bleibt im Rahmen (Messgröße 2 × 60 Einheiten). | Balance | berichtet. Option: Obergrenze für Milizläufer (z. B. das Doppelte der Versorgung). |
+| 4 | **Veralteter Verweis.** `data/doktrinen.js` nannte `data/linien.js` (seit Q.1 `data/varianten.js`); `CLAUDE.md` nannte als EP-Quelle „Linie Wirtschaft Stufe 2“ (jetzt Karte Lagerzehnt). | Dokumentation | behoben. |
+| 5 | **Aus Teil 6, schon behoben:** roher Schlüssel `research.branchOf.pfad` im Tooltip jeder Pfadforschung (seit Teil 3, Q.4 behoben); Ersatz einer gebannten Doktrin aus der führenden Kategorie (Q.3 behoben). | Fehler | behoben. |
+| 6 | **Einmaliger Zeitüberschuss** in `tests/browser-check.mjs` (Tutorial-Schritt „Karte“) bei voll belasteter Maschine; seitdem in vier vollen Läufen nicht wieder aufgetreten. | Test | beobachten. |
+
+### Testspiele ohne Browser (`tools/testspiele.mjs`)
+Bot „Einheiten zuerst“, je Partie bis 30 min, 3 Grade × 3 Profile × 6 Seeds (Kategorie-Bots: × 4 Seeds × 3 Kategorien). Geprüft in jedem Takt: Material und EP endlich, Material nie negativ, EP sinken nur durch Tausch (Freihandel); jede Einheit mit endlichen Werten, nie über ihren Lebenspunkten, im Feld und in den Lanes;
+Mauer nie über dem Maximum; kein Angebot mit doppelter oder unbekannter Karte; höchstens zwei Doktrinen; nicht mehr Forschungen als Plätze; jede Variante passt zu ihrem Gebäude. Ab Minute 5 zusätzlich: zwei Kopien des Spielstands laufen 60 s identisch (Determinismus), und ein gespeicherter Stand lässt sich laden (`adopt`) und weiterspielen.
+
+| Stand | Modus | Partien | Ergebnis | Verletzungen |
+|---|---|---|---|---|
+| `main` 0.9.2 | standard | 54 | 47 Siege, 7 Niederlagen | keine |
+| Branch | standard | 54 | 47 Siege, 7 Niederlagen (identisch mit `main`) | keine |
+| Branch vor der Korrektur | karten | 54 / 108 (Kategorie-Bots) | 47 / 7; 88 / 18 / 2 offen | Einheiten außerhalb des Feldes (Befund 1) |
+| Branch nach der Korrektur | karten | 54 / 108 (Kategorie-Bots) | 47 / 7; 89 / 17 / 2 offen | keine |
+
+### Testspiele in der Oberfläche (`tools/testspiel-browser.mjs`)
+Der Bot spielt im Browser (Chromium, 1280 × 720). Alle 30 s Spielzeit öffnet das Werkzeug alle sechs Reiter und prüft den sichtbaren Text und den Inhalt jedes Tooltips (alle Elemente mit `data-tooltip`, auch verborgene) auf rohe Textschlüssel, „undefined“, „NaN“, „Infinity“ und offene Platzhalter,
+dazu Konsolenfehler und das Tooltip- und Erklärzeilen-Audit. Bei Minute 8 (Standardmodus: Minute 3) speichert es, lädt die Seite neu und prüft Zeit, Raster und Karten; bei Minute 10 wechselt es auf Englisch. Gegenprobe: In die Seite eingefügte Fehltexte meldet es.
+
+| Stand | Adresse, Bot | Partie | Funde |
+|---|---|---|---|
+| Branch | `pacing=karten` (Bühne und Entdecken an), ohne Kategorie | Sieg nach 13:22 | keine |
+| Branch | `pacing=karten&druck=hoch`, Verteidigung | Sieg nach 20:43 | keine |
+| Branch | `pacing=karten`, Wirtschaft | Sieg nach 12:39 | keine |
+| Branch | `pacing=karten&buehne=0&entdecken=0`, Militär | Sieg nach 8:48 | keine |
+| Branch | `pacing=karten`, Schwer | Sieg nach 19:39 | keine |
+| Branch | `pacing=standard` (zweimal, einmal mit Speichern bei Minute 3) | Siege nach 6:25 und 5:56 | keine |
+| `main` | Standard (zweimal, einmal mit Speichern bei Minute 3) | Siege nach 5:55 und 6:36 | keine |
+| `main` | `buehne=0&entdecken=0` | Sieg nach 6:37 | keine |
+
+### Kombinationen (gezielte Prüfungen)
+Alle 14 ohne Befund: Massenaufgebot mit Eisenwaffen (Schwertkämpfer zählt als Läufer und kostet die Hälfte, Bogenschütze gesperrt); Fabrikmiliz ohne Kaserne (Aufgebot rückt aus); Raubbau mit Dampfkraft (Faktoren multiplizieren); Freihandel nach Turmschule (Turmschule ohne Wirkung);
+Zunftordnung mit Grenzfeste (die strengere Grenze gilt); Elite (Versorgung nicht unter 1); Dampfkraft nach Abriss aller Fabriken (Abschluss ohne Fehler, nichts ersetzt); Buchdruck mit abgerissener Universität (kein Fortschritt); Zermürbung tötet keine Einheit;
+Freihandel-Tausch nie unter den Stand der Stufe; nach zwei Doktrinen kein Würfeln; Weiterentwicklung im Standardmodus nicht erforschbar.
+
+### Testläufe
+Branch: 415 Unit-Tests (neu: `tests/feldgrenze.test.mjs`) und 629 Browser-Prüfpunkte in fünf Suiten, grün. `main`: 198 Unit-Tests und 401 Browser-Prüfpunkte, grün. Kurzsimulation (Standardmodus): 20 von 20 Siegen, keine offene Partie.
+
+### Grenzen
+Bots, keine Menschen: Bedienfehler, Missverständnisse und Spielgefühl prüft nur der Spieltest. Schmale Bildschirme decken die bestehenden Layout-Prüfungen in `tests/browser-check.mjs` ab, nicht die Testspiele.
+
 ## Auslegungen und Abweichungen (zur Bestätigung)
 Die Auslegungen 1 bis 24 stehen in `docs/STAND-kartenpfad.md`, Abschnitt „Auslegungen Teil 6“. Die wichtigsten, mit Frage:
 1. **Doktrin-Paarvergleich auf Schwer mit 50 statt 100 Partien je Arm.** Der Lauf mit 100 Partien überschritt das Zeitlimit der Umgebung (Normal allein dauerte 68 min). Die Aussage der Tabelle ändert das nicht; für 100 Partien den Lauf mit `node tools/messung-p6.mjs --set doktrin` außerhalb dieser Umgebung wiederholen.
@@ -270,3 +327,4 @@ Die Auslegungen 1 bis 24 stehen in `docs/STAND-kartenpfad.md`, Abschnitt „Ausl
 3. **Soll-Doktrinen Wehrpflicht und Igelstellung** und **Schmiede ab Stufe 3** (K6.07): nachliefern oder streichen?
 4. **Spielstand-Version 11:** ältere Stände werden verworfen (wie in CHANGELOG und `docs/STAND-kartenpfad.md` vermerkt).
 5. **Spieltest** nach dem Leitfaden; die drei [Mensch]-Kriterien sind offen.
+6. **Korrektur der Formationen nach `main` übernehmen?** Der Fehler (Debugging, Befund 1) steckt im gemeinsamen Code; in `main` tritt er bisher nicht auf, wäre aber mit größeren Armeen möglich. Vorschlag: Patch 0.9.3 über `main` mit dem Regressionstest, danach `MVP`.

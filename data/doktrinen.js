@@ -5,7 +5,7 @@
    Felder:
      id, kat        Kennung; Kategorie ('militaer' | 'wirtschaft' | 'verteidigung'); Mischdoktrinen (Teil 6, REQ-K6.05) tragen eine Liste mit zwei Kategorien und zählen für beide.
                     Eine Doktrin zählt C.KATEGORIEN.doktrin-mal für ihre Kategorie (Teil 6, REQ-K6.03; die Zeichen und Linien aus Teil 5 entfallen).
-     sonderbau      Kennung der Variante (data/linien.js, Feld sonderbau), die nur mit dieser Doktrin aufgewertet werden kann; null: kein Sonderbau.
+     sonderbau      Kennung der Variante (data/varianten.js, Feld doktrin an der Variante), die nur mit dieser Doktrin aufgewertet werden kann; null: kein Sonderbau.
                     Die Wirkung des Sonderbaus steht an der Variante (sie gilt, solange er fertig steht: ein Invest).
      effect         Wirkung mit der Wahl der Doktrin (stat, mul | add) wie bei den Karten; bei Doktrinen mit Sonderbau meist leer.
      drawback       bindende Einschränkung als Wirkung (stat, mul | add); gilt mit der Wahl und bis zum Ende der Partie.

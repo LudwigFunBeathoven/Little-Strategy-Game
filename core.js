@@ -697,7 +697,7 @@ function create(){
         const rows = [];
         for (const g of [melee, ranged]) for (let i = 0; i < g.length; i += R) rows.push(g.slice(i, i + R));
         rows.forEach((r, ri) => r.forEach((u, ci) => {
-          u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; u.x = f.x - dir * ri * C.ROW_GAP; u.moving = f.moving;
+          u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; u.x = Math.min(W, Math.max(0, f.x - dir * ri * C.ROW_GAP)); u.moving = f.moving;       // hintere Reihen bleiben im Feld (Testspiele: Fernkämpfer großer Gegnerarmeen standen sonst hinter der gegnerischen Basis)
           if (u.laneF !== u.lane && u.toOff == null) u.toOff = colOffset(ci);
         }));
         f.rows = Math.max(f.rows, rows.length);

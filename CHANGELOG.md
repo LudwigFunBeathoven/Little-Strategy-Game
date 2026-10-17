@@ -11,6 +11,7 @@ Anforderungen: `docs/anforderungen-kartenpfad-6.md`, Bericht `docs/bericht-karte
 - **Protokoll Format 3:** Kategorie je gewählter Karte, Karten je Kategorie, Werte der Synergiekarten, Weiterentwicklungen, p des Doktrin-Faktors je Wahl.
 - **Bots und Messung:** Kategorie-Bots statt Linien-Bots; `tools/messung-p6.mjs`, `tools/bedienelemente.mjs`. Sichtbare Bedienelemente bei Minute 10: 54 / 53 (vorher 62 / 59).
 - Behoben nebenbei: Pfadforschungen zeigten im Tooltip den rohen Schlüssel `research.branchOf.pfad`.
+- **Debugging nach Teil 6:** Hintere Reihen großer Formationen standen außerhalb des Spielfelds (gegnerische Fernkämpfer hinter ihrer Basis, für Nahkämpfer unerreichbar); jetzt auf das Feld begrenzt, Test `tests/feldgrenze.test.mjs`. Der Fehler steckt auch in `main` (dort bisher nicht erreicht). Neue Werkzeuge `tools/testspiele.mjs`, `tools/testspiel-browser.mjs`.
 
 ## v0.9.2-kartenpfad-5 – Branch `exp/kartenpfad`, Teil 5 (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-5.md`, Bericht `docs/bericht-kartenpfad-5.md`, Testleitfaden `docs/testleitfaden-kartenpfad-5.md`. **Spielstand-Version 10: ältere Spielstände werden verworfen.** Der Modus `standard` ist unverändert (Golden-Test).
