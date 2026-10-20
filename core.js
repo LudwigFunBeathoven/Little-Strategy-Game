@@ -1342,6 +1342,7 @@ function create(){
     S.xp += b; S.xpTotal += b;
     while (S.xpTotal >= xpNeed(S.level + 1)){
       S.level++; S.pendingLevels++;
+      if (S.pacing === 'karten') (S.stats.stufenT = S.stats.stufenT || []).push(+S.t.toFixed(1));       // Zeitpunkt des Stufenaufstiegs (Teil 8, REQ-K8.01: Wartezeit am Mindestabstand)
       log('log.levelUp', { n: S.level });
     }
     if (!S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
@@ -1487,7 +1488,9 @@ function create(){
       else if (chance) S.pfad.pDoktrin = Math.min(1, Math.round((p + C.DOKTRIN.p.schritt) * 1000) / 1000);
     }
     if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Nummer, Erscheinen, Wahl (REQ-P.06)
-      const d = S.pendingDraft; (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, t: Math.round(S.t * 10) / 10, tp: null });
+      const d = S.pendingDraft, lt = (S.stats.stufenT || [])[d.level - 1], vor = S.stats.wahlen && S.stats.wahlen.length ? S.pfad.lastPickT : 0, cost = xpNeed(S.level + 1) - xpNeed(S.level);
+      // Teil 8 (REQ-K8.01): lt Zeitpunkt der Stufe, w Wartezeit am Mindestabstand (Balken voll, Wahl noch nicht erschienen), ue Übertrag (EP über der erreichten Stufe, Anteil der Kosten der nächsten), rest weitere wartende Stufen
+      (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, t: Math.round(S.t * 10) / 10, tp: null, lt: lt ?? null, w: lt == null ? null : Math.round(Math.max(0, S.t - Math.max(lt, vor)) * 10) / 10, ue: Math.round((S.xpTotal - xpNeed(S.level)) / cost * 1000) / 1000, rest: S.pendingLevels - 1 });
     }
   }
   /* Neu ziehen (REQ-5.07): alle Optionen der offenen Wahl neu ziehen, je Wahl höchstens mAdd('rerolls')-mal */

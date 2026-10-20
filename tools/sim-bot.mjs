@@ -325,7 +325,8 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
   }
   const dirs = directionTracker({ lateralOf: G.lateralOf });
   const xpAt = sampleXp ? sampleXp.map(() => null) : null;                  // Referenzlauf (REQ-P.02): EP-Stand zu festen Zeitpunkten
-  let wallFall = null, sx = 0;
+  let wallFall = null, sx = 0, xi = 0;
+  const XP_AT = [300, 600, 900], xpSrcAt = {};
   // Teil 4 (REQ-S.09): Belegung des Rasters zu festen Zeitpunkten und Lebenspunkte, die die Mauer insgesamt verliert (Abnahme je Schritt, Reparatur zählt nicht)
   const GRID_AT = [120, 300, 600], grid = {}, wallPrev = G.S.sections.map(x => x.hp);
   let wallLost = 0, gi = 0;
@@ -340,6 +341,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
     bot.step();
     dirs.sample(G.S, DT);
     if (xpAt) while (sx < sampleXp.length && G.S.t >= sampleXp[sx]) xpAt[sx++] = G.S.xpTotal;
+    while (xi < XP_AT.length && G.S.t >= XP_AT[xi]) xpSrcAt[XP_AT[xi++]] = Object.assign({ total: G.S.xpTotal }, G.S.stats.xpSrc || {});       // Teil 8 (REQ-K8.01): EP je Quelle, kumuliert bei Minute 5, 10, 15
     if (trace && G.S.t >= (trace.next || 0)){ trace.next = (trace.next || 0) + traceEvery; trace.fn(G); }       // Werkzeug: Zustand im Takt traceEvery (Sekunden Spielzeit) beobachten
     if (wallFall === null && G.S.sections.some((s, k) => k !== GATE && s.hp <= 0)) wallFall = G.S.t;
     G.S.sections.forEach((x, k) => { if (x.hp < wallPrev[k]) wallLost += wallPrev[k] - x.hp; wallPrev[k] = x.hp; });
@@ -372,6 +374,6 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
     nbEnd: Math.round(1000 * S.slots.reduce((a, x, k) => a + (x && x.type === 'fabrik' && !x.upg ? G.neighborValue(k, 'fabrik') : 0), 0)) / 1000, slotsEnd: S.slots.map(x => x ? x.type : null),       // Teil 7 (REQ-K7.01): Summe der Nachbarschaftswerte der Fabriken am Ende, Belegung am Ende
     weiter: S.stats.weiter || [], katCounts: G.katCounts(), synergie: Object.fromEntries(Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0 && G.OPT[k] && G.OPT[k].synergie).map(k => [k, (({ n, value }) => ({ n, value }))(G.synergieNow(k))])),
     doktrinP: S.stats.doktrinP || [], trade: { material: Math.round(S.stats.tradeMaterial || 0), xp: Math.round(S.stats.tradeXp || 0) }, milizUnits: S.stats.milizUnits || 0, zermuerbt: S.stats.zermuerbt || 0,       // Protokoll Teil 6 (REQ-K6.08)
-    doktrinOffers: S.stats.doktrinOffers || 0, doktrinOfferWahlen: S.stats.doktrinOfferWahlen || [], doktrinen: S.stats.doktrinen || [], upkeep: Math.round(S.stats.upkeep || 0), towerKills: S.stats.towerKills || 0, towerMaterial: Math.round(S.stats.towerMaterial || 0), counterWaves: S.stats.counterWaves || 0, wavesRepelled: S.stats.wavesRepelled || 0, xpAt, wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
+    doktrinOffers: S.stats.doktrinOffers || 0, doktrinOfferWahlen: S.stats.doktrinOfferWahlen || [], doktrinen: S.stats.doktrinen || [], upkeep: Math.round(S.stats.upkeep || 0), towerKills: S.stats.towerKills || 0, towerMaterial: Math.round(S.stats.towerMaterial || 0), counterWaves: S.stats.counterWaves || 0, wavesRepelled: S.stats.wavesRepelled || 0, xpAt, xpSrcAt, wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
 }

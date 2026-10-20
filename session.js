@@ -67,6 +67,10 @@ const Session = (() => {
       while (P.fabrikplaetze.length <= Math.floor(S.t / 60)) P.fabrikplaetze.push({ min: P.fabrikplaetze.length, n: G.fabrikPlaetze(), grenze: G.fabrikGrenze() });
       P.kompanien = (S.stats.kompanien || []).slice(); P.geschuetze = (S.stats.gekauft && S.stats.gekauft.geschuetz) || 0;
       P.gebaeudeEnde = S.slots.map(x => x ? x.type : null);
+      // Teil 8 (REQ-K8.01): Stufenaufstiege (Zeitpunkt, Wartezeit am Mindestabstand, Übertrag) und EP je Quelle bei Minute 5, 10, 15
+      P.stufen = (S.stats.wahlen || []).map(w => ({ n: w.n, stufeT: w.lt, erschienenS: w.t, wartezeitS: w.w, uebertrag: w.ue, wartend: w.rest }));
+      P.xpBySourceAt = P.xpBySourceAt || {};
+      for (const m of [5, 10, 15]) if (S.t >= m * 60 && !P.xpBySourceAt[m]) P.xpBySourceAt[m] = Object.assign({ total: Math.round(S.xpTotal) }, Object.fromEntries(Object.entries(S.stats.xpSrc || {}).map(([k, v]) => [k, Math.round(v)])));
       const hp = S.sections.map(s => s.hp);
       if (P.wallPrev) hp.forEach((v, i) => { if (v < P.wallPrev[i]) P.wallHpLost += P.wallPrev[i] - v; });
       P.wallPrev = hp;

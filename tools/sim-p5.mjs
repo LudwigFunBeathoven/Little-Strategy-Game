@@ -13,7 +13,7 @@ import { availableParallelism } from 'node:os';
 import { writeFileSync } from 'node:fs';
 
 const EP_AT = [240, 480, 720];                                              // Grenzen der Abschnitte 0–4, 4–8, 8–12 min (Sekunden Spielzeit)
-const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
+const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpSrcAt: r.xpSrcAt, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
   xpPassive: r.xpPassive, xpBounty: r.xpBounty, xpSrc: r.xpSrc, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
   wallLost: r.wallLost, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers,
   doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills,
