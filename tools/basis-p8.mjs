@@ -36,7 +36,7 @@ for (const [bot] of BOTS){
 }
 
 console.log(`\nEP je Quelle, kumuliert (Median über die Partien; ${DIFF}, ${PROF}) und Anteil an der Summe\n`);
-const QUELLEN = ['kill', 'tower', 'base', 'wave', 'budget', 'lager', 'bounty', 'andere'];
+const QUELLEN = ['kill', 'tower', 'base', 'wave', 'budget', 'lager', 'trade', 'bounty', 'andere'];
 console.log(`| Bot | Minute | gesamt | ${QUELLEN.join(' | ')} |\n|---|---|---|${QUELLEN.map(() => '---|').join('')}`);
 for (const [bot] of BOTS){
   const rs = field(raw[bot]); if (!rs.length) continue;
