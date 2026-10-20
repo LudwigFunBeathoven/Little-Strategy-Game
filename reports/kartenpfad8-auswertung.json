@@ -1,0 +1,278 @@
+{
+ "prefix": "kartenpfad8",
+ "bots": {
+  "militaer": {
+   "takt": {
+    "partien": 50,
+    "wahlenMedian": 13,
+    "gebremstAnteil": 0.597684515195369,
+    "wartezeitMittel": 19.04384949348769,
+    "uebertragMedian": 0.183,
+    "abstandVor10": 57.24532005772006,
+    "abstandNach10": 50.43423282845902,
+    "abstandNach10Median": 47.099999999999994,
+    "wartendMaxMedian": 1
+   },
+   "quellen": {
+    "5": {
+     "gesamt": 476.59427935222084,
+     "kill": 288,
+     "tower": 0,
+     "base": 88.91772064777287,
+     "wave": 86,
+     "budget": 0,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "10": {
+     "gesamt": 945.0765501113208,
+     "kill": 361,
+     "tower": 0,
+     "base": 502.5050595445288,
+     "wave": 86,
+     "budget": 0,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "15": {
+     "gesamt": 1244.5064345115138,
+     "kill": 427,
+     "tower": 0,
+     "base": 769.7281332932387,
+     "wave": 86,
+     "budget": 0,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    }
+   },
+   "quellenSpaet": {
+    "kill": 66,
+    "tower": 0,
+    "base": 267.22307374870985,
+    "wave": 0,
+    "budget": 0,
+    "lager": 0,
+    "trade": 0,
+    "bounty": 0,
+    "andere": 0,
+    "gesamt": 299.42988440019303
+   },
+   "dauer": {
+    "siege": 0.98,
+    "patt": 0.02,
+    "dauer": 783.6
+   }
+  },
+  "wirtschaft": {
+   "takt": {
+    "partien": 50,
+    "wahlenMedian": 20,
+    "gebremstAnteil": 0.8546458141674333,
+    "wartezeitMittel": 34.28610855565778,
+    "uebertragMedian": 0.389,
+    "abstandVor10": 46.31575808080807,
+    "abstandNach10": 45.26746810409632,
+    "abstandNach10Median": 45.04615384615386,
+    "wartendMaxMedian": 13
+   },
+   "quellen": {
+    "5": {
+     "gesamt": 609.1040652916025,
+     "kill": 314,
+     "tower": 0,
+     "base": 79.74089068825873,
+     "wave": 86,
+     "budget": 104.63879999999709,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "10": {
+     "gesamt": 1576.01024565011,
+     "kill": 390.0999999999999,
+     "tower": 0,
+     "base": 414.06417659918645,
+     "wave": 86,
+     "budget": 609.9001823600142,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "15": {
+     "gesamt": 3998.580128142436,
+     "kill": 453.5999999999999,
+     "tower": 0,
+     "base": 881.3345649534302,
+     "wave": 86,
+     "budget": 1774.9050141021066,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    }
+   },
+   "quellenSpaet": {
+    "kill": 63.5,
+    "tower": 0,
+    "base": 467.2703883542438,
+    "wave": 0,
+    "budget": 1165.0048317420924,
+    "lager": 0,
+    "trade": 0,
+    "bounty": 0,
+    "andere": 0,
+    "gesamt": 2422.569882492326
+   },
+   "dauer": {
+    "siege": 0.88,
+    "patt": 0.02,
+    "dauer": 990.2
+   }
+  },
+  "verteidigung": {
+   "takt": {
+    "partien": 50,
+    "wahlenMedian": 22,
+    "gebremstAnteil": 0.635042735042735,
+    "wartezeitMittel": 23.606239316239332,
+    "uebertragMedian": 0.214,
+    "abstandVor10": 51.41866262626262,
+    "abstandNach10": 50.403591257007456,
+    "abstandNach10Median": 50.459999999999994,
+    "wartendMaxMedian": 24
+   },
+   "quellen": {
+    "5": {
+     "gesamt": 540.3656781376103,
+     "kill": 312,
+     "tower": 0,
+     "base": 70.64908502024235,
+     "wave": 86,
+     "budget": 59.69799999999766,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "10": {
+     "gesamt": 1029.119249514167,
+     "kill": 334.19999999999993,
+     "tower": 0,
+     "base": 332.9200251214577,
+     "wave": 86,
+     "budget": 236.6500399999857,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "15": {
+     "gesamt": 1678.2002805263921,
+     "kill": 411.5999999999999,
+     "tower": 0,
+     "base": 723.9494509109306,
+     "wave": 86,
+     "budget": 424.9381249999132,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    }
+   },
+   "quellenSpaet": {
+    "kill": 77.39999999999998,
+    "tower": 0,
+    "base": 391.02942578947295,
+    "wave": 0,
+    "budget": 188.28808499992752,
+    "lager": 0,
+    "trade": 0,
+    "bounty": 0,
+    "andere": 0,
+    "gesamt": 649.0810310122251
+   },
+   "dauer": {
+    "siege": 0.88,
+    "patt": 0.12,
+    "dauer": 1192.8
+   }
+  },
+  "ohne": {
+   "takt": {
+    "partien": 50,
+    "wahlenMedian": 15,
+    "gebremstAnteil": 0.5732165206508135,
+    "wartezeitMittel": 18.531664580725916,
+    "uebertragMedian": 0.173,
+    "abstandVor10": 60.56929769119768,
+    "abstandNach10": 50.91241892021022,
+    "abstandNach10Median": 48.866666666666674,
+    "wartendMaxMedian": 2
+   },
+   "quellen": {
+    "5": {
+     "gesamt": 487.7808117408868,
+     "kill": 312,
+     "tower": 0,
+     "base": 79.10438259109256,
+     "wave": 86,
+     "budget": 0,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "10": {
+     "gesamt": 875.3486727327501,
+     "kill": 374,
+     "tower": 0,
+     "base": 397.9907847570766,
+     "wave": 86,
+     "budget": 0,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    },
+    "15": {
+     "gesamt": 1380.4647030779074,
+     "kill": 414.79999999999984,
+     "tower": 0,
+     "base": 882.8859995973099,
+     "wave": 86,
+     "budget": 0,
+     "lager": 0,
+     "trade": 0,
+     "bounty": 0,
+     "andere": 0
+    }
+   },
+   "quellenSpaet": {
+    "kill": 40.79999999999984,
+    "tower": 0,
+    "base": 484.89521484023334,
+    "wave": 0,
+    "budget": 0,
+    "lager": 0,
+    "trade": 0,
+    "bounty": 0,
+    "andere": 0,
+    "gesamt": 505.11603034515736
+   },
+   "dauer": {
+    "siege": 0.96,
+    "patt": 0.02,
+    "dauer": 894.7
+   }
+  }
+ },
+ "pattOhneKategorieAlleFelder": 0.028888888888888888
+}

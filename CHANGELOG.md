@@ -1,5 +1,16 @@
 # Änderungen
 
+## v0.9.2-kartenpfad-8 – Branch `exp/kartenpfad`, Teil 8 und 9 (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad-8-9.md`, Berichte `docs/bericht-kartenpfad-8.md` und `-9.md`, Testleitfaden `docs/testleitfaden-kartenpfad-9.md`. **Spielstand-Version 13: ältere Spielstände werden verworfen.**
+- **Wahltakt:** Die Leiste zeigt den Fortschritt zur nächsten Wahl und bei vollem Balken „Nächste Wahl in 0:23 · Mindestabstand“ (kein „Karte in 0:00“ mehr). Die EP-Summe steht im Tooltip. Hebel für Übertragsgrenze und abnehmenden Budgetertrag sind vorhanden, aber ausgeschaltet (Ziel „gebremst ≤ 15 %“ nicht erreicht).
+- **Manufaktur** ohne Ordnungszahl; die Zahl steht in der Grenzanzeige.
+- **Reichweitenleiter** der eigenen Fernkämpfer: Werfer 105 < Bogenschütze 137 < Armbrust 158 < Katapult 189 < Geschütz 231.
+- **Gegner mit Bogen- und Armbrustschützen** (experimentell, `?gegnerfern=aus` schaltet ab).
+- **Belagerungsgerät entfällt;** Durchbruch Stufe II gibt Basisschaden. Grenzfeste verlängert den Wellenabstand um 10 % (vorher 25 %).
+- **Karten:** Nachteilszeile mit `▼` auf der Kartenfläche; Kategorie als Farbe und Symbol, Familie als Rahmen, Seltenheit als Ring.
+- **Texte:** Zeichenbudgets (R3) eingehalten, Designertext und veraltete Aussagen entfernt, Begriffe vereinheitlicht („Kontor“, „Lebenspunkte“, „Abschuss“), zehn Namenskollisionen aufgelöst, Phasenanzeige und Vorschau-Platzhalter entfernt; Zahlen über Platzhalter.
+- **Werkzeuge:** `tools/basis-p8.mjs`, `tools/ep-protokoll.mjs`, `tools/textbudget.mjs`, `tools/kalibrierung-p8.mjs`, `tools/texte-md.mjs` (Textübersicht `docs/texte-kartenpfad.md`).
+
 ## v0.9.2-kartenpfad-7 – Branch `exp/kartenpfad`, Teil 7 (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-7.md`, Bericht `docs/bericht-kartenpfad-7.md`, Testleitfaden `docs/testleitfaden-kartenpfad-7.md`. **Spielstand-Version 12: ältere Spielstände werden verworfen.** Der Modus `standard` ist unverändert (Golden-Test `tests/unveraendert.test.mjs`).
 - **Haupthaus im Mittelfeld:** steht ab Start als Gutshof, lässt sich nicht abreißen, hat keine Nachbarn; eigener Reiter „Haupthaus“. Acht Bauplätze bleiben frei.

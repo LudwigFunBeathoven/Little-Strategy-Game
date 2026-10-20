@@ -1,0 +1,76 @@
+FELDMESSUNG (einheiten-zuerst, 50 Partien je Feld, Modus karten)
+
+| Grad | Profil | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median (Mittel) | längste Lücke Median / P90 (s) | Lücke inkl. Ende Median / P90 (s) | Fabriken Min 5 / 10 (Median) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| leicht | aktiv | 100 % | 0 % | 0 % | 13:46 | 15:19 | 11 (11.8) | 107 / 123 | 107 / 123 | 4 / 5 |
+| leicht | durchschnitt | 92 % | 4 % | 4 % | 20:19 | 23:19 | 17 (17.1) | 123 / 144 | 123 / 144 | 4 / 5 |
+| leicht | gelegentlich | 60 % | 28 % | 12 % | 20:46 | 30:00 | 16 (16.0) | 169 / 189 | 169 / 189 | 4 / 4 |
+| normal | aktiv | 100 % | 0 % | 0 % | 14:37 | 15:47 | 13 (13.3) | 103 / 117 | 103 / 117 | 4 / 5 |
+| normal | durchschnitt | 96 % | 2 % | 2 % | 14:55 | 21:47 | 15 (16.0) | 109 / 125 | 109 / 125 | 4 / 5 |
+| normal | gelegentlich | 62 % | 34 % | 4 % | 16:38 | 24:44 | 16 (17.3) | 115 / 175 | 115 / 175 | 4 / 5 |
+| schwer | aktiv | 98 % | 0 % | 2 % | 13:02 | 14:34 | 16 (16.6) | 66 / 73 | 66 / 73 | 4 / 5 |
+| schwer | durchschnitt | 78 % | 20 % | 2 % | 14:21 | 19:28 | 17 (16.1) | 80 / 92 | 80 / 94 | 4 / 5 |
+| schwer | gelegentlich | 0 % | 100 % | 0 % | 1:30 | 1:36 | 0 (0.0) | 0 / 0 | 90 / 96 | – / – |
+
+Angebote mit Doktrin (Bot ohne Kategorie; Median, Mittel; erstes Angebot in Wahl; Partien ohne Doktrin-Angebot)
+
+| Grad | Profil | Angebote Median (Mittel) | erstes Angebot in Wahl (Median) | ohne Doktrin-Angebot |
+|---|---|---|---|---|
+| leicht | aktiv | 4 (3.9) | 5 | 0 % |
+| leicht | durchschnitt | 7 (6.4) | 5 | 0 % |
+| leicht | gelegentlich | 6 (6.1) | 4 | 0 % |
+| normal | aktiv | 4 (4.5) | 4 | 0 % |
+| normal | durchschnitt | 5 (5.2) | 4 | 0 % |
+| normal | gelegentlich | 5 (6.5) | 4 | 0 % |
+| schwer | aktiv | 6 (5.7) | 4 | 0 % |
+| schwer | durchschnitt | 6 (5.4) | 5 | 14 % |
+| schwer | gelegentlich | 0 (0.0) | – | 100 % |
+
+Weiterentwicklungen (Anteil der Partien; Abschluss Median; ersetzte Varianten je Partie mit Weiterentwicklung, Mittel)
+
+| Grad | Profil | Dampfkraft | Abschluss (Median) | Buchdruck | Abschluss (Median) | ersetzte Varianten (Mittel) |
+|---|---|---|---|---|---|---|
+| leicht | aktiv | 52 % | 11:06 | 16 % | 8:05 | 0.0 |
+| leicht | durchschnitt | 76 % | 14:44 | 16 % | 9:32 | 0.0 |
+| leicht | gelegentlich | 36 % | 17:25 | 16 % | 6:25 | 0.0 |
+| normal | aktiv | 72 % | 11:30 | 24 % | 5:59 | 0.0 |
+| normal | durchschnitt | 76 % | 11:33 | 18 % | 5:08 | 0.0 |
+| normal | gelegentlich | 68 % | 10:49 | 16 % | 5:12 | 0.0 |
+| schwer | aktiv | 74 % | 7:58 | 22 % | 4:50 | 0.0 |
+| schwer | durchschnitt | 74 % | 8:25 | 16 % | 5:37 | 0.0 |
+| schwer | gelegentlich | 0 % | – | 0 % | – | – |
+
+EP je Minute (Median; Partien im Abschnitt in Klammern)
+
+| Grad | Profil | 0–4 min | 4–8 min | 8–12 min | 12+ min | EP gesamt (Median) |
+|---|---|---|---|---|---|---|
+| leicht | aktiv | 43.6 (50) | 58.1 (50) | 120.4 (50) | 184.1 (46) | 1187 |
+| leicht | durchschnitt | 50.1 (50) | 42.4 (50) | 69.4 (50) | 1049.4 (46) | 10524 |
+| leicht | gelegentlich | 46.9 (50) | 31.6 (50) | 52.1 (50) | 1033.4 (50) | 10076 |
+| normal | aktiv | 62.1 (50) | 53.6 (50) | 106.1 (50) | 175.4 (47) | 1328 |
+| normal | durchschnitt | 108.1 (50) | 52.9 (50) | 118.7 (50) | 197.3 (44) | 1616 |
+| normal | gelegentlich | 121.8 (50) | 47.7 (50) | 88.8 (50) | 209.8 (47) | 1868 |
+| schwer | aktiv | 230.2 (50) | 74.8 (50) | 193.8 (50) | 190.4 (36) | 2169 |
+| schwer | durchschnitt | 236.6 (50) | 54.2 (43) | 132.8 (43) | 252.4 (36) | 2171 |
+| schwer | gelegentlich | 21.9 (50) | – (0) | – (0) | – (0) | 32 |
+
+EP-Quellen (Anteil am EP-Ertrag über alle Partien des Feldes)
+
+| Grad | Profil | Abschüsse (Einheiten) | Türme | Basisschaden | abgewehrte Wellen | Forschungsbudget | Hörsaal |
+|---|---|---|---|---|---|---|---|
+| leicht | aktiv | 37.6 % | 0.2 % | 55.3 % | 6.8 % | 0.0 % | 0.0 % |
+| leicht | durchschnitt | 74.6 % | 0.5 % | 11.5 % | 12.6 % | 0.0 % | 0.0 % |
+| leicht | gelegentlich | 75.5 % | 0.0 % | 9.5 % | 12.6 % | 0.0 % | 0.0 % |
+| normal | aktiv | 49.0 % | 0.7 % | 41.7 % | 8.3 % | 0.0 % | 0.0 % |
+| normal | durchschnitt | 63.3 % | 0.5 % | 25.4 % | 10.4 % | 0.0 % | 0.0 % |
+| normal | gelegentlich | 71.9 % | 0.0 % | 12.3 % | 11.2 % | 0.0 % | 0.0 % |
+| schwer | aktiv | 47.0 % | 2.7 % | 40.6 % | 8.3 % | 0.0 % | 0.0 % |
+| schwer | durchschnitt | 63.7 % | 2.8 % | 20.8 % | 10.4 % | 0.0 % | 0.0 % |
+| schwer | gelegentlich | 85.7 % | 0.0 % | 0.0 % | 14.3 % | 0.0 % | 0.0 % |
+
+Wahlrate je Karte (Normal, alle Profile, 9646 Angebote): 55 Karten, außerhalb von 5–60 %: 7
+
+fabrikmiliz 5.3 % (4/76), raubbau 8.8 % (6/68), grosseArmee 9.5 % (2/21), zunftordnung 10.5 % (8/76), freihandel 11.1 % (7/63), vorstoss 11.3 % (9/80), stiftung 12 % (3/25), kriegstrommeln 12.8 % (40/312), massenaufgebot 13 % (10/77), buchdruck 13.3 % (29/218), allesAufDieMitte 13.8 % (4/29), turmschule 13.9 % (26/187), kriegserfahrung 14.5 % (48/332), grenzwacht 14.5 % (17/117), handelskontor 14.7 % (16/109), lagerzehnt 15.2 % (31/204), stachelwall 15.2 % (52/343), schildwall 15.5 % (52/335), pluenderung 15.6 % (23/147), bollwerk 15.9 % (10/63), querverbindung 16 % (40/250), fernhandel 16.2 % (119/736), aushebung 16.5 % (53/322), soeldnertruppe 16.5 % (23/139), volleAuslastung 16.7 % (1/6), turmkanoniere 17 % (36/212), sammelruf 17.2 % (37/215), wehrverband 17.3 % (9/52), wasserrahmen 17.5 % (133/759), dampfkraft 17.6 % (57/323), kriegswirtschaft 17.8 % (19/107), wehrhandel 17.9 % (10/56), stehendesHeer 18.3 % (13/71), rekrutenzug 18.4 % (63/343), waffenbrueder 18.6 % (40/215), maurerkolonne 18.9 % (66/349), drill 19 % (67/353), zermuerbung 19 % (8/42), elite 19.4 % (14/72), durchbruch 19.5 % (29/149), bessereFabriken 19.9 % (65/327), gilde 20.2 % (24/119), gluecksritter 20.3 % (25/123), bauordnung 20.5 % (25/122), dauerauftrag 20.7 % (29/140), glaskanonen 21.1 % (4/19), grenzfeste 24.2 % (8/33), ausfall 25.8 % (16/62), geschuetzguss 69.4 % (150/216), ballistik 70 % (63/90), befestigungskunde 80.2 % (150/187), eiserneKlingen 92 % (150/163), fortgeschritteneTaktiken 94.6 % (87/92), stadtrecht 100 % (150/150), hofhaltung 100 % (150/150)
+
+fertig in 378 s, 450 Partien
+

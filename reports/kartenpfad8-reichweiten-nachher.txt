@@ -1,0 +1,18 @@
+Grundreichweiten (R_W = Werfer = 105); Türme: eigener Turm 120 (+20 je Ausbaustufe), gegnerischer Turm 95, Nahkampf 14
+
+| Einheit | heute | Vorgabe K8.05 | Faktor | gegenüber eigenem Turm (Grundreichweite) | gegenüber gegnerischem Turm |
+|---|---|---|---|---|---|
+| werfer | 105 | 105 | 1 | -15 | +10 |
+| bogenschuetze | 120 | 136.5 | 1.3 | +16.5 | +41.5 |
+| armbrust | 140 | 157.5 | 1.5 | +37.5 | +62.5 |
+| katapult | 170 | 189 | 1.8 | +69 | +94 |
+| geschuetz | 200 | 231 | 2.2 | +111 | +136 |
+
+Andere Einheiten (Nahkampf, Reichweite bis 30 zählt nicht als Fernkampf):
+  laeufer: 14
+  schild: 14
+  reiter: 14
+  schwertkaempfer: 14
+
+Wirkungen auf die Reichweite: Karte Lange Wurfarme +25/+50 (nur Werfer und Bogenschütze), Karte Turmschule ×1,2/×1,45/×1,7 (nur eigene Türme), Kartenbonus towerRange ×1,25/×1,5 (nur eigene Türme); Ausbau „Reichweite“ der Türme +20 je Stufe.
+Gegner heute: Läufer (Nahkampf) und Werfer (105); der gegnerische Turm (95) liegt unter dem Werfer.

@@ -344,7 +344,7 @@ Anforderungen: `docs/anforderungen-kartenpfad-7.md`.
 26. **Kalibrierung nur auf Normal** (`basisFaktor` 9,5); Leicht und Schwer unverändert.
 27. **Zunftordnung bei vollem Bestand:** Der Bestand über der gesenkten Grenze bleibt, das Zunfthaus ist gesperrt (Regel aus Teil 6).
 
-## Teil 8 und 9: EP-Pacing, Reichweiten, Kartenbereinigung, Text (Branch `exp/kartenpfad`, REQ-K8.01 – K8.09, REQ-K9.01 – K9.09, Spielstand-Version 12, ab T.6 gegebenenfalls 13)
+## Teil 8 und 9: EP-Pacing, Reichweiten, Kartenbereinigung, Text (Branch `exp/kartenpfad`, REQ-K8.01 – K8.09, REQ-K9.01 – K9.09, Spielstand-Version 13)
 
 Anforderungen: `docs/anforderungen-kartenpfad-8-9.md`.
 
@@ -359,3 +359,20 @@ Anforderungen: `docs/anforderungen-kartenpfad-8-9.md`.
 - **Anzeigefehler:** Bei wartender Wahl steht der Balken voll und `hud.xpEta` rechnet mit `need − cur = 0`, es erscheint „Karte in 0:00“. Behebung in T.1 (K8.03).
 - **Kein Programmfehler in der Stufenlogik:** Die Abbruchregel „nach T.0“ greift nicht; T.1 beginnt mit dem Balancing.
 - **Reichweiten:** Werfer 105, Bogenschütze 120, Armbrustschütze 140, Katapult 170, Geschütz 200; eigener Turm 120 (+20 je Ausbaustufe), gegnerischer Turm 95. Der Werfer überragt den gegnerischen Turm schon heute um 10. Die Vorgabe der Leiter (K8.05) hebt den Bogenschützen auf 136,5, den Armbrustschützen auf 157,5, das Katapult auf 189 und das Geschütz auf 231; alle liegen über der Grundreichweite des eigenen Turms (120) und des gegnerischen (95). **Die Turmbedingung aus K8.06 (gegnerische Fernkämpfer nicht über die Grundreichweite der Türme hinaus) lässt sich mit der Leiter nicht erfüllen**; es gilt die Abbruchregel zu T.3/T.4.
+
+### Stand Teil 8 und 9 (abgeschlossen)
+
+| Inkrement | Inhalt | Status |
+|---|---|---|
+| T.1 | K8.02 EP-Hebel (Übertragsgrenze `KARTEN.uebertrag`, abnehmender Budgetertrag `budget.abnahme`) implementiert, **ausgeschaltet**; K8.03 Anzeige des Fortschritts (Mindestabstand, Verfall) | fertig; Ziel „gebremst ≤ 15 %“ nicht erreicht, Entscheidung PO |
+| T.2 | K8.04 Manufaktur ohne Ordnungszahl | fertig |
+| T.3 | K8.05 Reichweitenleiter (eigene Einheiten) | fertig |
+| T.4 | K8.06 Gegner mit Bogen- und Armbrustschützen (`?gegnerfern=aus`) | fertig; Turmbedingung nicht erfüllbar, Gegner behalten alte Reichweiten |
+| T.5 | K8.07 Belagerungsgerät entfernt, K8.08 Grenzfeste ×1,10 | fertig; Bestätigung PO fehlt |
+| T.6 | K8.09 Messung, Spielstand 13, `docs/bericht-kartenpfad-8.md` | fertig |
+| U.0–U.2 | Textinventar, Nachteilszeile, Klassifikationen | fertig |
+| U.3 | Kürzen: R3 ohne Verstoß, Zeichen de −4,3 % (Ziel −25 % nicht erreicht) | fertig, Entscheidung PO |
+| U.4–U.6 | Designertext, Begriffe, Namenskollisionen, Phasenanzeige | fertig |
+| U.7 | Sprach-Audit R3–R6, `docs/texte-kartenpfad.md`, `docs/bericht-kartenpfad-9.md`, `docs/testleitfaden-kartenpfad-9.md` | fertig |
+
+Offen: Privater Testbuild für Teil 8/9 nicht neu veröffentlicht; `tests/browser-check.mjs` (Abschied 1/2) schwankt im Timing.
