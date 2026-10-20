@@ -241,7 +241,7 @@ function nbPreviewText(i, type){
 /* ---------- Gebäude-Aufwertung (Teil 4, REQ-S.05): Namen, Werte, Aktionen am Gebäude ---------- */
 const variantParams = v => { const p = Object.assign({}, sonderbauParams()); v.effect.forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); }); return p; };
 /* Anzeigename eines Platzes: Variante, sonst Grundgebäude */
-const slotName = sl => sl.type === 'haupthaus' ? t(`haus.stufe.${G.hausStufe()}.name`) : sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(G.weiterDone(sl.type) ? `bld.${sl.type}.name.weiter` : `bld.${sl.type}.name`);       // Haupthaus: Name der Stufe (Teil 7)       // Teil 6: nach der Weiterentwicklung heißt das Gebäude Dampfmühle bzw. Druckerei
+const slotName = sl => sl.type === 'haupthaus' ? t(`haus.stufe.${G.hausStufe()}.name`) : sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(G.weiterStufe(sl.type) ? `bld.${sl.type}.name.weiter${G.weiterStufe(sl.type) > 1 ? G.weiterStufe(sl.type) : ''}` : `bld.${sl.type}.name`);       // Haupthaus: Name der Stufe (Teil 7)       // Teil 6: nach der Weiterentwicklung heißt das Gebäude Dampfmühle bzw. Druckerei
 const variantTarget = sl => sl.upg && G.VAR[sl.upg.to] ? G.VAR[sl.upg.to] : null;
 let vpicks = [];
 function variantReason(block, vid){

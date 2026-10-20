@@ -45,7 +45,7 @@ const Stage = (() => {
   function needsLine(o){
     const k = o.pfad;
     if (!k || !(k.benoetigt || []).length) return '';
-    return t('kp.card.needs', { list: k.benoetigt.map(b => b.startsWith('gebaut:') ? t('kp.card.built', { name: t(`bld.${b.slice(7)}.name`) }) : (G.OPT[b] ? t(G.OPT[b].nameKey) : (G.RES[b] ? t(G.RES[b].nameKey) : b))).join(', ') });
+    return t('kp.card.needs', { list: k.benoetigt.map(b => b === 'forschungsort' ? t('kp.card.forschungsort') : b.startsWith('gebaut:') ? t('kp.card.built', { name: t(`bld.${b.slice(7)}.name`) }) : (G.OPT[b] ? t(G.OPT[b].nameKey) : (G.RES[b] ? t(G.RES[b].nameKey) : b))).join(', ') });
   }
   const hasKey = k => !!(KF_I18N[lang] && KF_I18N[lang][k]);
   /* Eine Wirkungszeile auf der Karte (REQ-K2.03): nur die unmittelbare Wirkung, keine Folgekarten */

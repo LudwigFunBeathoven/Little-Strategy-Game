@@ -38,17 +38,21 @@ const KF_PFAD = {
       oeffnetForschung: ['r_wehrgang', 'r_schiessscharten'],
       nameKey: 'kp.card.befestigungskunde.name', descKey: 'kp.card.befestigungskunde.desc', tiers: [{ effect: [] }] },
     /* ---------- Weiterentwicklungen (Teil 6, REQ-K6.06): Technologiekarte → Forschung → das ganze Gebäude wird ersetzt; eine je Bereich und Partie ---------- */
-    { id: 'dampfkraft', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:fabrik'],
+    /* Teil 7 (REQ-K7.08): höchstens zwei Stufen je Gebäude. Produktion: Wasserrahmen (erste Stufe, früh) und Dampfkraft (zweite Stufe, selten, ab Wahl 8, braucht Wasserrahmen) */
+    { id: 'wasserrahmen', kat: 'wirtschaft', familie: 'technologie', rarity: 'common', gewicht: 20, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:fabrik'],
+      oeffnetForschung: ['r_wasserrahmen'],
+      nameKey: 'kp.card.wasserrahmen.name', descKey: 'kp.card.wasserrahmen.desc', tiers: [{ effect: [] }] },
+    { id: 'dampfkraft', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 8, benoetigt: ['forschungsort', 'gebaut:fabrik', 'r_wasserrahmen'],
       oeffnetForschung: ['r_dampfkraft'],
       nameKey: 'kp.card.dampfkraft.name', descKey: 'kp.card.dampfkraft.desc', tiers: [{ effect: [] }] },
-    { id: 'buchdruck', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['gebaut:universitaet'],
+    { id: 'buchdruck', kat: 'wirtschaft', familie: 'technologie', rarity: 'common', gewicht: 20, abWahl: 3, benoetigt: ['gebaut:universitaet'],       // Teil 7: häufiger (Gewicht 20), kürzere Forschung
       oeffnetForschung: ['r_buchdruck'],
       nameKey: 'kp.card.buchdruck.name', descKey: 'kp.card.buchdruck.desc', tiers: [{ effect: [] }] },
     /* Teil 7 (REQ-K7.06, K7.07): Weiterentwicklungen mit Schaden an der gegnerischen Basis – Kontor → Handelshaus (Söldnerkompanien), Schmiede → Gießerei (Geschütze) */
-    { id: 'fernhandel', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:kontor'],
+    { id: 'fernhandel', kat: 'wirtschaft', familie: 'technologie', rarity: 'common', gewicht: 15, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:kontor'],
       oeffnetForschung: ['r_fernhandel'],
       nameKey: 'kp.card.fernhandel.name', descKey: 'kp.card.fernhandel.desc', tiers: [{ effect: [] }] },
-    { id: 'geschuetzguss', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:schmiede'],
+    { id: 'geschuetzguss', familie: 'technologie', rarity: 'common', gewicht: 15, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:schmiede'],
       oeffnetForschung: ['r_geschuetzguss'],
       nameKey: 'kp.card.geschuetzguss.name', descKey: 'kp.card.geschuetzguss.desc', tiers: [{ effect: [] }] },
     /* ---------- Wagnis: spielverändernd mit Nachteil, dauerhaft (REQ-KP.07); Fernkämpfer und Armee setzen eine Kaserne voraus ---------- */
@@ -63,7 +67,7 @@ const KF_PFAD = {
   /* Forschungen der Pfadkarten (REQ-KP.04); Schema wie data/research.js, dazu:
        schaltetFrei   Schlüssel, die der Abschluss öffnet ('einheit:<typ>', 'stufe:<upgrade>:<n>')
        ersetzt        Einheitenersatz { von: nach }
-       weiter         Weiterentwicklung (Teil 6, REQ-K6.06) { bereich: Gebäudetyp }: Der Abschluss ersetzt die Grundvarianten aller Gebäude dieses Typs (ohne Erstattung); Sonderbauten bleiben, Ausbaustufen auch
+       weiter         Weiterentwicklung (Teil 6, REQ-K6.06) { bereich: Gebäudetyp, stufe: 1 | 2 (Teil 7, höchstens zwei je Gebäude) }: Der Abschluss ersetzt die Grundvarianten aller Gebäude dieses Typs (ohne Erstattung); Sonderbauten bleiben, Ausbaustufen auch
        nurUni         Teil 7: nur in einer Universität erforschbar, nicht im Flügel Bibliothek des Haupthauses
        gebaeude       Teil 7: ohne stehendes Gebäude dieses Typs keine Forschung (Fernhandel: Kontor)
      Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
@@ -80,7 +84,10 @@ const KF_PFAD = {
     /* Teil 6 (REQ-K6.03): Pool höchstens 38 Karten ohne Doktrinen; gestrichen wurden die schwächsten und die, deren Wirkung eine neue Karte übernimmt (Vorschlag im Bericht) */
     'weitschuss', 'sappeure', 'zinnen', 'notreserve', 'werkmeister', 'instandhaltung', 'langeWurfarme',
     /* Teil 6 (REQ-K6.07): zwei neue Ausbau-Karten brauchen Platz im Pool (Grenze 38); gestrichen wird die Karte mit der seltensten und schwächsten Wirkung */
-    'verbrannteErde'],
+    'verbrannteErde',
+    /* Teil 7 (Kartenpool, Grenze 42): fünf neue Karten (Stadtrecht, Hofhaltung, Wasserrahmen, Fernhandel, Geschützguss) bei 38 Karten ergäben 43; gestrichen wird die Karte mit der niedrigsten Wahlrate
+       der Basismessung (Volle Auslastung: 0 von 7 Angeboten gewählt, Vorschlag zur Bestätigung im Bericht) */
+    'volleAuslastung'],
   /* Gebäude-Ausbauten, die im Modus karten entfallen, weil eine Karte sie übernimmt (Teil 6, REQ-K6.07; die Grundlagen bleiben: Turm bauen, Mauerausbau, Quartiere, Presse, Schmiede):
      Reichweite und Feuerrate der Türme → Karte Turmschule, Stachelwall → Karte Stachelwall, Mörtelkolonne → Karte Maurerkolonne, Kontor-Ausbau (Zinseszins) → Karte Handelskontor (Stufen, Name Zinsmeister) */
   entfallenAusbauten: ['reichweite_0', 'reichweite_2', 'kadenz_0', 'kadenz_2', 'stacheln', 'moertel', 'zinseszins'],
@@ -96,15 +103,18 @@ const KF_PFAD = {
     { id: 'r_eisenwaffen', branch: 'pfad', nameKey: 'kp.res.eisenwaffen.name', descKey: 'kp.res.eisenwaffen.desc',
       schaltetFrei: ['stufe:qualitaet:4'], ersetzt: { laeufer: 'schwertkaempfer', werfer: 'bogenschuetze' }, tiers: [{ cost: 400, timeS: 50, effect: [] }] },
     /* Weiterentwicklungen (Teil 6, REQ-K6.06; Kosten und Dauer sind Startwerte): Fabriken werden zu Dampfmühlen (Ertrag +40 %, Klickertrag ×2), die Universität zur Druckerei (Forschung halb so lang, Budgetkurs ×1,5) */
-    { id: 'r_dampfkraft', branch: 'pfad', nameKey: 'kp.res.dampfkraft.name', descKey: 'kp.res.dampfkraft.desc', weiter: { bereich: 'fabrik' },
+    /* Teil 7 (REQ-K7.08): erste Stufe der Produktion; früher und kürzer als die Weiterentwicklungen aus Teil 6 (Ziel: Abschluss im Median Minute 6–9, Wirtschafts-Bot Normal) */
+    { id: 'r_wasserrahmen', branch: 'pfad', nameKey: 'kp.res.wasserrahmen.name', descKey: 'kp.res.wasserrahmen.desc', weiter: { bereich: 'fabrik', stufe: 1 },
+      tiers: [{ cost: 350, timeS: 30, effect: [{ stat: 'factoryYield', mul: 1.3 }] }] },
+    { id: 'r_dampfkraft', branch: 'pfad', nameKey: 'kp.res.dampfkraft.name', descKey: 'kp.res.dampfkraft.desc', weiter: { bereich: 'fabrik', stufe: 2 }, requires: { research: 'r_wasserrahmen', tier: 1 },
       tiers: [{ cost: 800, timeS: 60, effect: [{ stat: 'factoryYield', mul: 1.4 }, { stat: 'clickYield', mul: 2 }] }] },
     { id: 'r_buchdruck', branch: 'pfad', nameKey: 'kp.res.buchdruck.name', descKey: 'kp.res.buchdruck.desc', weiter: { bereich: 'universitaet' }, nurUni: true,       // nurUni (Teil 7): nicht in der Bibliothek
-      tiers: [{ cost: 600, timeS: 50, effect: [{ stat: 'researchTime', mul: 0.5 }, { stat: 'budgetKurs', mul: 1.5 }] }] },
+      tiers: [{ cost: 350, timeS: 30, effect: [{ stat: 'researchTime', mul: 0.5 }, { stat: 'budgetKurs', mul: 1.5 }] }] },
     /* Teil 7: Handelshaus (Söldnerkompanien im Reiter Armee, C.HANDELSHAUS) und Gießerei (Geschütze in der Kaserne, C.UNITS.geschuetz); gebaeude: ohne dieses Gebäude keine Forschung */
     { id: 'r_fernhandel', branch: 'pfad', nameKey: 'kp.res.fernhandel.name', descKey: 'kp.res.fernhandel.desc', weiter: { bereich: 'kontor' }, gebaeude: 'kontor',
-      tiers: [{ cost: 500, timeS: 40, effect: [] }] },
+      tiers: [{ cost: 400, timeS: 30, effect: [] }] },
     { id: 'r_geschuetzguss', branch: 'pfad', nameKey: 'kp.res.geschuetzguss.name', descKey: 'kp.res.geschuetzguss.desc', weiter: { bereich: 'schmiede' },
-      tiers: [{ cost: 500, timeS: 40, effect: [] }] },
+      tiers: [{ cost: 400, timeS: 30, effect: [] }] },
     /* Ersatz für Mauerausbau III und Turmausbau (Teil 5): beide Stufen gehören zur Grundausstattung */
     { id: 'r_wehrgang', branch: 'pfad', nameKey: 'kp.res.wehrgang.name', descKey: 'kp.res.wehrgang.desc',
       tiers: [{ cost: 300, timeS: 40, effect: [{ stat: 'wallHp', mul: 1.3 }, { stat: 'repairCd', mul: 0.7 }] }] },

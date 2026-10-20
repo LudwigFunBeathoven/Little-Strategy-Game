@@ -1573,8 +1573,13 @@ function create(){
   /* Weiterentwicklung (Teil 6, REQ-K6.06): Grundvarianten und laufende Aufwertungen zu Grundvarianten aller Gebäude des Bereichs entfallen, ohne Erstattung (die bezahlten Kosten fallen aus dem Erstattungswert);
      Sonderbauten der Doktrinen, Ausbaustufen und das Gebäude selbst bleiben. Danach sind die Grundvarianten auf Basis der Weiterentwicklung wieder wählbar (variantsFor, Kosten wie bisher). */
   const grundVariante = vid => !!VAR[vid] && !VAR[vid].doktrin;
-  const weiterResearch = type => RESEARCH.find(r => r.weiter && r.weiter.bereich === type) || null;
-  const weiterDone = type => { const r = weiterResearch(type); return S.pacing === 'karten' && !!r && researchTier(r.id) > 0; };
+  /* Teil 7 (REQ-K7.08): höchstens zwei Stufen je Gebäude (Feld weiter.stufe; Fabrik: Wasserrahmen, dann Dampfkraft). weiterStufe = Zahl der abgeschlossenen Stufen,
+     weiterNext = nächste offene Stufe, weiterResearch = nächste offene, sonst die letzte */
+  const weiterList = type => RESEARCH.filter(r => r.weiter && r.weiter.bereich === type).sort((a, b) => (a.weiter.stufe || 1) - (b.weiter.stufe || 1));
+  const weiterStufe = type => S.pacing !== 'karten' ? 0 : weiterList(type).filter(r => researchTier(r.id) > 0).length;
+  const weiterNext = type => weiterList(type).find(r => researchTier(r.id) === 0) || null;
+  const weiterResearch = type => weiterNext(type) || weiterList(type).slice(-1)[0] || null;
+  const weiterDone = type => weiterStufe(type) > 0;
   /* Zahl der Varianten, die der Abschluss der Forschung r ersetzt (Tooltip „Ersetzt N Varianten“): stehende Grundvarianten und laufende Aufwertungen zu ihnen */
   const weiterErsetzt = id => {
     const r = RES[id], type = r && r.weiter && r.weiter.bereich;
@@ -1849,7 +1854,7 @@ function create(){
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     handelshaus, kompanieKosten, kompanieBlock, hireKompanie, supplyOf, queueSupply,
     hausStufe, fabrikGrenze, fabrikPlaetze, hasFluegel, forschungsort, zeughausDeckt, zeughausMax, zinsQuelle, budgetMax, uniPlaetze, hausNext, hausKarte, hausKosten, hausBlock, hausAusbau, fluegelFrei, fluegelBlock, chooseFluegel, hausKarteOffen,
-    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
+    enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, weiterStufe, weiterNext, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
