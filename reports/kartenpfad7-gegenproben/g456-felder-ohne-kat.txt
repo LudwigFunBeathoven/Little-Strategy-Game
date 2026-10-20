@@ -1,0 +1,75 @@
+fertig in 331 s, 450 Partien
+
+FELDMESSUNG (einheiten-zuerst, 50 Partien je Feld, Modus karten)
+
+| Grad | Profil | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median (Mittel) | längste Lücke Median / P90 (s) | Lücke inkl. Ende Median / P90 (s) | Fabriken Min 5 / 10 (Median) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| leicht | aktiv | 100 % | 0 % | 0 % | 18:58 | 20:38 | 15 (14.8) | 105 / 124 | 105 / 124 | 5 / 5 |
+| leicht | durchschnitt | 100 % | 0 % | 0 % | 17:20 | 22:51 | 14 (14.8) | 121 / 138 | 121 / 138 | 5 / 5 |
+| leicht | gelegentlich | 50 % | 42 % | 8 % | 20:09 | 28:49 | 17 (15.6) | 176 / 203 | 176 / 203 | 5 / 5 |
+| normal | aktiv | 98 % | 2 % | 0 % | 14:02 | 16:07 | 13 (13.0) | 101 / 121 | 101 / 121 | 5 / 5 |
+| normal | durchschnitt | 98 % | 0 % | 2 % | 19:34 | 26:09 | 18 (18.2) | 120 / 132 | 120 / 132 | 5 / 5 |
+| normal | gelegentlich | 74 % | 22 % | 4 % | 20:12 | 26:01 | 18 (18.1) | 157 / 207 | 157 / 207 | 5 / 5 |
+| schwer | aktiv | 100 % | 0 % | 0 % | 12:29 | 14:16 | 15 (15.1) | 66 / 74 | 66 / 74 | 5 / 5 |
+| schwer | durchschnitt | 88 % | 12 % | 0 % | 13:31 | 15:59 | 17 (15.1) | 79 / 104 | 80 / 110 | 5 / 5 |
+| schwer | gelegentlich | 0 % | 100 % | 0 % | 1:29 | 1:36 | 0 (0.0) | 0 / 0 | 89 / 96 | – / – |
+
+Angebote mit Doktrin (Bot ohne Kategorie; Median, Mittel; erstes Angebot in Wahl; Partien ohne Doktrin-Angebot)
+
+| Grad | Profil | Angebote Median (Mittel) | erstes Angebot in Wahl (Median) | ohne Doktrin-Angebot |
+|---|---|---|---|---|
+| leicht | aktiv | 5 (5.3) | 4 | 0 % |
+| leicht | durchschnitt | 5 (5.1) | 4 | 0 % |
+| leicht | gelegentlich | 6 (5.8) | 4 | 0 % |
+| normal | aktiv | 5 (4.6) | 4 | 0 % |
+| normal | durchschnitt | 6 (6.5) | 4 | 0 % |
+| normal | gelegentlich | 6 (6.3) | 4 | 0 % |
+| schwer | aktiv | 5 (5.1) | 4 | 0 % |
+| schwer | durchschnitt | 6 (5.1) | 4 | 12 % |
+| schwer | gelegentlich | 0 (0.0) | – | 100 % |
+
+Weiterentwicklungen (Anteil der Partien; Abschluss Median; ersetzte Varianten je Partie mit Weiterentwicklung, Mittel)
+
+| Grad | Profil | Dampfkraft | Abschluss (Median) | Buchdruck | Abschluss (Median) | ersetzte Varianten (Mittel) |
+|---|---|---|---|---|---|---|
+| leicht | aktiv | 10 % | 12:30 | 2 % | 5:32 | 0.0 |
+| leicht | durchschnitt | 64 % | 15:41 | 0 % | – | 0.0 |
+| leicht | gelegentlich | 56 % | 17:07 | 2 % | 3:43 | 0.0 |
+| normal | aktiv | 44 % | 11:52 | 2 % | 3:42 | 0.0 |
+| normal | durchschnitt | 80 % | 12:53 | 6 % | 3:44 | 0.0 |
+| normal | gelegentlich | 66 % | 14:32 | 4 % | 3:45 | 0.0 |
+| schwer | aktiv | 80 % | 9:06 | 2 % | 3:16 | 0.0 |
+| schwer | durchschnitt | 72 % | 8:51 | 0 % | – | 0.0 |
+| schwer | gelegentlich | 0 % | – | 0 % | – | – |
+
+EP je Minute (Median; Partien im Abschnitt in Klammern)
+
+| Grad | Profil | 0–4 min | 4–8 min | 8–12 min | 12+ min | EP gesamt (Median) |
+|---|---|---|---|---|---|---|
+| leicht | aktiv | 45.1 (50) | 58.6 (50) | 97.2 (50) | 817.5 (40) | 7091 |
+| leicht | durchschnitt | 50.4 (50) | 44.0 (50) | 72.8 (50) | 648.3 (45) | 3756 |
+| leicht | gelegentlich | 47.4 (50) | 29.2 (50) | 35.2 (50) | 688.8 (49) | 7260 |
+| normal | aktiv | 65.0 (50) | 59.8 (50) | 127.6 (50) | 219.1 (40) | 1371 |
+| normal | durchschnitt | 89.3 (50) | 45.7 (50) | 94.7 (50) | 983.8 (42) | 9636 |
+| normal | gelegentlich | 94.1 (50) | 34.3 (50) | 71.8 (50) | 896.6 (46) | 10779 |
+| schwer | aktiv | 187.5 (50) | 81.3 (50) | 224.2 (50) | 178.3 (22) | 1959 |
+| schwer | durchschnitt | 192.3 (50) | 56.9 (44) | 173.3 (44) | 198.3 (35) | 2032 |
+| schwer | gelegentlich | 21.9 (50) | – (0) | – (0) | – (0) | 32 |
+
+EP-Quellen (Anteil am EP-Ertrag über alle Partien des Feldes)
+
+| Grad | Profil | Abschüsse (Einheiten) | Türme | Basisschaden | abgewehrte Wellen | Forschungsbudget | Hörsaal |
+|---|---|---|---|---|---|---|---|
+| leicht | aktiv | 62.6 % | 0.0 % | 20.3 % | 15.1 % | 0.0 % | 0.0 % |
+| leicht | durchschnitt | 61.9 % | 0.1 % | 22.5 % | 14.9 % | 0.0 % | 0.0 % |
+| leicht | gelegentlich | 68.2 % | 0.0 % | 11.4 % | 16.2 % | 0.0 % | 0.0 % |
+| normal | aktiv | 43.2 % | 0.4 % | 46.9 % | 9.1 % | 0.0 % | 0.0 % |
+| normal | durchschnitt | 68.7 % | 0.6 % | 14.8 % | 15.2 % | 0.0 % | 0.0 % |
+| normal | gelegentlich | 69.2 % | 0.0 % | 11.6 % | 15.2 % | 0.0 % | 0.0 % |
+| schwer | aktiv | 41.7 % | 2.4 % | 44.5 % | 7.1 % | 0.0 % | 0.0 % |
+| schwer | durchschnitt | 52.3 % | 3.7 % | 32.0 % | 11.1 % | 0.0 % | 0.0 % |
+| schwer | gelegentlich | 85.9 % | 0.0 % | 0.0 % | 14.1 % | 0.0 % | 0.0 % |
+
+Wahlrate je Karte (Normal, alle Profile, 10693 Angebote): 56 Karten, außerhalb von 5–60 %: 7
+
+grenzfeste 10.4 % (5/48), zermuerbung 10.9 % (5/46), pluenderung 11.3 % (21/186), grosseArmee 13 % (3/23), lagerzehnt 13.6 % (37/273), gluecksritter 14 % (21/150), wasserrahmen 14.1 % (108/767), aushebung 14.1 % (43/304), dampfkraft 14.3 % (52/363), stiftung 14.3 % (1/7), massenaufgebot 14.4 % (13/90), dauerauftrag 14.5 % (24/166), gilde 14.5 % (21/145), bauordnung 14.5 % (20/138), sammelruf 14.6 % (35/239), ausfall 14.9 % (11/74), zunftordnung 14.9 % (10/67), elite 14.9 % (11/74), grenzwacht 15.1 % (21/139), belagerungsgeraet 15.3 % (59/385), kriegstrommeln 15.3 % (59/385), bollwerk 15.4 % (10/65), drill 15.7 % (68/433), glaskanonen 15.8 % (3/19), handelskontor 16.1 % (23/143), kriegserfahrung 16.2 % (60/371), turmschule 16.5 % (33/200), bessereFabriken 16.5 % (65/394), schildwall 16.6 % (62/374), buchdruck 16.7 % (8/48), waffenbrueder 16.8 % (36/214), wehrverband 16.9 % (14/83), durchbruch 16.9 % (26/154), kriegswirtschaft 17.1 % (22/129), fabrikmiliz 17.2 % (17/99), fernhandel 17.4 % (121/697), raubbau 17.4 % (12/69), rekrutenzug 17.5 % (64/366), querverbindung 17.8 % (46/259), turmkanoniere 17.9 % (40/223), stachelwall 18.3 % (65/356), stehendesHeer 18.5 % (17/92), volleAuslastung 20 % (1/5), maurerkolonne 20.3 % (79/389), freihandel 20.4 % (11/54), soeldnertruppe 20.5 % (34/166), wehrhandel 22.5 % (18/80), allesAufDieMitte 25.7 % (9/35), vorstoss 25.9 % (22/85), geschuetzguss 71.4 % (150/210), ballistik 76.1 % (70/92), befestigungskunde 80.2 % (150/187), eiserneKlingen 96.7 % (148/153), stadtrecht 100 % (150/150), hofhaltung 100 % (150/150), fortgeschritteneTaktiken 100 % (80/80)

@@ -1,0 +1,418 @@
+{
+ "prefix": "kartenpfad7",
+ "diff": "normal",
+ "profile": "durchschnitt",
+ "bots": {
+  "militaer": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     3,
+     3
+    ],
+    "min5": [
+     4,
+     3.98
+    ],
+    "min10": [
+     5,
+     4.804878048780488
+    ],
+    "dist": {
+     "4": 8,
+     "5": 33
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 41
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 12,
+     "universitaet": 92,
+     "kontor": 100
+    },
+    "mittel": {
+     "fabrik": 4.96,
+     "kaserne": 1,
+     "schmiede": 0.12,
+     "universitaet": 0.92,
+     "kontor": 1
+    },
+    "frei": 0,
+    "haupthaus": 100,
+    "doppelt": {}
+   },
+   "nachbarschaft": {
+    "nbMedian": 0.24,
+    "nbMittel": 0.24720000000000014,
+    "bauordnung": 0,
+    "bauordnungWert": null,
+    "gilde": 2,
+    "gildeWert": 0.32,
+    "gildeN": 4
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 2,
+     "tMedian": 647.2,
+     "ersetzt": 1
+    },
+    "r_dampfkraft": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_buchdruck": {
+     "anteil": 10,
+     "tMedian": 448.6,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 6,
+     "tMedian": 335.6,
+     "ersetzt": 0
+    },
+    "r_geschuetzguss": {
+     "anteil": 10,
+     "tMedian": 283.6,
+     "ersetzt": 0.2
+    }
+   },
+   "dauer": {
+    "siege": 100,
+    "dauer": 763.7,
+    "wahlen": 13,
+    "mauer": 0,
+    "pattAlle": 1,
+    "pattFeld": 0,
+    "siegeHoch": 100,
+    "nHoch": 300
+   },
+   "haus": {
+    "rathaus": 100,
+    "rathausWahl": 4,
+    "rathausT": 245,
+    "residenz": 98,
+    "residenzT": 478,
+    "fluegel": {
+     "zeughaus": 100,
+     "kanzlei": 98
+    },
+    "kompanien": 0,
+    "geschuetze": 0.42
+   }
+  },
+  "wirtschaft": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     3,
+     3
+    ],
+    "min5": [
+     4,
+     3.54
+    ],
+    "min10": [
+     4,
+     4.04
+    ],
+    "dist": {
+     "3": 8,
+     "4": 32,
+     "5": 10
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 50
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 100,
+     "universitaet": 94,
+     "kontor": 84
+    },
+    "mittel": {
+     "fabrik": 4.2,
+     "kaserne": 1,
+     "schmiede": 1,
+     "universitaet": 0.96,
+     "kontor": 0.84
+    },
+    "frei": 0,
+    "haupthaus": 100,
+    "doppelt": {
+     "universitaet": 2
+    }
+   },
+   "nachbarschaft": {
+    "nbMedian": 1.44,
+    "nbMittel": 2.3567999999999985,
+    "bauordnung": 94,
+    "bauordnungWert": 2,
+    "gilde": 82,
+    "gildeWert": 0.64,
+    "gildeN": 8
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 100,
+     "tMedian": 351,
+     "ersetzt": 2.8
+    },
+    "r_dampfkraft": {
+     "anteil": 72,
+     "tMedian": 668.2,
+     "ersetzt": 2.5833333333333335
+    },
+    "r_buchdruck": {
+     "anteil": 94,
+     "tMedian": 379,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 84,
+     "tMedian": 401.8,
+     "ersetzt": 0
+    },
+    "r_geschuetzguss": {
+     "anteil": 82,
+     "tMedian": 697.6,
+     "ersetzt": 0.7073170731707317
+    }
+   },
+   "dauer": {
+    "siege": 90,
+    "dauer": 988.2,
+    "wahlen": 20,
+    "mauer": 0,
+    "pattAlle": 2.7,
+    "pattFeld": 12,
+    "siegeHoch": 74,
+    "nHoch": 300
+   },
+   "haus": {
+    "rathaus": 100,
+    "rathausWahl": 5,
+    "rathausT": 286,
+    "residenz": 100,
+    "residenzT": 582,
+    "fluegel": {
+     "schatzkammer": 100,
+     "bibliothek": 100
+    },
+    "kompanien": 0.98,
+    "geschuetze": 20.96
+   }
+  },
+  "verteidigung": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     3,
+     3
+    ],
+    "min5": [
+     4,
+     4
+    ],
+    "min10": [
+     5,
+     4.76
+    ],
+    "dist": {
+     "4": 12,
+     "5": 38
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 50
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 30,
+     "universitaet": 76,
+     "kontor": 100
+    },
+    "mittel": {
+     "fabrik": 4.94,
+     "kaserne": 1,
+     "schmiede": 0.3,
+     "universitaet": 0.76,
+     "kontor": 1
+    },
+    "frei": 0,
+    "haupthaus": 100,
+    "doppelt": {}
+   },
+   "nachbarschaft": {
+    "nbMedian": 0.24,
+    "nbMittel": 0.28320000000000006,
+    "bauordnung": 4,
+    "bauordnungWert": 2,
+    "gilde": 6,
+    "gildeWert": 0.56,
+    "gildeN": 7
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 40,
+     "tMedian": 1103,
+     "ersetzt": 0.6
+    },
+    "r_dampfkraft": {
+     "anteil": 14,
+     "tMedian": 1415.4,
+     "ersetzt": 0.8571428571428571
+    },
+    "r_buchdruck": {
+     "anteil": 24,
+     "tMedian": 1212.6,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 32,
+     "tMedian": 1047,
+     "ersetzt": 0
+    },
+    "r_geschuetzguss": {
+     "anteil": 30,
+     "tMedian": 362.6,
+     "ersetzt": 0.26666666666666666
+    }
+   },
+   "dauer": {
+    "siege": 94,
+    "dauer": 1238.7,
+    "wahlen": 22,
+    "mauer": 210,
+    "pattAlle": 7.7,
+    "pattFeld": 24,
+    "siegeHoch": 72,
+    "nHoch": 300
+   },
+   "haus": {
+    "rathaus": 100,
+    "rathausWahl": 4,
+    "rathausT": 249,
+    "residenz": 100,
+    "residenzT": 498,
+    "fluegel": {
+     "bibliothek": 100,
+     "zeughaus": 100
+    },
+    "kompanien": 0,
+    "geschuetze": 9.18
+   }
+  },
+  "ohne": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     3,
+     3
+    ],
+    "min5": [
+     4,
+     3.96
+    ],
+    "min10": [
+     5,
+     4.64
+    ],
+    "dist": {
+     "3": 2,
+     "4": 14,
+     "5": 34
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 50
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 100,
+     "universitaet": 20,
+     "kontor": 100
+    },
+    "mittel": {
+     "fabrik": 4.78,
+     "kaserne": 1.02,
+     "schmiede": 1,
+     "universitaet": 0.2,
+     "kontor": 1
+    },
+    "frei": 0,
+    "haupthaus": 100,
+    "doppelt": {
+     "kaserne": 2
+    }
+   },
+   "nachbarschaft": {
+    "nbMedian": 0.36,
+    "nbMittel": 0.46559999999999974,
+    "bauordnung": 14,
+    "bauordnungWert": 2,
+    "gilde": 12,
+    "gildeWert": 0.64,
+    "gildeN": 8
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 72,
+     "tMedian": 694,
+     "ersetzt": 0
+    },
+    "r_dampfkraft": {
+     "anteil": 24,
+     "tMedian": 1038,
+     "ersetzt": 0
+    },
+    "r_buchdruck": {
+     "anteil": 20,
+     "tMedian": 494.6,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 58,
+     "tMedian": 816,
+     "ersetzt": 0
+    },
+    "r_geschuetzguss": {
+     "anteil": 100,
+     "tMedian": 469.6,
+     "ersetzt": 0
+    }
+   },
+   "dauer": {
+    "siege": 96,
+    "dauer": 934.2,
+    "wahlen": 15,
+    "mauer": 0,
+    "pattAlle": 4,
+    "pattFeld": 8,
+    "siegeHoch": 92,
+    "nHoch": 300
+   },
+   "haus": {
+    "rathaus": 100,
+    "rathausWahl": 4,
+    "rathausT": 240,
+    "residenz": 98,
+    "residenzT": 471,
+    "fluegel": {
+     "kanzlei": 100,
+     "bibliothek": 98
+    },
+    "kompanien": 0,
+    "geschuetze": 22.48
+   }
+  }
+ },
+ "spannweite": 475
+}

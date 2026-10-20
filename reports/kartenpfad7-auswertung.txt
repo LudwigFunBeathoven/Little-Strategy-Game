@@ -1,0 +1,57 @@
+AUSWERTUNG kartenpfad7 (normal, durchschnitt; Rohdaten reports/kartenpfad7-*.json)
+
+Fabrikplätze im Raster (Grundform, Varianten, Sonderbauten; Median / Mittel) und Verteilung bei Minute 10
+
+| Bot | Partien | Minute 2 | Minute 5 | Minute 10 | Verteilung Minute 10 (Zahl: Partien) | über der Grenze (Minute 10) |
+|---|---|---|---|---|---|---|
+| militaer | 50 | 3 / 3,0 | 4 / 4,0 | 5 / 4,8 | 4: 8, 5: 33 | 0 von 41 |
+| wirtschaft | 50 | 3 / 3,0 | 4 / 3,5 | 4 / 4,0 | 3: 8, 4: 32, 5: 10 | 0 von 50 |
+| verteidigung | 50 | 3 / 3,0 | 4 / 4,0 | 5 / 4,8 | 4: 12, 5: 38 | 0 von 50 |
+| ohne | 50 | 3 / 3,0 | 4 / 4,0 | 5 / 4,6 | 3: 2, 4: 14, 5: 34 | 0 von 50 |
+
+Belegung der Plätze am Partieende (Anteil der Partien mit dem Gebäude; Mittel der Zahl; „doppelt“: Anteil mit zwei oder mehr)
+
+| Bot | fabrik | kaserne | schmiede | universitaet | kontor | Haupthaus | freie Plätze (Mittel) | doppelt (außer Fabrik) |
+|---|---|---|---|---|---|---|---|---|
+| militaer | 100 % (5,0) | 100 % (1,0) | 12 % (0,1) | 92 % (0,9) | 100 % (1,0) | 100 % | 0,0 | nie |
+| wirtschaft | 100 % (4,2) | 100 % (1,0) | 100 % (1,0) | 94 % (1,0) | 84 % (0,8) | 100 % | 0,0 | universitaet 2 % |
+| verteidigung | 100 % (4,9) | 100 % (1,0) | 30 % (0,3) | 76 % (0,8) | 100 % (1,0) | 100 % | 0,0 | nie |
+| ohne | 100 % (4,8) | 100 % (1,0) | 100 % (1,0) | 20 % (0,2) | 100 % (1,0) | 100 % | 0,0 | kaserne 2 % |
+
+Nachbarschaft und Synergiekarten am Partieende (Summe der Nachbarschaftswerte aller Fabriken; Bauordnung und Gilde: Anteil der Partien mit der Karte, Wert bei Wahl)
+
+| Bot | Nachbarschaft Fabriken (Median / Mittel) | Bauordnung gewählt | Wert (×) | Gilde gewählt | Wert (Median) |
+|---|---|---|---|---|---|
+| militaer | 0,24 / 0,25 | 0 % | – | 2 % | +32 % (4 Karten) |
+| wirtschaft | 1,44 / 2,36 | 94 % | 2 | 82 % | +64 % (8 Karten) |
+| verteidigung | 0,24 / 0,28 | 4 % | 2 | 6 % | +56 % (7 Karten) |
+| ohne | 0,36 / 0,47 | 14 % | 2 | 12 % | +64 % (8 Karten) |
+
+Weiterentwicklungen (Anteil der Partien mit Abschluss; Abschluss Median; ersetzte Varianten Mittel)
+
+| Bot | Wasserrahmen | Dampfkraft | Buchdruck | Fernhandel | Geschützguss |
+|---|---|---|---|---|---|
+| militaer | 2 % · 10:47 · 1,0 | – | 10 % · 7:29 · 0,0 | 6 % · 5:36 · 0,0 | 10 % · 4:44 · 0,2 |
+| wirtschaft | 100 % · 5:51 · 2,8 | 72 % · 11:08 · 2,6 | 94 % · 6:19 · 0,0 | 84 % · 6:42 · 0,0 | 82 % · 11:38 · 0,7 |
+| verteidigung | 40 % · 18:23 · 0,6 | 14 % · 23:35 · 0,9 | 24 % · 20:13 · 0,0 | 32 % · 17:27 · 0,0 | 30 % · 6:03 · 0,3 |
+| ohne | 72 % · 11:34 · 0,0 | 24 % · 17:18 · 0,0 | 20 % · 8:15 · 0,0 | 58 % · 13:36 · 0,0 | 100 % · 7:50 · 0,0 |
+
+Dauer und Patt (normal, durchschnitt; Patt mit druck=hoch über alle Felder der Messreihe und im Feld normal/durchschnitt)
+
+| Bot | Siege | Dauer Median | Wahlen Median | Mauerverlust Median | Patt druck=hoch (alle Felder) | Patt druck=hoch (Feld) | Siege druck=hoch (Feld) |
+|---|---|---|---|---|---|---|---|
+| militaer | 100 % | 12:44 | 13 | 0 | 1 % (300 Partien) | 0 % | 100 % |
+| wirtschaft | 90 % | 16:28 | 20 | 0 | 2.7 % (300 Partien) | 12 % | 74 % |
+| verteidigung | 94 % | 20:39 | 22 | 210 | 7.7 % (300 Partien) | 24 % | 72 % |
+| ohne | 96 % | 15:34 | 15 | 0 | 4 % (300 Partien) | 8 % | 92 % |
+
+Spannweite der Dauer-Mediane der Kategorie-Bots: 7:55 min
+
+Haupthaus, Flügel, Söldnerkompanien, Geschütze
+
+| Bot | Rathaus (Anteil) | Rathaus in Wahl (Median) | Rathaus fertig (Median) | Residenz (Anteil) | Residenz fertig (Median) | Flügel (Anteil der Partien) | Kompanien je Partie (Mittel) | Geschütze je Partie (Mittel) |
+|---|---|---|---|---|---|---|---|---|
+| militaer | 100 % | 4 | 4:05 | 98 % | 7:58 | zeughaus 100 %, kanzlei 98 % | 0,0 | 0,4 |
+| wirtschaft | 100 % | 5 | 4:46 | 100 % | 9:42 | schatzkammer 100 %, bibliothek 100 % | 1,0 | 21,0 |
+| verteidigung | 100 % | 4 | 4:09 | 100 % | 8:18 | bibliothek 100 %, zeughaus 100 % | 0,0 | 9,2 |
+| ohne | 100 % | 4 | 4:00 | 98 % | 7:51 | kanzlei 100 %, bibliothek 98 % | 0,0 | 22,5 |

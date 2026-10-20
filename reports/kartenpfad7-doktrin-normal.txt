@@ -1,0 +1,19 @@
+fertig in 483 s, 300 Partien
+
+DOKTRINEN – Paarvergleich (einheiten-zuerst, normal/durchschnitt, 50 Partien je Arm, gleiche Seeds, druck: aus, Modus karten)
+
+| Doktrin | Kategorie | Siege mit | Siege ohne | Differenz (pp) | Dauer Median mit / ohne | Wahlen Median mit / ohne | Mauer-Verlust mit / ohne | Turm-Abschüsse mit / ohne | Sonderbau gebaut (mit) |
+|---|---|---|---|---|---|---|---|---|---|
+| zunftordnung | wirtschaft | 100 % | 100 % | 0 | 16:17 / 15:50 | 20 / 19 | 0 / 0 | 0.3 / 0.3 | 100 % (gewählt 100 %, Differenz bei Wahl 0) |
+| ausfall | verteidigung | 100 % | 92 % | +8 | 20:16 / 23:07 | 20 / 25 | 258 / 388 | 8.1 / 57.3 | – (gewählt 100 %, Differenz bei Wahl +8) |
+| grenzfeste | verteidigung | 68 % | 92 % | -24 | 26:15 / 23:07 | 29 / 25 | 669 / 388 | 151.7 / 57.3 | – (gewählt 100 %, Differenz bei Wahl -24) |
+
+Angebote mit Doktrin (Arm „alle“: alle Doktrinen im Pool, Kategorie-Bot)
+
+| Kategorie | Siege | Angebote mit Doktrin Median (Mittel) | Doktrinen gewählt Mittel | Erste Doktrin gewählt in Wahl (Median) | Erstes Angebot mit Doktrin in Wahl (Median) | Partien ohne Doktrin-Angebot | Unterhalt Median (Material) |
+|---|---|---|---|---|---|---|---|
+| militaer | null % | null (–) | – | – | – | null % | – |
+| wirtschaft | null % | null (–) | – | – | – | null % | – |
+| verteidigung | null % | null (–) | – | – | – | null % | – |
+
+Gewählt je Doktrin (Anteil der Partien): [{"zunftordnung":null,"stiftung":null,"stehendesHeer":null,"vorstoss":null,"bollwerk":null,"ausfall":null,"elite":null,"massenaufgebot":null,"freihandel":null,"raubbau":null,"fabrikmiliz":null,"grenzfeste":null,"zermuerbung":null},{"zunftordnung":null,"stiftung":null,"stehendesHeer":null,"vorstoss":null,"bollwerk":null,"ausfall":null,"elite":null,"massenaufgebot":null,"freihandel":null,"raubbau":null,"fabrikmiliz":null,"grenzfeste":null,"zermuerbung":null},{"zunftordnung":null,"stiftung":null,"stehendesHeer":null,"vorstoss":null,"bollwerk":null,"ausfall":null,"elite":null,"massenaufgebot":null,"freihandel":null,"raubbau":null,"fabrikmiliz":null,"grenzfeste":null,"zermuerbung":null}]

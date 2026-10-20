@@ -1,0 +1,61 @@
+FELDMESSUNG (einheiten-zuerst, Kategorie militaer, 50 Partien je Feld, Modus karten)
+
+| Grad | Profil | Siege | Niederl. | Patt | Dauer Median | Dauer P90 | Wahlen Median (Mittel) | längste Lücke Median / P90 (s) | Lücke inkl. Ende Median / P90 (s) | Fabriken Min 5 / 10 (Median) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| normal | aktiv | 98 % | 0 % | 2 % | 12:32 | 19:09 | 12 (12.6) | 100 / 119 | 100 / 119 | 4 / 5 |
+| normal | durchschnitt | 100 % | 0 % | 0 % | 12:44 | 20:12 | 13 (13.4) | 92 / 131 | 92 / 131 | 4 / 5 |
+| normal | gelegentlich | 92 % | 8 % | 0 % | 14:07 | 20:33 | 13 (13.9) | 106 / 174 | 106 / 174 | 4 / 5 |
+| schwer | aktiv | 98 % | 0 % | 2 % | 11:22 | 16:29 | 14 (14.3) | 66 / 110 | 66 / 110 | 4 / 5 |
+| schwer | durchschnitt | 86 % | 14 % | 0 % | 11:01 | 14:54 | 13 (12.6) | 78 / 93 | 79 / 93 | 4 / 5 |
+| schwer | gelegentlich | 0 % | 100 % | 0 % | 1:29 | 1:36 | 0 (0.0) | 0 / 0 | 89 / 96 | – / – |
+
+Angebote mit Doktrin (Bot ohne Kategorie; Median, Mittel; erstes Angebot in Wahl; Partien ohne Doktrin-Angebot)
+
+| Grad | Profil | Angebote Median (Mittel) | erstes Angebot in Wahl (Median) | ohne Doktrin-Angebot |
+|---|---|---|---|---|
+| normal | aktiv | 3 (3.4) | 4 | 0 % |
+| normal | durchschnitt | 3 (3.5) | 4 | 0 % |
+| normal | gelegentlich | 3 (3.4) | 5 | 0 % |
+| schwer | aktiv | 3 (3.6) | 5 | 0 % |
+| schwer | durchschnitt | 3 (3.1) | 4 | 14 % |
+| schwer | gelegentlich | 0 (0.0) | – | 100 % |
+
+Weiterentwicklungen (Anteil der Partien; Abschluss Median; ersetzte Varianten je Partie mit Weiterentwicklung, Mittel)
+
+| Grad | Profil | Dampfkraft | Abschluss (Median) | Buchdruck | Abschluss (Median) | ersetzte Varianten (Mittel) |
+|---|---|---|---|---|---|---|
+| normal | aktiv | 10 % | 9:41 | 8 % | 11:15 | 0.5 |
+| normal | durchschnitt | 2 % | 10:47 | 10 % | 7:29 | 0.1 |
+| normal | gelegentlich | 6 % | 5:02 | 2 % | 4:07 | 0.3 |
+| schwer | aktiv | 10 % | 6:08 | 8 % | 8:55 | 0.3 |
+| schwer | durchschnitt | 4 % | 5:34 | 6 % | 9:34 | 0.2 |
+| schwer | gelegentlich | 0 % | – | 0 % | – | – |
+
+EP je Minute (Median; Partien im Abschnitt in Klammern)
+
+| Grad | Profil | 0–4 min | 4–8 min | 8–12 min | 12+ min | EP gesamt (Median) |
+|---|---|---|---|---|---|---|
+| normal | aktiv | 64.3 (50) | 65.3 (50) | 165.0 (49) | 189.0 (26) | 1349 |
+| normal | durchschnitt | 88.2 (50) | 67.8 (50) | 168.8 (48) | 192.7 (28) | 1483 |
+| normal | gelegentlich | 93.7 (50) | 51.4 (50) | 116.0 (50) | 246.2 (35) | 1584 |
+| schwer | aktiv | 190.3 (50) | 111.3 (50) | 249.0 (47) | 218.5 (14) | 1938 |
+| schwer | durchschnitt | 196.6 (50) | 74.0 (43) | 217.8 (41) | 208.1 (19) | 2039 |
+| schwer | gelegentlich | 21.9 (50) | – (0) | – (0) | – (0) | 32 |
+
+EP-Quellen (Anteil am EP-Ertrag über alle Partien des Feldes)
+
+| Grad | Profil | Abschüsse (Einheiten) | Türme | Basisschaden | abgewehrte Wellen | Forschungsbudget | Hörsaal |
+|---|---|---|---|---|---|---|---|
+| normal | aktiv | 44.9 % | 0.0 % | 45.3 % | 9.7 % | 0.0 % | 0.0 % |
+| normal | durchschnitt | 50.0 % | 0.1 % | 38.8 % | 11.1 % | 0.0 % | 0.0 % |
+| normal | gelegentlich | 57.3 % | 0.0 % | 30.1 % | 12.4 % | 0.0 % | 0.0 % |
+| schwer | aktiv | 47.5 % | 2.2 % | 40.5 % | 9.7 % | 0.0 % | 0.0 % |
+| schwer | durchschnitt | 44.0 % | 3.9 % | 42.8 % | 9.3 % | 0.0 % | 0.0 % |
+| schwer | gelegentlich | 85.9 % | 0.0 % | 0.0 % | 14.1 % | 0.0 % | 0.0 % |
+
+Wahlrate je Karte (Normal, alle Profile, 8324 Angebote): 56 Karten, außerhalb von 5–60 %: 31
+
+grenzfeste 0 % (0/21), freihandel 0 % (0/32), zermuerbung 0 % (0/19), raubbau 0 % (0/47), bollwerk 0 % (0/41), stiftung 0 % (0/25), volleAuslastung 0 % (0/5), ausfall 0 % (0/28), wehrverband 0 % (0/3), wehrhandel 0 % (0/9), wasserrahmen 1.4 % (9/631), lagerzehnt 1.6 % (3/191), fernhandel 1.7 % (9/523), handelskontor 1.8 % (1/57), buchdruck 2 % (12/599), bauordnung 2.6 % (1/39), turmschule 2.8 % (4/141), querverbindung 3.3 % (7/214), turmkanoniere 3.3 % (4/123), bessereFabriken 3.6 % (8/224), kriegserfahrung 3.8 % (7/184), zunftordnung 3.8 % (1/26), gilde 3.9 % (2/51), gluecksritter 4.1 % (4/98), pluenderung 5.5 % (7/128), geschuetzguss 5.5 % (10/181), befestigungskunde 5.7 % (19/336), stachelwall 5.9 % (11/186), maurerkolonne 6 % (13/217), dampfkraft 6.7 % (1/15), allesAufDieMitte 30.8 % (8/26), sammelruf 32.2 % (57/177), fortgeschritteneTaktiken 33.3 % (60/180), eiserneKlingen 33.7 % (110/326), schildwall 38.2 % (110/288), rekrutenzug 38.6 % (102/264), kriegstrommeln 39.6 % (116/293), aushebung 40.6 % (110/271), waffenbrueder 40.6 % (71/175), grenzwacht 41 % (41/100), grosseArmee 41.2 % (7/17), drill 41.4 % (118/285), ballistik 41.7 % (75/180), kriegswirtschaft 42.7 % (38/89), belagerungsgeraet 42.7 % (135/316), durchbruch 43.2 % (57/132), soeldnertruppe 44.7 % (51/114), dauerauftrag 49.6 % (58/117), glaskanonen 53.8 % (7/13), vorstoss 82.4 % (42/51), massenaufgebot 84.6 % (44/52), fabrikmiliz 85.9 % (55/64), stehendesHeer 86.2 % (50/58), elite 91.5 % (43/47), stadtrecht 100 % (150/150), hofhaltung 100 % (145/145)
+
+fertig in 208 s, 300 Partien
+
