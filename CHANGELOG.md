@@ -1,5 +1,19 @@
 # Änderungen
 
+## v0.9.2-kartenpfad-7 – Branch `exp/kartenpfad`, Teil 7 (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderungen: `docs/anforderungen-kartenpfad-7.md`, Bericht `docs/bericht-kartenpfad-7.md`, Testleitfaden `docs/testleitfaden-kartenpfad-7.md`. **Spielstand-Version 12: ältere Spielstände werden verworfen.** Der Modus `standard` ist unverändert (Golden-Test `tests/unveraendert.test.mjs`).
+- **Haupthaus im Mittelfeld:** steht ab Start als Gutshof, lässt sich nicht abreißen, hat keine Nachbarn; eigener Reiter „Haupthaus“. Acht Bauplätze bleiben frei.
+- **Obergrenze für Manufakturen:** 3 auf dem Gutshof, 4 im Rathaus, 5 in der Residenz; jede Form aus einer Manufaktur zählt. Die Karten Stadtrecht (ab Wahl 2, spätestens Wahl 5) und Hofhaltung geben den Ausbau frei (400 bzw. 900 Material, 15 s).
+- **Flügel:** Jede neue Stufe bringt einen Flügel nach Wahl, endgültig: Bibliothek (Forschung ohne Universität), Zeughaus (Qualitätsstufen 1–2 ohne Schmiede), Schatzkammer (Zinsen ohne Kontor, halber Deckel), Kanzlei (eine Karte mehr je Angebot, höchstens 4).
+- **Doktrinen:** Zunftordnung senkt die Obergrenze um eins; Grenzfeste verlängert den Abstand der eigenen Wellen um 25 % (statt höchstens fünf Fabriken).
+- **Neue Weiterentwicklungen:** Fernhandel (Kontor → Handelshaus mit Söldnerkompanien: 6 Läufer und 2 Werfer ohne Versorgung, 600 Material, +15 % je Kauf, 60 s Abklingzeit), Geschützguss (Schmiede → Gießerei; neue Einheit Geschütz: langsam, große Reichweite, Versorgung 2, dreifacher Schaden an der gegnerischen Basis).
+- **Produktion in zwei Stufen:** Wasserrahmen (Manufaktur → Fabrik, Ertrag × 1,3, ab Wahl 3) und Dampfkraft als zweite Stufe (Fabrik → Dampffabrik, ab Wahl 8). Buchdruck, Fernhandel und Geschützguss kommen früher (ab Wahl 3) und forschen kürzer (30 s).
+- **Historische Namen** im Modus karten: Manufaktur, Fabrik, Dampffabrik, Akademie, Handelshaus, Gießerei, Gutshof, Rathaus, Residenz; Mauer Palisade → Ringmauer → Bastionsmauer, Türme Wachturm → Wehrturm → Geschützturm; Fabrikmiliz heißt Bürgerwehr.
+- **Zweites Exemplar** von Kaserne (ein Läufer mehr je Welle, eigene Quartiere) und Universität (weiterer Forschungsplatz), Kosten × 1,5. Schmiede und Kontor bleiben einmalig.
+- **Kartenpool:** Volle Auslastung gestrichen; 42 Karten ohne Doktrinen.
+- **Balancing:** Lebenspunkte der gegnerischen Basis auf Normal × 9,5 (vorher 10,5).
+- **Protokoll Format 4:** Haupthaus-Stufen, Flügel, Fabrikplätze je Minute, Söldnerkompanien, Geschütze, Belegung am Ende; Aktionen `hausAusbau`, `chooseFluegel`, `hireKompanie`.
+
 ## v0.9.2-kartenpfad-6 – Branch `exp/kartenpfad`, Teil 6 (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-6.md`, Bericht `docs/bericht-kartenpfad-6.md`, Testleitfaden `docs/testleitfaden-kartenpfad-6.md`. **Spielstand-Version 11: ältere Spielstände werden verworfen.** Der Modus `standard` ist unverändert (Golden-Test `tests/unveraendert.test.mjs`).
 - **Fehler behoben (Zunfthaus):** Die Einschränkung einer Doktrin gilt ab der Wahl, auch für Gebäude, die schon stehen; der Sonderbau bleibt gesperrt, bis die Grenze erfüllt ist.
