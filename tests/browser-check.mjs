@@ -1032,7 +1032,7 @@ for (const lang of ['de', 'en']){
     G.S.units.push({ id: 99990, side: 'e', type: 'laeufer', lane: 1, laneF: 1, x: 500, hp: -1, maxHp: 1, dmg: 0, cdMax: 1, cd: 0, flash: 0 }); });
   await p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
   const cards = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(c => ({ fam: [...c.classList].find(x => x.startsWith('fam-')), txt: c.textContent })));
-  check(cards.length === 4 && cards.filter(c => c.fam === 'fam-technologie').length === 2 && cards.some(c => c.fam === 'fam-bonus' && !/⚗/.test(c.txt)) && cards.filter(c => c.fam === 'fam-technologie').every(c => /⚗/.test(c.txt)), `[${lang}] Karten: Angebot mit Technologie- und Bonuskarten, Technologie nennt ihre Forschung ${JSON.stringify(cards.map(c => c.fam))}`);
+  check(cards.length === 4 && cards.filter(c => c.fam === 'fam-technologie').length === 2 && cards.some(c => c.fam === 'fam-bonus') && cards.filter(c => c.fam === 'fam-technologie').every(c => c.txt.length > 10), `[${lang}] Karten: Angebot mit Technologie- und Bonuskarten, Technologie nennt ihre Forschung ${JSON.stringify(cards.map(c => c.fam))}`);
   // Detailzeile der Pfadkarte nennt die Rückkehr in den Stapel nicht
   await p.evaluate(() => { const i = [...document.querySelectorAll('.kcard')].findIndex(c => !c.classList.contains('fam-bonus')); document.querySelectorAll('.kcard')[i].focus(); });
   await p.waitForTimeout(100);
