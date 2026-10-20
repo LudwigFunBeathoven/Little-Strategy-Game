@@ -82,18 +82,18 @@ for (const lang of ['de', 'en']){
 /* ---------- K5.07: Doktrinen auf der Kartenbühne, Sonderbau, gesperrte Aktion mit Erklärzeile ---------- */
 for (const lang of ['de', 'en']){
   const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=1&zeit=pause', { lang }); await calm(p);
-  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e6; G.S.t = 400; for (const i of [0, 1, 3, 4]) G.buildAt(i, 'fabrik'); G.buildAt(2, 'kaserne'); __kf.requestRender(); });
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e6; G.S.t = 400; G.S.haus.stufe = 2; for (const i of [0, 1, 3, 5]) G.buildAt(i, 'fabrik'); G.buildAt(2, 'kaserne'); __kf.requestRender(); });       // Teil 7: Rathaus (Grenze 4), das Mittelfeld gehört dem Haupthaus
   await p.evaluate(() => { const G = __kf.G; G.S.pendingLevels = 1; G.S.pendingDraft = { level: 1, options: ['zunftordnung', 'kriegstrommeln', 'bessereFabriken'], rerolled: 0, doktrinForced: true }; __kf.requestRender(); });
   await settle(p, 2200);
   const card = await p.evaluate(() => { const c = document.querySelector('.kcard.fam-doktrin'); return c && { band: c.querySelector('.kc-fam').textContent, name: c.querySelector('.kc-name').textContent, eff: c.querySelector('.kc-desc').textContent, ex: c.querySelector('.expl').textContent, risk: !!c.querySelector('.kc-risk'), cls: c.className }; });
   check(!!card && card.band === (lang === 'de' ? 'Doktrin' : 'Doctrine') && card.eff.length > 0 && card.eff.length <= 44 && card.ex.length > 5 && card.risk, `[${lang}] K5.07: Doktrinkarte mit Band, Wirkungszeile (höchstens 44 Zeichen), Erklärzeile und Einschränkung ${show(card)}`);
   await p.hover('.kcard.fam-doktrin'); await settle(p, 200);
   const det = await p.evaluate(() => document.querySelector('#stageDetail').textContent);
-  check((lang === 'de' ? /höchstens 4 Fabriken/ : /at most 4 factories/).test(det) && (lang === 'de' ? /Zunfthäuser/ : /guildhalls/).test(det), `[${lang}] K5.07: Detailzeile nennt Effekt und Einschränkung ${show(det)}`);
+  check((lang === 'de' ? /Obergrenze für Fabriken sinkt um 1/ : /factory cap drops by 1/).test(det) && (lang === 'de' ? /Zunfthäuser/ : /guildhalls/).test(det), `[${lang}] K5.07: Detailzeile nennt Effekt und Einschränkung ${show(det)}`);
   await p.click('.kcard.fam-doktrin'); await settle(p, 1800);
   check(await p.evaluate(() => __kf.G.cardTaken('zunftordnung') === 1 && __kf.G.doktrinCount() === 1), `[${lang}] K5.07: Doktrin gewählt`);
   // die fünfte Fabrik ist gesperrt, mit Erklärzeile (Kontextkopf des leeren Platzes)
-  await p.evaluate(() => { __kf.selectTab('build'); __kf.selectPlot && __kf.selectPlot(5); __kf.requestRender(); }); await settle(p, 300);
+  await p.evaluate(() => { __kf.selectTab('build'); __kf.selectPlot && __kf.selectPlot(6); __kf.requestRender(); }); await settle(p, 300);
   const why = await p.evaluate(() => { const b = [...document.querySelectorAll('#ctxBuild .pick')].find(x => /pick:fabrik/.test(x.dataset.tooltip)); return b && { dis: b.getAttribute('aria-disabled'), w: b.querySelector('.w') && b.querySelector('.w').textContent, ex: b.querySelector('.expl').textContent }; });
   check(!!why && why.dis === 'true' && (lang === 'de' ? /Zunftordnung/ : /Guild Order/).test(why.w) && why.ex.length > 5, `[${lang}] K5.07: fünfte Fabrik gesperrt, Grund genannt ${show(why)}`);
   // Sonderbau in der Liste der Aufwertungen einer Fabrik

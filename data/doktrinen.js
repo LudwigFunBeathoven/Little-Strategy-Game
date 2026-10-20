@@ -10,14 +10,16 @@
      effect         Wirkung mit der Wahl der Doktrin (stat, mul | add) wie bei den Karten; bei Doktrinen mit Sonderbau meist leer.
      drawback       bindende Einschränkung als Wirkung (stat, mul | add); gilt mit der Wahl und bis zum Ende der Partie.
      grenze         bindende Einschränkung als Regel: { max: n, typen: [Gebäudetypen] } – höchstens n Plätze mit diesen Typen; die Aktion „Bauen“ ist sonst gesperrt, mit Erklärzeile.
+                    Seit Teil 7 nutzt keine Doktrin mehr diese Form; die Zunftordnung senkt die Obergrenze für Fabriken des Haupthauses (drawback fabrikGrenze) und gilt ebenso für den Bestand.
                     Teil 6 (REQ-K6.01): gilt ab der Wahl auch für den Bestand: Er bleibt stehen, aber der Sonderbau der Doktrin ist gesperrt, solange mehr Plätze stehen (Erklärzeile „Reiße zuerst N Fabriken ab.“).
      wirkt          Angebotsbedingung wie bei den Bonuskarten (data/draft-options.js): die Doktrin erscheint nur, wenn ihre Wirkung im Spielstand etwas bewirkt.
      nameKey, descKey, effKey   Texte (Präfix doctrine.); {e1} … = Werte der Wirkungen, {d1} = Wert der Einschränkung
    Namen und Werte sind Startwerte (REQ-K5.07), Kalibrierung per Simulation. */
 const KF_DOKTRINEN = [
   /* ---------- Wirtschaft ---------- */
-  { id: 'zunftordnung', kat: 'wirtschaft', sonderbau: 'zunfthaus', effect: [], drawback: [],
-    grenze: { max: 4, typen: ['fabrik'] }, wirkt: { building: 'fabrik' },
+  /* Teil 7 (REQ-K7.05): Die Obergrenze für Fabriken des Haupthauses (höchstens 3/4/5) macht die frühere Grenze (höchstens 4) wirkungslos; die Zunftordnung senkt sie stattdessen um eins */
+  { id: 'zunftordnung', kat: 'wirtschaft', sonderbau: 'zunfthaus', effect: [], drawback: [{ stat: 'fabrikGrenze', add: -1 }],
+    wirkt: { building: 'fabrik' },
     nameKey: 'doctrine.zunftordnung.name', descKey: 'doctrine.zunftordnung.desc' },
   { id: 'stiftung', kat: 'wirtschaft', sonderbau: 'stiftungshaus', effect: [], drawback: [{ stat: 'unitCost', mul: 1.2 }],
     wirkt: { building: 'universitaet' },
@@ -57,8 +59,9 @@ const KF_DOKTRINEN = [
   { id: 'fabrikmiliz', kat: ['wirtschaft', 'militaer'], sonderbau: null, effect: [{ stat: 'fabrikMiliz', add: 1 }], drawback: [{ stat: 'materialYield', mul: 0.7 }],
     wirkt: { building: 'fabrik' },
     nameKey: 'doctrine.fabrikmiliz.name', descKey: 'doctrine.fabrikmiliz.desc' },
-  { id: 'grenzfeste', kat: ['wirtschaft', 'verteidigung'], sonderbau: null, effect: [{ stat: 'towerKillMaterial', add: 3 }], drawback: [],
-    grenze: { max: 5, typen: ['fabrik'] }, wirkt: { tower: true },
+  /* Teil 7 (REQ-K7.05): statt höchstens 5 Fabriken (durch die Obergrenze des Haupthauses wirkungslos) rücken die eigenen Wellen seltener aus */
+  { id: 'grenzfeste', kat: ['wirtschaft', 'verteidigung'], sonderbau: null, effect: [{ stat: 'towerKillMaterial', add: 3 }], drawback: [{ stat: 'ownWaveInterval', mul: 1.25 }],
+    wirkt: { tower: true },
     nameKey: 'doctrine.grenzfeste.name', descKey: 'doctrine.grenzfeste.desc' },
   { id: 'zermuerbung', kat: 'verteidigung', sonderbau: null, effect: [{ stat: 'zermuerbung', add: 0.25 }], drawback: [{ stat: 'quartiereCost', mul: 1.5 }],
     wirkt: { tower: true },

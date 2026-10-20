@@ -299,3 +299,17 @@ Anforderungen: `docs/anforderungen-kartenpfad-6.md`; Bericht folgt in `docs/beri
 22. **Mörtelkolonne und Maurerkolonne.** Die Maurerkolonne regeneriert nur Mauern, die kurz nicht getroffen wurden (Wartezeit `WALL_REGEN_DELAY_S`); der Ausbau Mörtelkolonne heilte jederzeit. Zahlenmäßig übertrifft Stufe III den ganzen Ausbau, im Gefecht ist sie schwächer. Ob eine eigene Karte nötig ist, zeigt die Messung in Q.6.
 23. **Gestrichen: Verbrannte Erde.** Zwei neue Karten brauchten Platz im Pool (Grenze 38). Die Karte hatte die seltenste Wirkung (Schaden nur nach dem Fall einer Mauer). Alternativen: Dauerauftrag oder Kriegstrommeln.
 24. **Zinsmeister ersetzt das Handelskontor als Karte im Modus karten** (gleiche Kennung, Stufen und Name im Modus karten); im Standardmodus bleibt das Handelskontor eine Karte mit einer Stufe.
+
+## Teil 7: Haupthaus, Fabrikgrenze, neue Weiterentwicklungen, historisches Setting (Branch `exp/kartenpfad`, REQ-K7.01 – K7.12, Spielstand-Version 12)
+
+Anforderungen: `docs/anforderungen-kartenpfad-7.md`.
+
+| Inkrement | Inhalt | Status |
+|---|---|---|
+| R.0 | K7.01 Basismessung nach Teil 6 (gleiche Seeds, 50 Partien je Feld) mit neuen Kennzahlen: Fabrikplätze bei Minute 2, 5, 10, Belegung am Ende (`slotsEnd`), Summe der Nachbarschaftswerte der Fabriken am Ende (`nbEnd`), Synergiewerte in den Rohdaten (`tools/sim-bot.mjs`, `tools/sim-p5.mjs`). Rohdaten `reports/kartenpfad7-basis-*`. | läuft |
+| R.1 | K7.02 Haupthaus im Mittelfeld (`C.HAUPTHAUS.platz` = 4, Platz `{ type: 'haupthaus', fixed: true }`, `S.haus`): ab Start Stufe I „Gutshof“, nicht abreißbar, nicht aufwertbar, ohne Nachbarschaftsboni (keine Regel nennt es); Reiter „Haupthaus“ (Stufe, Text, Obergrenze; sichtbar ab Start, nur Modus karten), Symbol aus den vorhandenen Zeichenmitteln (Haus mit Giebel, ab Stufe II Turm, je Flügel ein Anbau). K7.04 Obergrenze für Fabrikplätze 3/4/5 (`C.HAUPTHAUS.fabrikGrenze`, `G.fabrikGrenze`, `G.fabrikPlaetze`; jede Form aus einer Fabrik zählt, auch während der Aufwertung), `buildBlock` meldet `fabrikGrenze` mit Erklärzeile „Höchstens 3 Fabriken, mehr mit Stadtrecht.“, Anzeige im Reiter Bauen („Fabriken 3/3“) und Haupthaus. K7.05 Zunftordnung senkt die Grenze um eins (Stat `fabrikGrenze`, gilt für den Bestand: Zunfthaus gesperrt, bis die Grenze erfüllt ist; die Erklärzeile nennt die Doktrin), Grenzfeste: Wellenabstand × 1,25 statt höchstens fünf Fabriken. Spielstand-Version 12. Tests `tests/haus7.test.mjs` (6), angepasst `doktrinen`, `doktrinen6`, `einschraenkung6`, `aufwertung`, `hometab`; Tests ohne Bezug zum Haupthaus (`kategorien6`, `linien6`, `weiter6`) laufen ohne Haupthaus. Browser `tests/browser-r7.mjs` (neu), `browser-n5.mjs` angepasst. | fertig |
+
+## Auslegungen Teil 7 (zur Bestätigung durch den PO)
+1. **Zunftordnung auf Stufe I: Grenze 2.** Die Anforderung setzt „Obergrenze −1“ als Startwert. Wer die Doktrin auf dem Gutshof wählt, darf nur zwei Fabriken halten; das Zunfthaus lohnt dann kaum (ein Nachbar). Unverändert übernommen, Wirkung wird in R.7 gemessen.
+2. **Grenzfeste: Wellenabstand × 1,25 wirkt mit Vorstoß (× 0,5) multiplikativ**, beide Doktrinen zusammen ergeben × 0,625.
+3. **Die Erklärzeile der Fabrikgrenze nennt die nächste Karte** (Stadtrecht, Hofhaltung) und, falls die Zunftordnung die Grenze senkt, die Doktrin.

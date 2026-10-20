@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.2-kartenpfad-6',
-  SAVE_KEY: 'klammerfront.save.v11',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen): ältere Spielstände werden verworfen
+  VERSION: '0.9.2-kartenpfad-7',
+  SAVE_KEY: 'klammerfront.save.v12',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -126,6 +126,10 @@ const KF_CONFIG = {
      Zählregel: jede gewählte Karte zählt einmal, jede weitere Stufe derselben Karte ebenfalls, eine Doktrin doktrin-mal. Synergiekarten (data/karten6.js: Zähler, Verstärker, Brücken) zählen höchstens deckel Karten einer Kategorie
      und erscheinen erst, wenn synergieAb Karten ihrer Kategorie gewählt sind (damit der Zähler ab drei Karten spürbar ist). Führende Kategorie: mindestens vorsprung Karten Vorsprung vor der zweiten; ihre Karten und Doktrinen
      haben im Angebot das gewichtVorne-fache Ziehgewicht. Jedes Angebot mit drei oder mehr Karten enthält mindestens eine Karte außerhalb der führenden Kategorie. poolMax: Obergrenze des Pools ohne Doktrinen (Test). */
+  /* Teil 7 (REQ-K7.02, K7.04): Haupthaus im Mittelfeld des Rasters (platz), nur im Modus karten. Es steht ab Start auf Stufe I, lässt sich nicht abreißen und nicht aufwerten,
+     gibt und erhält keine Nachbarschaftsboni. fabrikGrenze: erlaubte Fabrikplätze je Stufe (I, II, III); als Fabrikplatz zählt jedes Gebäude, das aus einer Fabrik hervorgeht
+     (Grundform, Varianten, Sonderbauten, Weiterentwicklungen). Die Doktrin Zunftordnung senkt die Grenze (Stat fabrikGrenze, add). */
+  HAUPTHAUS: { platz: 4, fabrikGrenze: [3, 4, 5] },
   KATEGORIEN: { liste: ['wirtschaft', 'militaer', 'verteidigung'], doktrin: 2, deckel: 8, synergieAb: 2, vorsprung: 2, gewichtVorne: 2, poolMax: 38 },
   /* Teil 4 (REQ-S.08): Testschalter ?druck=hoch (Standard aus). Verstärkt die regulären Gegnerwellen ab Minute abMinute um faktor (Zahl der Einheiten); die Druckkurve selbst
      bleibt unverändert, bis der Spieltest Daten liefert (Entscheidung B4). Die Belagerungswelle bleibt unberührt. */
@@ -198,7 +202,7 @@ const KF_CONFIG = {
     unitEaseS: 0.08,            // gezeichnete Einheiten folgen ihrer Position mit dieser Zeitkonstante (kein Springen beim Aufrücken, REQ-6.01)
     unitEaseSnapPx: 0.3,        // Totzone der Darstellung: näher als so viele Pixel wird nicht mehr nachgeführt
     // Heimat-Reiter je Gebäudetyp (REQ-6.05): ein Klick auf das Gebäude in der Welt öffnet diesen Reiter
-    homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build' },
+    homeTab: { fabrik: 'build', kaserne: 'army', schmiede: 'smithy', universitaet: 'uni', kontor: 'build', haupthaus: 'haus' },
     draftLockMs: 400,
     entdecken: true,            // Sichtbarkeitsregel „nur, was jetzt nutzbar ist“ (REQ-K2.04–K2.06): true/false erzwingt, null = nur im Pacing-Modus 'karten'; URL ?entdecken=1|0
     kartenbuehne: true,         // Kartenwahl als Bühne mit Ablauf (REQ-KP.03, K2.01–K2.03): true/false erzwingt, null = nur im Pacing-Modus 'karten'; URL ?buehne=1|0

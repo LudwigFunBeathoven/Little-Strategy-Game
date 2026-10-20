@@ -5,7 +5,7 @@
    (REQ-6.04) und kehrt danach zum vorigen Reiter samt Auswahl zurück. Knöpfe entstehen einmal bzw. nur bei geänderter Auswahl (REQ-5.01). */
 'use strict';
 
-const TABS = ['build', 'wall', 'army', 'smithy', 'uni', 'cards'];
+const TABS = ['build', 'haus', 'wall', 'army', 'smithy', 'uni', 'cards'];       // haus: Haupthaus (Teil 7, nur Modus karten)
 /* Markierung „neu“ (REQ-T.05): Reiter, Bau-Optionen und Einheiten, die erst im Lauf der Partie erscheinen, tragen bis zum ersten Ansehen
    (UI.newSeenMs sichtbar) eine Marke. Was beim Start schon sichtbar ist, gilt als bekannt (Grundlinie). Gesehenes liegt im Spielstand (ui). */
 const NewMarks = (() => {
@@ -50,6 +50,7 @@ function tabForSel(s){
   return sl ? C.UI.homeTab[sl.type] : 'build';
 }
 function tabVisible(id){
+  if (id === 'haus' && !G.S.haus) return false;                             // Haupthaus nur im Modus karten (Teil 7, REQ-K7.02)
   if (Disc.on()) return Disc.shows('tab:' + id);                           // REQ-K2.04: Reiter erst, wenn etwas darin nutzbar ist; ein Reiter bleibt danach
   if (id === 'smithy') return G.has('schmiede');
   if (id === 'cards') return G.introShows('cards');
@@ -104,6 +105,7 @@ function autoDraft(){
 /* Wirkung eines Gebäudes für Erklärzeilen: neu gebaut (built = false) oder wie es gerade wirkt */
 function bldEffect(type, built){
   switch (type){
+    case 'haupthaus': return t('fx.haupthaus', { n: G.fabrikGrenze() });
     case 'fabrik': return t('fx.fabrik', { rate: fmt1(G.factoryRate()) });
     case 'schmiede': return t('fx.schmiede', { n: G.S.lvl.qualitaet });
     case 'kaserne': return t('fx.kaserne', { n: built ? G.kaserneLevel() : 1, m: C.KASERNE_SUPPLY_PER_LEVEL * (built ? G.kaserneLevel() : 1) });
@@ -226,7 +228,7 @@ function nbPreviewText(i, type){
 /* ---------- Gebäude-Aufwertung (Teil 4, REQ-S.05): Namen, Werte, Aktionen am Gebäude ---------- */
 const variantParams = v => { const p = Object.assign({}, sonderbauParams()); v.effect.forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); }); return p; };
 /* Anzeigename eines Platzes: Variante, sonst Grundgebäude */
-const slotName = sl => sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(G.weiterDone(sl.type) ? `bld.${sl.type}.name.weiter` : `bld.${sl.type}.name`);       // Teil 6: nach der Weiterentwicklung heißt das Gebäude Dampfmühle bzw. Druckerei
+const slotName = sl => sl.type === 'haupthaus' ? t(`haus.stufe.${G.hausStufe()}.name`) : sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(G.weiterDone(sl.type) ? `bld.${sl.type}.name.weiter` : `bld.${sl.type}.name`);       // Haupthaus: Name der Stufe (Teil 7)       // Teil 6: nach der Weiterentwicklung heißt das Gebäude Dampfmühle bzw. Druckerei
 const variantTarget = sl => sl.upg && G.VAR[sl.upg.to] ? G.VAR[sl.upg.to] : null;
 let vpicks = [];
 function variantReason(block, vid){
@@ -330,7 +332,7 @@ function renderContext(){
     }
     updatePicks();
   }
-  if (sl){
+  if (sl && !sl.fixed){                                                    // das Haupthaus lässt sich nicht abreißen (Teil 7)
     const i = sel.i, refund = refundText(G.refundFor(i));
     if (!demolishArmed) dem.appendChild(mkButton('btn-ghost', t('slot.demolish'), () => { demolishArmed = true; showHint('demolish'); ctxKey = ''; requestRender(); }, 'demolish:' + i, t('ex.demolish', { refund })));
     else {
@@ -418,6 +420,7 @@ function doktrinParams(d){
   const p = Object.assign({}, sonderbauParams());
   if (d.grenze) p.g = d.grenze.max;
   for (const e of d.drawback || []) if (e.stat === 'towerMax') p.tw = e.add;                                // Freihandel: höchste Turmstufe
+  for (const e of d.drawback || []) if (e.stat === 'fabrikGrenze') p.gd = fmtNum(-e.add);                     // Zunftordnung: Obergrenze für Fabriken sinkt (Teil 7)
   for (const e of d.effect || []) if (e.stat === 'zermuerbung') p.zr = pct(e.add);                         // Zermürbung: Anteil der Lebenspunkte
   const v = d.sonderbau && G.VAR[d.sonderbau];
   if (v) v.effect.forEach((e, i) => { p['s' + (i + 1)] = effectValue(e); });
@@ -721,6 +724,14 @@ function renderResearch(){
   }
 }
 let resDoneSeen = -1, toastTimer = null;
+/* ---------- Haupthaus (Teil 7, REQ-K7.02 – K7.04): Stufe, Obergrenze für Fabriken; Flügel ab Stufe II ---------- */
+function renderHaus(){
+  const S = G.S, h = S.haus;
+  if (!h) return;
+  setText($('hausTitle'), t(`haus.stufe.${h.stufe}.name`));
+  setText($('hausText'), t(`haus.stufe.${h.stufe}.desc`));
+  setText($('hausGrenze'), t('haus.grenze', { n: G.fabrikGrenze(), m: G.fabrikPlaetze() }));
+}
 function toast(text){
   const el = $('toast'); if (!el) return;
   setText(el, text); setHidden(el, false);
@@ -802,7 +813,8 @@ function renderPanels(){
     g.btn.classList.toggle('built', !!sl);
     g.btn.setAttribute('aria-selected', String(!!sel && sel.kind === 'plot' && sel.i === i));
   }
-  setText($('factoryStat'), t('fab.stat', { n: G.factoryCount(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) }));
+  setText($('factoryStat'), G.fabrikGrenze() < Infinity ? t('fab.stat.grenze', { n: G.fabrikPlaetze(), max: G.fabrikGrenze(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) })       // Obergrenze des Haupthauses (Teil 7, REQ-K7.04)
+    : t('fab.stat', { n: G.factoryCount(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) }));
   // Armee
   setText($('queue'), `${S.queue.length}/${G.supplyCap()}`);
   setText($('ownCount'), fmt(G.ownOnField()));
@@ -815,6 +827,7 @@ function renderPanels(){
   // Schmiede, Universität, Karten
   setText($('smithyText'), Disc.on() && !G.has('schmiede') ? t('panel.smithy.none') : t('panel.smithy.text', { n: S.lvl.qualitaet }));
   setText($('uniInfo'), t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() }) + ' ' + t(G.has('universitaet') ? 'research.intro' : 'research.needUni', { n: G.researchSlots() }));
+  renderHaus();
   renderResearch();
   renderBudget();
   renderDraft();

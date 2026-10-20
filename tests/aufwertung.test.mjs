@@ -70,13 +70,13 @@ test('S.05: Während der Aufwertung wirkt das Gebäude nicht (Fabrik, Kaserne)',
 
 test('S.05: Variante behält Ausbaustufen und Nachbarschaftsregeln des Grundgebäudes', () => {
   const { G } = game();
-  place(G, 'kaserne', 4); G.S.lvl.ausbau = 2; G.S.t = 200;
+  place(G, 'kaserne', 3); G.S.lvl.ausbau = 2; G.S.t = 200;                     // Teil 7: das Mittelfeld (4) gehört dem Haupthaus
   const cap = G.supplyCap();
-  place(G, 'schmiede', 5);                                                       // Kaserne neben Schmiede (Platz 4 und 5): Nachbarschaftsbonus
+  place(G, 'schmiede', 0);                                                       // Kaserne neben Schmiede (Platz 3 und 0): Nachbarschaftsbonus
   const withNb = G.supplyCap(); assert.ok(withNb >= cap);
-  G.S.material = 1e6; assert.ok(G.upgradeBuilding(4, 'exerzierplatz')); finish(G);
+  G.S.material = 1e6; assert.ok(G.upgradeBuilding(3, 'exerzierplatz')); finish(G);
   assert.equal(G.S.lvl.ausbau, 2, 'Ausbaustufe unverändert'); assert.equal(G.supplyCap(), withNb, 'Versorgung und Nachbarschaft wie vorher');
-  assert.equal(G.S.slots[4].type, 'kaserne'); assert.equal(G.S.slots[4].variant, 'exerzierplatz');
+  assert.equal(G.S.slots[3].type, 'kaserne'); assert.equal(G.S.slots[3].variant, 'exerzierplatz');
 });
 
 test('S.05: Manufaktur wirkt je Gebäude, Werkstatt und die übrigen Varianten einmal', () => {
@@ -91,9 +91,9 @@ test('S.05: Manufaktur wirkt je Gebäude, Werkstatt und die übrigen Varianten e
   assert.ok(Math.abs(G.matRate() / r0 - (1 + 2 * (1 + yield1)) / 3) < 1e-6, `Mehrertrag je Manufaktur: ${G.matRate() / r0}`);
 });
 
-test('S.05: Spielstand-Version 11 und Zustand der Aufwertung im Spielstand', () => {
+test('S.05: Spielstand-Version 12 (Teil 7) und Zustand der Aufwertung im Spielstand', () => {
   const { G } = game();
-  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 11);
+  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 12);
   place(G, 'fabrik', 0); G.S.t = 200; G.S.material = 1e6; G.upgradeBuilding(0, 'manufaktur');
   const snap = JSON.parse(JSON.stringify(G.snapshot()));
   assert.ok(snap.slots[0].upg);

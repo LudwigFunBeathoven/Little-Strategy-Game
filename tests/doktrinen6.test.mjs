@@ -176,16 +176,20 @@ test('K6.05 Fabrikmiliz: jede Fabrik stellt je Minute einen Läufer ohne Versorg
   const { G: S } = game('standard'); place(S, 'fabrik', 0); S.S.draft.stacks.fabrikmiliz = 1; S.S.draft.ver++; run(S, 70); assert.equal(S.S.queue.length, 0, 'Standardmodus: kein Aufgebot');
 });
 
-test('K6.05 Grenzfeste: Turm-Abschüsse bringen Material, höchstens fünf Fabriken; Bestand bleibt, neue sind gesperrt', () => {
-  const { G } = game(); G.S.t = 100;
-  for (let i = 0; i < 7; i++) place(G, 'fabrik', i);
+test('K6.05 Grenzfeste: Turm-Abschüsse bringen Material; seit Teil 7 (REQ-K7.05) rücken die eigenen Wellen seltener aus statt einer Grenze für Fabriken', () => {
+  const { G, C } = game(); G.S.t = 100;
+  for (const i of [0, 1]) place(G, 'fabrik', i);
   assert.equal(G.mAdd('towerKillMaterial'), 0);
+  const iv = G.ownWaveInterval();
   pick(G, 'grenzfeste');
   assert.equal(G.mAdd('towerKillMaterial'), 3);
-  assert.equal(G.countType('fabrik'), 7, 'Bestand bleibt stehen');
-  assert.equal(G.buildBlock(7, 'fabrik'), 'limit'); assert.equal(G.doctrineLimit('fabrik').id, 'grenzfeste');
-  assert.equal(G.doctrineExcess(G.DOK.grenzfeste), 2);
-  G.demolish(0); G.demolish(1); G.demolish(2); assert.equal(G.countType('fabrik'), 4); assert.equal(G.buildBlock(0, 'fabrik'), null, 'unter der Grenze wieder baubar');
+  assert.ok(Math.abs(G.ownWaveInterval() / iv - 1.25) < 1e-9, `Wellenabstand ${G.ownWaveInterval()} gegen ${iv}`);
+  assert.equal(G.doctrineLimit('fabrik'), null, 'keine Grenze der Doktrin');
+  assert.equal(G.doctrineExcess(G.DOK.grenzfeste), 0);
+  assert.equal(G.buildBlock(2, 'fabrik'), null, 'die Obergrenze des Haupthauses gilt unverändert');
+  // die Einschränkung gilt sofort: die nächste Welle nach der Wahl kommt im längeren Abstand
+  G.S.nextOwnWave = G.S.t + 0.01; G.S.nextWave = 1e9; G.S.pendingDraft = null; G.S.pendingLevels = 0; G.tick(0.05);
+  assert.ok(Math.abs(G.S.nextOwnWave - (G.S.t - 0.05 + 0.01 + C.WAVE_INTERVAL_S * 1.25)) < 0.06, `nächste Welle ${G.S.nextOwnWave}`);
   // Kategorien: Mischdoktrin zählt für Wirtschaft und Verteidigung
   const k = G.katCounts(); assert.ok(k.wirtschaft >= 2 && k.verteidigung >= 2, `Mischdoktrin: ${JSON.stringify(k)}`);
 });

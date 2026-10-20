@@ -56,7 +56,7 @@ const adjacent = (i, diagonal = false) => { const g = C.GRID_SIZE, r = Math.floo
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 11;                      // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+const SAVE_VERSION = 12;                      // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 /* Werfer und seine Ersatzeinheiten teilen die Werfer-Karten (Lange Wurfarme …) */
 const isThrower = type => (C.UNITS[type].base || type) === 'werfer';
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
@@ -100,6 +100,7 @@ function freshState(diff, seed){
     pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, pDoktrin: C.DOKTRIN.p.start },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     budget: 0,                        // Forschungsbudget (Teil 5): Index in C.KARTEN.budget.stufen
     milizT: 0,                        // Doktrin Fabrikmiliz (Teil 6): Zeit seit dem letzten Aufgebot
+    haus: null,                       // Haupthaus (Teil 7, REQ-K7.02): { stufe } im Modus karten, sonst null
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0, waveSize: {},       // waveSize: Zahl der Einheiten je Gegnerwelle für die EP der abgewehrten Welle (Modus karten, Teil 5)
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
@@ -269,6 +270,11 @@ function create(){
   const has = b => S.slots.some(s => s && s.type === b && !s.upg);                     // ein Gebäude in Aufwertung wirkt nicht (REQ-S.05)
   const countType = type => S.slots.filter(s => s && s.type === type && !s.upg).length;
   const standingCount = type => S.slots.filter(s => s && s.type === type).length;       // auch Gebäude in Aufwertung: sie belegen den Platz
+  /* Haupthaus (Teil 7, REQ-K7.02, K7.04): Stufe 1–3 im Modus karten; die Obergrenze für Fabrikplätze folgt der Stufe, die Zunftordnung senkt sie (fabrikGrenze). Fabrikplätze sind alle Plätze vom Typ fabrik
+     (Varianten, Sonderbauten und Weiterentwicklungen behalten den Typ). Ohne Haupthaus gibt es keine Grenze. */
+  const hausStufe = () => S.pacing === 'karten' && S.haus ? S.haus.stufe : 0;
+  const fabrikGrenze = () => hausStufe() ? Math.max(0, C.HAUPTHAUS.fabrikGrenze[hausStufe() - 1] + mAdd('fabrikGrenze')) : Infinity;
+  const fabrikPlaetze = () => standingCount('fabrik');
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   /* Doktrin Freihandel (Teil 6, REQ-K6.05): Türme bleiben auf Stufe towerMax, ihre Ausbauten (Reichweite, Feuerrate) sind gesperrt; die Einschränkung gilt auch für Türme, die schon höher stehen (wirksame Stufe) */
   const towerCap = () => S.pacing === 'karten' && mAdd('towerMax') > 0 ? mAdd('towerMax') : Infinity;
@@ -441,6 +447,7 @@ function create(){
     if (!isBuildable(type)) return 'locked';
     if (type !== 'fabrik' && standingCount(type) >= C.MAX_PER_TYPE) return 'standing';
     if (i < 0 || i >= SLOTS || S.slots[i]) return 'occupied';
+    if (type === 'fabrik' && fabrikPlaetze() >= fabrikGrenze()) return 'fabrikGrenze';               // Obergrenze des Haupthauses (Teil 7, REQ-K7.04)
     if (doctrineLimit(type)) return 'limit';
     if (S.material < buildCost(type)) return 'material';
     return null;
@@ -454,7 +461,10 @@ function create(){
   };
   /* Die Einschränkung gilt ab der Wahl, auch für Gebäude, die schon stehen (Teil 6, REQ-K6.01, ersetzt Auslegung 3 aus Teil 5): Zahl der Plätze, um die die Grenze einer Doktrin überschritten ist.
      Solange es welche gibt, ist der Sonderbau der Doktrin gesperrt (variantBlock 'excess'); neue Gebäude über der Grenze sind es ohnehin (doctrineLimit). */
-  const doctrineExcess = d => d && d.grenze ? Math.max(0, S.slots.filter(sl => sl && d.grenze.typen.includes(sl.type)).length - d.grenze.max) : 0;
+  /* Teil 7 (REQ-K7.05): Eine Doktrin, die die Obergrenze für Fabriken senkt (Zunftordnung), ist überschritten, solange mehr Fabrikplätze stehen, als die Grenze erlaubt */
+  const lowersGrenze = d => (d.drawback || []).some(e => e.stat === 'fabrikGrenze');
+  const doctrineExcess = d => !d ? 0 : d.grenze ? Math.max(0, S.slots.filter(sl => sl && d.grenze.typen.includes(sl.type)).length - d.grenze.max)
+    : lowersGrenze(d) && S.pacing === 'karten' ? Math.max(0, fabrikPlaetze() - fabrikGrenze()) : 0;
   const variantExcess = vid => { const v = VAR[vid]; return v && v.doktrin && S.pacing === 'karten' && cardTaken(v.doktrin) > 0 ? doctrineExcess(DOK[v.doktrin]) : 0; };
   const activeDoctrines = () => DOKTRINEN.filter(d => cardTaken(d.id) > 0);
   const doktrinCount = () => activeDoctrines().length;
@@ -562,7 +572,7 @@ function create(){
   }
   function clampSections(){ S.sections.forEach((s, i) => { s.hp = Math.min(s.hp, sectionMax(i)); }); }
   function demolish(i){
-    if (S.status !== 'running' || !S.slots[i]) return false;
+    if (S.status !== 'running' || !S.slots[i] || S.slots[i].fixed) return false;                       // das Haupthaus lässt sich nicht abreißen (Teil 7)
     const refund = refundFor(i), type = S.slots[i].type;
     S.material += refund;
     S.slots[i] = null; S.slotVer++;                                        // eine abgerissene Variante verliert ihr Zeichen (REQ-S.04)
@@ -1685,6 +1695,7 @@ function create(){
     S.pacing = opts.pacing || C.PACING_MODUS || 'standard';
     S.druck = opts.druck === 'hoch' ? 'hoch' : null;
     if (S.pacing === 'karten') S.enemyBaseHp = diffCfg().enemyBaseHp;
+    if (S.pacing === 'karten'){ S.haus = { stufe: 1, fluegel: [], bau: null }; S.slots[C.HAUPTHAUS.platz] = { type: 'haupthaus', paid: 0, fixed: true }; }       // Haupthaus Stufe I im Mittelfeld (Teil 7, REQ-K7.02)
     S.intro = opts.intro === true;          // ohne Angabe (Tests, ältere Spielstände) volle Regeln ohne Einführung
     S.nextEnemy = rollEnemyWave();
     // Schonfrist (REQ-T.03): opts.hold = { maxS, size, bounty } – die erste Gegnerwelle besteht aus size Läufern und rückt erst nach releaseHold() oder nach maxS aus;
@@ -1732,6 +1743,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
+    hausStufe, fabrikGrenze, fabrikPlaetze,
     enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,

@@ -6,6 +6,7 @@ import { loadCore } from '../tools/load-core.mjs';
 function game(pacing = 'karten', seed = 5){
   const { KlammerCore, KF_CONFIG } = loadCore();
   const G = KlammerCore.create(); G.FX.on = false; G.newGame('normal', seed, { pacing });
+  if (pacing === 'karten'){ G.S.haus = null; G.S.slots[4] = null; }       // Teil 7: diese Tests prüfen Regeln ohne Haupthaus (alle neun Plätze frei, keine Obergrenze für Fabriken; tests/haus7.test.mjs prüft das Haupthaus)
   G.S.sections.forEach(s => { s.hp = 1e9; }); G.S.material = 1e7; G.S.nextWave = 1e9; G.S.nextOwnWave = 1e9;
   return { G, C: KF_CONFIG };
 }

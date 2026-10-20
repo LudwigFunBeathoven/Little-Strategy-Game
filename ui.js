@@ -177,6 +177,9 @@ function buildReason(block, cost, type){
     case 'notRunning': return t('tip.notRunning');
     case 'locked': { const src = type ? G.keySource('bau:' + type) : null; return (src && sourceLabel(src)) || lockedText(); }
     case 'standing': return t('build.reason.standing');
+    case 'fabrikGrenze': {                                                         // Obergrenze des Haupthauses (Teil 7, REQ-K7.04); senkt eine Doktrin sie, steht ihr Name dabei
+      const d = G.activeDoctrines().find(x => (x.drawback || []).some(e => e.stat === 'fabrikGrenze'));
+      return t(`build.reason.fabrikGrenze.${Math.min(3, G.hausStufe())}`, { n: G.fabrikGrenze() }) + (d ? ' ' + t('build.reason.fabrikGrenze.doktrin', { name: t(d.nameKey), n: -G.mAdd('fabrikGrenze') }) : ''); }
     case 'limit': { const d = G.doctrineLimit(type); return d ? t('build.reason.limit', { name: t(d.nameKey), n: d.grenze.max, types: d.grenze.typen.map(x => t(`bld.${x}.name`)).join(', ') }) : null; }
     case 'material': return missing('material', cost, G.S.material);
   }
@@ -328,6 +331,7 @@ function tipContent(id){
     case 'ban': { const d = S.pendingDraft; const id = d && d.options[a];
       return { title: id ? t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }) : t('draft.reroll'), body: t('tip.draft.ban', { n: G.bansLeft() }) }; }
     case 'grid': { const sl = S.slots[a];
+      if (sl && sl.type === 'haupthaus') return { title: t('slot.label', { n: Number(a) + 1 }), body: slotName(sl) + ' · ' + t('bld.haupthaus.desc'), rows: [[t('haus.grenze.label'), t('haus.grenze.value', { n: G.fabrikGrenze(), m: G.fabrikPlaetze() })]] };
       const rule = sl && G.NEIGHBORS.find(r => r.building === sl.type);
       return { title: t('slot.label', { n: Number(a) + 1 }), body: sl ? t(`bld.${sl.type}.name`) + ' · ' + t(`bld.${sl.type}.desc`) + (rule ? ' ' + t('nb.title') + ': ' + nbRuleText(rule) + '.' : '') : t('tip.grid.empty') }; }
   }

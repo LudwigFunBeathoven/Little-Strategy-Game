@@ -11,6 +11,7 @@ const Disc = (() => {
   /* Tabelle: Schlüssel → Bedingung. Dieselbe Tabelle füllt die Zuordnung im Bericht (descKey = Zeile der Sprachdatei). */
   const VIS = {
     'tab:build':   { when: () => true },
+    'tab:haus':    { when: S => !!S.haus },                                                // Haupthaus (Teil 7, REQ-K7.02): im Modus karten ab Start
     'tab:army':    { when: () => true },
     'tab:wall':    { when: S => Object.keys(S.revealed).some(k => S.revealed[k] && (k.startsWith('repair_') || (wallUpgrade(k) && G.isAvailable(k) && !G.stageSource(k)))) },       // nutzbar: Reparatur oder ein freigeschalteter Ausbau
     'tab:smithy':  { when: () => G.has('schmiede') },

@@ -83,6 +83,15 @@ function drawBuilding(kind, cx, gy, s){
     for (let i = 0; i < 4; i++) ctx.fillRect(x + 1.5 * s + i * 5.3 * s, gy - 12 * s, 2.2 * s, 9 * s);
     ctx.fillRect(x - 1 * s, gy - 14 * s, w + 2 * s, 2.5 * s);
     ctx.beginPath(); ctx.moveTo(x - 1 * s, gy - 14 * s); ctx.lineTo(cx, gy - 20 * s); ctx.lineTo(x + w + 1 * s, gy - 14 * s); ctx.fill();
+  } else if (kind === 'haupthaus'){
+    // Haupthaus (Teil 7, REQ-K7.02): Haus mit Giebel, ab Stufe II ein Turm mit Fahne, je Flügel ein Anbau; nur vorhandene Zeichenmittel
+    const h = G.S.haus || { stufe: 1, fluegel: [] }, w = 14 * s, hh = 12 * s, x = cx - w / 2;
+    ctx.fillRect(x, gy - hh, w, hh);
+    ctx.beginPath(); ctx.moveTo(x - 1.5 * s, gy - hh); ctx.lineTo(cx, gy - hh - 7 * s); ctx.lineTo(x + w + 1.5 * s, gy - hh); ctx.fill();
+    (h.fluegel || []).forEach((f, k) => { const fx = k === 0 ? x - 7 * s : x + w + 1 * s; ctx.fillRect(fx, gy - 8 * s, 6 * s, 8 * s); });
+    if (h.stufe >= 2){ ctx.fillRect(cx - 2 * s, gy - hh - 13 * s, 4 * s, 7 * s); ctx.fillStyle = COL.brass; ctx.fillRect(cx + 2 * s, gy - hh - 13 * s, 4 * s, 2.5 * s); ctx.fillStyle = COL.steel; }
+    if (h.stufe >= 3){ ctx.beginPath(); ctx.moveTo(cx - 3 * s, gy - hh - 13 * s); ctx.lineTo(cx, gy - hh - 17 * s); ctx.lineTo(cx + 3 * s, gy - hh - 13 * s); ctx.fill(); }
+    ctx.fillStyle = COL.brass; ctx.fillRect(cx - 2 * s, gy - 6 * s, 4 * s, 6 * s);                                                         // Tor
   }
 }
 

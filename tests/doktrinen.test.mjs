@@ -85,25 +85,27 @@ test('K5.07: Sonderbauten gibt es nur mit ihrer Doktrin', () => {
   assert.ok(g.variantCost('zunfthaus') > g.variantCost('manufaktur'));
 });
 
-test('K5.07 Zunftordnung: Zunfthaus mit dreifachem Nachbarschaftsbonus; höchstens vier Fabriken und Zunfthäuser, die Aktion ist sonst gesperrt', () => {
-  const { G, C } = game(); G.S.t = 200;
-  for (const i of [0, 1, 3, 4]) place(G, 'fabrik', i);                         // 2×2-Block: je zwei Nachbarn
+test('K5.07 Zunftordnung: Zunfthaus mit dreifachem Nachbarschaftsbonus; die Obergrenze für Fabriken sinkt um eins (Teil 7, REQ-K7.05), die Aktion ist sonst gesperrt', () => {
+  const { G, C } = game(); G.S.t = 200; G.S.haus.stufe = 3;                       // Residenz: Obergrenze 5, mit der Zunftordnung 4
+  for (const i of [0, 1, 3]) place(G, 'fabrik', i);                              // Platz 0 hat zwei Nachbarn (1 und 3); das Mittelfeld gehört dem Haupthaus
   const per = 0.06;
   pick(G, 'zunftordnung');
+  assert.equal(G.fabrikGrenze(), C.HAUPTHAUS.fabrikGrenze[2] - 1);
   const r0 = G.matRate();
   upgrade(G, 0, 'zunfthaus');
   const n = G.neighborCount(0, 'fabrik'), gain = G.factoryRate() * per * n * (C.DOKTRIN.zunfthaus.nachbarFaktor - 1);
+  assert.equal(n, 2);
   assert.ok(Math.abs(G.matRate() - (r0 + gain)) < 1e-9, `Ertrag ${G.matRate()} gegen ${r0 + gain}`);
-  // Grenze: vier Plätze belegt
-  assert.equal(G.buildBlock(2, 'fabrik'), 'limit');
+  place(G, 'fabrik', 6);
+  // Grenze: vier Fabrikplätze belegt, das Zunfthaus zählt mit
+  assert.equal(G.buildBlock(2, 'fabrik'), 'fabrikGrenze');
   assert.equal(G.buildAt(2, 'fabrik'), false);
-  assert.equal(G.doctrineLimit('fabrik').id, 'zunftordnung');
   assert.equal(G.buildBlock(2, 'kontor'), null, 'andere Gebäude bleiben baubar');
-  G.demolish(4); assert.equal(G.buildBlock(4, 'fabrik'), null, 'nach einem Abriss wieder frei');
-  // schon Vorhandenes bleibt stehen (kein Zwangsabriss): mit sechs Fabriken vor der Wahl bleiben alle stehen, neue sind gesperrt; der Sonderbau ist erst frei, wenn die Grenze erfüllt ist (Teil 6, REQ-K6.01, tests/einschraenkung6.test.mjs)
-  const h = game().G; for (let i = 0; i < 6; i++) place(h, 'fabrik', i); pick(h, 'zunftordnung');
-  assert.equal(h.countType('fabrik'), 6); assert.equal(h.buildBlock(6, 'fabrik'), 'limit');
-  // Standardmodus kennt die Grenze nicht
+  G.demolish(6); assert.equal(G.buildBlock(6, 'fabrik'), null, 'nach einem Abriss wieder frei');
+  // schon Vorhandenes bleibt stehen (kein Zwangsabriss): mit drei Fabriken auf Stufe I bleibt alles stehen, neue sind gesperrt; der Sonderbau ist erst frei, wenn die Grenze erfüllt ist (Teil 6, REQ-K6.01, tests/einschraenkung6.test.mjs)
+  const h = game().G; for (const i of [0, 1, 2]) place(h, 'fabrik', i); pick(h, 'zunftordnung');
+  assert.equal(h.countType('fabrik'), 3); assert.equal(h.buildBlock(6, 'fabrik'), 'fabrikGrenze'); assert.equal(h.doctrineExcess(h.DOK.zunftordnung), 1);
+  // Standardmodus kennt weder Haupthaus noch Grenze
   const s = game('standard').G; for (let i = 0; i < 6; i++) place(s, 'fabrik', i); assert.equal(s.buildBlock(6, 'fabrik'), null);
 });
 
@@ -159,12 +161,12 @@ test('K5.07 Vorstoß: eigene Wellen rücken doppelt so oft aus, die Türme feuer
 
 test('K5.07 Bollwerk: Bastion feuert über die Mauer in die Lane ihrer Zeile, Abschüsse bringen doppelte EP, Fabriken liefern 15 % weniger', () => {
   const { G, C } = game(); G.S.t = 200;
-  place(G, 'fabrik', 0); place(G, 'fabrik', 4); place(G, 'fabrik', 7);
+  place(G, 'fabrik', 0); place(G, 'fabrik', 3); place(G, 'fabrik', 7);           // Teil 7: das Mittelfeld gehört dem Haupthaus, die mittlere Zeile hat Platz 3
   const r0 = G.matRate();
   pick(G, 'bollwerk');
   assert.ok(Math.abs(G.factoryRate() / (C.FACTORY_BASE_RATE * G.mMul('materialYield')) - 0.85) < 1e-9, 'Fabriken −15 %');
-  upgrade(G, 0, 'bastion'); upgrade(G, 4, 'bastion'); upgrade(G, 7, 'bastion');
-  assert.equal(JSON.stringify(G.bastionSlots()), '[0,4,7]'); assert.equal(JSON.stringify([0, 4, 7].map(G.bastionLane)), '[0,1,2]');
+  upgrade(G, 0, 'bastion'); upgrade(G, 3, 'bastion'); upgrade(G, 7, 'bastion');
+  assert.equal(JSON.stringify(G.bastionSlots()), '[0,3,7]'); assert.equal(JSON.stringify([0, 3, 7].map(G.bastionLane)), '[0,1,2]');
   assert.ok(G.matRate() > 0, 'die Fabrik unter der Bastion arbeitet weiter');
   const dmg = C.PLAYER_TURRET.dmgPerLevel * C.DOKTRIN.bastion.grundStufe * C.DOKTRIN.bastion.schadenFaktor;
   assert.equal(G.bastionDmg(0), dmg * G.mMul('turretDmg'));
@@ -237,6 +239,7 @@ test('K5.07: Texte der Doktrinen und Sonderbauten in de und en; Wirkungszeile h�
     for (const d of D){
       const p = { nb: C.DOKTRIN.zunfthaus.nachbarFaktor, bd: pct(C.DOKTRIN.bastion.schadenFaktor - 1), fsm: 200, fe: 16, fse: 20, fmt: 120, tw: 1, rv: 3, rs: 4, mv: 60, zr: 25 };
       if (d.grenze) p.g = d.grenze.max;
+      for (const e of d.drawback || []) if (e.stat === 'fabrikGrenze') p.gd = -e.add;          // Teil 7: Zunftordnung senkt die Obergrenze für Fabriken
       (d.effect || []).forEach((e, i) => { p['e' + (i + 1)] = e.stat === 'ownWaveInterval' ? num(e.mul) : e.stat === 'counterBoost' ? pct(e.add) : val(e); });
       (d.drawback || []).forEach((e, i) => { p['d' + (i + 1)] = val(e); p['d' + (i + 1) + 'p'] = e.mul !== undefined ? pct(Math.abs(e.mul - 1)) : val(e); });
       const v = d.sonderbau && G.VAR[d.sonderbau]; if (v) v.effect.forEach((e, i) => { p['s' + (i + 1)] = e.stat === 'budgetKurs' ? num(e.mul) : val(e); });
