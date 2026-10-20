@@ -275,11 +275,17 @@ function create(){
   const hausStufe = () => S.pacing === 'karten' && S.haus ? S.haus.stufe : 0;
   const fabrikGrenze = () => hausStufe() ? Math.max(0, C.HAUPTHAUS.fabrikGrenze[hausStufe() - 1] + mAdd('fabrikGrenze')) : Infinity;
   const fabrikPlaetze = () => standingCount('fabrik');
+  /* Flügel des Haupthauses (Teil 7, REQ-K7.03): je Stufe ab II einer nach Wahl; sie übernehmen Grundfunktionen eines Spezialgebäudes (C.HAUPTHAUS.fluegel) */
+  const FL = C.HAUPTHAUS.fluegel;
+  const hasFluegel = id => S.pacing === 'karten' && !!S.haus && (S.haus.fluegel || []).includes(id);
+  const forschungsort = () => has('universitaet') || hasFluegel('bibliothek');             // Universität oder Bibliothek: Technologiekarten und Forschung
+  const zeughausDeckt = id => id === 'qualitaet' && hasFluegel('zeughaus');                // Zeughaus: Schmiede-Ausbauten bis FL.zeughaus.schmiedeStufen ohne Schmiede
+  const zeughausMax = id => zeughausDeckt(id) && !has('schmiede') && S.lvl[id] >= FL.zeughaus.schmiedeStufen;
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   /* Doktrin Freihandel (Teil 6, REQ-K6.05): Türme bleiben auf Stufe towerMax, ihre Ausbauten (Reichweite, Feuerrate) sind gesperrt; die Einschränkung gilt auch für Türme, die schon höher stehen (wirksame Stufe) */
   const towerCap = () => S.pacing === 'karten' && mAdd('towerMax') > 0 ? mAdd('towerMax') : Infinity;
   const lv = id => {
-    const u = C.UPGRADES[id], base = (C.BUILDINGS.includes(u.group) && !has(u.group)) ? 0 : S.lvl[id], cap = towerCap();
+    const u = C.UPGRADES[id], base = (C.BUILDINGS.includes(u.group) && !has(u.group)) ? (zeughausDeckt(id) ? Math.min(S.lvl[id], FL.zeughaus.schmiedeStufen) : 0) : S.lvl[id], cap = towerCap();
     return cap < Infinity && u.tower !== undefined ? Math.min(base, u.base === 'turm' ? cap : 0) : base;
   };
   /* gesperrter Turmausbau: die Doktrin, die ihn sperrt, sonst null */
@@ -407,7 +413,9 @@ function create(){
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
   const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));
   /* Handelskontor (REQ-6.07 b): Deckel und nächster Zinsbetrag */
-  const kontorCap = () => Math.round((C.KONTOR.capBase + C.KONTOR.capPerLevel * lv('zinseszins')) * (1 + nbTotal('kontor')) * mMul('kontorCap'));
+  /* Flügel Schatzkammer (Teil 7): ohne stehendes Kontor Zinsen mit dem Anteil deckelAnteil am Zinsdeckel; ein Kontor zahlt den vollen Deckel, beide zusammen zählen nicht doppelt */
+  const zinsQuelle = () => has('kontor') ? 'kontor' : hasFluegel('schatzkammer') ? 'schatzkammer' : null;
+  const kontorCap = () => Math.round((C.KONTOR.capBase + C.KONTOR.capPerLevel * lv('zinseszins')) * (1 + nbTotal('kontor')) * mMul('kontorCap') * (zinsQuelle() === 'schatzkammer' ? FL.schatzkammer.deckelAnteil : 1));
   const kontorRaw = () => Math.min(kontorCap(), Math.floor(Math.max(0, S.material) / C.KONTOR.perN) * C.KONTOR.amount);
   const kontorNext = () => Math.floor(kontorRaw() * mMul('kontorYield'));         // kontorYield (Teil 4; wirkt heute nur noch mit einer Karte, die den Stat setzt)
 
@@ -427,11 +435,11 @@ function create(){
   function isAvailable(id){
     const u = C.UPGRADES[id];
     if (ausbauRemoved(id)) return false;
-    if (C.BUILDINGS.includes(u.group) && !has(u.group)) return false;
+    if (C.BUILDINGS.includes(u.group) && !has(u.group) && !zeughausDeckt(id)) return false;
     if (u.needs && S.lvl[u.needs] <= 0) return false;
     return true;
   }
-  const canBuy = id => S.status === 'running' && isAvailable(id) && !stageSource(id) && !isMaxed(id) && !noEffect(id) && !towerBlocked(id) && S[C.UPGRADES[id].cur] >= upCost(id);
+  const canBuy = id => S.status === 'running' && isAvailable(id) && !stageSource(id) && !isMaxed(id) && !zeughausMax(id) && !noEffect(id) && !towerBlocked(id) && S[C.UPGRADES[id].cur] >= upCost(id);
   const builtCount = () => S.slots.filter(Boolean).length;
   /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
   // Die erste Fabrik ist gratis (REQ-44)
@@ -471,11 +479,13 @@ function create(){
 
   /* Forschungsbudget (Teil 5, REQ-K5.05): Der eingestellte Anteil des laufenden Materialertrags (Fabriken und Presse, nicht Klicks, Zinsen oder Beute) wird in EP umgewandelt.
      Nur im Modus karten und bei stehender Universität; der Kurs sinkt mit dem Anteil (kursFaktor), Karten und Sonderbauten können ihn heben (budgetKurs). */
-  const budgetStufe = () => S.pacing === 'karten' && has('universitaet') ? (S.budget || 0) : 0;
+  /* Flügel Bibliothek (Teil 7): ohne Universität ein Budget bis zur Stufe FL.bibliothek.budgetMax */
+  const budgetMax = () => S.pacing !== 'karten' ? -1 : has('universitaet') ? C.KARTEN.budget.stufen.length - 1 : hasFluegel('bibliothek') ? FL.bibliothek.budgetMax : -1;
+  const budgetStufe = () => budgetMax() >= 0 ? Math.min(S.budget || 0, budgetMax()) : 0;
   const budgetShare = () => C.KARTEN.budget.stufen[budgetStufe()] || 0;
   const budgetKurs  = () => C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[budgetStufe()] * mMul('budgetKurs');
   function setBudget(i){
-    if (S.pacing !== 'karten' || !has('universitaet') || !(i >= 0 && i < C.KARTEN.budget.stufen.length)) return false;
+    if (S.pacing !== 'karten' || !(i >= 0 && i <= budgetMax())) return false;
     S.budget = i; return true;
   }
   /* Doktrin Freihandel (Teil 6, REQ-K6.05): im Kontor Material gegen EP und EP gegen Material tauschen, je ein Stapel (C.DOKTRIN.freihandel). Der Tausch von EP gegen Material kostet Fortschritt zur nächsten Wahl
@@ -628,6 +638,55 @@ function create(){
       log('log.variantDone', { building: '@bld.' + sl.type + '.name', slot: i + 1, name: '@' + VAR[vid].nameKey });
       emit('buildingVariant', { type: sl.type, slot: i, variant: vid });
     });
+  }
+  /* ---------- Haupthaus: Ausbau und Flügel (Teil 7, REQ-K7.03) ----------
+     Die Karte der nächsten Stufe (Stadtrecht, Hofhaltung) gibt den Ausbau frei; er kostet C.HAUPTHAUS.kosten Material und dauert dauerS Sekunden. Mit jeder neuen Stufe ist ein Flügel zu wählen. */
+  const hausNext = () => hausStufe() && hausStufe() < C.HAUPTHAUS.fabrikGrenze.length ? hausStufe() + 1 : 0;
+  const hausKarte = n => PFAD_OPTIONS.find(o => o.pfad.haus === n) || null;
+  const hausKosten = () => hausNext() ? C.HAUPTHAUS.kosten[hausNext() - 1] : null;
+  function hausBlock(){
+    if (S.status !== 'running') return 'notRunning';
+    if (!hausStufe()) return 'notInMode';
+    const n = hausNext(); if (!n) return 'maxed';
+    if (S.haus.bau) return 'building';
+    const k = hausKarte(n); if (!k || !cardTaken(k.id)) return 'noCard';
+    if (S.material < hausKosten()) return 'material';
+    return null;
+  }
+  function hausAusbau(){
+    if (hausBlock()) return false;
+    const n = hausNext();
+    S.material -= hausKosten();
+    S.haus.bau = { to: n, t: 0 };
+    log('log.hausStart', { name: '@haus.stufe.' + n + '.name' });
+    return true;
+  }
+  function progressHaus(dt){
+    const b = S.haus && S.haus.bau; if (!b) return;
+    b.t += dt;
+    if (b.t < C.HAUPTHAUS.dauerS) return;
+    S.haus.stufe = b.to; S.haus.bau = null; S.slotVer++;
+    (S.haus.abschluss = S.haus.abschluss || {})[b.to] = S.pfad.choices;                            // für den Abstand der nächsten Karte (abstandWahlen)
+    (S.stats.haus = S.stats.haus || []).push({ stufe: b.to, t: +S.t.toFixed(1), wahl: S.pfad.choices });       // Protokoll: Haupthaus-Stufe mit Zeitpunkt (REQ-K7.12)
+    log('log.hausDone', { name: '@haus.stufe.' + b.to + '.name' });
+    emit('hausStufe', { stufe: b.to });
+  }
+  const fluegelFrei = () => hausStufe() ? Math.max(0, hausStufe() - 1 - S.haus.fluegel.length) : 0;
+  function fluegelBlock(id){
+    if (!FL[id]) return 'unknown';
+    if (S.status !== 'running') return 'notRunning';
+    if (!hausStufe()) return 'notInMode';
+    if (S.haus.fluegel.includes(id)) return 'taken';
+    if (!fluegelFrei()) return 'noSlot';
+    return null;
+  }
+  function chooseFluegel(id){
+    if (fluegelBlock(id)) return false;
+    S.haus.fluegel.push(id); S.slotVer++;
+    (S.stats.fluegel = S.stats.fluegel || []).push({ id, t: +S.t.toFixed(1), stufe: S.haus.stufe });
+    log('log.fluegel', { name: '@haus.fluegel.' + id + '.name' });
+    emit('fluegelGewaehlt', { id });
+    return true;
   }
   const repairCost = () => Math.ceil(C.REPAIR_COST * mMul('repairCost'));
   /* Reparatur je Abschnitt (REQ-13.6). Ein gefallener Abschnitt steht danach wieder, sein Turm feuert wieder. */
@@ -1254,14 +1313,17 @@ function create(){
     if (!S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
   }
   /* Pfadkarten (Modus 'karten'): ziehbar ab der abWahl-ten Wahl, wenn ihre Voraussetzungen stehen und keine Exklusivkarte gewählt ist (REQ-KP.02) */
-  const requirementMet = b => b.startsWith('gebaut:') ? has(b.slice(7)) : sourceMet(b);
-  const isPathFamily = o => !!o.pfad && o.family === 'technologie';
+  const requirementMet = b => b === 'forschungsort' ? forschungsort() : b.startsWith('gebaut:') ? has(b.slice(7)) : sourceMet(b);
+  const isPathFamily = o => !!o.pfad && (o.family === 'technologie' || o.family === 'weiterentwicklung');       // Weiterentwicklung des Haupthauses (Teil 7) belegt einen Pfadplatz
+  /* Karte für Stufe n des Haupthauses (Teil 7, REQ-K7.03): ziehbar, wenn Stufe n−1 steht und seit ihrem Abschluss abstandWahlen Wahlen vergangen sind (Stufe I steht ab Start) */
+  const hausKarteOffen = n => hausStufe() === n - 1 && (n - 1 === 1 || S.pfad.choices + 1 >= ((S.haus.abschluss || {})[n - 1] ?? Infinity) + C.HAUPTHAUS.abstandWahlen);
   function pfadAvailable(o){
     const k = o.pfad;
     if (S.pacing !== 'karten' || cardTaken(o.id) > 0 || S.research.banned.includes(o.id)) return false;
     if (k.abWahl > S.pfad.choices + 1) return false;
     if (!(k.benoetigt || []).every(requirementMet)) return false;
-    if (k.familie === 'technologie' && !has('universitaet')) return false;
+    if (k.familie === 'technologie' && !forschungsort()) return false;
+    if (k.haus && !hausKarteOffen(k.haus)) return false;
     if ((k.exklusivMit || []).some(id => cardTaken(id) > 0)) return false;
     if (supplyCapped() && supplyOnly(tiersOf(o)[0].effect || [])) return false;       // Versorgung am Deckel (Wagnis „Volle Auslastung“): nur der Nachteil bliebe
     return true;
@@ -1307,7 +1369,7 @@ function create(){
   const cardWeight = o => rarityWeight(o.rarity) * Math.pow(C.CARD_TIER_WEIGHT_BONUS, cardTaken(o.id));
   const draftSize = () => {
     const a = S.pacing === 'karten' ? C.KARTEN.angebot : null;           // Modus karten: 3 Karten, mit Universität 4 (REQ-P.04); Standard 2 bzw. 3
-    return (has('universitaet') ? (a ? a.universitaet : C.DRAFT_OPTIONS_UNIVERSITY) : (a ? a.basis : C.DRAFT_OPTIONS_BASE)) + mAdd('draftSize');
+    return (has('universitaet') || hasFluegel('kanzlei') ? (a ? a.universitaet : C.DRAFT_OPTIONS_UNIVERSITY) : (a ? a.basis : C.DRAFT_OPTIONS_BASE)) + mAdd('draftSize');       // Kanzlei (Teil 7): wie mit Universität, nicht zusätzlich
   };
   /* Gewichtete Ziehung ohne Zurücklegen, über den seedbaren Spielzufall (REQ-45):
      höchstens eine legendäre Karte je Angebot; die letzte Karte kommt aus einer anderen Kategorie, falls sonst nur eine vertreten wäre */
@@ -1352,6 +1414,7 @@ function create(){
     const out = [];
     const take = (o, list) => { out.push(o); const i = list.indexOf(o); if (i >= 0) list.splice(i, 1); };
     const slots = Math.min(C.KARTEN.pfadPlaetze, pf.length, k);
+    for (const o of pf.filter(o => o.pfad.garantieWahl && S.pfad.choices + 1 >= o.pfad.garantieWahl)) if (out.length < slots) take(o, pf);       // Teil 7: Stadtrecht spätestens in Wahl garantieWahl
     while (out.length < slots && pf.length) take(pickWeighted(pf, weightKarten), pf);
     const doks = rest.filter(o => o.doktrin);
     if (withDoktrin && doks.length && out.length < k) take(pickWeighted(doks, weightKarten), rest);
@@ -1432,7 +1495,10 @@ function create(){
 
   /* ---------- Forschung (REQ-5.07): Material und Zeit, eine gleichzeitig (Zweiter Forschungsplatz: zwei) ---------- */
   const researchTier = id => S.research.done[id] || 0;
-  const researchSlots = () => 1 + mAdd('researchSlots');
+  /* Forschungsplätze: Universität 1 (+ Karten), Flügel Bibliothek einer (Teil 7, REQ-K7.03); eine Forschung im Platz der Bibliothek trägt bib und dauert × FL.bibliothek.zeitFaktor */
+  const uniPlaetze = () => has('universitaet') || S.pacing !== 'karten' ? 1 + mAdd('researchSlots') : 0;
+  const researchSlots = () => uniPlaetze() + (hasFluegel('bibliothek') ? 1 : 0);
+  const uniActive = () => S.research.active.filter(a => !a.bib).length;
   const researchNext = id => { const r = RES[id], n = researchTier(id); return r && n < r.tiers.length ? r.tiers[n] : null; };
   const researchCost = id => { const t = researchNext(id); return t ? t.cost : null; };
   function researchBlock(id){
@@ -1440,14 +1506,14 @@ function create(){
     if (!r) return 'unknown';
     if (S.status !== 'running') return 'notRunning';
     if ((r.branch === 'pfad' && S.pacing !== 'karten') || (S.pacing === 'karten' && PFAD && (PFAD.entfallen || []).includes(id))) return 'notInMode';
-    if (!has('universitaet')) return 'noUni';
+    if (!forschungsort() || (r.nurUni && !has('universitaet'))) return 'noUni';                    // nurUni: Buchdruck braucht eine Universität (Teil 7)
     if (!isOpen('forschung:' + id)) return 'closed';
     if (!researchNext(id)) return 'maxed';
     if (S.research.locked && S.research.locked.includes(id)) return 'locked';   // nur Simulation: Paarvergleich gesperrt (REQ-6.06)
     if (r.requires && researchTier(r.requires.research) < r.requires.tier) return 'requires';
     if (S.research.active.some(a => a.id === id)) return 'active';
     if (supplyCapped() && supplyOnly(researchNext(id).effect || [])) return 'noEffect';
-    if (S.research.active.length >= researchSlots()) return 'busy';
+    if (S.research.active.length >= researchSlots() || (r.nurUni && uniActive() >= uniPlaetze())) return 'busy';
     if (S.material < researchCost(id)) return 'material';
     return null;
   }
@@ -1460,7 +1526,7 @@ function create(){
   }
   function rushResearch(id){
     const a = S.research.active.find(x => x.id === id), cost = rushCost(id);
-    if (!a || S.status !== 'running' || !has('universitaet') || S.material < cost) return false;
+    if (!a || S.status !== 'running' || !(a.bib ? hasFluegel('bibliothek') : has('universitaet')) || S.material < cost) return false;
     S.material -= cost; a.t = a.timeS;
     S.stats.rushSpent = (S.stats.rushSpent || 0) + cost;
     progressResearch(0);
@@ -1499,15 +1565,20 @@ function create(){
     if (researchBlock(id)) return false;
     const t = researchNext(id);
     S.material -= t.cost;
-    S.research.active.push({ id, tier: researchTier(id) + 1, t: 0, timeS: t.timeS });
+    const entry = { id, tier: researchTier(id) + 1, t: 0, timeS: t.timeS };
+    if (!(has('universitaet') && uniActive() < uniPlaetze())) entry.bib = true;                   // kein freier Platz in der Universität: Platz der Bibliothek (Teil 7)
+    S.research.active.push(entry);
     return true;
   }
-  /* Fortschritt nur, solange die Universität steht */
+  /* Fortschritt nur, solange die Universität steht (im Platz der Bibliothek: solange der Flügel steht, Teil 7) */
   function progressResearch(dt){
-    if (!S.research.active.length || !has('universitaet')) return;
+    if (!S.research.active.length) return;
+    const uni = has('universitaet'), bib = hasFluegel('bibliothek');
+    if (!uni && !bib) return;
     // Universität neben Fabriken forscht schneller (Nachbarschaft, REQ-6.07 a): Forschungszeit × (1 + Regelwert)
     const speed = 1 / Math.max(0.1, 1 + nbTotal('universitaet')) / mMul('researchTime');       // researchTime: Weiterentwicklung Buchdruck (Teil 6): wirkt auch auf laufende Forschungen
-    for (const a of S.research.active) a.t += dt * speed;
+    const speedBib = 1 / FL.bibliothek.zeitFaktor / mMul('researchTime');
+    for (const a of S.research.active){ if (a.bib ? bib : uni) a.t += dt * (a.bib ? speedBib : speed); }
     const done = S.research.active.filter(a => a.t >= a.timeS);
     if (!done.length) return;
     S.research.active = S.research.active.filter(a => a.t < a.timeS);
@@ -1616,8 +1687,8 @@ function create(){
     // Garnison (Teil 4): stehende Mauerabschnitte heilen x Lebenspunkte je Sekunde, ohne Wartezeit; das Tor nie (wie die Maurerkolonne)
     const wallFlat = mAdd('wallRegenFlat');
     if (wallFlat > 0) S.sections.forEach((s, i) => { if (i !== GATE && s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + wallFlat * dt); });
-    // Handelskontor: Zinsen auf den Materialbestand, gedeckelt
-    if (has('kontor')){
+    // Handelskontor: Zinsen auf den Materialbestand, gedeckelt (ohne Kontor zahlt der Flügel Schatzkammer mit kleinerem Deckel, Teil 7)
+    if (zinsQuelle()){
       S.kontorT += dt;
       if (S.kontorT >= C.KONTOR.intervalS){
         S.kontorT -= C.KONTOR.intervalS;
@@ -1628,6 +1699,7 @@ function create(){
     }
     progressResearch(dt);
     progressVariants(dt);
+    progressHaus(dt);
     if (raubbauOn()) for (const sl of S.slots) if (sl && sl.type === 'fabrik' && sl.raubT0 === undefined) sl.raubT0 = S.t;         // Doktrin Raubbau: die Fabrik zählt ab jetzt (Neubau und Bestand)
     if (S.pacing === 'karten' && mAdd('fabrikMiliz') > 0){                                                                       // Doktrin Fabrikmiliz (Teil 6): jede Fabrik stellt alle intervalS Sekunden einen Läufer ohne Versorgung
       S.milizT += dt;
@@ -1743,7 +1815,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    hausStufe, fabrikGrenze, fabrikPlaetze,
+    hausStufe, fabrikGrenze, fabrikPlaetze, hasFluegel, forschungsort, zeughausDeckt, zeughausMax, zinsQuelle, budgetMax, uniPlaetze, hausNext, hausKarte, hausKosten, hausBlock, hausAusbau, fluegelFrei, fluegelBlock, chooseFluegel, hausKarteOffen,
     enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,

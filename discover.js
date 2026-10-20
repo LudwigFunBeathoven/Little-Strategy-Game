@@ -14,8 +14,8 @@ const Disc = (() => {
     'tab:haus':    { when: S => !!S.haus },                                                // Haupthaus (Teil 7, REQ-K7.02): im Modus karten ab Start
     'tab:army':    { when: () => true },
     'tab:wall':    { when: S => Object.keys(S.revealed).some(k => S.revealed[k] && (k.startsWith('repair_') || (wallUpgrade(k) && G.isAvailable(k) && !G.stageSource(k)))) },       // nutzbar: Reparatur oder ein freigeschalteter Ausbau
-    'tab:smithy':  { when: () => G.has('schmiede') },
-    'tab:uni':     { when: () => G.has('universitaet') },
+    'tab:smithy':  { when: () => G.has('schmiede') || G.hasFluegel('zeughaus') },               // Teil 7: Flügel Zeughaus und Bibliothek öffnen die Reiter ohne Gebäude
+    'tab:uni':     { when: () => G.has('universitaet') || G.hasFluegel('bibliothek') },
     'tab:cards':   { when: S => !!S.pendingDraft || cardsChosen(S) > 0 },
     'army:kaserne': { when: () => G.has('kaserne') || (G.isBuildable('kaserne') && G.introShows('buildings')) },       // baubar (bei gestaffelter Einführung erst mit Stufe 2)
     'hud:material': { when: () => true },
@@ -27,7 +27,7 @@ const Disc = (() => {
     'hud:cardSym': { when: S => S.xpTotal > 0 },
     'hud:supply':  { when: S => S.queue.length > 0 || S.ownWaveNo >= 1 || G.ownOnField() > 0 },
     'hud:army':    { when: S => S.ownWaveNo >= 1 },
-    'hud:interest': { when: () => G.has('kontor') },
+    'hud:interest': { when: () => !!G.zinsQuelle() },                                          // Kontor oder Flügel Schatzkammer (Teil 7)
     'hud:neighbor': { when: S => S.slots.filter(Boolean).length >= 2 },
     'cards:kat':   { when: S => Object.keys(S.draft.stacks).some(id => S.draft.stacks[id] > 0 && G.OPT[id] && G.OPT[id].synergie) },        // Teil 6 (REQ-K6.03): Karten je Kategorie erst nach der ersten Synergiekarte
   };

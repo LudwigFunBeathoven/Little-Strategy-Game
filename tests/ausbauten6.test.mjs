@@ -86,7 +86,7 @@ test('K6.07 Maurerkolonne: Stufe III regeneriert mindestens so viel wie der ganz
   for (let i = 0; i < 3; i++) assert.ok(G.sectionMax(i) * G.mAdd('wallRegenPct') / 100 >= full, `Abschnitt ${i}: ${G.sectionMax(i) * G.mAdd('wallRegenPct') / 100} gegen ${full}`);
 });
 
-test('K6.07: der Pool bleibt bei höchstens 38 Karten ohne Doktrinen; verbrannteErde ist gestrichen, die Ausbau-Karten sind Verteidigung bzw. Wirtschaft', () => {
+test('K6.07: der Pool bleibt bei höchstens 42 Karten ohne Doktrinen (Teil 7); verbrannteErde ist gestrichen, die Ausbau-Karten sind Verteidigung bzw. Wirtschaft', () => {
   const { G, C } = game();
   const pool = G.ALL_OPTIONS.filter(o => !o.doktrin && !G.cardRemoved(o.id));
   assert.ok(pool.length <= C.KATEGORIEN.poolMax, `Karten im Pool: ${pool.length}`);

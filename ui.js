@@ -192,7 +192,8 @@ function upgradeReason(id){
   if (G.isMaxed(id)) return t('tip.maxed');
   if (G.stageSource(id)) return sourceLabel(G.stageSource(id)) || lockedText();
   if (G.noEffect(id)) return t('tip.noSupply', { n: C.SUPPLY_CAP_MAX });
-  if (C.BUILDINGS.includes(u.group) && !G.has(u.group)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
+  if (G.zeughausMax(id)) return t('tip.zeughausMax', { n: C.HAUPTHAUS.fluegel.zeughaus.schmiedeStufen });       // Flügel Zeughaus ohne Schmiede (Teil 7)
+  if (C.BUILDINGS.includes(u.group) && !G.has(u.group) && !G.zeughausDeckt(id)) return t('tip.needsBuilding', { name: t(`bld.${u.group}.name`) });
   if (u.needs && S.lvl[u.needs] <= 0) return t('tip.needsTower');
   if (S[u.cur] < G.upCost(id)) return missing(u.cur, G.upCost(id), S[u.cur]);
   return null;
@@ -263,7 +264,7 @@ function tipContent(id){
       const i = Number(a), sh = C.KARTEN.budget.stufen[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs'), gross = G.matRate() + G.autoPressCps() * G.clickPower();
       return { title: t('budget.step.title', { n: pct(sh) }), body: sh > 0 ? t('tip.budget.body', { n: pct(sh), k: fmt2(k) }) : t('tip.budget.off'),
                rows: [[t('tip.budget.rate'), sh > 0 ? fmt2(k) : '–'], [t('tip.budget.xp'), fmt1(gross * sh * k)], [t('tip.budget.mat'), fmt1(gross * (1 - sh))]],
-               reason: G.has('universitaet') ? null : t('tip.needsBuilding', { name: t('bld.universitaet.name') }) }; }
+               reason: i <= G.budgetMax() ? null : G.budgetMax() >= 0 ? t('budget.bib', { n: pct(C.KARTEN.budget.stufen[G.budgetMax()]) }) : t('tip.needsBuilding', { name: t('bld.universitaet.name') }) }; }
     case 'demolish':  return { title: t('slot.demolish'), body: t('tip.demolish.body'), rows: [[t('tip.refund'), refundText(G.refundFor(Number(a)))]] };
     case 'confirmDemolish': return { title: t('demolish.confirm'), body: t('tip.confirmDemolish.body', { refund: refundText(G.refundFor(Number(a))) }) };
     case 'cancel': return { title: t('slot.cancel'), body: t('tip.cancel.body') };
@@ -330,6 +331,11 @@ function tipContent(id){
     case 'reroll': return { title: t('draft.reroll'), body: t('tip.draft.reroll', { n: G.rerollsLeft() }) };
     case 'ban': { const d = S.pendingDraft; const id = d && d.options[a];
       return { title: id ? t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }) : t('draft.reroll'), body: t('tip.draft.ban', { n: G.bansLeft() }) }; }
+    case 'haus': {                                                                 // Haupthaus: Ausbau zur nächsten Stufe (Teil 7, REQ-K7.03)
+      const n = G.hausNext();
+      return { title: n ? t('haus.ausbau', { name: t(`haus.stufe.${n}.name`) }) : t('bld.haupthaus.name'), body: n ? t('tip.haus.ausbau', { name: t(`haus.stufe.${n}.name`), effect: t(`haus.stufe.${n}.eff`), s: C.HAUPTHAUS.dauerS }) : t('haus.stufe.3.desc'),
+               rows: n ? [[t('tip.cost'), costText('material', G.hausKosten())], [t('tip.variant.dur'), `${C.HAUPTHAUS.dauerS} s`]] : [], reason: hausReason() }; }
+    case 'fluegel': return { title: t(`haus.fluegel.${a}.name`), body: t(`haus.fluegel.${a}.desc`, fluegelParams()) + ' ' + t('tip.fluegel.body'), reason: G.S.haus && G.S.haus.fluegel.includes(a) ? null : fluegelReason(a) };
     case 'grid': { const sl = S.slots[a];
       if (sl && sl.type === 'haupthaus') return { title: t('slot.label', { n: Number(a) + 1 }), body: slotName(sl) + ' · ' + t('bld.haupthaus.desc'), rows: [[t('haus.grenze.label'), t('haus.grenze.value', { n: G.fabrikGrenze(), m: G.fabrikPlaetze() })]] };
       const rule = sl && G.NEIGHBORS.find(r => r.building === sl.type);

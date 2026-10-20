@@ -129,8 +129,19 @@ const KF_CONFIG = {
   /* Teil 7 (REQ-K7.02, K7.04): Haupthaus im Mittelfeld des Rasters (platz), nur im Modus karten. Es steht ab Start auf Stufe I, lässt sich nicht abreißen und nicht aufwerten,
      gibt und erhält keine Nachbarschaftsboni. fabrikGrenze: erlaubte Fabrikplätze je Stufe (I, II, III); als Fabrikplatz zählt jedes Gebäude, das aus einer Fabrik hervorgeht
      (Grundform, Varianten, Sonderbauten, Weiterentwicklungen). Die Doktrin Zunftordnung senkt die Grenze (Stat fabrikGrenze, add). */
-  HAUPTHAUS: { platz: 4, fabrikGrenze: [3, 4, 5] },
-  KATEGORIEN: { liste: ['wirtschaft', 'militaer', 'verteidigung'], doktrin: 2, deckel: 8, synergieAb: 2, vorsprung: 2, gewichtVorne: 2, poolMax: 38 },
+  HAUPTHAUS: { platz: 4, fabrikGrenze: [3, 4, 5],
+    /* Teil 7 (REQ-K7.03): Stufe II und III kommen über die Karten Stadtrecht und Hofhaltung (data/kartenpfad.js, Familie weiterentwicklung, Feld haus); nach der Wahl kostet der Ausbau
+       kosten[Stufe] Material und dauert dauerS Sekunden Spielzeit. Jede neue Stufe öffnet einen Flügel nach Wahl (höchstens zwei je Partie, jeder einmal, endgültig). */
+    kosten: [0, 400, 900], dauerS: 15,
+    abstandWahlen: 2,           // eine Karte für Stufe n+1 erscheint frühestens so viele Wahlen nach dem Abschluss der Stufe n (Hofhaltung nach Stadtrecht)
+    /* Flügel: übernehmen Grundfunktionen eines Spezialgebäudes, das in seinem Bereich stärker bleibt.
+       bibliothek: ein eigener Forschungsplatz (auch ohne Universität), Forschungen dort × zeitFaktor; Technologiekarten erscheinen auch ohne Universität; Forschungsbudget bis zur Stufe budgetMax (Index in KARTEN.budget.stufen)
+       zeughaus: Schmiede-Ausbauten (Qualität) bis Stufe schmiedeStufen ohne Schmiede
+       schatzkammer: Zinsen auf den Materialbestand wie ein Kontor mit dem Anteil deckelAnteil an dessen Zinsdeckel (zählt nur ohne stehendes Kontor)
+       kanzlei: so viele Karten je Angebot wie mit Universität (nicht zusätzlich) */
+    fluegel: { bibliothek: { zeitFaktor: 1.5, budgetMax: 1 }, zeughaus: { schmiedeStufen: 2 }, schatzkammer: { deckelAnteil: 0.5 }, kanzlei: {} },
+  },
+  KATEGORIEN: { liste: ['wirtschaft', 'militaer', 'verteidigung'], doktrin: 2, deckel: 8, synergieAb: 2, vorsprung: 2, gewichtVorne: 2, poolMax: 42 },       // poolMax: 38 in Teil 6, 42 in Teil 7 (fünf neue Karten: Stadtrecht, Hofhaltung, Wasserrahmen, Fernhandel, Geschützguss)
   /* Teil 4 (REQ-S.08): Testschalter ?druck=hoch (Standard aus). Verstärkt die regulären Gegnerwellen ab Minute abMinute um faktor (Zahl der Einheiten); die Druckkurve selbst
      bleibt unverändert, bis der Spieltest Daten liefert (Entscheidung B4). Die Belagerungswelle bleibt unberührt. */
   DRUCK: { hoch: { abMinute: 4, faktor: 1.3 } },
@@ -236,7 +247,7 @@ const KF_CONFIG = {
     faecherGrad: 6,             // äußerste Karten stehen um so viele Grad schief
     hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
     inhaltSymbole: { bau: '\u2302', einheit: '\u25B2', stufe: '\u21E7', forschung: '\u2697' },   // Symbole für Inhalte auf den Karten (Gebäude, Einheit, Ausbaustufe, Forschung)
-    symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0', doktrin: '\u2691' },
+    symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0', doktrin: '\u2691', weiterentwicklung: '\u2302' },
     katSymbole: { wirtschaft: '\u25CE', militaer: '\u2694', verteidigung: '\u2616' },       // Kategorien der Karten (Teil 6, REQ-K6.03)
   },
 

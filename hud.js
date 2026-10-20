@@ -79,7 +79,7 @@ function renderHud(){
   const rateText = t('hud.perSecond', { n: fmt1(G.incomeRate()) });
   setHidden(E.budgetInfo, !(S.pacing === 'karten' && G.budgetShare() > 0));                      // Forschungsbudget (Teil 5): kleine Anzeige, sobald es über 0 % steht
   if (G.budgetShare() > 0) setText(E.budgetInfo, t('hud.budget', { n: pct(G.budgetShare()) }));
-  setText(E.rate, G.has('kontor') ? t('hud.rateInterest', { rate: rateText, n: fmt(G.kontorNext()), cap: fmt(G.kontorCap()), s: Math.max(0, Math.ceil(C.KONTOR.intervalS - S.kontorT)) }) : rateText);
+  setText(E.rate, G.zinsQuelle() ? t('hud.rateInterest', { rate: rateText, n: fmt(G.kontorNext()), cap: fmt(G.kontorCap()), s: Math.max(0, Math.ceil(C.KONTOR.intervalS - S.kontorT)) }) : rateText);
   const x = G.xpProgress();
   setText(E.xpVal, fmt(S.xp));
   // EP je Sekunde und geschätzte Zeit bis zur nächsten Kartenwahl (REQ-6.06)

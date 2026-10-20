@@ -52,7 +52,7 @@ function tabForSel(s){
 function tabVisible(id){
   if (id === 'haus' && !G.S.haus) return false;                             // Haupthaus nur im Modus karten (Teil 7, REQ-K7.02)
   if (Disc.on()) return Disc.shows('tab:' + id);                           // REQ-K2.04: Reiter erst, wenn etwas darin nutzbar ist; ein Reiter bleibt danach
-  if (id === 'smithy') return G.has('schmiede');
+  if (id === 'smithy') return G.has('schmiede') || G.hasFluegel('zeughaus');       // Flügel Zeughaus: Qualitätsstufen ohne Schmiede (Teil 7)
   if (id === 'cards') return G.introShows('cards');
   return true;
 }
@@ -187,6 +187,18 @@ function buildPanels(){
       resEls[r.id] = makeOpt(resGroups[card.id].opts, 'res', 'res:' + r.id, () => G.startResearch(r.id));
       resEls[r.id].card = card.id; resEls[r.id].group = resGroups[card.id];
     } else resEls[r.id] = makeOpt($(BRANCH_BOX[r.branch]), 'res', 'res:' + r.id, () => G.startResearch(r.id));
+  }
+  // Haupthaus (Teil 7, REQ-K7.03): Ausbau zur nächsten Stufe, ein Knopf je Flügel; einmal erzeugt
+  hausAusbauEl = makeOpt($('hausAusbau'), '', 'haus:ausbau', () => G.hausAusbau());
+  for (const id of Object.keys(C.HAUPTHAUS.fluegel)){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = 'fluegel:' + id;
+    const nm = document.createElement('b'), d = document.createElement('span'), ex = document.createElement('span'), w = document.createElement('span');
+    d.className = 'd'; ex.className = 'expl'; w.className = 'w';
+    b.append(nm, d, ex, w);
+    b.addEventListener('click', () => { if (!isDis(b) && G.chooseFluegel(id)) requestRender(); });
+    $('hausFluegel').appendChild(b);
+    fluegelEls[id] = { b, nm, d, ex, w };
   }
   // Forschungsbudget (Teil 5, REQ-K5.05): ein Knopf je Stufe, einmal erzeugt
   C.KARTEN.budget.stufen.forEach((sh, i) => {
@@ -488,7 +500,7 @@ function pathStatus(){
   }
   return out;
 }
-const FAMILY_ORDER = ['technologie', 'doktrin', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
+const FAMILY_ORDER = ['weiterentwicklung', 'technologie', 'doktrin', 'bonus', 'wagnis'], famOf = o => o.family || 'bonus';
 let chosenKey = '', draftKey = '';
 function renderChosen(){
   const ps = Stage.on() && !Disc.on() && G.S.pacing === 'karten' ? pathStatus() : [];
@@ -649,17 +661,17 @@ function researchReason(id){
 /* Forschungsbudget (Teil 5): Knöpfe, Beschriftung und Erklärzeile je Stufe; nur im Modus karten */
 const budgetBtns = [];
 function renderBudget(){
-  const S = G.S, karten = S.pacing === 'karten', uni = G.has('universitaet');
+  const S = G.S, karten = S.pacing === 'karten', uni = G.budgetMax() >= 0, max = G.budgetMax();       // Flügel Bibliothek: Budget ohne Universität bis budgetMax (Teil 7)
   setHidden($('budgetBox'), !karten);
   if (!karten) return;
   const cur = G.budgetStufe();
-  setText($('budgetText'), t(uni ? 'budget.text' : 'budget.needUni', { n: pct(G.budgetShare()), k: fmt2(G.budgetKurs()) }));
+  setText($('budgetText'), t(uni ? 'budget.text' : 'budget.needUni', { n: pct(G.budgetShare()), k: fmt2(G.budgetKurs()) }) + (uni && !G.has('universitaet') ? ' ' + t('budget.bib', { n: pct(C.KARTEN.budget.stufen[max]) }) : ''));
   C.KARTEN.budget.stufen.forEach((sh, i) => {
     const b = budgetBtns[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs');
     setText(b.querySelector('.btn-label'), t('budget.step', { n: pct(sh) }));
     setText(b.querySelector('.expl'), sh > 0 ? t('ex.budget', { n: pct(sh), k: fmt2(k) }) : t('ex.budget.off'));
     b.setAttribute('aria-pressed', String(i === cur && uni));
-    setDis(b, !uni || S.status !== 'running');
+    setDis(b, !uni || i > max || S.status !== 'running');
   });
 }
 let resRunKey = '';
@@ -699,7 +711,7 @@ function renderResearch(){
     for (const a of S.research.active){
       const row = document.createElement('div'); row.className = 'res-run';
       row.innerHTML = '<span></span><span class="num"></span><span class="bar steel"><i></i></span>';
-      row.children[0].textContent = t('research.runningName', { name: researchName(G.RES[a.id], a.tier) });
+      row.children[0].textContent = t(a.bib ? 'research.runningBib' : 'research.runningName', { name: researchName(G.RES[a.id], a.tier) });       // im Platz der Bibliothek (Teil 7)
       // Beschleunigen gegen Material (REQ-6.06)
       const id = a.id;
       row.appendChild(mkButton('btn-ghost rush', t('research.rush'), () => { if (G.rushResearch(id)) requestRender(); }, 'rush:' + id, ''));
@@ -724,13 +736,62 @@ function renderResearch(){
   }
 }
 let resDoneSeen = -1, toastTimer = null;
-/* ---------- Haupthaus (Teil 7, REQ-K7.02 – K7.04): Stufe, Obergrenze für Fabriken; Flügel ab Stufe II ---------- */
+/* ---------- Haupthaus (Teil 7, REQ-K7.02 – K7.04): Stufe, Obergrenze für Fabriken, Ausbau zur nächsten Stufe; Flügel ab Stufe II ---------- */
+let hausAusbauEl = null;
+const fluegelEls = {};
+const fluegelParams = () => { const F = C.HAUPTHAUS.fluegel; return { z: pct(F.bibliothek.zeitFaktor - 1), b: pct(C.KARTEN.budget.stufen[F.bibliothek.budgetMax]), n: F.zeughaus.schmiedeStufen, p: pct(F.schatzkammer.deckelAnteil) }; };
+function hausReason(){
+  const b = G.hausBlock(), n = G.hausNext();
+  switch (b){
+    case 'notRunning': return t('tip.notRunning');
+    case 'building': return t('haus.ausbau.running', { name: t(`haus.stufe.${G.S.haus.bau.to}.name`), s: Math.max(0, Math.ceil(C.HAUPTHAUS.dauerS - G.S.haus.bau.t)) });
+    case 'noCard': return t('haus.ausbau.noCard', { name: t(G.hausKarte(n).nameKey) });
+    case 'material': return missing('material', G.hausKosten(), G.S.material);
+  }
+  return null;
+}
+function fluegelReason(id){
+  switch (G.fluegelBlock(id)){
+    case 'notRunning': return t('tip.notRunning');
+    case 'taken': return t('haus.fluegel.taken');
+    case 'noSlot': return t(G.hausStufe() >= C.HAUPTHAUS.fabrikGrenze.length ? 'haus.fluegel.allTaken' : 'haus.fluegel.noSlot');
+  }
+  return null;
+}
 function renderHaus(){
   const S = G.S, h = S.haus;
   if (!h) return;
   setText($('hausTitle'), t(`haus.stufe.${h.stufe}.name`));
   setText($('hausText'), t(`haus.stufe.${h.stufe}.desc`));
   setText($('hausGrenze'), t('haus.grenze', { n: G.fabrikGrenze(), m: G.fabrikPlaetze() }));
+  // Ausbau: sichtbar, sobald die Karte der nächsten Stufe gewählt ist (Entdecken: erst dann nutzbar)
+  const n = G.hausNext(), card = n ? G.hausKarte(n) : null, open = !!card && (G.cardTaken(card.id) > 0 || !Disc.on());
+  setHidden(hausAusbauEl.btn, !open);
+  if (open){
+    const bau = h.bau;
+    setText(hausAusbauEl.label, t('haus.ausbau', { name: t(`haus.stufe.${n}.name`) }));
+    setText(hausAusbauEl.expl, bau ? t('haus.ausbau.running', { name: t(`haus.stufe.${bau.to}.name`), s: Math.max(0, Math.ceil(C.HAUPTHAUS.dauerS - bau.t)) })
+      : t('ex.haus.ausbau', { effect: t(`haus.stufe.${n}.eff`), cost: costText('material', G.hausKosten()), s: C.HAUPTHAUS.dauerS }));
+    setDis(hausAusbauEl.btn, !!G.hausBlock());
+  }
+  // Flügel: ab Stufe II; ein freier Platz zeigt die Wahl, danach die gewählten Flügel
+  const show = h.stufe >= 2 || h.fluegel.length > 0;
+  setHidden($('hausFluegelBox'), !show);
+  if (!show) return;
+  const frei = G.fluegelFrei();
+  setText($('hausFluegelText'), frei ? t('haus.fluegel.choose') : t('haus.fluegel.chosen', { list: h.fluegel.map(id => t(`haus.fluegel.${id}.name`)).join(', ') }));
+  const p = fluegelParams();
+  for (const [id, e] of Object.entries(fluegelEls)){
+    const taken = h.fluegel.includes(id);
+    setHidden(e.b, !frei && !taken);
+    e.b.classList.toggle('selected', taken);
+    setText(e.nm, t(`haus.fluegel.${id}.name`));
+    setText(e.d, t(`haus.fluegel.${id}.desc`, p));
+    setText(e.ex, t('ex.fluegel', { effect: t(`haus.fluegel.${id}.eff`, p) }));
+    const why = taken ? null : fluegelReason(id);
+    setText(e.w, why || ''); setHidden(e.w, !why);
+    setDis(e.b, !!G.fluegelBlock(id));
+  }
 }
 function toast(text){
   const el = $('toast'); if (!el) return;
@@ -825,8 +886,8 @@ function renderPanels(){
   $('camFollow').setAttribute('aria-pressed', String(Cam.follow));
   setText($('camFollowExpl'), t(Cam.follow ? 'ex.cam.followOn' : 'ex.cam.followOff'));
   // Schmiede, Universität, Karten
-  setText($('smithyText'), Disc.on() && !G.has('schmiede') ? t('panel.smithy.none') : t('panel.smithy.text', { n: S.lvl.qualitaet }));
-  setText($('uniInfo'), t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() }) + ' ' + t(G.has('universitaet') ? 'research.intro' : 'research.needUni', { n: G.researchSlots() }));
+  setText($('smithyText'), !G.has('schmiede') && G.hasFluegel('zeughaus') ? t('panel.smithy.zeughaus', { n: C.HAUPTHAUS.fluegel.zeughaus.schmiedeStufen }) : Disc.on() && !G.has('schmiede') ? t('panel.smithy.none') : t('panel.smithy.text', { n: S.lvl.qualitaet }));
+  setText($('uniInfo'), t(G.has('universitaet') ? 'level.uniOn' : 'level.uniOff', { n: G.draftSize() }) + ' ' + t(G.has('universitaet') ? 'research.intro' : G.hasFluegel('bibliothek') ? 'research.bib' : 'research.needUni', Object.assign({ n: G.researchSlots() }, fluegelParams())));       // Flügel Bibliothek (Teil 7)
   renderHaus();
   renderResearch();
   renderBudget();

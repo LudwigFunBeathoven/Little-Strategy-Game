@@ -210,10 +210,10 @@ test('K6.03 Angebot: Synergiekarten erscheinen erst mit genug Karten ihrer Kateg
   for (const id of SYN) assert.equal(S.optionAvailable(S.OPT[id]), false, `${id} im Standardmodus`);
 });
 
-test('K6.03 Pool: höchstens 38 Karten ohne Doktrinen; keine Karte doppelt; die gestrichenen Karten sind nicht im Angebot', () => {
+test('K6.03, K7: Pool höchstens 42 Karten ohne Doktrinen (Teil 6: 38); keine Karte doppelt; die gestrichenen Karten sind nicht im Angebot', () => {
   const { G, C } = game();
   const pool = G.ALL_OPTIONS.filter(o => !o.doktrin && !G.cardRemoved(o.id));
-  assert.ok(pool.length <= C.KATEGORIEN.poolMax && C.KATEGORIEN.poolMax === 38, `Karten im Pool: ${pool.length}`);
+  assert.ok(pool.length <= C.KATEGORIEN.poolMax && C.KATEGORIEN.poolMax === 42, `Karten im Pool: ${pool.length}`);
   assert.equal(new Set(pool.map(o => o.id)).size, pool.length);
   const per = Object.fromEntries(['wirtschaft', 'militaer', 'verteidigung', 'neutral'].map(k => [k, pool.filter(o => (G.katsOf(o).join() || 'neutral').split(',').includes(k)).length]));
   for (const k of ['wirtschaft', 'militaer', 'verteidigung']) assert.ok(per[k] >= 7, `${k}: ${per[k]} Karten (Zähler brauchen Karten)`);

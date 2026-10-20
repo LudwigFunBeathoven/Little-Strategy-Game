@@ -140,6 +140,7 @@ const Stage = (() => {
       return tab('wall');
     }
     if (o.pfad && o.family === 'technologie') return tab('uni');
+    if (o.pfad && o.family === 'weiterentwicklung') return tab('haus');                     // Haupthaus (Teil 7): der Ausbau wartet im Reiter Haupthaus
     if (o.doktrin) return tab('build');                                     // Doktrin: ihr Sonderbau entsteht über die Aufwertung eines Gebäudes im Reiter Bauen (Teil 5)
     if (o.pfad && o.family === 'wagnis') return { el: document.querySelector('.hud-item[data-tooltip="hud:material"]'), mark: null };
     const hudOf = { wirtschaft: 'hud:material', armee: 'hud:soldiers', basis: 'hud:walls' }[o.category];

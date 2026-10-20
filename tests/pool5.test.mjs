@@ -16,10 +16,10 @@ const pool = G => G.ALL_OPTIONS.filter(o => !o.doktrin && !G.cardRemoved(o.id));
 const REMOVED = ['serienbau', 'bauleitung', 'doppelschicht', 'schwerePressen', 'nachtschicht', 'kriegsanleihe', 'grossauftrag', 'rationalisierung', 'selbstlaeufer', 'fliessband',
   'veteranen', 'taktiker', 'vorposten', 'blitzkrieg', 'soeldnerheer', 'festungsbau', 'bastion', 'scharfschuetzen', 'zeugmeister'];
 
-test('K5.06/K6.03: der Pool des Modus karten hat höchstens 38 Karten (ohne Doktrinen); die gestrichenen Karten sind nicht darin', () => {
+test('K5.06/K6.03: der Pool des Modus karten hat höchstens 42 Karten (ohne Doktrinen; Teil 6: 38); die gestrichenen Karten sind nicht darin', () => {
   const { G, P } = game();
   const ids = pool(G).map(o => o.id);
-  assert.ok(ids.length >= 25 && ids.length <= 38, `Karten im Pool: ${ids.length}`);
+  assert.ok(ids.length >= 25 && ids.length <= 42, `Karten im Pool: ${ids.length}`);
   for (const id of REMOVED){ assert.ok(!ids.includes(id), `${id} gestrichen`); assert.ok(P.entfallenKarten.includes(id), `${id} steht in entfallenKarten`); }
   // nie angeboten: auch nicht mit allen Voraussetzungen
   G.S.level = 8; G.S.pfad.choices = 9; G.build('kaserne'); G.build('fabrik'); G.S.lvl.turm_0 = 2;

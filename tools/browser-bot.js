@@ -19,15 +19,26 @@ function KF_BROWSER_BOT(G, profile, hooks){
     // Bauplatz mit dem größten Nachbarschaftsnutzen (REQ-6.07 a); bei Gleichstand der erste freie
     const bestSlot = type => { let best = free, bg = -Infinity;
       S.slots.forEach((x, i) => { if (x) return; const g = G.neighborGain ? G.neighborGain(i, type) : 0; if (g > bg + 1e-9){ bg = g; best = i; } }); return best; };
+    // Haupthaus (Teil 7, REQ-K7.12): Ausbau bezahlen, sobald die Karte gewählt ist und das Material reicht; Flügel nach fester Regel je Kategorie
+    const haus = G.pacing() === 'karten' && !!S.haus;
+    if (haus){
+      if (G.hausBlock() === null) G.hausAusbau();
+      if (G.fluegelFrei() > 0){ const f = KF_BROWSER_BOT.KAT_FLUEGEL[o.kat || 'ohne'].concat(Object.keys(C.HAUPTHAUS.fluegel)).find(id => G.fluegelBlock(id) === null); if (f) G.chooseFluegel(f); }
+    }
+    const reserve = haus && G.hausBlock() === 'material' ? G.hausKosten() : 0;       // Rücklage für den Ausbau: Tausch, Ausbauten und Forschung warten
+    const covered = haus ? KF_BROWSER_BOT.covered(G) : [];                   // Gebäude, deren Grundfunktion ein gewählter Flügel übernimmt
+    const fabWanted = haus && G.fabrikPlaetze() < G.fabrikGrenze();
     // Modus karten: ist das Raster voll und ein inzwischen freigeschaltetes Gebäude fehlt, reißt der Bot eine Fabrik ab (wie der Bot „gierig“); sonst blockiert ein früh gefülltes Raster die Kaserne
     if (free < 0 && !o.noBuild && G.pacing() === 'karten' && G.factoryCount() > 3){
-      const want = ['kaserne', 'schmiede', 'universitaet', 'kontor'].find(b => !(o.forbid || []).includes(b) && !G.has(b) && G.isBuildable(b));
+      const want = ['kaserne', 'schmiede', 'universitaet', 'kontor'].find(b => !(o.forbid || []).includes(b) && !covered.includes(b) && !G.has(b) && G.isBuildable(b));
       const i = want ? S.slots.findIndex(x => x && x.type === 'fabrik') : -1;
       if (i >= 0) G.demolish(i);
     }
+    // Teil 7: Raster voll, die Obergrenze erlaubt eine weitere Fabrik: das Gebäude, das ein Flügel ersetzt, weicht ihr
+    if (S.slots.findIndex(x => !x) < 0 && !o.noBuild && fabWanted){ const i = S.slots.findIndex(x => x && covered.includes(x.type)); if (i >= 0) G.demolish(i); }
     free = S.slots.findIndex(x => !x);
     if (free >= 0 && !o.noBuild){
-      const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && G.buildBlock(free, b) === null);
+      const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && !(fabWanted && covered.includes(b)) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
     // Forschungsbudget (Teil 5, REQ-K5.10): feste Regel je Kategorie-Bot – Militär 0 %, Wirtschaft 50 %, Verteidigung 25 %; ohne Kategorie und Angabe 0 %; o.budget überschreibt (Stufe 0, 1, 2)
@@ -38,10 +49,10 @@ function KF_BROWSER_BOT(G, profile, hooks){
     // Freihandel (Teil 6, REQ-K6.05): Material über dem Dreifachen eines Stapels wird gegen EP getauscht (höchstens zwei Stapel je Entscheidung)
     if (G.pacing() === 'karten' && G.freihandel()){
       const F = C.DOKTRIN.freihandel;
-      for (let k = 0; k < 2 && S.material >= 3 * F.stapelMaterial && !G.tradeBlock('ep'); k++) G.tradeMaterialToXp();
+      for (let k = 0; k < 2 && S.material - reserve >= 3 * F.stapelMaterial && !G.tradeBlock('ep'); k++) G.tradeMaterialToXp();
     }
     if (o.kat && G.pacing() === 'karten') KF_BROWSER_BOT.aufwerten(G, o.kat, h);       // Kategorie-Bot (Teil 4, ab Teil 6 nach Kategorie): Gebäude zu Varianten seiner Kategorie aufwerten
-    if (!o.noUpgrades){
+    if (!o.noUpgrades && !reserve){
       for (const id of PRIO) if (C.UPGRADES[id] && (o.useWall || !/^(turm|mauer)/.test(id))) G.buy(id);
       const pr = KF_BROWSER_BOT.pfadResearch(G), r = pr ? G.RES[pr] : G.RESEARCH.find(x => G.researchBlock(x.id) === null);
       if (r && S.material > G.researchCost(r.id) * 2 && G.startResearch(r.id) && h.researched) h.researched(r.id);
@@ -83,6 +94,8 @@ KF_BROWSER_BOT.pfadResearch = function(G){
 };
 KF_BROWSER_BOT.pfadPick = function(G, offer, variant, kat){
   if (G.pacing() !== 'karten') return null;
+  const hi = offer.findIndex(id => G.OPT[id] && G.OPT[id].pfad && G.OPT[id].pfad.haus);           // Teil 7 (REQ-K7.12): Stadtrecht und Hofhaltung, sobald sie erscheinen
+  if (hi >= 0) return hi;
   if (kat){                                                                // Kategorie-Bot (Teil 6, REQ-K6.08): zuerst die Karte mit den meisten Treffern in der eigenen Kategorie (eine Doktrin zählt doppelt)
     let bestI = null, score = 0;
     offer.forEach((id, i) => { const o = G.OPT[id], s = [].concat((o && o.kat) || []).filter(k => k === kat).length * (o && o.doktrin ? 2 : 1); if (s > score){ score = s; bestI = i; } });
@@ -97,6 +110,11 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, kat){
 /* Gebäude-Aufwertung (Teil 4, REQ-S.05): Der Kategorie-Bot wertet jedes Gebäude, für das seine Kategorie eine Variante hat, auf, sobald das Material mit Rücklage reicht.
    Fabriken werden nur zur Manufaktur mehrfach aufgewertet (Ertrag je Gebäude); jede andere Variante wirkt einmal, ein zweites Gebäude brächte nichts. */
 KF_BROWSER_BOT.KAT_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Kategorie-Bot (0, 25, 50 %)
+/* Flügel des Haupthauses (Teil 7, REQ-K7.12): feste Reihenfolge je Kategorie-Bot; der Bot ohne Kategorie nimmt Kanzlei und Zeughaus */
+KF_BROWSER_BOT.KAT_FLUEGEL = { militaer: ['zeughaus', 'kanzlei'], wirtschaft: ['schatzkammer', 'bibliothek'], verteidigung: ['bibliothek', 'zeughaus'], ohne: ['kanzlei', 'zeughaus'] };
+/* Gebäude, deren Grundfunktion ein Flügel übernimmt: Es weicht einer weiteren Fabrik, wenn das Raster voll ist */
+KF_BROWSER_BOT.FLUEGEL_ERSETZT = { bibliothek: 'universitaet', zeughaus: 'schmiede', schatzkammer: 'kontor', kanzlei: 'universitaet' };
+KF_BROWSER_BOT.covered = G => (G.S.haus ? G.S.haus.fluegel : []).map(f => KF_BROWSER_BOT.FLUEGEL_ERSETZT[f]);
 KF_BROWSER_BOT.KAT_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Kategorie-Bots
 KF_BROWSER_BOT.MEHRFACH = ['manufaktur', 'zunfthaus', 'bastion'];       // Varianten, deren Wirkung je Gebäude gilt
 /* Weiterentwicklung eines Bereichs „geöffnet“: die Technologiekarte, die ihre Forschung öffnet, ist gewählt (Teil 6) */

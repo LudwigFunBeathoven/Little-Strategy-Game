@@ -56,7 +56,7 @@ test('Graphtest: jeder gesperrte Inhalt hat eine Quelle, Voraussetzungsketten si
     assert.notEqual(state[id], 1, `Zyklus bei ${id}`);
     if (state[id] === 2) return;
     state[id] = 1;
-    for (const b of x.benoetigt || []) if (!b.startsWith('gebaut:')) { assert.ok(byId[b], `unbekannte Voraussetzung ${b}`); visit(b); }
+    for (const b of x.benoetigt || []) if (!b.startsWith('gebaut:') && b !== 'forschungsort') { assert.ok(byId[b], `unbekannte Voraussetzung ${b}`); visit(b); }       // forschungsort: Universität oder Bibliothek (Teil 7)
     state[id] = 2;
   };
   for (const id of Object.keys(byId)) visit(id);
@@ -78,6 +78,7 @@ function tableState(seed){
     for (const id of TECH) G.S.draft.stacks[id] = 1;
     delete G.S.draft.stacks[['eiserneKlingen', 'befestigungskunde'][(seed >> 1) % 2]];
   }
+  if (seed % 7 === 0 || seed % 7 === 3) G.S.draft.stacks.stadtrecht = 1;                                    // Teil 7: auch die Karte des Haupthauses ist eine Pfadkarte
   G.S.draft.ver++;
   return { G, C, uni };
 }

@@ -6,7 +6,10 @@
      id, kat, familie   Kennung; Kategorie (Teil 6, REQ-K6.03: 'wirtschaft' | 'militaer' | 'verteidigung', ohne Eintrag neutral); 'technologie' | 'wagnis' (die Familie 'bonus' sind die Karten aus data/draft-options.js, die Familie 'doktrin' steht in data/doktrinen.js)
      rarity         'common' | 'rare' | 'legendary' (Anzeige); gewicht = Grundgewicht im Angebot (relativ zu den anderen Pfadkarten)
      abWahl         frühestens ab der n-ten Kartenwahl im Angebot
-     benoetigt      Liste: Karten-Ids, Forschungs-Ids oder 'gebaut:<gebäude>', die vorhanden sein müssen
+     benoetigt      Liste: Karten-Ids, Forschungs-Ids, 'gebaut:<gebäude>' oder 'forschungsort' (Universität oder Flügel Bibliothek, Teil 7), die vorhanden sein müssen
+     garantieWahl   Teil 7: spätestens in dieser Wahl liegt die Karte im Angebot (auf einem Pfadplatz), solange sie ziehbar ist
+     haus           Teil 7 (Familie weiterentwicklung): Stufe des Haupthauses, die die Karte öffnet; ziehbar, wenn das Haupthaus eine Stufe darunter steht
+                    und seit deren Abschluss HAUPTHAUS.abstandWahlen Wahlen vergangen sind (Stufe I steht ab Start)
      schaltetFrei   Schlüssel: 'bau:<gebäude>', 'einheit:<typ>', 'stufe:<upgrade>:<n>' (Kauf ab Stufe n)
      oeffnetForschung   Forschungs-Ids, die in der Universität verfügbar werden (nur Technologie)
      exklusivMit    Karten-Ids, die sich gegenseitig ausschließen
@@ -15,22 +18,27 @@
    Werte sind Startwerte (REQ-KP.02), Kalibrierung per Simulation. */
 const KF_PFAD = {
   karten: [
-    /* ---------- Technologie: öffnet Forschungsoptionen in der Universität (REQ-KP.04); erscheint, sobald eine Universität steht (Teil 5, REQ-K5.02) ---------- */
-    { id: 'fortgeschritteneTaktiken', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    /* ---------- Weiterentwicklung des Haupthauses (Teil 7, REQ-K7.03): neutral, ohne Universität, belegt einen Pfadplatz; nach der Wahl Ausbau gegen Material (C.HAUPTHAUS) ---------- */
+    { id: 'stadtrecht', familie: 'weiterentwicklung', rarity: 'common', gewicht: 20, abWahl: 2, garantieWahl: 5, haus: 2,
+      nameKey: 'kp.card.stadtrecht.name', descKey: 'kp.card.stadtrecht.desc', tiers: [{ effect: [] }] },
+    { id: 'hofhaltung', familie: 'weiterentwicklung', rarity: 'rare', gewicht: 20, abWahl: 2, benoetigt: ['stadtrecht'], haus: 3,
+      nameKey: 'kp.card.hofhaltung.name', descKey: 'kp.card.hofhaltung.desc', tiers: [{ effect: [] }] },
+    /* ---------- Technologie: öffnet Forschungsoptionen in der Universität (REQ-KP.04); erscheint, sobald eine Universität steht (Teil 5, REQ-K5.02) oder der Flügel Bibliothek (Teil 7: 'forschungsort') ---------- */
+    { id: 'fortgeschritteneTaktiken', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['forschungsort'],
       exklusivMit: ['ballistik'], oeffnetForschung: ['r_reiter', 'r_schild'],
       nameKey: 'kp.card.fortgeschritteneTaktiken.name', descKey: 'kp.card.fortgeschritteneTaktiken.desc', tiers: [{ effect: [] }] },
-    { id: 'ballistik', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    { id: 'ballistik', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['forschungsort'],
       exklusivMit: ['fortgeschritteneTaktiken'], oeffnetForschung: ['r_armbrust', 'r_katapult'],
       nameKey: 'kp.card.ballistik.name', descKey: 'kp.card.ballistik.desc', tiers: [{ effect: [] }] },
-    { id: 'eiserneKlingen', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    { id: 'eiserneKlingen', kat: 'militaer', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['forschungsort'],
       oeffnetForschung: ['r_eisenwaffen'],
       nameKey: 'kp.card.eiserneKlingen.name', descKey: 'kp.card.eiserneKlingen.desc', tiers: [{ effect: [] }] },
     /* Teil 5: Mauer-, Turm- und Ausbaustufen gehören zur Grundausstattung; Befestigungskunde öffnet stattdessen zwei Forschungen mit eigener Wirkung (Vorschlag, zur Bestätigung) */
-    { id: 'befestigungskunde', kat: 'verteidigung', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['gebaut:universitaet'],
+    { id: 'befestigungskunde', kat: 'verteidigung', familie: 'technologie', rarity: 'common', gewicht: 10, abWahl: 1, benoetigt: ['forschungsort'],
       oeffnetForschung: ['r_wehrgang', 'r_schiessscharten'],
       nameKey: 'kp.card.befestigungskunde.name', descKey: 'kp.card.befestigungskunde.desc', tiers: [{ effect: [] }] },
     /* ---------- Weiterentwicklungen (Teil 6, REQ-K6.06): Technologiekarte → Forschung → das ganze Gebäude wird ersetzt; eine je Bereich und Partie ---------- */
-    { id: 'dampfkraft', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['gebaut:universitaet', 'gebaut:fabrik'],
+    { id: 'dampfkraft', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:fabrik'],
       oeffnetForschung: ['r_dampfkraft'],
       nameKey: 'kp.card.dampfkraft.name', descKey: 'kp.card.dampfkraft.desc', tiers: [{ effect: [] }] },
     { id: 'buchdruck', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['gebaut:universitaet'],
@@ -49,6 +57,7 @@ const KF_PFAD = {
        schaltetFrei   Schlüssel, die der Abschluss öffnet ('einheit:<typ>', 'stufe:<upgrade>:<n>')
        ersetzt        Einheitenersatz { von: nach }
        weiter         Weiterentwicklung (Teil 6, REQ-K6.06) { bereich: Gebäudetyp }: Der Abschluss ersetzt die Grundvarianten aller Gebäude dieses Typs (ohne Erstattung); Sonderbauten bleiben, Ausbaustufen auch
+       nurUni         Teil 7: nur in einer Universität erforschbar, nicht im Flügel Bibliothek des Haupthauses
      Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
   /* Forschungen, die im Modus karten entfallen: Schildträger (eine Pfadforschung ersetzt sie), Ingenieurskunst (Teil 4, REQ-S.03: nur Baukosten) und der Hörsaal (Teil 5, REQ-K5.05:
      das Forschungsbudget der Universität ersetzt ihn) */
@@ -81,7 +90,7 @@ const KF_PFAD = {
     /* Weiterentwicklungen (Teil 6, REQ-K6.06; Kosten und Dauer sind Startwerte): Fabriken werden zu Dampfmühlen (Ertrag +40 %, Klickertrag ×2), die Universität zur Druckerei (Forschung halb so lang, Budgetkurs ×1,5) */
     { id: 'r_dampfkraft', branch: 'pfad', nameKey: 'kp.res.dampfkraft.name', descKey: 'kp.res.dampfkraft.desc', weiter: { bereich: 'fabrik' },
       tiers: [{ cost: 800, timeS: 60, effect: [{ stat: 'factoryYield', mul: 1.4 }, { stat: 'clickYield', mul: 2 }] }] },
-    { id: 'r_buchdruck', branch: 'pfad', nameKey: 'kp.res.buchdruck.name', descKey: 'kp.res.buchdruck.desc', weiter: { bereich: 'universitaet' },
+    { id: 'r_buchdruck', branch: 'pfad', nameKey: 'kp.res.buchdruck.name', descKey: 'kp.res.buchdruck.desc', weiter: { bereich: 'universitaet' }, nurUni: true,       // nurUni (Teil 7): nicht in der Bibliothek
       tiers: [{ cost: 600, timeS: 50, effect: [{ stat: 'researchTime', mul: 0.5 }, { stat: 'budgetKurs', mul: 1.5 }] }] },
     /* Ersatz für Mauerausbau III und Turmausbau (Teil 5): beide Stufen gehören zur Grundausstattung */
     { id: 'r_wehrgang', branch: 'pfad', nameKey: 'kp.res.wehrgang.name', descKey: 'kp.res.wehrgang.desc',

@@ -79,6 +79,40 @@ const shot = (p, name) => p.screenshot({ path: new URL(`../docs/bilder/kartenpfa
   await ctx.close();
 }
 
+/* ---------- K7.03: Stadtrecht auf der Bühne, Ausbau, Flügel ---------- */
+for (const lang of ['de', 'en']){
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1&zeit=pause', { lang }); await calm(p);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.S.t = 200; G.S.pfad.choices = 1; G.S.pendingLevels = 1; G.S.pendingDraft = { level: 2, options: ['stadtrecht', 'drill', 'bessereFabriken'], rerolled: 0 }; __kf.requestRender(); });
+  await settle(p, 2200);
+  const card = await p.evaluate(() => { const c = document.querySelector('.kcard.fam-weiterentwicklung'); return c && { band: c.querySelector('.kc-fam').textContent, name: c.querySelector('.kc-name').textContent, eff: c.querySelector('.kc-desc').textContent }; });
+  check(!!card && card.band === (lang === 'de' ? 'Weiterentwicklung' : 'Development') && card.eff.length <= 44 && card.name === (lang === 'de' ? 'Stadtrecht' : 'Town Charter'), `[${lang}] K7.03: Karte Stadtrecht mit Band Weiterentwicklung und Wirkungszeile ${show(card)}`);
+  await p.click('.kcard.fam-weiterentwicklung'); await settle(p, 1800);
+  await p.evaluate(() => { __kf.selectTab('haus'); __kf.requestRender(); }); await settle(p, 300);
+  const ab = await p.evaluate(() => { const b = document.querySelector('[data-tooltip="haus:ausbau"]'); return b && { vis: b.checkVisibility(), dis: b.getAttribute('aria-disabled'), text: b.innerText.replace(/\s+/g, ' ') }; });
+  check(ab && ab.vis && ab.dis !== 'true' && (lang === 'de' ? /Ausbau: Rathaus.*400 Material.*15 s/ : /Expand: Town Hall.*400 material.*15 s/).test(ab.text), `[${lang}] K7.03: Ausbau im Reiter Haupthaus mit Kosten und Dauer ${show(ab)}`);
+  await p.click('[data-tooltip="haus:ausbau"]'); await settle(p, 200);
+  check(await p.evaluate(() => !!__kf.G.S.haus.bau), `[${lang}] K7.03: Ausbau läuft nach dem Klick`);
+  await run(p, 16); await settle(p, 300);
+  const fl = await p.evaluate(() => ({ stufe: __kf.G.hausStufe(), title: document.querySelector('#hausTitle').textContent, box: !document.querySelector('#hausFluegelBox').hidden,
+    picks: [...document.querySelectorAll('#hausFluegel .pick')].filter(e => !e.hidden).map(e => ({ tip: e.dataset.tooltip, ex: e.querySelector('.expl').textContent })) }));
+  check(fl.stufe === 2 && fl.title === (lang === 'de' ? 'Rathaus' : 'Town Hall') && fl.box && fl.picks.length === 4 && fl.picks.every(x => x.ex.length > 5), `[${lang}] K7.03: Rathaus, vier Flügel zur Wahl mit Erklärzeile ${show(fl)}`);
+  if (lang === 'de') await shot(p, 'haus-fluegelwahl');
+  const tip = await tipOf(p, '[data-tooltip="fluegel:zeughaus"]');
+  check(/Schmiede|smithy/.test(tip) && /endgültig|final/.test(tip), `[${lang}] K7.03: Tooltip des Flügels ${show(tip)}`);
+  await p.click('[data-tooltip="fluegel:zeughaus"]'); await settle(p, 300);
+  const after = await p.evaluate(() => ({ fl: __kf.G.S.haus.fluegel.join(), visible: [...document.querySelectorAll('#hausFluegel .pick')].filter(e => !e.hidden).length, smithy: !document.querySelector('#tab-smithy').hidden, text: document.querySelector('#hausFluegelText').textContent }));
+  check(after.fl === 'zeughaus' && after.visible === 1 && after.smithy, `[${lang}] K7.03: Zeughaus gewählt, Reiter Schmiede ohne Schmiede sichtbar ${show(after)}`);
+  await p.evaluate(() => { __kf.selectTab('smithy'); __kf.requestRender(); }); await settle(p, 300);
+  const sm = await p.evaluate(() => ({ text: document.querySelector('#smithyText').textContent, q: !document.querySelector('[data-tooltip="upg:qualitaet"]').hidden }));
+  check(sm.q && /Zeughaus|armoury/.test(sm.text), `[${lang}] K7.03: Qualitätsstufen ohne Schmiede ${show(sm)}`);
+  const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
+  check(!audit.tips.length && !audit.expl.length, `[${lang}] K7.03: Tooltips und Erklärzeilen vollständig ${show(audit)}`);
+  const raw = await p.evaluate(() => [...document.querySelectorAll('#panel-haus, #panel-smithy')].map(e => e.innerText).join(' ').match(/\b[a-z]+\.[a-z]+\.[a-zA-Z.]+|undefined|NaN|\{[a-z0-9]+\}/g));
+  check(!raw, `[${lang}] K7.03: keine rohen Schlüssel oder Platzhalter ${show(raw)}`);
+  check(errs.length === 0, `[${lang}] K7.03: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- Standardmodus: kein Haupthaus ---------- */
 {
   const { ctx, p, errs } = await open('pacing=standard');

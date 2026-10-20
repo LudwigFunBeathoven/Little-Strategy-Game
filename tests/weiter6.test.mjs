@@ -118,7 +118,7 @@ test('K6.06 Buchdruck: Der Fortschritt der Forschung läuft nur mit stehender Un
   const { G: S } = game('standard'); assert.equal(S.weiterDone('universitaet'), false); assert.equal(S.mMul('researchTime'), 1);
 });
 
-test('K6.06: Zählt für die Kategorie Wirtschaft und passt in den Pool (höchstens 38 Karten ohne Doktrinen)', () => {
+test('K6.06: Zählt für die Kategorie Wirtschaft und passt in den Pool (höchstens 42 Karten ohne Doktrinen, Teil 7)', () => {
   const { G, C } = game();
   pick(G, 'dampfkraft'); assert.equal(G.katCounts().wirtschaft, 1);
   const pool = G.ALL_OPTIONS.filter(o => !o.doktrin && !G.cardRemoved(o.id));
