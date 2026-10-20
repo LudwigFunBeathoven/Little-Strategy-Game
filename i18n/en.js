@@ -1000,7 +1000,6 @@ KF_I18N.en = {
   'bld.fabrik.desc.karten': 'Produces material. Can be built several times up to the main hall\'s cap; each further manufactory costs more.',
   'result.lost.text.karten': '{kills} kills before the fall. Build manufactories earlier, put up a tower or start on Easy.',
   'slot.dialogText.karten': 'Manufactories can be built several times up to the main hall\'s cap, barracks and university twice, smithy and trading post once each.',
-  'bld.fabrik.nth.karten': '{name} no. {n}',
   'fab.stat.karten': 'Manufactories {n} · {rate} material/s each · next {next}',
   'draft.bessereFabriken.name.karten': 'Better manufactories',
   'draft.bessereFabriken.desc.karten': 'Manufactory output +{e1}%.',
@@ -1033,4 +1032,17 @@ KF_I18N.en = {
   'bld.kaserne.desc.karten': 'Raises the supply cap, expandable with quarters. A second barracks sends one more runner per wave and has its own quarters.',
   'bld.universitaet.desc.karten': 'One more card per offer and a research slot. A second university brings another research slot.',
   'build.reason.standing.karten': 'Already standing as often as allowed',
+  /* Teil 8 (REQ-K8.03): Anzeige des EP-Fortschritts im Modus karten */
+  'hud.kp.open': 'Choice open',
+  'hud.kp.next': 'Next choice in {s}',
+  'hud.kp.nextMin': 'Next choice in {s} · minimum gap',
+  'hud.kp.noRate': 'To level {n}',
+  'hud.kp.lost': ' · XP lost',
+  'tip.hud.xpTotal': 'Total XP',
+  'tip.hud.xpLost': 'Lost XP',
+  'tip.hud.xp.karten': 'XP from takedowns, base damage, waves and budget. Each level brings a choice, at least {s} s after the last. While a level waits, surplus XP is lost.',
+  /* Teil 8 (REQ-K8.07): Durchbruch Stufe II */
+  'draft.durchbruch.desc.t2': 'Units deal {e1}x damage to the enemy base; the base also loses {e2} health per second.',
+  /* Teil 8 (REQ-K8.02): Tausch Material → EP bei verfallenden EP */
+  'trade.reason.verfall': 'The waiting level is full; further XP would be lost.',
 };

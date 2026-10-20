@@ -110,7 +110,7 @@ test('K7.08 Dampfkraft: zweite Stufe nach dem Wasserrahmen; ersetzt die Variante
 });
 
 test('K6.06 Buchdruck: Forschungen dauern halb so lang (auch laufende), der Kurs des Forschungsbudgets steigt um die Hälfte', () => {
-  const { G, C } = setup();
+  const { G, C } = setup(); C.KARTEN.budget.abnahme = 0;
   const base = G.RESEARCH.find(r => r.branch !== 'pfad' && G.researchBlock(r.id) === null); assert.ok(base, 'eine Grundforschung ist startbar');
   G.S.material = 1e7; assert.ok(G.startResearch(base.id));
   const a = G.S.research.active[0]; idle(G); G.tick(1); const dt0 = a.t; assert.ok(dt0 > 0);

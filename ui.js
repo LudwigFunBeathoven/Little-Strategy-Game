@@ -24,6 +24,8 @@ const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
 const PACING_PARAM = ['standard', 'karten'].includes(URL_PARAMS.get('pacing')) ? URL_PARAMS.get('pacing') : null;
 /* ?druck=hoch (Teil 4, REQ-S.08): Testschalter, verstärkt die regulären Gegnerwellen ab Minute 4; sonst aus */
 const DRUCK_PARAM = URL_PARAMS.get('druck') === 'hoch' ? 'hoch' : null;
+/* ?gegnerfern=aus (Teil 8, REQ-K8.06): schaltet die gegnerischen Bogen- und Armbrustschützen ab (Vergleichsmessungen); sonst an */
+const GEGNERFERN_PARAM = URL_PARAMS.get('gegnerfern') === 'aus' ? 'aus' : null;
 
 /* ================= Sprache ================= */
 function storageGet(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -268,7 +270,7 @@ function tipContent(id){
       return { title: t(v.nameKey), body: t(v.descKey, variantParams(v)) + ' ' + t('variant.once'), rows, reason: variantReason(G.variantBlock(i, b), b) };
     }
     case 'budget': {                                                              // Forschungsbudget (Teil 5, REQ-K5.05)
-      const i = Number(a), sh = C.KARTEN.budget.stufen[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs'), gross = G.matRate() + G.autoPressCps() * G.clickPower();
+      const i = Number(a), sh = C.KARTEN.budget.stufen[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs') * G.budgetAbnahme(), gross = G.matRate() + G.autoPressCps() * G.clickPower();
       return { title: t('budget.step.title', { n: pct(sh) }), body: sh > 0 ? t('tip.budget.body', { n: pct(sh), k: fmt2(k) }) : t('tip.budget.off'),
                rows: [[t('tip.budget.rate'), sh > 0 ? fmt2(k) : '–'], [t('tip.budget.xp'), fmt1(gross * sh * k)], [t('tip.budget.mat'), fmt1(gross * (1 - sh))]],
                reason: i <= G.budgetMax() ? null : G.budgetMax() >= 0 ? t('budget.bib', { n: pct(C.KARTEN.budget.stufen[G.budgetMax()]) }) : t('tip.needsBuilding', { name: t('bld.universitaet.name') }) }; }
@@ -289,7 +291,7 @@ function tipContent(id){
     }
     case 'trade': {                                                                // Doktrin Freihandel (Teil 6, REQ-K6.05): Tausch im Kontor
       const dir = a === 'ep' ? 'ep' : 'material', F = C.DOKTRIN.freihandel, blk = G.tradeBlock(dir);
-      const why = !blk ? null : blk === 'material' ? missing('material', F.stapelMaterial, S.material) : blk === 'xp' ? t('trade.reason.xp', { n: fmtNum(F.stapelEp) }) : blk === 'noKontor' ? t('tip.needsBuilding', { name: t('bld.kontor.name') }) : t('tip.notRunning');
+      const why = !blk ? null : blk === 'material' ? missing('material', F.stapelMaterial, S.material) : blk === 'xp' ? t('trade.reason.xp', { n: fmtNum(F.stapelEp) }) : blk === 'noKontor' ? t('tip.needsBuilding', { name: t('bld.kontor.name') }) : blk === 'verfall' ? t('trade.reason.verfall') : t('tip.notRunning');
       return { title: t(dir === 'ep' ? 'trade.toXp' : 'trade.toMat'), body: t('tip.trade.body', { a: fmtNum(F.stapelMaterial), b: fmtNum(F.stapelMaterial * F.kursEp), c: fmtNum(F.stapelEp), d: fmtNum(F.stapelEp * F.kursMaterial) }),
                rows: [[t('trade.progress'), `${fmt(Math.max(0, G.xpFortschritt()))} EP`]], reason: why };
     }
@@ -648,7 +650,7 @@ function startGame(diff, opts = {}){
   storageSet(C.DIFFICULTY_KEY, diff);
   TutUI.reset(); NewMarks.reset(); Disc.reset();
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
-    { pacing: PACING_PARAM || undefined, druck: DRUCK_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
+    { pacing: PACING_PARAM || undefined, druck: DRUCK_PARAM || undefined, gegnerfern: GEGNERFERN_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
   if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
   resultShownFor = null;
   save();

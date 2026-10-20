@@ -18,7 +18,8 @@ const KF_KARTEN6 = [
     tiers: [{ effect: [{ stat: 'extraUnit', add: 1 }] },                                                          // frühere Linie Militär, Stufe 1: die Kaserne schickt je Welle einen Läufer mehr
             { effect: [{ stat: 'extraUnit', add: 1 }, { stat: 'startSmith', add: 1 }] }] },                       // Stufe II: frühere Linie Militär, Stufe 2 – neue Einheiten starten mit einer Schmiede-Stufe mehr
   { id: 'durchbruch', category: 'armee', kat: 'militaer', rarity: 'rare', nameKey: 'draft.durchbruch.name', descKey: 'draft.durchbruch.desc',
-    tiers: [{ effect: [{ stat: 'dmgVsBase', mul: 2 }] }] },                                                       // frühere Linie Militär, Stufe 3: doppelter Schaden an der gegnerischen Basis
+    tiers: [{ effect: [{ stat: 'dmgVsBase', mul: 2 }] },                                                          // frühere Linie Militär, Stufe 3: doppelter Schaden an der gegnerischen Basis
+            { effect: [{ stat: 'dmgVsBase', mul: 2 }, { stat: 'siegeDps', add: 2 }] }] },                         // Teil 8 (REQ-K8.07): Stufe II – die Basis verliert zusätzlich Lebenspunkte je Sekunde (Effekt der Stufe 2 von Belagerungsgerät)
   { id: 'pluenderung', category: 'basis', kat: 'verteidigung', rarity: 'common', nameKey: 'draft.pluenderung.name', descKey: 'draft.pluenderung.desc', wirkt: { tower: true },
     tiers: [{ effect: [{ stat: 'towerKillMaterial', add: 1 }] }] },                                               // frühere Linie Verteidigung, Stufe 1: Abschüsse durch Türme bringen Material
 

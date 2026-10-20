@@ -29,7 +29,7 @@ const Session = (() => {
   const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption', 'upgradeBuilding', 'setBudget', 'hausAusbau', 'chooseFluegel', 'hireKompanie'];
   function reset(){
     const S = G.S;
-    P = { format: 'klammerfront-session', formatVersion: 4, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
+    P = { format: 'klammerfront-session', formatVersion: 4, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, gegnerfern: S.gegnerfern !== false, stage: Stage.on(), startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
           switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit, pressure: S.druck || 'aus' }, visible: [], discovered: {},
           variants: [], xpBySource: {}, wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };

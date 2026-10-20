@@ -112,7 +112,7 @@ test('K6.05 Massenaufgebot: Läufer kosten die Hälfte und ein Läufer mehr je W
 });
 
 test('K6.05 Freihandel: Tausch im Kontor, Türme auf Stufe 1, Turmausbauten gesperrt, auch im Bestand', () => {
-  const { G, C } = game(); G.S.t = 200;
+  const { G, C } = game(); G.S.t = 200; C.KARTEN.uebertrag = null;       // ohne Übertragsgrenze (Teil 8): geprüft wird nur der Tausch
   const FH = C.DOKTRIN.freihandel;
   G.S.lvl.turm_0 = 3; G.S.lvl.reichweite_0 = 2; G.S.lvl.turm_2 = 1;
   const r0 = G.turretRange(0), t3 = G.lv('turm_0');
@@ -183,13 +183,13 @@ test('K6.05 Grenzfeste: Turm-Abschüsse bringen Material; seit Teil 7 (REQ-K7.05
   const iv = G.ownWaveInterval();
   pick(G, 'grenzfeste');
   assert.equal(G.mAdd('towerKillMaterial'), 3);
-  assert.ok(Math.abs(G.ownWaveInterval() / iv - 1.25) < 1e-9, `Wellenabstand ${G.ownWaveInterval()} gegen ${iv}`);
+  assert.ok(Math.abs(G.ownWaveInterval() / iv - 1.1) < 1e-9, `Wellenabstand ${G.ownWaveInterval()} gegen ${iv}`);
   assert.equal(G.doctrineLimit('fabrik'), null, 'keine Grenze der Doktrin');
   assert.equal(G.doctrineExcess(G.DOK.grenzfeste), 0);
   assert.equal(G.buildBlock(2, 'fabrik'), null, 'die Obergrenze des Haupthauses gilt unverändert');
   // die Einschränkung gilt sofort: die nächste Welle nach der Wahl kommt im längeren Abstand
   G.S.nextOwnWave = G.S.t + 0.01; G.S.nextWave = 1e9; G.S.pendingDraft = null; G.S.pendingLevels = 0; G.tick(0.05);
-  assert.ok(Math.abs(G.S.nextOwnWave - (G.S.t - 0.05 + 0.01 + C.WAVE_INTERVAL_S * 1.25)) < 0.06, `nächste Welle ${G.S.nextOwnWave}`);
+  assert.ok(Math.abs(G.S.nextOwnWave - (G.S.t - 0.05 + 0.01 + C.WAVE_INTERVAL_S * 1.1)) < 0.06, `nächste Welle ${G.S.nextOwnWave}`);
   // Kategorien: Mischdoktrin zählt für Wirtschaft und Verteidigung
   const k = G.katCounts(); assert.ok(k.wirtschaft >= 2 && k.verteidigung >= 2, `Mischdoktrin: ${JSON.stringify(k)}`);
 });

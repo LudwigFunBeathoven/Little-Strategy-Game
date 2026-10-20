@@ -1000,7 +1000,6 @@ KF_I18N.de = {
   'bld.fabrik.desc.karten': 'Erzeugt Material. Mehrfach baubar bis zur Obergrenze des Haupthauses; jede weitere Manufaktur kostet mehr.',
   'result.lost.text.karten': '{kills} Abschüsse vor dem Fall. Früher Manufakturen bauen, einen Turm errichten oder mit Leicht beginnen.',
   'slot.dialogText.karten': 'Manufakturen sind bis zur Obergrenze des Haupthauses mehrfach baubar, Kaserne und Universität zweimal, Schmiede und Kontor je einmal.',
-  'bld.fabrik.nth.karten': '{name} Nr. {n}',
   'fab.stat.karten': 'Manufakturen {n} · je {rate} Material/s · nächste {next}',
   'draft.bessereFabriken.name.karten': 'Bessere Manufakturen',
   'draft.bessereFabriken.desc.karten': 'Ertrag der Manufakturen +{e1} %.',
@@ -1033,4 +1032,17 @@ KF_I18N.de = {
   'bld.kaserne.desc.karten': 'Hebt das Versorgungslimit, ausbaubar mit Quartieren. Eine zweite Kaserne schickt je Welle einen Läufer mehr und hat eigene Quartiere.',
   'bld.universitaet.desc.karten': 'Eine Karte mehr je Angebot und ein Forschungsplatz. Eine zweite Universität bringt einen weiteren Forschungsplatz.',
   'build.reason.standing.karten': 'Steht bereits so oft, wie es erlaubt ist',
+  /* Teil 8 (REQ-K8.03): Anzeige des EP-Fortschritts im Modus karten */
+  'hud.kp.open': 'Wahl offen',
+  'hud.kp.next': 'Nächste Wahl in {s}',
+  'hud.kp.nextMin': 'Nächste Wahl in {s} · Mindestabstand',
+  'hud.kp.noRate': 'Bis Stufe {n}',
+  'hud.kp.lost': ' · EP verfallen',
+  'tip.hud.xpTotal': 'EP gesamt',
+  'tip.hud.xpLost': 'Verfallene EP',
+  'tip.hud.xp.karten': 'EP aus Abschüssen, Basisschaden, Wellen und Budget. Jede Stufe bringt eine Wahl, frühestens {s} s nach der letzten. Wartet eine Stufe, verfallen überschüssige EP.',
+  /* Teil 8 (REQ-K8.07): Durchbruch Stufe II */
+  'draft.durchbruch.desc.t2': 'Einheiten richten an der gegnerischen Basis {e1}-fachen Schaden an; die Basis verliert zusätzlich {e2} Lebenspunkte pro Sekunde.',
+  /* Teil 8 (REQ-K8.02): Tausch Material → EP bei verfallenden EP */
+  'trade.reason.verfall': 'Die wartende Stufe ist voll; weitere EP verfallen.',
 };

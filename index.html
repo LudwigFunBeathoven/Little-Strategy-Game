@@ -61,6 +61,9 @@
   .bar{height:7px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
   .bar > i{display:block; height:100%; width:100%; border-radius:4px; transition:width .15s linear;}
   .bar.thin{height:4px;}
+  /* Teil 8 (REQ-K8.03): Balken der Kartenwahl – schraffiert, solange der Mindestabstand die Wahl zurückhält; roter Rand, solange überschüssige EP verfallen */
+  .bar.wait > i{background:repeating-linear-gradient(45deg,var(--brass) 0 6px,color-mix(in srgb,var(--brass) 55%,var(--surface-2)) 6px 12px);}
+  .bar.lost{box-shadow:inset -3px 0 0 var(--rust);}
   .bar.steel > i{background:var(--steel);} .bar.rust > i{background:var(--rust);} .bar.brass > i{background:var(--brass);}
 
 
@@ -277,7 +280,7 @@
   .hud-item{position:relative;}
   .hud-item > b{font-size:18px; font-weight:500; line-height:1.1; min-width:4ch;}
   /* Feste Breiten für Zähler: keine Layoutsprünge beim Aktualisieren (REQ-5.10) */
-  #material{min-width:7ch;} #xpVal{min-width:6ch;} #hudSoldiers{min-width:5ch;} #clock{min-width:5ch;} #armyState{min-width:7ch;}
+  #material{min-width:7ch;} #xpVal{min-width:9ch;} #hudSoldiers{min-width:5ch;} #clock{min-width:5ch;} #armyState{min-width:7ch;}
   .hud-waves .num{min-width:4.5ch; display:inline-block;} .hud-walls .wall-row b{min-width:4ch;}
   .float{position:absolute; right:10px; top:14px; font-size:12px; font-weight:600; color:var(--brass); pointer-events:none; animation:floatup .9s ease-out forwards;}
   @keyframes floatup{from{opacity:1; transform:translateY(0);} to{opacity:0; transform:translateY(-16px);}}

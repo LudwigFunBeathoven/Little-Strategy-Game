@@ -151,7 +151,7 @@ for (const lang of ['de', 'en']){
   const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=0', { lang }); await calm(p);
   await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; __kf.selectTab('build'); __kf.selectPlot(0); __kf.requestRender(); }); await settle(p, 300);
   const pick = await p.evaluate(() => { const b = document.querySelector('#ctxBuild [data-tooltip^="pick:fabrik"] b'); return b && b.textContent; });
-  check(pick === (lang === 'de' ? 'Manufaktur Nr. 1' : 'Manufactory no. 1'), `[${lang}] K7.09: Bauoption heißt Manufaktur ${show(pick)}`);
+  check(pick === (lang === 'de' ? 'Manufaktur' : 'Manufactory'), `[${lang}] K7.09, K8.04: Bauoption heißt Manufaktur, ohne Ordnungszahl ${show(pick)}`);
   await p.evaluate(() => { const G = __kf.G; G.S.lvl.mauer = 2; G.S.lvl.turm_0 = 3; G.S.revealed.mauer = true; G.S.revealed.turm_0 = true; __kf.clearSelection(); __kf.selectTab('wall'); __kf.requestRender(); }); await settle(p, 300);
   const subs = await p.evaluate(() => ['subMauer', 'subTurm0', 'subTurm2'].map(id => document.getElementById(id).textContent));
   check(subs[0] === (lang === 'de' ? 'Mauer: Ringmauer' : 'Wall: Curtain Wall') && subs[1] === (lang === 'de' ? 'Turm oben: Wehrturm' : 'Top tower: Defence Tower') && subs[2] === (lang === 'de' ? 'Turm unten' : 'Bottom tower'), `[${lang}] K7.09: Stufennamen von Mauer und Türmen ${show(subs)}`);

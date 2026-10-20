@@ -13,7 +13,7 @@ const withEco = G => { G.S.material = 1e5; for (let i = 0; i < 4; i++) G.build('
 const second = G => { const m0 = G.S.materialTotal, x0 = G.S.xpTotal, b0 = (G.S.stats.xpSrc || {}).budget || 0; for (let i = 0; i < 20; i++) G.tick(0.05); return { mat: G.S.materialTotal - m0, xp: G.S.xpTotal - x0, budget: ((G.S.stats.xpSrc || {}).budget || 0) - b0 }; };
 
 test('Der eingestellte Anteil des Materialertrags wird abgezogen und zum Kurs in EP gutgeschrieben', () => {
-  const { G, C } = game(); withEco(G);
+  const { G, C } = game(); C.KARTEN.budget.abnahme = 0; withEco(G);       // ohne abnehmenden Ertrag (Teil 8): der Kurs bleibt über die Messsekunde gleich
   const k = C.KARTEN.budget, gross = G.matRate() + G.autoPressCps() * G.clickPower();
   const s0 = second(G);
   assert.ok(Math.abs(s0.mat - gross) < 1e-6 * gross + 1e-6, 'ohne Budget: voller Ertrag'); assert.equal(s0.budget, 0);
@@ -68,7 +68,7 @@ test('Hörsaal entfällt im Modus karten und bleibt im Standard erforschbar', ()
 });
 
 test('Lehrjahre und die Kartenwahl: das Budget bringt EP, die zur nächsten Wahl führen', () => {
-  const { G } = game(); withEco(G);
+  const { G, C } = game(); C.KARTEN.budget.abnahme = 0; withEco(G);
   G.S.draft.stacks.kriegserfahrung = 1; G.S.draft.ver++;
   G.setBudget(2);
   const s = second(G);

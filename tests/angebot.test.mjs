@@ -31,7 +31,7 @@ const CASES = {
   kriegstrommeln:  { off: G => {}, on: G => { G.build('kaserne'); } },        // Teil 5: Versorgung 5 gibt es mit der Kaserne (3 + 2), ohne Karte
   schildwall:      { off: G => {}, on: G => { G.build('kaserne'); } },
   weitschuss: GONE, langeWurfarme: GONE,                                   // Teil 6 (REQ-K6.03): Pool höchstens 38 Karten, siehe tests/kategorien6.test.mjs
-  drill: {}, belagerungsgeraet: {}, sappeure: GONE, vorposten: GONE, veteranen: GONE, taktiker: GONE,
+  drill: {}, belagerungsgeraet: GONE, sappeure: GONE, vorposten: GONE, veteranen: GONE, taktiker: GONE,
   // Basis
   turmkanoniere:   { off: G => {}, on: G => { G.S.lvl.turm_0 = 1; } },
   bastion: GONE, scharfschuetzen: GONE, zeugmeister: GONE, festungsbau: GONE,

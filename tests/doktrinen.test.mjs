@@ -110,7 +110,7 @@ test('K5.07 Zunftordnung: Zunfthaus mit dreifachem Nachbarschaftsbonus; die Ober
 });
 
 test('K5.07 Stiftung: Stiftungshaus verdoppelt den Kurs des Forschungsbudgets; Einheiten kosten 20 % mehr', () => {
-  const { G, C } = game(); G.S.t = 200;
+  const { G, C } = game(); C.KARTEN.budget.abnahme = 0; G.S.t = 200;
   place(G, 'universitaet', 0); place(G, 'fabrik', 1); G.setBudget(2);
   const k0 = G.budgetKurs(), c0 = G.unitCost('laeufer');
   pick(G, 'stiftung');

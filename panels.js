@@ -274,7 +274,7 @@ function updateVariantPicks(){
 function updatePicks(){
   for (const p of picks){
     const block = G.buildBlock(p.i, p.type), cost = G.buildCost(p.type), why = buildReason(block, cost, p.type);
-    setText(p.nm, p.type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1, name: t(G.weiterStufe('fabrik') ? `bld.fabrik.name.weiter${G.weiterStufe('fabrik') > 1 ? G.weiterStufe('fabrik') : ''}` : 'bld.fabrik.name') }) : t(`bld.${p.type}.name`));       // Teil 7: Name der Stufe (Manufaktur, Fabrik, Dampffabrik)
+    setText(p.nm, p.type !== 'fabrik' ? t(`bld.${p.type}.name`) : G.pacing() === 'karten' ? slotName({ type: 'fabrik' }) : t('bld.fabrik.nth', { n: G.factoryCount() + 1, name: t('bld.fabrik.name') }));       // Teil 8 (REQ-K8.04): im Modus karten der Name der Stufe ohne Ordnungszahl (Manufaktur, Fabrik, Dampffabrik); die Zahl steht nur in der Grenzanzeige
     setText(p.ex, t('ex.line', { effect: bldEffect(p.type, false), cost: costText('material', cost) }));
     setText(p.w, why || ''); setHidden(p.w, !why);
     setText(p.nb, nbPreviewText(p.i, p.type));
@@ -685,7 +685,7 @@ function renderBudget(){
   const cur = G.budgetStufe();
   setText($('budgetText'), t(uni ? 'budget.text' : 'budget.needUni', { n: pct(G.budgetShare()), k: fmt2(G.budgetKurs()) }) + (uni && !G.has('universitaet') ? ' ' + t('budget.bib', { n: pct(C.KARTEN.budget.stufen[max]) }) : ''));
   C.KARTEN.budget.stufen.forEach((sh, i) => {
-    const b = budgetBtns[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs');
+    const b = budgetBtns[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs') * G.budgetAbnahme();
     setText(b.querySelector('.btn-label'), t('budget.step', { n: pct(sh) }));
     setText(b.querySelector('.expl'), sh > 0 ? t('ex.budget', { n: pct(sh), k: fmt2(k) }) : t('ex.budget.off'));
     b.setAttribute('aria-pressed', String(i === cur && uni));

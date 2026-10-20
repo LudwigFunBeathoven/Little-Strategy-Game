@@ -61,8 +61,9 @@ function hudTip(item){
     case 'material': { const rows = [[t('tip.m.matRate'), fmt1(G.incomeRate())]];
       if (G.budgetShare() > 0) rows.push([t('tip.m.budget'), t('hud.budget', { n: pct(G.budgetShare()) })]);       // Teil 5: Forschungsbudget
       return { title: t('hud.material'), body: t('tip.hud.material'), rows }; }
-    case 'xp': { const x = G.xpProgress();
-      return { title: t('hud.xp'), body: t('tip.hud.xp'), rows: [[t('level.progress', { n: x.level + 1 }), `${fmt(Math.max(0, x.cur))} / ${fmt(x.need)}`], [t('tip.hud.xpRate'), fmt1(xpRate())]] }; }
+    case 'xp': { const x = G.xpProgress(), rows = [[t('level.progress', { n: x.level + 1 }), `${fmt(Math.max(0, x.cur))} / ${fmt(x.need)}`], [t('tip.hud.xpRate'), fmt1(xpRate())]];
+      if (S.pacing === 'karten') rows.push([t('tip.hud.xpTotal'), fmt(S.xp)], [t('tip.hud.xpLost'), fmt(S.stats.xpVerfall || 0)]);       // Teil 8: Summe und verfallene EP nur im Tooltip
+      return { title: t('hud.xp'), body: t('tip.hud.xp', { s: C.KARTEN.minAbstand }), rows }; }
     case 'waves': return { title: t('hud.waves'), body: t('tip.hud.waves', { s: C.WAVE_INTERVAL_S }) };
     case 'walls': return { title: t('hud.walls'), body: t('tip.hud.walls') };
     case 'army': return { title: t('hud.army'), body: t('tip.hud.army') };
@@ -81,11 +82,21 @@ function renderHud(){
   if (G.budgetShare() > 0) setText(E.budgetInfo, t('hud.budget', { n: pct(G.budgetShare()) }));
   setText(E.rate, G.zinsQuelle() ? t('hud.rateInterest', { rate: rateText, n: fmt(G.kontorNext()), cap: fmt(G.kontorCap()), s: Math.max(0, Math.ceil(C.KONTOR.intervalS - S.kontorT)) }) : rateText);
   const x = G.xpProgress();
-  setText(E.xpVal, fmt(S.xp));
   // EP je Sekunde und geschätzte Zeit bis zur nächsten Kartenwahl (REQ-6.06)
   const xr = xpRate(), eta = xr > 0 ? Math.ceil(Math.max(0, x.need - x.cur) / xr) : null;
-  setText(E.xpRate, eta != null && running ? t('hud.xpEta', { n: fmt1(xr), s: clock(eta) }) : t('hud.perSecond', { n: fmt1(xr) }));
-  setText(E.lvlProg, t('hud.toLevel', { n: x.level + 1, cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
+  if (S.pacing === 'karten'){
+    // Teil 8 (REQ-K8.03): Fortschritt zur nächsten Wahl, bei greifendem Mindestabstand Restzeit und Grund; die EP-Summe steht nur im Tooltip
+    setText(E.xpVal, x.state === 'offen' ? t('hud.kp.open') : `${fmt(Math.max(0, x.cur))} / ${fmt(x.need)}`);
+    const rest = x.state === 'sperre' ? Math.ceil(x.restS) : eta != null ? Math.max(eta, Math.ceil(G.xpRestAbstandS())) : null;
+    const bremst = x.state === 'sperre' || (eta != null && G.xpRestAbstandS() > eta);
+    setText(E.xpRate, t('hud.perSecond', { n: fmt1(xr) }));
+    setText(E.lvlProg, x.state === 'offen' ? t('hud.kp.open') : rest == null ? t('hud.kp.noRate', { n: x.level + 1 }) : t(bremst ? 'hud.kp.nextMin' : 'hud.kp.next', { s: clock(rest) }) + (x.verfall ? t('hud.kp.lost') : ''));
+    E.barLvl.parentElement.classList.toggle('wait', x.state === 'sperre'); E.barLvl.parentElement.classList.toggle('lost', !!x.verfall);
+  } else {
+    setText(E.xpVal, fmt(S.xp));
+    setText(E.xpRate, eta != null && running ? t('hud.xpEta', { n: fmt1(xr), s: clock(eta) }) : t('hud.perSecond', { n: fmt1(xr) }));
+    setText(E.lvlProg, t('hud.toLevel', { n: x.level + 1, cur: fmt(Math.max(0, x.cur)), need: fmt(x.need) }));
+  }
   setWidth(E.barLvl, 100 * x.frac);
   // Wellen erst mit der ersten Welle (REQ-47); im Tutorial von Anfang an, der Countdown ist Ziel von Schritt 4 (REQ-T.01)
   setHidden(E.hudWaves, Disc.on() ? !Disc.shows('hud:waves') : !(G.introShows('waves') || Tutorial.active()));

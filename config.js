@@ -22,8 +22,14 @@ const KF_CONFIG = {
        nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
        Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
     schwellen: { start: 70, wachstum: 1.05 },
+    uebertrag: { anteil: 0.25 },                    // Teil 8 (REQ-K8.02): wartet eine Stufe (Mindestabstand), geht in die nächste höchstens dieser Anteil ihrer Kosten über, weitere EP verfallen; null = unbegrenzt
     schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
     minAbstand: 45,
+    /* Reichweitenleiter der Fernkämpfer (Teil 8, REQ-K8.05): Grundreichweiten im Modus karten, bezogen auf die des Werfers R_W (UNITS.werfer.range = 105): Bogenschütze 1,3 · R_W, Armbrustschütze 1,5 · R_W,
+       Katapult 1,8 · R_W, Geschütz 2,2 · R_W (gerundet); mindestens 10 % Abstand je Stufe, keine Reichweite sinkt. Der Standardmodus behält die Werte in UNITS. */
+    /* Gegner mit Fernkämpfern (Teil 8, REQ-K8.06, experimentell): ab dem ab-fachen der Größe der ersten Welle ersetzen Läufer zufällig Bogenschützen bzw. Armbrustschützen, je Typ höchstens anteil der Welle. */
+    gegnerFern: { bogen: { ab: 1.5, anteil: 0.25 }, armbrust: { ab: 2.5, anteil: 0.25 } },
+    reichweiten: { bogenschuetze: 137, armbrust: 158, katapult: 189, geschuetz: 231 },
     /* EP-Quellen aus dem Spielfluss neben den Abschüssen (Teil 5, REQ-K5.03): Schaden an der gegnerischen Basis und vollständig abgewehrte Gegnerwellen. Die Mitte der Partie bringt sonst kaum EP,
        weil die Belagerung die regulären Gegnerwellen aufhält (Befund 4.1). */
     epBasis: { proProzent: 10 },                  // EP je 1 % der Lebenspunkte der gegnerischen Basis, die eigene Einheiten und Karten abtragen
@@ -31,7 +37,7 @@ const KF_CONFIG = {
     /* Forschungsbudget der Universität (Teil 5, REQ-K5.05, ersetzt im Modus karten den Hörsaal): Der Spieler stellt ein, welcher Anteil des laufenden Materialertrags (Fabriken und Presse)
        in EP umgewandelt wird. stufen: wählbare Anteile; kurs: EP je Material bei kursFaktor 1; kursFaktor je Stufe: der Kurs sinkt mit dem Anteil (abnehmender Ertrag, reines Forschen soll nicht
        die beste Strategie sein). Gilt nur bei stehender Universität. */
-    budget: { stufen: [0, 0.25, 0.5], kurs: 0.08, kursFaktor: [1, 1, 0.7] },
+    budget: { stufen: [0, 0.25, 0.5], kurs: 0.08, kursFaktor: [1, 1, 0.7], abnahme: 0 },       // abnahme (Teil 8, REQ-K8.02, Hebel 2): Kurs × 1 / (1 + Summe der Budget-EP / abnahme); 0 = aus (die Messungen in Bericht kartenpfad-8 zeigen, dass der Hebel Wirtschaft und Verteidigung zu stark schwächt)
     xpMult: { leicht: 1, normal: 1, schwer: 1 }, // EP je Abschuss je Grad (ersetzt im Modus karten DIFFICULTY.xpMult: mehr Gegner bringen mehr EP, ein Ausgleich über den Faktor entfällt)
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,
@@ -63,8 +69,6 @@ const KF_CONFIG = {
                           { effect: [{ stat: 'drumsDmg', mul: 1.6 }, { stat: 'drumsMin', add: -2 }] }],
       schildwall:        [{ effect: [{ stat: 'shieldHp', mul: 1.2 }] },
                           { effect: [{ stat: 'shieldHp', mul: 1.35 }, { stat: 'shieldMin', add: -1 }] }],
-      belagerungsgeraet: [{ effect: [{ stat: 'dmgVsBase', mul: 1.6 }], drawback: [{ stat: 'dmgVsUnits', mul: 0.8 }] },
-                          { effect: [{ stat: 'dmgVsBase', mul: 2.2 }, { stat: 'siegeDps', add: 2 }], drawback: [{ stat: 'dmgVsUnits', mul: 0.65 }] }],
       langeWurfarme:     [{ effect: [{ stat: 'werferRange', add: 25 }], drawback: [{ stat: 'werferHp', mul: 0.85 }] },
                           { effect: [{ stat: 'werferRange', add: 50 }, { stat: 'rangedDmg', mul: 1.1 }], drawback: [{ stat: 'werferHp', mul: 0.7 }] }],
       sappeure:          [{ effect: [{ stat: 'siegeDps', add: 2 }] },

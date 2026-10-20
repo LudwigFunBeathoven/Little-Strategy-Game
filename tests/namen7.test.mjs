@@ -11,7 +11,7 @@ const karten = (T, k) => T[k + '.karten'] ?? T[k];
 const gone = new Set([...P.entfallenKarten, ...P.entfallen.map(r => r.replace(/^r_/, '')), ...P.entfallenAusbauten]);
 const hidden = k => { const m = k.match(/^(?:draft|kp\.eff|kp\.card|research|upg)\.([a-zA-Z_0-9]+)(\.|$)/); return !!m && gone.has(m[1]); };
 /* Texte, die die neuen Stufen selbst benennen: Fabrik (nach Wasserrahmen) und Handelshaus (nach Fernhandel) sind dort die neuen Namen */
-const STUFE = /^(kp\.(card|eff|res)\.(wasserrahmen|dampfkraft|fernhandel)(\.|$)|bld\.[a-z]+\.name\.weiter\d?$|tip\.kompanie$)/;
+const STUFE = /^(kp\.(card|eff|res)\.(wasserrahmen|dampfkraft|fernhandel)(\.|$)|bld\.[a-z]+\.name\.weiter\d?$|tip\.kompanie$|bld\.fabrik\.nth$)/;       // bld.fabrik.nth: im Modus karten nicht gerendert (Teil 8, REQ-K8.04)
 const OLD = { de: /Fabrik|Dampfmühle|Druckerei|Werkstatt/, en: /\bfactor(y|ies)\b|steam mill|print shop|workshop|trading house/i };
 
 test('K7.09 Suchtest: Im Modus karten nennt kein sichtbarer Text die alten Namen (Fabrik als Grundgebäude, Dampfmühle, Druckerei, Werkstatt)', () => {

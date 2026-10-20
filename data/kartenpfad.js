@@ -87,7 +87,9 @@ const KF_PFAD = {
     'verbrannteErde',
     /* Teil 7 (Kartenpool, Grenze 42): fünf neue Karten (Stadtrecht, Hofhaltung, Wasserrahmen, Fernhandel, Geschützguss) bei 38 Karten ergäben 43; gestrichen wird die Karte mit der niedrigsten Wahlrate
        der Basismessung (Volle Auslastung: 0 von 7 Angeboten gewählt, Vorschlag zur Bestätigung im Bericht) */
-    'volleAuslastung'],
+    'volleAuslastung',
+    /* Teil 8 (REQ-K8.07): Belagerungsgerät entfällt (der Nachteil überwog den Nutzen); der Effekt seiner Stufe 2 (die Basis verliert dauerhaft Lebenspunkte je Sekunde) ist Stufe 2 von Durchbruch (Pool 41) */
+    'belagerungsgeraet'],
   /* Gebäude-Ausbauten, die im Modus karten entfallen, weil eine Karte sie übernimmt (Teil 6, REQ-K6.07; die Grundlagen bleiben: Turm bauen, Mauerausbau, Quartiere, Presse, Schmiede):
      Reichweite und Feuerrate der Türme → Karte Turmschule, Stachelwall → Karte Stachelwall, Mörtelkolonne → Karte Maurerkolonne, Kontor-Ausbau (Zinseszins) → Karte Handelskontor (Stufen, Name Zinsmeister) */
   entfallenAusbauten: ['reichweite_0', 'reichweite_2', 'kadenz_0', 'kadenz_2', 'stacheln', 'moertel', 'zinseszins'],

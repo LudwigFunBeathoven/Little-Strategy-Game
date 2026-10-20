@@ -33,8 +33,8 @@ function baseHealth(G){
 function botRng(seed){ let s = (seed ^ 0x9e3779b9) >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 /* Bots spielen wie ein neuer Spieler mit gestaffelter Einführung (REQ-47); KF_SKIP_INTRO=1 schaltet sie ab */
-export function newGame(diff, seed, pacing, druck){
-  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { intro: process.env.KF_SKIP_INTRO !== '1', pacing, druck });
+export function newGame(diff, seed, pacing, druck, gegnerfern){
+  const G = KlammerCore.create(); G.FX.on = false; G.newGame(diff, seed, { intro: process.env.KF_SKIP_INTRO !== '1', pacing, druck, gegnerfern });
   return G;
 }
 function forkGame(G){
@@ -290,13 +290,13 @@ export function playGame(job){
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, startCards, xpLog }){
+function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, startCards, xpLog, gegnerfern }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (budget !== undefined) prof.budget = budget;                          // Forschungsbudget (Teil 5): Stufe 0, 1, 2 (0, 25, 50 %)
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
   if (kat){ prof.kat = kat; prof.pfad = prof.pfad && pfad ? prof.pfad : KF_BROWSER_BOT.KAT_PFAD[kat]; }       // Kategorie-Bot (Teil 6, REQ-K6.08; vorher Linien-Bot): bevorzugt Karten, Doktrinen und Varianten seiner Kategorie
-  const G = newGame(diff, seed, pacing, druck);
+  const G = newGame(diff, seed, pacing, druck, gegnerfern);
   if (xpLog) G.S.xpLog = [];                                                 // Werkzeug (Teil 8): Einzelereignisse der EP aufzeichnen
   if (startCards){ for (const id of startCards) G.S.draft.stacks[id] = 1; G.S.draft.ver++; }       // Werkzeug für Versuche: Karten von Beginn an
   if (noRush) G.rushWave = () => false;                                   // Paarvergleich: ohne „Welle vorziehen“ (REQ-6.07 c)

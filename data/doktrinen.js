@@ -60,7 +60,7 @@ const KF_DOKTRINEN = [
     wirkt: { building: 'fabrik' },
     nameKey: 'doctrine.fabrikmiliz.name', descKey: 'doctrine.fabrikmiliz.desc' },
   /* Teil 7 (REQ-K7.05): statt höchstens 5 Fabriken (durch die Obergrenze des Haupthauses wirkungslos) rücken die eigenen Wellen seltener aus */
-  { id: 'grenzfeste', kat: ['wirtschaft', 'verteidigung'], sonderbau: null, effect: [{ stat: 'towerKillMaterial', add: 3 }], drawback: [{ stat: 'ownWaveInterval', mul: 1.25 }],
+  { id: 'grenzfeste', kat: ['wirtschaft', 'verteidigung'], sonderbau: null, effect: [{ stat: 'towerKillMaterial', add: 3 }], drawback: [{ stat: 'ownWaveInterval', mul: 1.10 }],
     wirkt: { tower: true },
     nameKey: 'doctrine.grenzfeste.name', descKey: 'doctrine.grenzfeste.desc' },
   { id: 'zermuerbung', kat: 'verteidigung', sonderbau: null, effect: [{ stat: 'zermuerbung', add: 0.25 }], drawback: [{ stat: 'quartiereCost', mul: 1.5 }],

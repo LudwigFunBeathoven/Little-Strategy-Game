@@ -95,7 +95,7 @@ test('Gegnerwellen merken ihre Größe, die Belagerungswelle zählt dreifach', (
 });
 
 test('Lehrjahre (Kriegserfahrung) wirken im Modus karten auf alle EP-Quellen, Abschüsse tragen den Faktor schon', () => {
-  const { G } = game('karten');
+  const { G, C } = game('karten'); C.KARTEN.uebertrag = null;       // ohne Übertragsgrenze (Teil 8): die Rechnung prüft nur den Faktor
   G.S.draft.stacks.kriegserfahrung = 1; G.S.draft.ver++;
   assert.equal(G.mMul('xpGain'), 1.3);
   const x0 = G.S.xpTotal; G.gainXp(100, 'base'); assert.ok(Math.abs(G.S.xpTotal - x0 - 130) < 1e-9, 'Basisschaden ×1,3');
@@ -108,7 +108,7 @@ test('Lehrjahre (Kriegserfahrung) wirken im Modus karten auf alle EP-Quellen, Ab
 });
 
 test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühestens minAbstand nach der letzten, die EP bleiben erhalten; er löst nie eine Wahl aus', () => {
-  const { G, C } = game('karten');
+  const { G, C } = game('karten'); C.KARTEN.uebertrag = null;       // ohne Übertragsgrenze (Teil 8, siehe tests/ep8.test.mjs)
   const min = C.KARTEN.minAbstand;
   run(G, 5);
   G.gainXp(G.xpNeed(1) - G.S.xpTotal + 1);                          // erste Wahl: kein Mindestabstand

@@ -274,7 +274,7 @@ test('Eisenwaffen: Einheitenersatz wertet Warteschlange und Feld auf, die Zahl b
 
 test('Ersatzeinheiten erben die Werfer-Karten (Lange Wurfarme)', () => {
   const { G } = game('karten'); G.S.draft.stacks.langeWurfarme = 1; G.S.draft.ver++;
-  assert.equal(G.unitRange('p', 'bogenschuetze'), game('karten').C.UNITS.bogenschuetze.range + 25);
+  assert.equal(G.unitRange('p', 'bogenschuetze'), G.baseRange('bogenschuetze') + 25);
 });
 
 /* ---------- Wagnis, Exklusivpfad (REQ-KP.06, KP.07) ---------- */
