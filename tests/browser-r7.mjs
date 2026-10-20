@@ -47,7 +47,7 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
 
 import { mkdirSync } from 'node:fs';
 mkdirSync(new URL('../docs/bilder/', import.meta.url), { recursive: true });
-const shot = (p, name) => p.screenshot({ path: new URL(`../docs/bilder/kartenpfad7-${name}.png`, import.meta.url).pathname });
+const shot = async (p, name) => { await p.evaluate(() => { document.querySelector('#hintBox').hidden = true; }); await p.screenshot({ path: new URL(`../docs/bilder/kartenpfad7-${name}.png`, import.meta.url).pathname }); };       // ohne Hinweis im Bild
 
 /* ---------- K7.02, K7.04: Haupthaus im Mittelfeld, Reiter, Obergrenze ---------- */
 {
@@ -73,6 +73,9 @@ const shot = (p, name) => p.screenshot({ path: new URL(`../docs/bilder/kartenpfa
   await p.evaluate(() => { __kf.clearSelection(); __kf.selectTab('haus'); __kf.requestRender(); }); await settle(p, 300);
   check(/stehen 3/.test(await p.evaluate(() => document.querySelector('#hausGrenze').textContent)), 'K7.04: Grenze im Reiter Haupthaus');
   await shot(p, 'haus-stufe1');
+  // Residenz mit zwei Flügeln für den Bericht
+  await p.evaluate(() => { const G = __kf.G; G.S.haus.stufe = 3; G.S.haus.fluegel = ['bibliothek', 'zeughaus']; G.S.slotVer++; for (const [i, b] of [[3, 'kaserne'], [5, 'universitaet'], [6, 'kontor'], [7, 'fabrik'], [8, 'fabrik']]) G.buildAt(i, b); __kf.selectTab('haus'); __kf.requestRender(); });
+  await settle(p, 300); await shot(p, 'haus-residenz');
   const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
   check(!audit.tips.length && !audit.expl.length, `K7.02: Tooltips und Erklärzeilen vollständig ${show(audit)}`);
   check(errs.length === 0, `K7.02: keine Konsolenfehler${show(errs)}`);
