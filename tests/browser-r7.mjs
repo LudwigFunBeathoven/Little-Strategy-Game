@@ -184,6 +184,24 @@ for (const lang of ['de', 'en']){
   await ctx.close();
 }
 
+/* ---------- K7.12: Sitzungsprotokoll Format 4 (Haupthaus, Flügel, Fabrikplätze je Minute, Kompanien, Geschütze) ---------- */
+{
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } }), p = await ctx.newPage(), errs = [];
+  p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_CERT|fonts\.g/.test(m.text())) errs.push(m.text()); });
+  await p.goto(base + 'index.html?debug=1&tutorial=0&lang=de&difficulty=easy&pacing=karten'); await p.waitForTimeout(400);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e6; G.S.level = 15; for (const [i, t] of [[0, 'fabrik'], [1, 'kaserne'], [2, 'kontor'], [3, 'universitaet'], [5, 'schmiede']]) G.buildAt(i, t);
+    G.S.draft.stacks.stadtrecht = 1; G.S.draft.stacks.fernhandel = 1; G.S.draft.stacks.geschuetzguss = 1; G.S.draft.ver++; G.hausAusbau();
+    for (const r of ['r_fernhandel', 'r_geschuetzguss']){ G.unlockKey('forschung:' + r); G.startResearch(r); G.rushResearch(r); } });
+  await p.evaluate(() => { for (let k = 0; k < 70; k++){ __kf.G.S.pendingDraft = null; __kf.G.S.pendingLevels = 0; __kf.G.tick(1); } });
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e6; G.chooseFluegel('kanzlei'); G.hireKompanie(); G.spawn('geschuetz'); G.tick(0.05); });
+  await settle(p, 300);
+  const s = await p.evaluate(() => { const s = __kf.session(); return { fv: s.formatVersion, haus: s.haupthaus, fl: s.fluegel, fab: s.fabrikplaetze, komp: s.kompanien, g: s.geschuetze, end: s.gebaeudeEnde, acts: s.actions.map(a => a.kind).filter(k => ['hausAusbau', 'chooseFluegel', 'hireKompanie'].includes(k)) }; });
+  check(s.fv === 4 && s.haus.length === 1 && s.haus[0].stufe === 2 && s.fl.length === 1 && s.fl[0].id === 'kanzlei' && s.fab.length >= 2 && s.fab.every(x => typeof x.n === 'number' && typeof x.grenze === 'number') && s.komp.length === 1 && s.g === 1 && s.end[4] === 'haupthaus' && s.acts.length === 3,
+    `K7.12: Protokoll Format 4 ${show(s)}`);
+  check(errs.length === 0, `K7.12: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- Standardmodus: kein Haupthaus ---------- */
 {
   const { ctx, p, errs } = await open('pacing=standard');

@@ -130,8 +130,8 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, kat){
 /* Gebäude-Aufwertung (Teil 4, REQ-S.05): Der Kategorie-Bot wertet jedes Gebäude, für das seine Kategorie eine Variante hat, auf, sobald das Material mit Rücklage reicht.
    Fabriken werden nur zur Manufaktur mehrfach aufgewertet (Ertrag je Gebäude); jede andere Variante wirkt einmal, ein zweites Gebäude brächte nichts. */
 KF_BROWSER_BOT.KAT_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Kategorie-Bot (0, 25, 50 %)
-/* Flügel des Haupthauses (Teil 7, REQ-K7.12): feste Reihenfolge je Kategorie-Bot; der Bot ohne Kategorie nimmt Kanzlei und Zeughaus */
-KF_BROWSER_BOT.KAT_FLUEGEL = { militaer: ['zeughaus', 'kanzlei'], wirtschaft: ['schatzkammer', 'bibliothek'], verteidigung: ['bibliothek', 'zeughaus'], ohne: ['kanzlei', 'zeughaus'] };
+/* Flügel des Haupthauses (Teil 7, REQ-K7.12): feste Reihenfolge je Kategorie-Bot; der Bot ohne Kategorie nimmt Kanzlei und Bibliothek (beide ersetzen die Universität, Schmiede und Kontor bleiben) */
+KF_BROWSER_BOT.KAT_FLUEGEL = { militaer: ['zeughaus', 'kanzlei'], wirtschaft: ['schatzkammer', 'bibliothek'], verteidigung: ['bibliothek', 'zeughaus'], ohne: ['kanzlei', 'bibliothek'] };
 /* Gebäude, deren Grundfunktion ein Flügel übernimmt: Es weicht einer weiteren Fabrik, wenn das Raster voll ist */
 /* Zweites Exemplar je Kategorie-Bot (Teil 7, REQ-K7.10): Militär und ohne Kategorie die Kaserne, Wirtschaft und Verteidigung die Universität */
 KF_BROWSER_BOT.ZWEITES = { militaer: 'kaserne', wirtschaft: 'universitaet', verteidigung: 'universitaet', ohne: 'kaserne' };

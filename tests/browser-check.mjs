@@ -1137,9 +1137,9 @@ for (const lang of ['de', 'en']){
     await p.click('#draftOffer .card-pick >> nth=0'); await p.waitForTimeout(150);
   }
   const d = await p.evaluate(() => { const s = __kf.session(); return { fv: s.formatVersion, drafts: s.drafts, kat: s.kategorien, syn: s.synergie, weiter: s.weiterentwicklungen, dp: s.doktrinP }; });
-  const ok = d.fv === 3 && d.drafts.every(x => Array.isArray(x.kat)) && (d.kat === undefined || (typeof d.kat.wirtschaft === 'number' && Array.isArray(d.weiter) && Array.isArray(d.dp))) && d.drafts.length >= 2 && d.drafts.every(x => typeof x.chosen === 'string' && Array.isArray(x.offered) && x.offered.length >= 2 && x.offered.includes(x.chosen)
+  const ok = d.fv === 4 && /* Teil 7: Format 4 */  d.drafts.every(x => Array.isArray(x.kat)) && (d.kat === undefined || (typeof d.kat.wirtschaft === 'number' && Array.isArray(d.weiter) && Array.isArray(d.dp))) && d.drafts.length >= 2 && d.drafts.every(x => typeof x.chosen === 'string' && Array.isArray(x.offered) && x.offered.length >= 2 && x.offered.includes(x.chosen)
     && typeof x.thinkMs === 'number' && x.thinkMs >= 400 && x.rerolled === 0 && x.banned === 0 && typeof x.level === 'number' && typeof x.t === 'number');
-  check(ok, `Protokoll Format 3: ${d.drafts.length} Kartenwahlen mit Karte, Kategorie, Alternativen, Bedenkzeit, Neu ziehen und Bannen ${JSON.stringify(d.drafts[0])} ${JSON.stringify([d.kat, d.weiter])}`);
+  check(ok, `Protokoll Format 4: ${d.drafts.length} Kartenwahlen mit Karte, Kategorie, Alternativen, Bedenkzeit, Neu ziehen und Bannen ${JSON.stringify(d.drafts[0])} ${JSON.stringify([d.kat, d.weiter])}`);
   check(errs.length === 0, `Protokoll: keine Fehler${show(errs)}`);
   await ctx.close();
 }

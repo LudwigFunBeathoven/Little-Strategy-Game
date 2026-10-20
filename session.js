@@ -26,10 +26,10 @@ const Session = (() => {
     if (k) unitLog = unitLog.slice(k);
     if (lastPos.size > 4 * S.units.length + 50){ const ids = new Set(S.units.map(u => u.id)); for (const id of lastPos.keys()) if (!ids.has(id)) lastPos.delete(id); }
   }
-  const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption', 'upgradeBuilding', 'setBudget'];
+  const ACTIONS = ['spawn', 'buy', 'buildAt', 'demolish', 'repair', 'startResearch', 'rerollDraft', 'banOption', 'upgradeBuilding', 'setBudget', 'hausAusbau', 'chooseFluegel', 'hireKompanie'];
   function reset(){
     const S = G.S;
-    P = { format: 'klammerfront-session', formatVersion: 3, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
+    P = { format: 'klammerfront-session', formatVersion: 4, version: C.VERSION, lang, diff: S.diff, pacing: S.pacing, druck: S.druck || null, stage: Stage.on(), startedAt: new Date().toISOString(),
           result: S.status, durationS: 0, clicks: 0, clicksPerMinute: [], clicksByPhase: { early: 0, mid: 0, late: 0 }, timeByPhase: { early: 0, mid: 0, late: 0 },
           switches: { stage: Stage.on(), discover: Disc.on(), preview: C.ENTDECKEN.vorschau, time: C.KARTENBUEHNE.zeit, pressure: S.druck || 'aus' }, visible: [], discovered: {},
           variants: [], xpBySource: {}, wallHpLost: 0, actions: [], drafts: [], research: [], researchDone: [], unlocks: [], maxUnits: 0, maxArmy: 0, firstWallFallS: null, wallUse: { repairs: 0, upgrades: 0 }, kills: 0, losses: 0 };
@@ -61,6 +61,12 @@ const Session = (() => {
       P.weiterentwicklungen = (S.stats.weiter || []).map(w => ({ id: w.id, bereich: w.bereich, t: w.t, ersetzteVarianten: w.ersetzt }));
       P.doktrinP = (S.stats.doktrinP || []).slice();
       P.doktrinEffekte = { tauschMaterial: Math.round(S.stats.tradeMaterial || 0), tauschEP: Math.round(S.stats.tradeXp || 0), milizEinheiten: S.stats.milizUnits || 0, zermuerbt: S.stats.zermuerbt || 0 };
+      // Teil 7 (REQ-K7.12): Haupthaus-Stufe mit Zeitpunkt, Flügel, Fabrikplätze je Minute (Stand zu Beginn der Minute), Söldnerkompanien, Geschütze
+      P.haupthaus = (S.stats.haus || []).slice(); P.fluegel = (S.stats.fluegel || []).slice();
+      P.fabrikplaetze = P.fabrikplaetze || [];
+      while (P.fabrikplaetze.length <= Math.floor(S.t / 60)) P.fabrikplaetze.push({ min: P.fabrikplaetze.length, n: G.fabrikPlaetze(), grenze: G.fabrikGrenze() });
+      P.kompanien = (S.stats.kompanien || []).slice(); P.geschuetze = (S.stats.gekauft && S.stats.gekauft.geschuetz) || 0;
+      P.gebaeudeEnde = S.slots.map(x => x ? x.type : null);
       const hp = S.sections.map(s => s.hp);
       if (P.wallPrev) hp.forEach((v, i) => { if (v < P.wallPrev[i]) P.wallHpLost += P.wallPrev[i] - v; });
       P.wallPrev = hp;

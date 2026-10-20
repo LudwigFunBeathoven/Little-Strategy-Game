@@ -35,7 +35,7 @@ const KF_CONFIG = {
     xpMult: { leicht: 1, normal: 1, schwer: 1 }, // EP je Abschuss je Grad (ersetzt im Modus karten DIFFICULTY.xpMult: mehr Gegner bringen mehr EP, ein Ausgleich über den Faktor entfällt)
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,
-    basisFaktor: { leicht: 8.0, normal: 10.5, schwer: 7.5 },   // Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer).
+    basisFaktor: { leicht: 8.0, normal: 9.5, schwer: 7.5 },    // Teil 7: Normal 10,5 → 9,5 (Obergrenze für Fabriken und Haupthaus verlangsamen die Wirtschaft; Bot ohne Kategorie wieder 15:07 bei 15 Wahlen). Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer).
                                 // Teil 5 (REQ-K5.03): Ziel etwa 15 Minuten bei 12–16 Wahlen (Normal, „durchschnitt“); vorher 5,5 / 5,5 / 3,0 bei etwa 11:50. Leicht liefert weniger Abschüsse (kleinere Wellen), Schwer mehr.
     /* Werte des Schwierigkeitsgrades (DIFFICULTY), die im Modus karten anders gelten (Teil 5, REQ-K5.02: „Schwer, durchschnitt“ 70–90 % Siege); der Modus standard bleibt unverändert */
     gegner: { leicht: {}, normal: {}, schwer: { waveBase: 4.0 } },       // Schwer: Grundwelle 4,0 statt 3,5 (Messung: 3,8 und 4,0 → 87,5 % Siege bei „durchschnitt“, 4,2 → 20 %, die Eröffnung entscheidet)
