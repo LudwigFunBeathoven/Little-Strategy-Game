@@ -94,6 +94,7 @@ const DESC_PARAMS = {
   presse:     () => ({ n: C.FX_PRESSE }),
   qualitaet:  () => ({ percent: pct(C.FX_QUALITAET) }),
   ausbau:     () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL }),
+  ausbau2:    () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL }),
   zinseszins:    () => ({ n: C.KONTOR.capPerLevel }),
   mauer:      () => ({ n: C.FX_MAUER_HP }),
   stacheln:   () => ({ n: C.FX_STACHELN_DMG }),
@@ -121,6 +122,7 @@ const METRICS = {
   presse:     ['tip.m.perClick',     () => G.clickPower(), v => fmt(v)],
   qualitaet:  ['tip.m.strength',     () => G.qualityMult() * 100, v => fmt(v) + ' %'],
   ausbau:     ['tip.m.queueMax',     () => G.supplyCap(), v => fmt(v)],
+  ausbau2:    ['tip.m.queueMax',     () => G.supplyCap(), v => fmt(v)],
   zinseszins:    ['tip.m.interest',  () => G.kontorCap(), v => fmt(v)],
   mauer:      ['tip.m.baseMax',      () => G.sectionMax(C.GATE_LANE), v => fmt(v)],
   stacheln:   ['tip.m.thorns',       () => C.FX_STACHELN_DMG * G.S.lvl.stacheln, v => fmt(v)],
@@ -665,7 +667,7 @@ function makeOpt(parent, cls, tip, onClick){
   const nm = b.children[0];
   return { btn: b, name: nm, kbd: nm.children[0], label: nm.children[1], tag: nm.children[2], fresh: nm.children[3], expl: b.children[1] };
 }
-const GROUP_BOX = { fertigung: 'optsFertigung', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm_0: 'optsTurm0', turm_2: 'optsTurm2' };
+const GROUP_BOX = { fertigung: 'optsFertigung', schmiede: 'optsSchmiede', kaserne: 'optsKaserne', kaserne2: 'optsKaserne', kontor: 'optsKontor', mauer: 'optsMauer', turm_0: 'optsTurm0', turm_2: 'optsTurm2' };
 
 
 /* ================= Eingabe in der Spielwelt (REQ-46, REQ-5.01) ================= */

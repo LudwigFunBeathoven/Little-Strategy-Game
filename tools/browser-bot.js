@@ -10,7 +10,7 @@ function KF_BROWSER_BOT(G, profile, hooks){
   const pickFirst = () => { if (h.draft) h.draft(G); const i = KF_BROWSER_BOT.pfadPick(G, G.S.pendingDraft.options, o.pfad, o.kat); G.chooseDraft(i === null ? 0 : i); };
   const build = (slot, type) => { if (G.buildAt(slot, type) && h.built) h.built(type); };
   let clickAcc = 0, actAcc = 0, mix = 0;
-  const PRIO = ['presse', 'ausbau', 'qualitaet', 'turm_0', 'turm_2', 'mauer'];
+  const PRIO = ['presse', 'ausbau', 'ausbau2', 'qualitaet', 'turm_0', 'turm_2', 'mauer'];
   function act(){
     const S = G.S;
     if (S.pendingDraft){ pickFirst(); return; }
@@ -35,10 +35,18 @@ function KF_BROWSER_BOT(G, profile, hooks){
       if (i >= 0) G.demolish(i);
     }
     // Teil 7: Raster voll, die Obergrenze erlaubt eine weitere Fabrik: das Gebäude, das ein Flügel ersetzt, weicht ihr
-    if (S.slots.findIndex(x => !x) < 0 && !o.noBuild && fabWanted){ const i = S.slots.findIndex(x => x && covered.includes(x.type)); if (i >= 0) G.demolish(i); }
+    // zuerst ein zweites Exemplar (Teil 7, REQ-K7.10), dann das Gebäude eines Flügels
+    if (S.slots.findIndex(x => !x) < 0 && !o.noBuild && fabWanted){
+      const dup = S.slots.findIndex((x, k) => x && C.ZWEITES[x.type] && S.slots.findIndex(y => y && y.type === x.type) !== k);
+      const i = dup >= 0 ? dup : S.slots.findIndex(x => x && covered.includes(x.type));
+      if (i >= 0) G.demolish(i);
+    }
     free = S.slots.findIndex(x => !x);
     if (free >= 0 && !o.noBuild){
-      const type = G.factoryCount() < 3 ? 'fabrik' : ['kaserne', 'schmiede', 'universitaet', 'kontor', 'fabrik'].find(b => !(o.forbid || []).includes(b) && !(fabWanted && covered.includes(b)) && G.buildBlock(free, b) === null);
+      // erst je ein Spezialgebäude, dann Fabriken; ist keine weitere erlaubt, ein zweites Exemplar nach Kategorie (Teil 7, REQ-K7.10: der freie Platz auf Stufe I)
+      const stands = b => S.slots.some(x => x && x.type === b);
+      const order = ['kaserne', 'schmiede', 'universitaet', 'kontor'].filter(b => !stands(b)).concat(['fabrik', KF_BROWSER_BOT.ZWEITES[o.kat || 'ohne']]);
+      const type = G.factoryCount() < 3 ? 'fabrik' : order.find(b => !(o.forbid || []).includes(b) && !(fabWanted && covered.includes(b)) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
     // Forschungsbudget (Teil 5, REQ-K5.10): feste Regel je Kategorie-Bot – Militär 0 %, Wirtschaft 50 %, Verteidigung 25 %; ohne Kategorie und Angabe 0 %; o.budget überschreibt (Stufe 0, 1, 2)
@@ -125,6 +133,8 @@ KF_BROWSER_BOT.KAT_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };    
 /* Flügel des Haupthauses (Teil 7, REQ-K7.12): feste Reihenfolge je Kategorie-Bot; der Bot ohne Kategorie nimmt Kanzlei und Zeughaus */
 KF_BROWSER_BOT.KAT_FLUEGEL = { militaer: ['zeughaus', 'kanzlei'], wirtschaft: ['schatzkammer', 'bibliothek'], verteidigung: ['bibliothek', 'zeughaus'], ohne: ['kanzlei', 'zeughaus'] };
 /* Gebäude, deren Grundfunktion ein Flügel übernimmt: Es weicht einer weiteren Fabrik, wenn das Raster voll ist */
+/* Zweites Exemplar je Kategorie-Bot (Teil 7, REQ-K7.10): Militär und ohne Kategorie die Kaserne, Wirtschaft und Verteidigung die Universität */
+KF_BROWSER_BOT.ZWEITES = { militaer: 'kaserne', wirtschaft: 'universitaet', verteidigung: 'universitaet', ohne: 'kaserne' };
 KF_BROWSER_BOT.FLUEGEL_ERSETZT = { bibliothek: 'universitaet', zeughaus: 'schmiede', schatzkammer: 'kontor', kanzlei: 'universitaet' };
 KF_BROWSER_BOT.covered = G => (G.S.haus ? G.S.haus.fluegel : []).map(f => KF_BROWSER_BOT.FLUEGEL_ERSETZT[f]);
 KF_BROWSER_BOT.KAT_PFAD = { militaer: 'militaer', wirtschaft: 'wissen', verteidigung: 'festung' };       // Pfad-Reihenfolge der Kategorie-Bots

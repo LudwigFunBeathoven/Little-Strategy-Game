@@ -168,6 +168,22 @@ for (const lang of ['de', 'en']){
   await ctx.close();
 }
 
+/* ---------- K7.10: zweite Kaserne mit eigenen Quartieren ---------- */
+{
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1'); await calm(p);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; G.buildAt(0, 'kaserne'); __kf.selectTab('build'); __kf.selectPlot(1); __kf.requestRender(); }); await settle(p, 300);
+  const pk = await p.evaluate(() => { const b = document.querySelector('#ctxBuild [data-tooltip^="pick:kaserne"]'); return b && { dis: b.getAttribute('aria-disabled'), text: b.innerText.replace(/\s+/g, ' ') }; });
+  check(pk && pk.dis !== 'true' && /225 Material/.test(pk.text), `K7.10: zweite Kaserne baubar, teurer ${show(pk)}`);
+  await p.click('#ctxBuild [data-tooltip^="pick:kaserne"]'); await settle(p, 200);
+  await p.evaluate(() => { __kf.G.S.material = 1e5; __kf.selectTab('army'); __kf.requestRender(); }); await settle(p, 400);
+  const q = await p.evaluate(() => { const b = document.querySelector('[data-tooltip="upg:ausbau2"]'); return b && { vis: !b.hidden, text: b.innerText.replace(/\s+/g, ' ') }; });
+  check(q && q.vis && /Quartiere \(zweite Kaserne\)/.test(q.text), `K7.10: Quartiere der zweiten Kaserne im Reiter Armee ${show(q)}`);
+  const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
+  check(!audit.tips.length && !audit.expl.length, `K7.10: Tooltips und Erklärzeilen vollständig ${show(audit)}`);
+  check(errs.length === 0, `K7.10: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- Standardmodus: kein Haupthaus ---------- */
 {
   const { ctx, p, errs } = await open('pacing=standard');

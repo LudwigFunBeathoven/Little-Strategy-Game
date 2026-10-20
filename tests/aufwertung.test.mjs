@@ -62,7 +62,9 @@ test('S.05: Während der Aufwertung wirkt das Gebäude nicht (Fabrik, Kaserne)',
   assert.ok(G.matRate() < rate * 0.6, `Fabrik in Aufwertung liefert nichts: ${G.matRate()} < ${rate}`);
   assert.equal(G.has('kaserne'), false, 'Kaserne in Aufwertung wirkt nicht');
   assert.ok(G.supplyCap() < cap);
-  assert.equal(G.buildBlock(3, 'kaserne'), 'standing', 'der Platz bleibt belegt');
+  // der Platz bleibt belegt: Teil 7 (REQ-K7.10) erlaubt im Modus karten zwei Kasernen; die in Aufwertung zählt als erste
+  assert.equal(G.buildBlock(3, 'kaserne'), null); place(G, 'kaserne', 3); assert.equal(G.buildBlock(5, 'kaserne'), 'standing', 'der Platz bleibt belegt');
+  G.demolish(3);
   finish(G);
   assert.ok(G.has('kaserne')); assert.equal(G.supplyCap(), cap);
   assert.ok(G.matRate() > rate, 'Manufaktur liefert mehr als eine Fabrik');

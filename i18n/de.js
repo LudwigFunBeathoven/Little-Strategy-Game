@@ -999,7 +999,7 @@ KF_I18N.de = {
   'bld.fabrik.name.karten': 'Manufaktur',
   'bld.fabrik.desc.karten': 'Erzeugt Material. Mehrfach baubar bis zur Obergrenze des Haupthauses; jede weitere Manufaktur kostet mehr.',
   'result.lost.text.karten': '{kills} Abschüsse vor dem Fall. Früher Manufakturen bauen, einen Turm errichten oder mit Leicht beginnen.',
-  'slot.dialogText.karten': 'Manufakturen sind bis zur Obergrenze des Haupthauses mehrfach baubar, alle anderen Gebäude je einmal.',
+  'slot.dialogText.karten': 'Manufakturen sind bis zur Obergrenze des Haupthauses mehrfach baubar, Kaserne und Universität zweimal, Schmiede und Kontor je einmal.',
   'bld.fabrik.nth.karten': '{name} Nr. {n}',
   'fab.stat.karten': 'Manufakturen {n} · je {rate} Material/s · nächste {next}',
   'draft.bessereFabriken.name.karten': 'Bessere Manufakturen',
@@ -1027,4 +1027,10 @@ KF_I18N.de = {
   'turm.sub.2.name': 'Turm unten: {name}',
   'tip.stufenname': 'Bauwerk',
   'tip.stufenname.next': '{a} → {b} ab Stufe {n}',
+  /* Teil 7 (REQ-K7.10): zweites Exemplar von Kaserne und Universität */
+  'upg.ausbau2.name': 'Quartiere (zweite Kaserne)',
+  'upg.ausbau2.desc': 'Baut Quartiere für die zweite Kaserne: Versorgungslimit +{n}. Obergrenze 15 Einheiten je Welle.',
+  'bld.kaserne.desc.karten': 'Hebt das Versorgungslimit, ausbaubar mit Quartieren. Eine zweite Kaserne schickt je Welle einen Läufer mehr und hat eigene Quartiere.',
+  'bld.universitaet.desc.karten': 'Eine Karte mehr je Angebot und ein Forschungsplatz. Eine zweite Universität bringt einen weiteren Forschungsplatz.',
+  'build.reason.standing.karten': 'Steht bereits so oft, wie es erlaubt ist',
 };

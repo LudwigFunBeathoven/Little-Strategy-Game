@@ -281,6 +281,9 @@ function create(){
   const forschungsort = () => has('universitaet') || hasFluegel('bibliothek');             // Universität oder Bibliothek: Technologiekarten und Forschung
   const zeughausDeckt = id => id === 'qualitaet' && hasFluegel('zeughaus');                // Zeughaus: Schmiede-Ausbauten bis FL.zeughaus.schmiedeStufen ohne Schmiede
   const zeughausMax = id => zeughausDeckt(id) && !has('schmiede') && S.lvl[id] >= FL.zeughaus.schmiedeStufen;
+  /* Zweites Exemplar (Teil 7, REQ-K7.10): Kaserne und Universität je zweimal im Modus karten; zweiteSteht = zwei fertige Gebäude des Typs */
+  const maxPerType = type => S.pacing === 'karten' && C.ZWEITES[type] ? 2 : C.MAX_PER_TYPE;
+  const zweiteSteht = type => S.pacing === 'karten' && !!C.ZWEITES[type] && countType(type) >= 2;
   // Wirksame Stufe: Upgrades eines abgerissenen Gebäudes bleiben gespeichert, wirken aber nicht (REQ-01.8)
   /* Doktrin Freihandel (Teil 6, REQ-K6.05): Türme bleiben auf Stufe towerMax, ihre Ausbauten (Reichweite, Feuerrate) sind gesperrt; die Einschränkung gilt auch für Türme, die schon höher stehen (wirksame Stufe) */
   const towerCap = () => S.pacing === 'karten' && mAdd('towerMax') > 0 ? mAdd('towerMax') : Infinity;
@@ -411,7 +414,7 @@ function create(){
   };
   // Kaserne: Gebäude = Ausbaustufe 1, „Ausbau“ bis Stufe 3; jede Stufe +KASERNE_SUPPLY_PER_LEVEL (REQ-17.1)
   const kaserneLevel = () => has('kaserne') ? 1 + lv('ausbau') : 0;
-  const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * kaserneLevel() + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));
+  const supplyCap    = () => Math.min(C.SUPPLY_CAP_MAX, Math.round((C.SUPPLY_CAP_START + C.KASERNE_SUPPLY_PER_LEVEL * (kaserneLevel() + (zweiteSteht('kaserne') ? lv('ausbau2') : 0)) + mAdd('supply') + nbTotal('kaserne')) * mMul('supplyMult')));       // ausbau2: Quartiere der zweiten Kaserne (Teil 7)
   /* Handelskontor (REQ-6.07 b): Deckel und nächster Zinsbetrag */
   /* Flügel Schatzkammer (Teil 7): ohne stehendes Kontor Zinsen mit dem Anteil deckelAnteil am Zinsdeckel; ein Kontor zahlt den vollen Deckel, beide zusammen zählen nicht doppelt */
   const zinsQuelle = () => has('kontor') ? 'kontor' : hasFluegel('schatzkammer') ? 'schatzkammer' : null;
@@ -421,20 +424,21 @@ function create(){
 
   function upCost(id){
     const u = C.UPGRADES[id];
-    let c = u.baseCost * Math.pow(u.growth, S.lvl[id]) * mMul('upgradeCost') * (id === 'ausbau' ? mMul('quartiereCost') : id === 'qualitaet' ? mMul('qualitaetCost') : 1);       // quartiereCost, qualitaetCost: Zahlmeisterei, Münzschmiede (Teil 5)
+    let c = u.baseCost * Math.pow(u.growth, S.lvl[id]) * mMul('upgradeCost') * (id === 'ausbau' || id === 'ausbau2' ? mMul('quartiereCost') : id === 'qualitaet' ? mMul('qualitaetCost') : 1);       // quartiereCost, qualitaetCost: Zahlmeisterei, Münzschmiede (Teil 5)
     return Math.ceil(c);
   }
   const isMaxed = id => C.UPGRADES[id].max !== undefined && S.lvl[id] >= C.UPGRADES[id].max;
   /* Wirkungslos (Patch 0.9.2): Das Versorgungslimit steht schon am harten Deckel; weitere Versorgung (Kaserne-Ausbau, Forschung, Karten) bringt nichts mehr */
   const supplyCapped = () => supplyCap() >= C.SUPPLY_CAP_MAX;
   const supplyOnly = effects => effects.length > 0 && effects.every(e => e.stat === 'supply' || e.stat === 'supplyMult');
-  const noEffect = id => C.UPGRADES[id].group === 'kaserne' && supplyCapped();
+  const noEffect = id => (C.UPGRADES[id].group === 'kaserne' || C.UPGRADES[id].group === 'kaserne2') && supplyCapped();
   const stachelStufen = () => lv('stacheln') + mAdd('stachelStufen');                                  // Karte Stachelwall (Teil 6, REQ-K6.07) zählt wie Stufen des Ausbaus
   /* Ausbauten, die im Modus karten entfallen, weil eine Karte sie übernimmt (Teil 6, REQ-K6.07) */
   const ausbauRemoved = id => S.pacing === 'karten' && !!PFAD && (PFAD.entfallenAusbauten || []).includes(id);
   function isAvailable(id){
     const u = C.UPGRADES[id];
     if (ausbauRemoved(id)) return false;
+    if (u.zweite && !zweiteSteht(u.zweite)) return false;                                           // Quartiere der zweiten Kaserne (Teil 7)
     if (C.BUILDINGS.includes(u.group) && !has(u.group) && !zeughausDeckt(id)) return false;
     if (u.needs && S.lvl[u.needs] <= 0) return false;
     return true;
@@ -444,7 +448,7 @@ function create(){
   /* Die n-te Fabrik kostet FACTORY_BASE_COST × FACTORY_COST_GROWTH^(n−1); nach einem Abriss sinkt der Preis wieder (REQ-16.2/16.5) */
   // Die erste Fabrik ist gratis (REQ-44)
   const factoryCost = () => C.FIRST_FACTORY_FREE && factoryCount() === 0 ? 0 : Math.ceil(C.FACTORY_BASE_COST * Math.pow(C.FACTORY_COST_GROWTH, factoryCount()) * mMul('factoryCost') * mMul('buildCost'));
-  const buildCost = type => type === 'fabrik' ? factoryCost() : Math.ceil(C.BUILDING_COST[type] * mMul('buildCost'));
+  const buildCost = type => type === 'fabrik' ? factoryCost() : Math.ceil(C.BUILDING_COST[type] * mMul('buildCost') * (S.pacing === 'karten' && C.ZWEITES[type] && standingCount(type) >= 1 ? C.ZWEITES[type].kostenFaktor : 1));       // zweites Exemplar teurer (Teil 7)
   const isBuildable = type => (C.START_BUILDINGS.includes(type) || !!S.unlocked[type]) && isOpen('bau:' + type);
   const refundFor = i => S.slots[i] ? Math.floor(S.slots[i].paid * C.REFUND_RATE) : 0;
   /* Warum ein Gebäude nicht baubar ist (null = baubar) */
@@ -453,7 +457,7 @@ function create(){
     if (!C.BUILDINGS.includes(type)) return 'unknown';
     if (!introShows('buildings') && type !== 'fabrik') return 'hidden';
     if (!isBuildable(type)) return 'locked';
-    if (type !== 'fabrik' && standingCount(type) >= C.MAX_PER_TYPE) return 'standing';
+    if (type !== 'fabrik' && standingCount(type) >= maxPerType(type)) return 'standing';
     if (i < 0 || i >= SLOTS || S.slots[i]) return 'occupied';
     if (type === 'fabrik' && fabrikPlaetze() >= fabrikGrenze()) return 'fabrikGrenze';               // Obergrenze des Haupthauses (Teil 7, REQ-K7.04)
     if (doctrineLimit(type)) return 'limit';
@@ -891,7 +895,7 @@ function create(){
       if (S.queue.length >= supplyCap()) S.stats.wavesFull = (S.stats.wavesFull || 0) + 1;
       const bought = S.queue.map(q => q.type);
       // Karte Rekrutenzug (Teil 6, vorher Linie Militär Stufe 1): die Kaserne bildet je Welle zusätzliche Einheiten aus (Läufer, ohne Kosten, außerhalb des Versorgungslimits)
-      const types = bought.concat(has('kaserne') ? new Array(Math.floor(mAdd('extraUnit'))).fill(ownType('laeufer')) : []);
+      const types = bought.concat(has('kaserne') ? new Array(Math.floor(mAdd('extraUnit')) + (zweiteSteht('kaserne') ? C.ZWEITES.kaserne.laeufer : 0)).fill(ownType('laeufer')) : []);       // Teil 7: die zweite Kaserne schickt je Welle einen Läufer mehr
       // eine Gruppe über alle Lanes: Armee, falls es keine gibt, sonst Nachschub (REQ-5.06)
       const g = addGroup('p', assignLanes(types, strongerLane(S.nextEnemy)), deployX());
       if (opts.boost > 0) for (const u of S.units) if (u.form === g.id){ u.hp *= 1 + opts.boost; u.maxHp *= 1 + opts.boost; u.dmg *= 1 + opts.boost; }       // Gegenstoß: stärkere Welle
@@ -1526,7 +1530,7 @@ function create(){
   /* ---------- Forschung (REQ-5.07): Material und Zeit, eine gleichzeitig (Zweiter Forschungsplatz: zwei) ---------- */
   const researchTier = id => S.research.done[id] || 0;
   /* Forschungsplätze: Universität 1 (+ Karten), Flügel Bibliothek einer (Teil 7, REQ-K7.03); eine Forschung im Platz der Bibliothek trägt bib und dauert × FL.bibliothek.zeitFaktor */
-  const uniPlaetze = () => has('universitaet') || S.pacing !== 'karten' ? 1 + mAdd('researchSlots') : 0;
+  const uniPlaetze = () => has('universitaet') || S.pacing !== 'karten' ? 1 + mAdd('researchSlots') + (zweiteSteht('universitaet') ? 1 : 0) : 0;       // zweite Universität: ein weiterer Forschungsplatz (Teil 7)
   const researchSlots = () => uniPlaetze() + (hasFluegel('bibliothek') ? 1 : 0);
   const uniActive = () => S.research.active.filter(a => !a.bib).length;
   const researchNext = id => { const r = RES[id], n = researchTier(id); return r && n < r.tiers.length ? r.tiers[n] : null; };
@@ -1852,7 +1856,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
-    handelshaus, kompanieKosten, kompanieBlock, hireKompanie, supplyOf, queueSupply,
+    maxPerType, zweiteSteht, handelshaus, kompanieKosten, kompanieBlock, hireKompanie, supplyOf, queueSupply,
     hausStufe, fabrikGrenze, fabrikPlaetze, hasFluegel, forschungsort, zeughausDeckt, zeughausMax, zinsQuelle, budgetMax, uniPlaetze, hausNext, hausKarte, hausKosten, hausBlock, hausAusbau, fluegelFrei, fluegelBlock, chooseFluegel, hausKarteOffen,
     enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, weiterStufe, weiterNext, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,

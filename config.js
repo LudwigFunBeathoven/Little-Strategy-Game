@@ -133,6 +133,10 @@ const KF_CONFIG = {
      ohne Versorgung; Kosten kosten × wachstum^(Zahl der Käufe), Abklingzeit cdS Sekunden */
   /* Teil 7 (REQ-K7.09): historische Namen der Stufen von Mauer (Stufe des Ausbaus „Verstärkung“) und Türmen (Stufe des Turms), [ab Stufe, Name]; nur Anzeige im Modus karten, keine Regeln */
   STUFENNAMEN: { mauer: [[0, 'palisade'], [2, 'ringmauer'], [4, 'bastionsmauer']], turm: [[1, 'wachturm'], [3, 'wehrturm'], [5, 'geschuetzturm']] },
+  /* Teil 7 (REQ-K7.10): Kaserne und Universität sind im Modus karten zweimal baubar (Schmiede und Kontor einmal). Das zweite Exemplar kostet kostenFaktor × Baukosten.
+     Zweite Kaserne: laeufer zusätzliche Läufer je eigener Welle (ohne Kosten, außerhalb der Versorgung) und eigene Quartiere (Ausbau ausbau2, je Stufe KASERNE_SUPPLY_PER_LEVEL);
+     zweite Universität: ein weiterer Forschungsplatz. */
+  ZWEITES: { kaserne: { kostenFaktor: 1.5, laeufer: 1 }, universitaet: { kostenFaktor: 1.5 } },
   HANDELSHAUS: { kompanie: { laeufer: 6, werfer: 2 }, kosten: 600, wachstum: 1.15, cdS: 60 },
   HAUPTHAUS: { platz: 4, fabrikGrenze: [3, 4, 5],
     /* Teil 7 (REQ-K7.03): Stufe II und III kommen über die Karten Stadtrecht und Hofhaltung (data/kartenpfad.js, Familie weiterentwicklung, Feld haus); nach der Wahl kostet der Ausbau
@@ -351,6 +355,7 @@ const KF_CONFIG = {
     qualitaet:  { group: 'schmiede',     baseCost: 80,  cur: 'material' },   // Wachstum: SMITHY_COST_GROWTH
     /* Kaserne: das Gebäude ist Ausbaustufe 1, „Ausbau“ hebt auf Stufe 2 und 3 (REQ-17.1) */
     ausbau:     { group: 'kaserne',      baseCost: 250, growth: 2.0,  cur: 'material', max: 5 },   // Stufe 6: 3 + 6 × 2 = 15
+    ausbau2:    { group: 'kaserne2', zweite: 'kaserne', baseCost: 250, growth: 2.0, cur: 'material', max: 5 },   // Teil 7 (REQ-K7.10): Quartiere der zweiten Kaserne, nur im Modus karten mit zwei Kasernen
     zinseszins: { group: 'kontor',       baseCost: 300, growth: 2.0,  cur: 'material', max: 4 },
     mauer:      { group: 'mauer',        baseCost: 120, growth: 1.6,  cur: 'material' },
     stacheln:   { group: 'mauer',        baseCost: 150, growth: 1.8,  cur: 'material', max: 5 },

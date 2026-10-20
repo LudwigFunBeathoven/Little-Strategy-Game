@@ -999,7 +999,7 @@ KF_I18N.en = {
   'bld.fabrik.name.karten': 'Manufactory',
   'bld.fabrik.desc.karten': 'Produces material. Can be built several times up to the main hall\'s cap; each further manufactory costs more.',
   'result.lost.text.karten': '{kills} kills before the fall. Build manufactories earlier, put up a tower or start on Easy.',
-  'slot.dialogText.karten': 'Manufactories can be built several times up to the main hall\'s cap, every other building once.',
+  'slot.dialogText.karten': 'Manufactories can be built several times up to the main hall\'s cap, barracks and university twice, smithy and trading post once each.',
   'bld.fabrik.nth.karten': '{name} no. {n}',
   'fab.stat.karten': 'Manufactories {n} · {rate} material/s each · next {next}',
   'draft.bessereFabriken.name.karten': 'Better manufactories',
@@ -1027,4 +1027,10 @@ KF_I18N.en = {
   'turm.sub.2.name': 'Bottom tower: {name}',
   'tip.stufenname': 'Structure',
   'tip.stufenname.next': '{a} → {b} from level {n}',
+  /* Teil 7 (REQ-K7.10): zweites Exemplar von Kaserne und Universität */
+  'upg.ausbau2.name': 'Quarters (second barracks)',
+  'upg.ausbau2.desc': 'Builds quarters for the second barracks: supply cap +{n}. At most 15 units per wave.',
+  'bld.kaserne.desc.karten': 'Raises the supply cap, expandable with quarters. A second barracks sends one more runner per wave and has its own quarters.',
+  'bld.universitaet.desc.karten': 'One more card per offer and a research slot. A second university brings another research slot.',
+  'build.reason.standing.karten': 'Already standing as often as allowed',
 };

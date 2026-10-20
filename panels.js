@@ -364,7 +364,7 @@ function renderContext(){
 
 /* ---------- Kaufknöpfe (Upgrades, Einheiten, Reparatur): nur Inhalt und Zustand ändern sich ---------- */
 let ctxRepairOpt = null;
-const UP_TAB = { fertigung: null, mauer: 'wall', turm_0: 'wall', turm_2: 'wall', schmiede: 'smithy', kaserne: 'army', kontor: 'ctx' };     // Reiter, in dem ein Ausbau zu sehen ist
+const UP_TAB = { fertigung: null, mauer: 'wall', turm_0: 'wall', turm_2: 'wall', schmiede: 'smithy', kaserne: 'army', kaserne2: 'army', kontor: 'ctx' };     // Reiter, in dem ein Ausbau zu sehen ist
 const resEls = {}, resGroupsAll = {};
 function updateOpt(el, kind, a){
   const S = G.S;
