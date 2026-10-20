@@ -36,6 +36,7 @@ const pick = p => p.evaluate(() => { const G = __kf.G; G.S.pendingDraft.options[
 for (const lang of ['de', 'en']){
   const { ctx, p, errs } = await open('pacing=karten&zeit=pause', { lang });
   const L = lang === 'de' ? { next: /Nächste Wahl in 0:4\d · Mindestabstand/, open: 'Wahl offen', lost: 'EP verfallen', total: 'EP gesamt' } : { next: /Next choice in 0:4\d · minimum gap/, open: 'Choice open', lost: 'XP lost', total: 'Total XP' };
+  await p.evaluate(() => { __kf.C.KARTEN.uebertrag = { anteil: 0.25 }; });       // der Hebel ist im Standard aus; die Anzeige des Verfalls prüft sein Verhalten
   // 1. füllt sich: Fortschritt als „cur / need“, keine Summe in der Leiste, kein „Karte in 0:00“
   await p.evaluate(() => { __kf.G.S.stats.xpSrc = {}; __kf.G.gainXp(40, 'kill'); }); await render(p);
   let h = await hud(p);

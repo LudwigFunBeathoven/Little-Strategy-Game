@@ -1040,9 +1040,11 @@ KF_I18N.de = {
   'hud.kp.lost': ' · EP verfallen',
   'tip.hud.xpTotal': 'EP gesamt',
   'tip.hud.xpLost': 'Verfallene EP',
-  'tip.hud.xp.karten': 'EP aus Abschüssen, Basisschaden, Wellen und Budget. Jede Stufe bringt eine Wahl, frühestens {s} s nach der letzten. Wartet eine Stufe, verfallen überschüssige EP.',
+  'tip.hud.xp.karten': 'EP aus Abschüssen, Basisschaden, Wellen und Budget. Jede Stufe bringt eine Wahl, frühestens {s} s nach der letzten.',
   /* Teil 8 (REQ-K8.07): Durchbruch Stufe II */
   'draft.durchbruch.desc.t2': 'Einheiten richten an der gegnerischen Basis {e1}-fachen Schaden an; die Basis verliert zusätzlich {e2} Lebenspunkte pro Sekunde.',
   /* Teil 8 (REQ-K8.02): Tausch Material → EP bei verfallenden EP */
   'trade.reason.verfall': 'Die wartende Stufe ist voll; weitere EP verfallen.',
+  /* Teil 8: Zusatz im Tooltip, solange die Übertragsgrenze gilt */
+  'tip.hud.xpCap': 'Wartet eine Stufe, verfallen überschüssige EP.',
 };

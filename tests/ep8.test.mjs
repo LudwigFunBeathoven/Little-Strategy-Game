@@ -63,7 +63,7 @@ test('K8.01: Auswertung eines Sitzungsprotokolls (tools/ep-protokoll.mjs)', () =
 });
 
 test('K8.02 Übertrag: Eine wartende Stufe nimmt höchstens den Anteil uebertrag.anteil der Kosten der nächsten mit; der Rest verfällt', () => {
-  const { G, C } = game();
+  const { G, C } = game(); C.KARTEN.uebertrag = { anteil: 0.25 };       // der Hebel ist im Standard aus (config.js)
   const U = C.KARTEN.uebertrag.anteil; assert.ok(U > 0 && U <= 0.25, 'höchstens 25 %');
   G.gainXp(G.xpNeed(1) + 1, 'kill'); neutral(G);          // erste Wahl: kein Mindestabstand
   const lvl = G.S.level;
@@ -84,7 +84,7 @@ test('K8.02 Übertrag: Eine wartende Stufe nimmt höchstens den Anteil uebertrag
 });
 
 test('K8.02 Übertrag: Die Wartezeit ist durch den Übertrag kürzer als der Mindestabstand, wenn die Stufe nahezu gefüllt ist; EP gehen nicht doppelt verloren', () => {
-  const { G, C } = game();
+  const { G, C } = game(); C.KARTEN.uebertrag = { anteil: 0.25 };
   G.gainXp(G.xpNeed(1) + 1, 'kill'); neutral(G);
   const need = G.xpNeed(G.S.level + 1) - G.S.xpTotal;
   G.gainXp(need + 1, 'kill');                                          // Stufe erreicht, Mindestabstand läuft
@@ -94,7 +94,7 @@ test('K8.02 Übertrag: Die Wartezeit ist durch den Übertrag kürzer als der Min
 });
 
 test('K8.02 Standardmodus: keine Übertragsgrenze, keine Stufenwartezeit, S.xp bleibt gleich xpTotal', () => {
-  const { G } = game('standard');
+  const { G, C } = game('standard'); C.KARTEN.uebertrag = { anteil: 0.25 };
   G.gainXp(1e4, 'kill'); assert.equal(G.S.xp, G.S.xpTotal); assert.equal(G.S.stats.xpVerfall, undefined);
 });
 
@@ -109,7 +109,7 @@ test('K8.02 Abnehmender Ertrag des Forschungsbudgets: Kurs × 1 / (1 + Summe der
 });
 
 test('K8.02 Verfall: Solange EP ohnehin verfallen, bleibt das Material beim Spieler (kein Forschungsbudget, kein Tausch Material → EP)', () => {
-  const { G, C } = game(); C.KARTEN.budget.abnahme = 0;
+  const { G, C } = game(); C.KARTEN.uebertrag = { anteil: 0.25 }; C.KARTEN.budget.abnahme = 0;
   G.S.material = 1e5; for (let i = 0; i < 4; i++) G.build('fabrik'); G.build('universitaet'); G.setBudget(2);
   const secs = s => { const m0 = G.S.materialTotal, b0 = (G.S.stats.xpSrc || {}).budget || 0; for (let i = 0; i < 20 * s; i++){ G.S.sections.forEach(x => { x.hp = 1e9; }); G.S.nextWave = 1e9; G.S.nextOwnWave = 1e9; G.tick(0.05); } return { mat: G.S.materialTotal - m0, budget: ((G.S.stats.xpSrc || {}).budget || 0) - b0 }; };
   let s = secs(1); assert.ok(s.budget > 0, 'ohne wartende Stufe fließt das Budget');
@@ -125,6 +125,7 @@ test('K8.02 Verfall: Solange EP ohnehin verfallen, bleibt das Material beim Spie
 
 test('K8.02 Verfall: xpVerfaellt gilt nur im Modus karten und nur bei wartender Stufe', () => {
   const { G } = game('standard'); G.gainXp(1e4); assert.equal(G.xpVerfaellt(), false);
-  const { G: K } = game(); assert.equal(K.xpVerfaellt(), false); K.gainXp(K.xpNeed(1) - 1, 'kill'); assert.equal(K.xpVerfaellt(), false, 'Stufe noch nicht erreicht');
+  const { G: K, C } = game(); C.KARTEN.uebertrag = { anteil: 0.25 };
+  assert.equal(game().G.xpVerfaellt(), false); assert.equal(K.xpVerfaellt(), false); K.gainXp(K.xpNeed(1) - 1, 'kill'); assert.equal(K.xpVerfaellt(), false, 'Stufe noch nicht erreicht');
   K.gainXp(1 + 1e4, 'kill'); assert.equal(K.xpVerfaellt(), true, 'Stufe erreicht, Übertrag voll'); neutral(K); assert.equal(K.xpVerfaellt(), false, 'nach der Wahl füllt sich der Balken wieder');
 });

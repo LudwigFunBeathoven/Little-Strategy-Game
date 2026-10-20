@@ -1040,9 +1040,11 @@ KF_I18N.en = {
   'hud.kp.lost': ' · XP lost',
   'tip.hud.xpTotal': 'Total XP',
   'tip.hud.xpLost': 'Lost XP',
-  'tip.hud.xp.karten': 'XP from takedowns, base damage, waves and budget. Each level brings a choice, at least {s} s after the last. While a level waits, surplus XP is lost.',
+  'tip.hud.xp.karten': 'XP from takedowns, base damage, waves and budget. Each level brings a choice, at least {s} s after the last.',
   /* Teil 8 (REQ-K8.07): Durchbruch Stufe II */
   'draft.durchbruch.desc.t2': 'Units deal {e1}x damage to the enemy base; the base also loses {e2} health per second.',
   /* Teil 8 (REQ-K8.02): Tausch Material → EP bei verfallenden EP */
   'trade.reason.verfall': 'The waiting level is full; further XP would be lost.',
+  /* Teil 8: Zusatz im Tooltip, solange die Übertragsgrenze gilt */
+  'tip.hud.xpCap': 'While a level waits, surplus XP is lost.',
 };

@@ -63,7 +63,7 @@ function hudTip(item){
       return { title: t('hud.material'), body: t('tip.hud.material'), rows }; }
     case 'xp': { const x = G.xpProgress(), rows = [[t('level.progress', { n: x.level + 1 }), `${fmt(Math.max(0, x.cur))} / ${fmt(x.need)}`], [t('tip.hud.xpRate'), fmt1(xpRate())]];
       if (S.pacing === 'karten') rows.push([t('tip.hud.xpTotal'), fmt(S.xp)], [t('tip.hud.xpLost'), fmt(S.stats.xpVerfall || 0)]);       // Teil 8: Summe und verfallene EP nur im Tooltip
-      return { title: t('hud.xp'), body: t('tip.hud.xp', { s: C.KARTEN.minAbstand }), rows }; }
+      return { title: t('hud.xp'), body: t('tip.hud.xp', { s: C.KARTEN.minAbstand }) + (S.pacing === 'karten' && C.KARTEN.uebertrag ? ' ' + t('tip.hud.xpCap') : ''), rows }; }
     case 'waves': return { title: t('hud.waves'), body: t('tip.hud.waves', { s: C.WAVE_INTERVAL_S }) };
     case 'walls': return { title: t('hud.walls'), body: t('tip.hud.walls') };
     case 'army': return { title: t('hud.army'), body: t('tip.hud.army') };

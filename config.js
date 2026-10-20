@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.2-kartenpfad-7',
-  SAVE_KEY: 'klammerfront.save.v12',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
+  VERSION: '0.9.2-kartenpfad-8',
+  SAVE_KEY: 'klammerfront.save.v13',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -22,7 +22,7 @@ const KF_CONFIG = {
        nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
        Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
     schwellen: { start: 70, wachstum: 1.05 },
-    uebertrag: { anteil: 0.25 },                    // Teil 8 (REQ-K8.02): wartet eine Stufe (Mindestabstand), geht in die nächste höchstens dieser Anteil ihrer Kosten über, weitere EP verfallen; null = unbegrenzt
+    uebertrag: null,                                // Teil 8 (REQ-K8.02, Hebel 3): { anteil: 0.25 } – wartet eine Stufe (Mindestabstand), geht in die nächste höchstens dieser Anteil ihrer Kosten über, weitere EP verfallen; null = unbegrenzt (Standard: Der Hebel schwächt die Bots stark, siehe Bericht kartenpfad-8)
     schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
     minAbstand: 45,
     /* Reichweitenleiter der Fernkämpfer (Teil 8, REQ-K8.05): Grundreichweiten im Modus karten, bezogen auf die des Werfers R_W (UNITS.werfer.range = 105): Bogenschütze 1,3 · R_W, Armbrustschütze 1,5 · R_W,
