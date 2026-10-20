@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Klammerfront – Projektkontext für Claude
 
 ## Was das ist
@@ -6,7 +10,7 @@ Der Spieler klickt, baut Fabriken im 3×3-Raster und schickt Einheiten in Wellen
 Gebäude und Upgrades. Abschüsse bringen Erfahrungspunkte (EP), die nur als Erfahrung zählen. Jeder Stufenaufstieg bietet Spezialkarten
 (2, mit Universität 3), die bis zu drei Stufen haben. Die Partie ist verloren, wenn das Tor fällt.
 
-Stand: v0.9.0 (Kartenbühne und Entdecken: `docs/anforderungen-kartenpfad-2.md`, `docs/bericht-ui-0.9.md`, Testleitfaden `docs/testleitfaden-ui-0.9.md`). Vorher v0.8.1 (MVP-Veröffentlichung: `docs/anforderungen-mvp-release.md`, `docs/bericht-mvp-release.md`; Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
+Stand: v0.9.2 (Patch-Stand, Spielstand-Version 7; Änderungen je Version in `CHANGELOG.md`; Versionsnummer in `package.json` und `config.js` `VERSION`). Aktueller Funktionsstand: v0.9.0 (Kartenbühne und Entdecken: `docs/anforderungen-kartenpfad-2.md`, `docs/bericht-ui-0.9.md`, Testleitfaden `docs/testleitfaden-ui-0.9.md`). Vorher v0.8.1 (MVP-Veröffentlichung: `docs/anforderungen-mvp-release.md`, `docs/bericht-mvp-release.md`; Tutorial „Erste Schritte“: `docs/anforderungen-tutorial.md`, Stand je Inkrement in `docs/STAND.md`, Bericht in `docs/bericht-tutorial.md`).
 Vorher v0.7 (Iteration 6: `docs/anforderungen-iteration-6.md`, `docs/bericht-iteration-6.md`). Frühere Iterationen: `docs/archiv/`.
 
 ## Der Nutzer
@@ -14,7 +18,25 @@ Nick ist Product Owner, kein Entwickler. Erkläre Änderungen in Klartext und ü
 Kommunikation auf Deutsch, knapp, Ergebnis zuerst. Schwache Ideen offen benennen.
 Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nichts stillschweigend anders lösen.
 
+## Befehle
+Kein Build, kein Linter, keine Abhängigkeiten. Spielen: `index.html` im Browser öffnen (kein Server nötig); mit `?dev=1` (Prüfungen, Testschnittstelle `window.__kf`) oder `?debug=1` (Sitzungsprotokoll) zusätzlich.
+```
+npm test                                              # alle Node-Tests (tests/*.test.mjs)
+node --test tests/pendel.test.mjs                     # eine Testdatei
+node --test --test-name-pattern="Muster" tests/waves.test.mjs   # ein Test nach Name
+npm run test:browser                                  # tests/browser-check.mjs + tests/browser-k2.mjs
+npm run simulate -- --suite kurz                      # Simulator (Suiten: Abschnitt „Balancing“)
+node tools/bench-tick.mjs                             # Tick-Zeit mit 2 × 60 Einheiten
+```
+Stolperstein: Playwright gehört nicht zum Projekt (`npx playwright install chromium` außerhalb des Repos). Fehlt es, melden beide Browser-Skripte „übersprungen“ und enden mit Exit-Code 0:
+ein grünes `npm run test:browser` beweist dann nichts. Die Browser-Skripte laden die Seite über einen eigenen lokalen HTTP-Server (nicht `file://`, dort geht `localStorage` gelegentlich verloren).
+URL-Schalter: `?lang=de|en`, `?difficulty=easy|normal|hard`, `?tutorial=1|0`, `?buehne=1|0`, `?entdecken=1|0`, `?vorschau=naechste`, `?zeit=pause|langsam|lauf`, `?dev=1`, `?debug=1`. Der Pacing-Modus (`PACING_MODUS`) ist in der öffentlichen Fassung per Adresse nicht wählbar (`?pacing=` wirkt nicht; Test in `tests/browser-check.mjs`).
+
 ## Aufbau (kein Build-Schritt, keine Abhängigkeiten)
+Die Skripte sind klassische `<script>`-Dateien ohne Module und teilen globale Namen; die Ladereihenfolge in `index.html` zählt (config → i18n → data → hints → tutorial → core → ui → render → discover → hud → panels → stage → tutorial-ui → session).
+Tests und Simulator laden `core.js` ohne Browser über `tools/load-core.mjs` in einem `vm`-Kontext, der nur `config.js`, `data/draft-options.js`, `data/research.js`, `data/neighbors.js`, `core.js` und `tools/browser-bot.js` kennt.
+Braucht `core.js` künftig eine weitere Datei, muss sie dort in die Liste `files`; Zugriffe auf `document`, `window` oder Speicher lassen es im Test abstürzen.
+
 | Datei | Inhalt |
 |---|---|
 | `index.html` | Markup und CSS. Enthält außer dem Titel keinen sichtbaren Text. |
@@ -42,6 +64,9 @@ Weicht eine Umsetzung von einer Anforderung ab: begründen und nachfragen, nicht
 | `tools/browser-bot.js` | Bot „Einheiten zuerst“: Durchlauftest, Protokollprüfung und zweite Simulationsstrategie (REQ-6.09). |
 | `tools/sprachliste.mjs` | Wortliste des Sprach-Audits (`tests/sprache.test.mjs`, Schlüssel mit Präfix `tut.`). |
 | `tools/vergleichsbasis.mjs` | Vergleichsbasis der Simulation: Siegquote, Dauer, Kartenwahlen je Feld (50 Partien, beide Strategien). |
+| `tools/load-core.mjs` | Lädt Konfiguration, Daten und `core.js` im `vm`-Kontext (Tests, Simulator); wertet `KF_OVERRIDE` aus. |
+| `tools/baseline-wahlen.mjs` | Basislinie der Kartenwahlen je Profil und Strategie (Zahl, Zeitpunkte). |
+| `tools/sichtbar-mass.mjs` | Kennzahl „sichtbare Bedienelemente“ in Minute 1, 5, 10 (REQ-K2.08); braucht Playwright. |
 | `tools/bench-tick.mjs` | Tick-Zeit mit 2 × 60 Einheiten. |
 | `tests/` | `npm test` (Node-eigener Test-Runner), optional `npm run test:browser` (braucht Playwright). |
 | `docs/STAND.md` | Stand je Inkrement, Prüfergebnisse, Abweichungen und Auslegungen. |
@@ -137,6 +162,7 @@ Ziel-Lane bis zur Ankunft gebunden, danach `ARMY.minLaneStayS`, Querplatz gleite
 Ein Inkrement ist fertig, wenn: das Spiel über `index.html` ohne Konsolenfehler startet; `npm test` und `npm run test:browser`
 grün sind; die Kurzsimulation keine offene Partie und eine Siegquote von 20–100 % zeigt; neue Texte in `de` und `en` liegen und
 neue Knöpfe Tooltip und Erklärzeile haben; der Commit `I<Iteration>.<Inkrement>: <Inhalt>` heißt und `docs/STAND.md` aktualisiert ist.
+(Die Historie seit v0.8 weicht ab: `T.n`, `R.n`, `KP.n`, ab v0.9 `Version <x.y.z> (Entwurf): <Inhalt>`; die Neuerungen je Version stehen zusätzlich in `CHANGELOG.md`.)
 
 ## Abschluss einer Iteration
 Bericht `docs/bericht-iteration-<n>.md` mit: Ergebnis in drei Sätzen, Entscheidungen des PO, Abweichungen und Auslegungen
