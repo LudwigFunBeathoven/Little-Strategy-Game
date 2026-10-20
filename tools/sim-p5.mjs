@@ -13,7 +13,7 @@ import { availableParallelism } from 'node:os';
 import { writeFileSync } from 'node:fs';
 
 const EP_AT = [240, 480, 720];                                              // Grenzen der Abschnitte 0–4, 4–8, 8–12 min (Sekunden Spielzeit)
-const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpSrcAt: r.xpSrcAt, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
+const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: r.t, xpAt: r.xpAt, xpSrcAt: r.xpSrcAt, xpLog: r.xpLog, xpTotal: r.xpTotal, xpKill: r.xpKill, xpTower: r.xpTower,
   xpPassive: r.xpPassive, xpBounty: r.xpBounty, xpSrc: r.xpSrc, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
   wallLost: r.wallLost, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers,
   doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills,
@@ -35,7 +35,7 @@ if (!isMainThread){
   const jobs = [];
   if (SUITE === 'felder')
     for (const diff of DIFFS) for (const profile of PROFILES) for (let r = 0; r < RUNS; r++)
-      jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, sampleXp: EP_AT, seed: seedOf(2, r) });
+      jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, sampleXp: EP_AT, xpLog: arg('xplog', 'nein') === 'ja' || undefined, seed: seedOf(2, r) });
 
   if (SUITE === 'budget')
     for (const arm of [0, 1, 2]) for (const profile of PROFILES) for (const diff of DIFFS) for (let r = 0; r < RUNS; r++)
@@ -215,5 +215,5 @@ if (!isMainThread){
   }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
     arm: r.arm, variant: r.variant, druckName: r.druckName, doktrinen: r.doktrinen, doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, upkeep: r.upkeep, towerKills: r.towerKills, variants: r.variants, xpSrc: r.xpSrc, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
-    grid: r.grid, wallLost: r.wallLost, synergie: r.synergie, katCounts: r.katCounts, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, weiter: r.weiter, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, gekauft: r.gekauft, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t * 10) / 10, lt: w.lt, w: w.w, ue: w.ue, rest: w.rest })), xpSrcAt: r.xpSrcAt })) }));
+    grid: r.grid, wallLost: r.wallLost, synergie: r.synergie, katCounts: r.katCounts, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, weiter: r.weiter, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, gekauft: r.gekauft, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t * 10) / 10, lt: w.lt, w: w.w, ue: w.ue, rest: w.rest })), xpSrcAt: r.xpSrcAt, xpLog: r.xpLog })) }));
 }

@@ -278,18 +278,26 @@ function scanBonus(G, stats, prof, horizon){
 
 /* Eine vollständige Partie. Liefert Kennzahlen für den Bericht. */
 /* Paarvergleich der Nachbarschaftsregeln (REQ-6.07 a): nbOff = Gebäudetyp, dessen Regel in dieser Partie ausgeschaltet ist */
+/* EP-Ereignisse je Quelle in Zeitfächern von 2 s (Werkzeug für Näherungsrechnungen, Teil 8) */
+function xpBins(log){
+  if (!log) return null;
+  const out = {};
+  for (const [t, src, b] of log){ const a = out[src] = out[src] || []; const i = Math.floor(t / 2); while (a.length <= i) a.push(0); a[i] = Math.round((a[i] + b) * 100) / 100; }
+  return out;
+}
 export function playGame(job){
   const rule = job.nbOff ? KF_NEIGHBORS.find(r => r.building === job.nbOff) : null, per = rule ? rule.per : 0;
   if (rule) rule.per = 0;
   try { return playGameInner(job); } finally { if (rule) rule.per = per; }
 }
-function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, startCards }){
+function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, startCards, xpLog }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (budget !== undefined) prof.budget = budget;                          // Forschungsbudget (Teil 5): Stufe 0, 1, 2 (0, 25, 50 %)
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
   if (kat){ prof.kat = kat; prof.pfad = prof.pfad && pfad ? prof.pfad : KF_BROWSER_BOT.KAT_PFAD[kat]; }       // Kategorie-Bot (Teil 6, REQ-K6.08; vorher Linien-Bot): bevorzugt Karten, Doktrinen und Varianten seiner Kategorie
   const G = newGame(diff, seed, pacing, druck);
+  if (xpLog) G.S.xpLog = [];                                                 // Werkzeug (Teil 8): Einzelereignisse der EP aufzeichnen
   if (startCards){ for (const id of startCards) G.S.draft.stacks[id] = 1; G.S.draft.ver++; }       // Werkzeug für Versuche: Karten von Beginn an
   if (noRush) G.rushWave = () => false;                                   // Paarvergleich: ohne „Welle vorziehen“ (REQ-6.07 c)
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {}, scan: [] };
@@ -374,6 +382,6 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
     nbEnd: Math.round(1000 * S.slots.reduce((a, x, k) => a + (x && x.type === 'fabrik' && !x.upg ? G.neighborValue(k, 'fabrik') : 0), 0)) / 1000, slotsEnd: S.slots.map(x => x ? x.type : null),       // Teil 7 (REQ-K7.01): Summe der Nachbarschaftswerte der Fabriken am Ende, Belegung am Ende
     weiter: S.stats.weiter || [], katCounts: G.katCounts(), synergie: Object.fromEntries(Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0 && G.OPT[k] && G.OPT[k].synergie).map(k => [k, (({ n, value }) => ({ n, value }))(G.synergieNow(k))])),
     doktrinP: S.stats.doktrinP || [], trade: { material: Math.round(S.stats.tradeMaterial || 0), xp: Math.round(S.stats.tradeXp || 0) }, milizUnits: S.stats.milizUnits || 0, zermuerbt: S.stats.zermuerbt || 0,       // Protokoll Teil 6 (REQ-K6.08)
-    doktrinOffers: S.stats.doktrinOffers || 0, doktrinOfferWahlen: S.stats.doktrinOfferWahlen || [], doktrinen: S.stats.doktrinen || [], upkeep: Math.round(S.stats.upkeep || 0), towerKills: S.stats.towerKills || 0, towerMaterial: Math.round(S.stats.towerMaterial || 0), counterWaves: S.stats.counterWaves || 0, wavesRepelled: S.stats.wavesRepelled || 0, xpAt, xpSrcAt, wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
+    doktrinOffers: S.stats.doktrinOffers || 0, doktrinOfferWahlen: S.stats.doktrinOfferWahlen || [], doktrinen: S.stats.doktrinen || [], upkeep: Math.round(S.stats.upkeep || 0), towerKills: S.stats.towerKills || 0, towerMaterial: Math.round(S.stats.towerMaterial || 0), counterWaves: S.stats.counterWaves || 0, wavesRepelled: S.stats.wavesRepelled || 0, xpAt, xpSrcAt, xpLog: xpBins(S.xpLog), wahlen: S.stats.wahlen || null, scan: stats.scan, picks, builtAt, freeChoices: S.stats.freeChoices || 0, researchTimes: S.stats.researchDone || [], rushSpent: S.stats.rushSpent || 0, interest: S.stats.interest || 0, waveRushes: S.stats.waveRushes || 0,
   };
 }

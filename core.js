@@ -1339,6 +1339,7 @@ function create(){
       if (src !== 'kill' && src !== 'tower' && src !== 'bounty') b *= mMul('xpGain');
       const m = S.stats.xpSrc = S.stats.xpSrc || {}; m[src || 'other'] = (m[src || 'other'] || 0) + b;
     }
+    if (S.xpLog) S.xpLog.push([+S.t.toFixed(2), src || 'other', +b.toFixed(3)]);       // Werkzeug (Simulation, Teil 8): Einzelereignisse der EP für Näherungsrechnungen
     S.xp += b; S.xpTotal += b;
     while (S.xpTotal >= xpNeed(S.level + 1)){
       S.level++; S.pendingLevels++;
