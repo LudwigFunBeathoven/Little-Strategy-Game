@@ -93,8 +93,8 @@ const pct = x => Math.round(x * 100);
 const DESC_PARAMS = {
   presse:     () => ({ n: C.FX_PRESSE }),
   qualitaet:  () => ({ percent: pct(C.FX_QUALITAET) }),
-  ausbau:     () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL }),
-  ausbau2:    () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL }),
+  ausbau:     () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL, cap: C.SUPPLY_CAP_MAX }),
+  ausbau2:    () => ({ n: C.KASERNE_SUPPLY_PER_LEVEL, cap: C.SUPPLY_CAP_MAX }),
   zinseszins:    () => ({ n: C.KONTOR.capPerLevel }),
   mauer:      () => ({ n: C.FX_MAUER_HP }),
   stacheln:   () => ({ n: C.FX_STACHELN_DMG }),
@@ -342,7 +342,7 @@ function tipContent(id){
       return { title: id ? t('draft.ban', { name: cardName(G.OPT[id], G.cardTaken(id) + 1) }) : t('draft.reroll'), body: t('tip.draft.ban', { n: G.bansLeft() }) }; }
     case 'haus': {                                                                 // Haupthaus: Ausbau zur nächsten Stufe (Teil 7, REQ-K7.03)
       const n = G.hausNext();
-      return { title: n ? t('haus.ausbau', { name: t(`haus.stufe.${n}.name`) }) : t('bld.haupthaus.name'), body: n ? t('tip.haus.ausbau', { name: t(`haus.stufe.${n}.name`), effect: t(`haus.stufe.${n}.eff`), s: C.HAUPTHAUS.dauerS }) : t('haus.stufe.3.desc'),
+      return { title: n ? t('haus.ausbau', { name: t(`haus.stufe.${n}.name`) }) : t('bld.haupthaus.name'), body: n ? t('tip.haus.ausbau', { name: t(`haus.stufe.${n}.name`), effect: t(`haus.stufe.${n}.eff`, { n: C.HAUPTHAUS.fabrikGrenze[n - 1] }), s: C.HAUPTHAUS.dauerS }) : t('haus.stufe.3.desc'),
                rows: n ? [[t('tip.cost'), costText('material', G.hausKosten())], [t('tip.variant.dur'), `${C.HAUPTHAUS.dauerS} s`]] : [], reason: hausReason() }; }
     case 'fluegel': return { title: t(`haus.fluegel.${a}.name`), body: t(`haus.fluegel.${a}.desc`, fluegelParams()) + ' ' + t('tip.fluegel.body'), reason: G.S.haus && G.S.haus.fluegel.includes(a) ? null : fluegelReason(a) };
     case 'grid': { const sl = S.slots[a];

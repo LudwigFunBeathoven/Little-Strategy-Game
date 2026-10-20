@@ -464,6 +464,8 @@ function optParams(o, tier){
   if (o.synergie){ p.syn = pct(Math.abs(o.synergie.perCard || 0)); p.max = C.KATEGORIEN.deckel; if (o.synergie.fix) p.e1 = fmtNum(o.synergie.fix.mul); }       // Synergiekarten (Teil 6, REQ-K6.03)
   if (o.pfad && o.pfad.haus) p.gr = C.HAUPTHAUS.fabrikGrenze[o.pfad.haus - 1];       // Stadtrecht und Hofhaltung: Obergrenze für Manufakturen der neuen Stufe (Teil 9, R6)
   if (o.doktrin) Object.assign(p, doktrinParams(o.doktrin));
+  if (o.oeffnetForschung && G.RES[o.oeffnetForschung[0]]){ const rp = researchParams(G.RES[o.oeffnetForschung[0]], 1); for (const k in rp) if (p[k] === undefined) p[k] = rp[k]; }       // Technologiekarten nennen den Wert ihrer Forschung (Teil 9, R6)
+  p.cap = C.SUPPLY_CAP_MAX;
   for (const e of tr.effect || []){                                                                      // Regeländerungen der Stufen 2 und 3 (Teil 5, REQ-K5.06): neue Schwelle c2
     if (e.stat === 'drumsMin') p.c2 = o.condition.value + e.add;
     if (e.stat === 'shieldMin') p.c2 = C.FORMATION_ROW_MAX + e.add;
@@ -637,6 +639,7 @@ function logParams(entry){
   if (p.seconds !== undefined) p.duration = dur(p.seconds);
   if (p.amount !== undefined) p.amount = fmt(p.amount);
   if (p.tier !== undefined) p.tier = ROMAN[p.tier];
+  if (entry.key === 'log.siegeWarning'){ p.n = C.SIEGE_STRENGTH; p.s = C.SIEGE_WARNING_S; }       // Zahlen aus config.js (Teil 9, R6)
   return p;
 }
 function renderLog(){
@@ -789,7 +792,7 @@ function renderHaus(){
     const bau = h.bau;
     setText(hausAusbauEl.label, t('haus.ausbau', { name: t(`haus.stufe.${n}.name`) }));
     setText(hausAusbauEl.expl, bau ? t('haus.ausbau.running', { name: t(`haus.stufe.${bau.to}.name`), s: Math.max(0, Math.ceil(C.HAUPTHAUS.dauerS - bau.t)) })
-      : t('ex.haus.ausbau', { effect: t(`haus.stufe.${n}.eff`), cost: costText('material', G.hausKosten()), s: C.HAUPTHAUS.dauerS }));
+      : t('ex.haus.ausbau', { effect: t(`haus.stufe.${n}.eff`, { n: C.HAUPTHAUS.fabrikGrenze[n - 1] }), cost: costText('material', G.hausKosten()), s: C.HAUPTHAUS.dauerS }));
     setDis(hausAusbauEl.btn, !!G.hausBlock());
   }
   // Flügel: ab Stufe II; ein freier Platz zeigt die Wahl, danach die gewählten Flügel

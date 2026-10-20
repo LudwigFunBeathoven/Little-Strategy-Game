@@ -47,3 +47,33 @@ test('Ersatztexte des Tutorials stehen wörtlich in den Sprachdateien (KP.08)', 
   assert.equal(I.de['tut.bye2'], 'Was neu ist, ist markiert. Bewahre das Tor, Statthalter.');
   assert.equal(I.en['tut.xpBounty'], '+{n} experience');
 });
+
+/* Teil 9, REQ-K9.08: Textregeln R3 bis R6 für die sichtbaren Texte des Modus karten */
+import { inventar, sichtbar } from '../tools/textbudget.mjs';
+
+test('R3: kein sichtbarer Text überschreitet sein Zeichenbudget (de; en plus 15 %)', () => {
+  const over = inventar().rows.filter(r => r.deOver || r.enOver).map(r => `${r.key}: de ${r.de}/${r.deLimit}, en ${r.en}/${r.enLimit}`);
+  assert.deepEqual(over, []);
+});
+
+test('R4: kein Designertext (Begründungen der Balance, Absichten, Platzhalter)', () => {
+  const sicht = sichtbar(), bad = [];
+  const re = { de: /bewusst|Absicht|soll verhindern|damit .{0,20}nicht zu|Hier kommt später|folgt noch|TODO/i, en: /on purpose|intended to|to prevent|something more will appear|coming soon|TODO/i };
+  for (const lang of ['de', 'en']) for (const k of sicht.keys) if (typeof sicht.I[lang][k] === 'string' && re[lang].test(sicht.I[lang][k])) bad.push(`${lang} ${k}`);
+  assert.deepEqual(bad, []);
+});
+
+test('R5: Begriffe – „Leben“, „Handelskontor“, „hit points“, „forge“, „kill“ kommen nicht vor', () => {
+  const sicht = sichtbar(), bad = [];
+  const re = { de: /\bLeben\b|Handelskontor/, en: /hit points|\bforge\b|\bkills?\b/i };
+  for (const lang of ['de', 'en']) for (const k of sicht.keys) if (typeof sicht.I[lang][k] === 'string' && re[lang].test(sicht.I[lang][k].replace(/\{kills\}/g, ''))) bad.push(`${lang} ${k}`);
+  assert.deepEqual(bad, []);
+});
+
+test('R6: feste Zahlen im Text nur in der Liste der begründeten Ausnahmen', () => {
+  const sicht = sichtbar();
+  const ausnahmen = new Set(['tip.click.body', 'kp.stage.hint', 'kp.eff.glaskanonen', 'kp.card.glaskanonen.desc', 'kp.drawback.glaskanonen', 'kp.res.eisenwaffen.desc',
+    'kp.eff.bollwerk', 'kp.eff.sammelruf', 'kp.eff.elite', 'kp.eff.raubbau', 'tip.weiter.one']);
+  const bad = sicht.keys.filter(k => typeof sicht.I.de[k] === 'string' && /\d/.test(sicht.I.de[k].replace(/\{[^}]*\}/g, '')) && !ausnahmen.has(k));
+  assert.deepEqual(bad, []);
+});
