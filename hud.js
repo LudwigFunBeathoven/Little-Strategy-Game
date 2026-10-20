@@ -112,7 +112,7 @@ function renderHud(){
   }
   setText(E.armyState, paused ? t('army.paused') : t('army.' + G.armyState('p')));
   setText(E.clock, clock(S.t));
-  setText(E.eraLabel, S.status === 'setup' ? '' : t('hdr.level', { n: S.level, phase: t('phase.' + G.phase()) }));
+  setText(E.eraLabel, S.status === 'setup' ? '' : t('hdr.level', { n: S.level }));
   setText(E.diffLabel, S.status === 'setup' ? '' : t(`diff.${S.diff}.name`));
   // Offene Kartenwahl: auffälliger Hinweis, öffnet den Reiter Karten; kein automatischer Wechsel (REQ-5.03)
   setHidden(E.draftBtn, !(running && S.pendingDraft) || Stage.on());

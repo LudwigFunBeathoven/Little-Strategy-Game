@@ -238,7 +238,6 @@ const KF_CONFIG = {
 
   /* Entdecken (REQ-K2.04 – K2.06) */
   ENTDECKEN: {
-    vorschau: 'keine',          // 'keine' oder 'naechste': höchstens ein Platzhalter „?“ je Bereich (REQ-K2.04, Soll); URL ?vorschau=naechste
     einblendenMs: 300,          // neues Element blendet so lange ein (höchstens 300)
     hinweisMs: 8000,            // Erstkontakt-Hinweis zu neuem Inhalt schließt nach so vielen ms (REQ-K2.06)
   },

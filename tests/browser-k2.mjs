@@ -261,9 +261,9 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   check(c.errs.length === 0, `K2.07: standard mit Schaltern: keine Konsolenfehler${show(c.errs)}`);
   await c.ctx.close();
   // Vorschau und Lauf
-  const d = await open('pacing=karten&vorschau=naechste&zeit=lauf');
-  const sd = await d.p.evaluate(() => ({ time: __kf.C.KARTENBUEHNE.zeit, prev: __kf.C.ENTDECKEN.vorschau }));
-  check(sd.time === 'lauf' && sd.prev === 'naechste', `K2.07: ?vorschau=naechste und ?zeit=lauf setzen die Konfiguration ${JSON.stringify(sd)}`);
+  const d = await open('pacing=karten&zeit=lauf');
+  const sd = await d.p.evaluate(() => ({ time: __kf.C.KARTENBUEHNE.zeit }));
+  check(sd.time === 'lauf', `K2.07: ?zeit=lauf setzt die Konfiguration ${JSON.stringify(sd)}`);
   await levelUp(d.p, 1); await d.p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
   const t1 = await d.p.evaluate(() => __kf.G.S.t); await settle(d.p, 500);
   check(await d.p.evaluate(t => __kf.G.S.t > t, t1), 'K2.02/K2.07: bei zeit = lauf läuft die Spielzeit bei offener Wahl weiter');

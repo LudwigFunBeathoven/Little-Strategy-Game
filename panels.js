@@ -127,7 +127,6 @@ function buildPanels(){
     bar.appendChild(b);
     tabEls[id] = { btn: b, label: b.children[0], expl: b.children[1], mark: b.children[2], fresh: b.children[3], panel: $('panel-' + id) };
   }
-  const pv = document.createElement('span'); pv.className = 'prev-tab'; pv.id = 'tabPrev'; pv.dataset.tooltip = 'prev'; pv.hidden = true; pv.setAttribute('aria-hidden', 'true'); bar.appendChild(pv);
   bar.addEventListener('keydown', e => {
     const vis = TABS.filter(tabVisible), i = vis.indexOf(activeTab);
     const next = e.key === 'ArrowRight' ? vis[(i + 1) % vis.length] : e.key === 'ArrowLeft' ? vis[(i - 1 + vis.length) % vis.length]
@@ -823,11 +822,6 @@ function renderPanels(){
   const S = G.S, running = S.status === 'running';
   autoDraft();
   document.body.classList.toggle('disc', Disc.on());
-  { // Vorschau (REQ-K2.04, Soll): höchstens ein Platzhalter „?“ je Bereich – Reiterleiste und Einheitenliste
-    const pv = Disc.on() && C.ENTDECKEN.vorschau === 'naechste';
-    const tp = $('tabPrev'); setHidden(tp, !(pv && TABS.some(id => !tabVisible(id)))); setText(tp, t('kp.vorschau'));
-    const up = $('unitPrev'); setHidden(up, !(pv && Object.keys(C.UNITS).some(u => !C.UNITS[u].replacement && !G.unitUnlocked(u)))); setText(up, t('kp.vorschau'));
-  }
   if (!tabVisible(activeTab)) activeTab = 'build';                      // Reiter verschwunden (Schmiede abgerissen)
   for (const id of TABS){
     const el = tabEls[id], on = id === activeTab;

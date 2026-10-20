@@ -9,18 +9,16 @@ const G = KlammerCore.create();
 const $ = id => document.getElementById(id);
 /* URL-Parameter für Tests (REQ-T2.01): ?lang=de|en und ?difficulty=easy|normal|hard überspringen den Startbildschirm; ?tutorial=1|0 schaltet das Tutorial */
 const URL_PARAMS = new URLSearchParams(location.search);
-/* Schalter für Spieltests per Adresse (REQ-K2.07): ?zeit=pause|langsam|lauf (Spielzeit bei offener Wahl), ?vorschau=keine|naechste */
-{ const z = URL_PARAMS.get('zeit'), v = URL_PARAMS.get('vorschau');
-  if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z;
-  if (['keine', 'naechste'].includes(v)) C.ENTDECKEN.vorschau = v; }
+/* Schalter für Spieltests per Adresse (REQ-K2.07): ?zeit=pause|langsam|lauf (Spielzeit bei offener Wahl)*/
+{ const z = URL_PARAMS.get('zeit');
+  if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z; }
 const DIFF_ALIAS = { easy: 'leicht', normal: 'normal', hard: 'schwer', leicht: 'leicht', schwer: 'schwer' };
 const LANG_PARAM = KF_CONFIG.LANGUAGES.includes(URL_PARAMS.get('lang')) ? URL_PARAMS.get('lang') : null;
 const DIFF_PARAM = DIFF_ALIAS[URL_PARAMS.get('difficulty')] || null;
 /* ?pacing=standard|karten wählt den Pacing-Modus (REQ-KP.01); sonst gilt PACING_MODUS aus config.js */
-/* Schalter für Spieltests per Adresse (REQ-K2.07): ?zeit=pause|langsam|lauf (Spielzeit bei offener Wahl), ?vorschau=keine|naechste */
-{ const z = URL_PARAMS.get('zeit'), v = URL_PARAMS.get('vorschau');
-  if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z;
-  if (['keine', 'naechste'].includes(v)) C.ENTDECKEN.vorschau = v; }
+/* Schalter für Spieltests per Adresse (REQ-K2.07): ?zeit=pause|langsam|lauf (Spielzeit bei offener Wahl)*/
+{ const z = URL_PARAMS.get('zeit');
+  if (['pause', 'langsam', 'lauf'].includes(z)) C.KARTENBUEHNE.zeit = z; }
 const PACING_PARAM = ['standard', 'karten'].includes(URL_PARAMS.get('pacing')) ? URL_PARAMS.get('pacing') : null;
 /* ?druck=hoch (Teil 4, REQ-S.08): Testschalter, verstärkt die regulären Gegnerwellen ab Minute 4; sonst aus */
 const DRUCK_PARAM = URL_PARAMS.get('druck') === 'hoch' ? 'hoch' : null;
@@ -252,7 +250,7 @@ function tipContent(id){
                rows: [[t('tip.m.baseHp'), `${fmt(sec.hp)} → ${fmt(after)}`], [t('tip.cost'), costText('material', cost)]], reason: repairReason(i) };
     }
     case 'click':
-      return { title: t('btn.click'), body: t('tip.click.body', { max: C.MAX_CLICKS_PER_SECOND }), rows: [[t('tip.m.perClick'), fmt1(G.clickPower())], [t('tip.m.matRate'), fmt1(G.matRate())]],
+      return { title: t('btn.click'), body: t('tip.click.body', { max: C.MAX_CLICKS_PER_SECOND, mid: C.PHASE_MID_LEVEL, late: C.PHASE_LATE_LEVEL }), rows: [[t('tip.m.perClick'), fmt1(G.clickPower())], [t('tip.m.matRate'), fmt1(G.matRate())]],
                reason: S.status !== 'running' ? t('tip.notRunning') : null };
     case 'cam': return { title: t('cam.' + a), body: t('tip.cam.' + a) };
     case 'world': return { title: t('tip.world.title'), body: t('tip.world.body') };
@@ -313,11 +311,9 @@ function tipContent(id){
     case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a) };
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
-    case 'prev': return { title: t('kp.vorschau'), body: t('tip.kp.vorschau') };
     case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
     case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
-    case 'prev': return { title: t('kp.vorschau'), body: t('tip.kp.vorschau') };
     case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
     case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'rush': { const act = S.research.active.find(x => x.id === a);

@@ -110,9 +110,6 @@
   .opt:disabled{cursor:default; opacity:.5;}
   .barracks[hidden], .res-tree > div[hidden], .res-group[hidden], .cols > div[hidden]{display:none;}
   .opt[hidden]{display:none;}
-  .prev-item{display:inline-block; padding:4px 14px; margin:2px 0; border:1px dashed var(--rule-strong); border-radius:4px; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; cursor:help;}
-  .prev-item[hidden]{display:none;}
-  .tabs .prev-tab{align-self:center; padding:4px 12px; margin-left:4px; border:1px dashed var(--rule-strong); border-radius:4px; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; cursor:help;}
   body.disc button[hidden]{display:none;}              /* REQ-K2.04: ein verborgener Knopf ist nicht sichtbar (Klassenregeln wie .btn-ghost überschrieben sonst das Attribut) */
   .opt-name{font-weight:600; font-size:14px;}
   .opt-name em{font-style:normal; font-weight:400; color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; font-size:11.5px; margin-left:6px;}
@@ -520,7 +517,6 @@
         <div class="tabpanel cols" id="panel-army" role="tabpanel" hidden>
           <div>
             <div class="opts" id="optsUnits"></div>
-            <span class="prev-item" id="unitPrev" data-tooltip="prev" hidden aria-hidden="true"></span>
             <div class="opts" id="optsKompanie"></div>
             <!-- Kaserne im Reiter Armee (REQ-6.05): Status, Ausbauten; ohne Kaserne ein Weg zum Bauen -->
             <div class="barracks" id="armyKaserne">

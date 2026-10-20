@@ -285,9 +285,9 @@ for (const mode of ['', 'intro=0']){
   await settle(c.p, 200);
   check(c.errs.length === 0, `K2.07: keine Konsolenfehler${show(c.errs)}`);
   await c.ctx.close();
-  const d = await open('vorschau=naechste&zeit=lauf');
-  const sd = await d.p.evaluate(() => ({ time: __kf.C.KARTENBUEHNE.zeit, prev: __kf.C.ENTDECKEN.vorschau, tp: document.getElementById('tabPrev').checkVisibility() }));
-  check(sd.time === 'lauf' && sd.prev === 'naechste' && sd.tp, `K2.07: ?vorschau=naechste zeigt ein „?“ in der Reiterleiste, ?zeit=lauf setzt den Lauf ${JSON.stringify(sd)}`);
+  const d = await open('zeit=lauf');
+  const sd = await d.p.evaluate(() => ({ time: __kf.C.KARTENBUEHNE.zeit }));
+  check(sd.time === 'lauf', `K2.07: ?zeit=lauf setzt den Lauf ${JSON.stringify(sd)}`);
   await levelUp(d.p, 1); await d.p.waitForFunction(() => !document.getElementById('stage').hidden, null, { timeout: 3000 });
   const t1 = await d.p.evaluate(() => __kf.G.S.t); await settle(d.p, 500);
   check(await d.p.evaluate(t => __kf.G.S.t > t, t1), 'K2.02/K2.07: bei zeit = lauf läuft die Spielzeit bei offener Wahl weiter');
