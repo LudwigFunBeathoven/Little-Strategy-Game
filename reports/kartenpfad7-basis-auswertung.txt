@@ -1,0 +1,48 @@
+AUSWERTUNG kartenpfad7-basis (normal, durchschnitt; Rohdaten reports/kartenpfad7-basis-*.json)
+
+Fabrikplätze im Raster (Grundform, Varianten, Sonderbauten; Median / Mittel) und Verteilung bei Minute 10
+
+| Bot | Partien | Minute 2 | Minute 5 | Minute 10 | Verteilung Minute 10 (Zahl: Partien) | über der Grenze (Minute 10) |
+|---|---|---|---|---|---|---|
+| militaer | 50 | 4 / 4,0 | 5 / 4,9 | 5 / 5,0 | 5: 35 | – (keine Grenze) |
+| wirtschaft | 50 | 4 / 4,1 | 5 / 4,9 | 5 / 4,7 | 4: 13, 5: 37 | – (keine Grenze) |
+| verteidigung | 50 | 4 / 4,0 | 5 / 5,0 | 5 / 5,0 | 4: 1, 5: 49 | – (keine Grenze) |
+| ohne | 50 | 4 / 4,1 | 5 / 5,0 | 5 / 5,0 | 5: 50 | – (keine Grenze) |
+
+Belegung der Plätze am Partieende (Anteil der Partien mit dem Gebäude; Mittel der Zahl; „doppelt“: Anteil mit zwei oder mehr)
+
+| Bot | fabrik | kaserne | schmiede | universitaet | kontor | Haupthaus | freie Plätze (Mittel) | doppelt (außer Fabrik) |
+|---|---|---|---|---|---|---|---|---|
+| militaer | 100 % (5,0) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 0 % | 0,0 | nie |
+| wirtschaft | 100 % (4,7) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 0 % | 0,3 | nie |
+| verteidigung | 100 % (5,0) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 0 % | 0,0 | nie |
+| ohne | 100 % (5,0) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 100 % (1,0) | 0 % | 0,0 | nie |
+
+Nachbarschaft und Synergiekarten am Partieende (Summe der Nachbarschaftswerte aller Fabriken; Bauordnung und Gilde: Anteil der Partien mit der Karte, Wert bei Wahl)
+
+| Bot | Nachbarschaft Fabriken (Median / Mittel) | Bauordnung gewählt | Wert (×) | Gilde gewählt | Wert (Median) |
+|---|---|---|---|---|---|
+| militaer | 0,36 / 0,42 | 0 % | – | 0 % | – (– Karten) |
+| wirtschaft | 3,60 / 4,81 | 96 % | 2 | 92 % | +64 % (8 Karten) |
+| verteidigung | 0,48 / 0,48 | 10 % | 2 | 8 % | +56 % (7 Karten) |
+| ohne | 0,60 / 0,85 | 28 % | 2 | 14 % | +56 % (7 Karten) |
+
+Weiterentwicklungen (Anteil der Partien mit Abschluss; Abschluss Median; ersetzte Varianten Mittel)
+
+| Bot | Wasserrahmen | Dampfkraft | Buchdruck | Fernhandel | Geschützguss |
+|---|---|---|---|---|---|
+| militaer | – | 2 % · 14:06 · 1,0 | 2 % · 8:58 · 0,0 | – | – |
+| wirtschaft | – | 60 % · 14:31 · 3,1 | 60 % · 15:18 · 0,0 | – | – |
+| verteidigung | – | 32 % · 17:27 · 0,6 | 38 % · 19:19 · 0,0 | – | – |
+| ohne | – | 60 % · 12:19 · 0,0 | 74 % · 11:45 · 0,0 | – | – |
+
+Dauer und Patt (normal, durchschnitt; Patt mit druck=hoch über alle Felder der Messreihe und im Feld normal/durchschnitt)
+
+| Bot | Siege | Dauer Median | Wahlen Median | Mauerverlust Median | Patt druck=hoch (alle Felder) | Patt druck=hoch (Feld) | Siege druck=hoch (Feld) |
+|---|---|---|---|---|---|---|---|
+| militaer | 100 % | 11:38 | 12 | 0 | 0 % (300 Partien) | 0 % | 100 % |
+| wirtschaft | 100 % | 17:11 | 21 | 0 | 1.3 % (300 Partien) | 4 % | 92 % |
+| verteidigung | 98 % | 20:57 | 21 | 0 | 2.7 % (300 Partien) | 14 % | 86 % |
+| ohne | 100 % | 15:01 | 15 | 0 | 1.7 % (300 Partien) | 0 % | 98 % |
+
+Spannweite der Dauer-Mediane der Kategorie-Bots: 9:19 min

@@ -348,7 +348,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
       for (const ty of types) n[ty] = (n[ty] || 0) + 1;
       const vars = {};
       for (const x of G.S.slots) if (x && x.variant) vars[x.variant] = (vars[x.variant] || 0) + 1;
-      grid[GRID_AT[gi++]] = { total: types.length, types: n, variants: vars };
+      grid[GRID_AT[gi++]] = { total: types.length, types: n, variants: vars, grenze: G.fabrikGrenze ? (G.fabrikGrenze() === Infinity ? null : G.fabrikGrenze()) : null, stufe: G.hausStufe ? G.hausStufe() : 0 };       // Teil 7: Obergrenze und Stufe des Haupthauses
     }
   }
   const S = G.S;
@@ -368,6 +368,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
     enemyBaseFrac: S.enemyBaseHp / G.diffCfg().enemyBaseHp, supplyEnd: G.supplyCap(), kills: S.kills, losses: S.losses, matRateEnd: Math.round(G.matRate() * 10) / 10,
     grid, wallLost: Math.round(wallLost), variants: S.stats.variants || [],
+    haus: S.stats.haus || [], fluegel: S.stats.fluegel || [], kompanien: (S.stats.kompanien || []).length, gekauft: S.stats.gekauft || {},       // Teil 7 (REQ-K7.12)
     nbEnd: Math.round(1000 * S.slots.reduce((a, x, k) => a + (x && x.type === 'fabrik' && !x.upg ? G.neighborValue(k, 'fabrik') : 0), 0)) / 1000, slotsEnd: S.slots.map(x => x ? x.type : null),       // Teil 7 (REQ-K7.01): Summe der Nachbarschaftswerte der Fabriken am Ende, Belegung am Ende
     weiter: S.stats.weiter || [], katCounts: G.katCounts(), synergie: Object.fromEntries(Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0 && G.OPT[k] && G.OPT[k].synergie).map(k => [k, (({ n, value }) => ({ n, value }))(G.synergieNow(k))])),
     doktrinP: S.stats.doktrinP || [], trade: { material: Math.round(S.stats.tradeMaterial || 0), xp: Math.round(S.stats.tradeXp || 0) }, milizUnits: S.stats.milizUnits || 0, zermuerbt: S.stats.zermuerbt || 0,       // Protokoll Teil 6 (REQ-K6.08)

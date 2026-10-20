@@ -1,0 +1,358 @@
+{
+ "prefix": "kartenpfad7-basis",
+ "diff": "normal",
+ "profile": "durchschnitt",
+ "bots": {
+  "militaer": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     4,
+     4.02
+    ],
+    "min5": [
+     5,
+     4.94
+    ],
+    "min10": [
+     5,
+     5
+    ],
+    "dist": {
+     "5": 35
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 0
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 100,
+     "universitaet": 100,
+     "kontor": 100
+    },
+    "mittel": {
+     "fabrik": 5,
+     "kaserne": 1,
+     "schmiede": 1,
+     "universitaet": 1,
+     "kontor": 1
+    },
+    "frei": 0,
+    "haupthaus": 0,
+    "doppelt": {}
+   },
+   "nachbarschaft": {
+    "nbMedian": 0.36,
+    "nbMittel": 0.42479999999999996,
+    "bauordnung": 0,
+    "bauordnungWert": null,
+    "gilde": 0,
+    "gildeWert": null,
+    "gildeN": null
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_dampfkraft": {
+     "anteil": 2,
+     "tMedian": 846,
+     "ersetzt": 1
+    },
+    "r_buchdruck": {
+     "anteil": 2,
+     "tMedian": 538.1,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_geschuetzguss": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    }
+   },
+   "dauer": {
+    "siege": 100,
+    "dauer": 698.4,
+    "wahlen": 12,
+    "mauer": 0,
+    "pattAlle": 0,
+    "pattFeld": 0,
+    "siegeHoch": 100,
+    "nHoch": 300
+   }
+  },
+  "wirtschaft": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     4,
+     4.06
+    ],
+    "min5": [
+     5,
+     4.9
+    ],
+    "min10": [
+     5,
+     4.74
+    ],
+    "dist": {
+     "4": 13,
+     "5": 37
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 0
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 100,
+     "universitaet": 100,
+     "kontor": 100
+    },
+    "mittel": {
+     "fabrik": 4.7,
+     "kaserne": 1,
+     "schmiede": 1,
+     "universitaet": 1,
+     "kontor": 1
+    },
+    "frei": 0.3,
+    "haupthaus": 0,
+    "doppelt": {}
+   },
+   "nachbarschaft": {
+    "nbMedian": 3.6,
+    "nbMittel": 4.809599999999998,
+    "bauordnung": 96,
+    "bauordnungWert": 2,
+    "gilde": 92,
+    "gildeWert": 0.64,
+    "gildeN": 8
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_dampfkraft": {
+     "anteil": 60,
+     "tMedian": 870.8,
+     "ersetzt": 3.066666666666667
+    },
+    "r_buchdruck": {
+     "anteil": 60,
+     "tMedian": 918,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_geschuetzguss": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    }
+   },
+   "dauer": {
+    "siege": 100,
+    "dauer": 1031.4,
+    "wahlen": 21,
+    "mauer": 0,
+    "pattAlle": 1.3,
+    "pattFeld": 4,
+    "siegeHoch": 92,
+    "nHoch": 300
+   }
+  },
+  "verteidigung": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     4,
+     4.02
+    ],
+    "min5": [
+     5,
+     5
+    ],
+    "min10": [
+     5,
+     4.98
+    ],
+    "dist": {
+     "4": 1,
+     "5": 49
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 0
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 100,
+     "universitaet": 100,
+     "kontor": 100
+    },
+    "mittel": {
+     "fabrik": 4.98,
+     "kaserne": 1,
+     "schmiede": 1,
+     "universitaet": 1,
+     "kontor": 1
+    },
+    "frei": 0.02,
+    "haupthaus": 0,
+    "doppelt": {}
+   },
+   "nachbarschaft": {
+    "nbMedian": 0.48,
+    "nbMittel": 0.4848000000000001,
+    "bauordnung": 10,
+    "bauordnungWert": 2,
+    "gilde": 8,
+    "gildeWert": 0.56,
+    "gildeN": 7
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_dampfkraft": {
+     "anteil": 32,
+     "tMedian": 1047.4,
+     "ersetzt": 0.5625
+    },
+    "r_buchdruck": {
+     "anteil": 38,
+     "tMedian": 1159,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_geschuetzguss": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    }
+   },
+   "dauer": {
+    "siege": 98,
+    "dauer": 1257.4,
+    "wahlen": 21,
+    "mauer": 0,
+    "pattAlle": 2.7,
+    "pattFeld": 14,
+    "siegeHoch": 86,
+    "nHoch": 300
+   }
+  },
+  "ohne": {
+   "fabriken": {
+    "n": 50,
+    "min2": [
+     4,
+     4.06
+    ],
+    "min5": [
+     5,
+     5
+    ],
+    "min10": [
+     5,
+     5
+    ],
+    "dist": {
+     "5": 50
+    },
+    "ueberGrenze": 0,
+    "mitGrenze": 0
+   },
+   "belegung": {
+    "anteil": {
+     "fabrik": 100,
+     "kaserne": 100,
+     "schmiede": 100,
+     "universitaet": 100,
+     "kontor": 100
+    },
+    "mittel": {
+     "fabrik": 5,
+     "kaserne": 1,
+     "schmiede": 1,
+     "universitaet": 1,
+     "kontor": 1
+    },
+    "frei": 0,
+    "haupthaus": 0,
+    "doppelt": {}
+   },
+   "nachbarschaft": {
+    "nbMedian": 0.6,
+    "nbMittel": 0.8543999999999998,
+    "bauordnung": 28,
+    "bauordnungWert": 2,
+    "gilde": 14,
+    "gildeWert": 0.56,
+    "gildeN": 7
+   },
+   "weiter": {
+    "r_wasserrahmen": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_dampfkraft": {
+     "anteil": 60,
+     "tMedian": 739,
+     "ersetzt": 0
+    },
+    "r_buchdruck": {
+     "anteil": 74,
+     "tMedian": 705,
+     "ersetzt": 0
+    },
+    "r_fernhandel": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    },
+    "r_geschuetzguss": {
+     "anteil": 0,
+     "tMedian": null,
+     "ersetzt": null
+    }
+   },
+   "dauer": {
+    "siege": 100,
+    "dauer": 900.8,
+    "wahlen": 15,
+    "mauer": 0,
+    "pattAlle": 1.7,
+    "pattFeld": 0,
+    "siegeHoch": 98,
+    "nHoch": 300
+   }
+  }
+ },
+ "spannweite": 559.0000000000001
+}
