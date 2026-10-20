@@ -58,7 +58,7 @@ const shot = (p, name) => p.screenshot({ path: new URL(`../docs/bilder/kartenpfa
   await p.click('#plotGrid button:nth-child(5)'); await settle(p, 300);
   const st = await p.evaluate(() => ({ tab: __kf.tab, title: document.querySelector('#hausTitle').textContent, grenze: document.querySelector('#hausGrenze').textContent,
     dem: document.querySelectorAll('#ctxDemolish button').length, ctx: document.querySelector('#ctxTitle').textContent }));
-  check(st.tab === 'haus' && st.title === 'Gutshof' && /3 Fabriken/.test(st.grenze), `K7.02: Klick auf das Haupthaus öffnet den Reiter Haupthaus ${show(st)}`);
+  check(st.tab === 'haus' && st.title === 'Gutshof' && /3 Manufakturen/.test(st.grenze), `K7.02: Klick auf das Haupthaus öffnet den Reiter Haupthaus ${show(st)}`);
   check(st.dem === 0, 'K7.02: kein Abriss für das Haupthaus');
   await p.evaluate(() => { __kf.clearSelection(); __kf.selectTab('build'); __kf.requestRender(); }); await settle(p, 200);
   const tip = await tipOf(p, '#plotGrid button:nth-child(5)');
@@ -67,9 +67,9 @@ const shot = (p, name) => p.screenshot({ path: new URL(`../docs/bilder/kartenpfa
   await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; for (const i of [0, 1, 2]) G.buildAt(i, 'fabrik'); __kf.selectTab('build'); __kf.selectPlot(3); __kf.requestRender(); });
   await settle(p, 300);
   const fab = await p.evaluate(() => { const b = [...document.querySelectorAll('#ctxBuild .pick')].find(e => e.dataset.tooltip.startsWith('pick:fabrik')); return b ? { dis: b.getAttribute('aria-disabled'), w: b.querySelector('.w').textContent } : null; });
-  check(fab && fab.dis === 'true' && /Höchstens 3 Fabriken, mehr mit Stadtrecht/.test(fab.w), `K7.04: vierte Fabrik gesperrt mit Erklärzeile ${show(fab)}`);
+  check(fab && fab.dis === 'true' && /Höchstens 3 Manufakturen, mehr mit Stadtrecht/.test(fab.w), `K7.04: vierte Fabrik gesperrt mit Erklärzeile ${show(fab)}`);
   const stat = await p.evaluate(() => document.querySelector('#factoryStat').textContent);
-  check(/Fabriken 3\/3/.test(stat), `K7.04: Grenze im Reiter Bauen ${show(stat)}`);
+  check(/Manufakturen 3\/3/.test(stat), `K7.04: Grenze im Reiter Bauen ${show(stat)}`);
   await p.evaluate(() => { __kf.clearSelection(); __kf.selectTab('haus'); __kf.requestRender(); }); await settle(p, 300);
   check(/stehen 3/.test(await p.evaluate(() => document.querySelector('#hausGrenze').textContent)), 'K7.04: Grenze im Reiter Haupthaus');
   await shot(p, 'haus-stufe1');
@@ -140,6 +140,31 @@ for (const lang of ['de', 'en']){
   const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
   check(!audit.tips.length && !audit.expl.length, `[${lang}] K7.06: Tooltips und Erklärzeilen vollständig ${show(audit)}`);
   check(errs.length === 0, `[${lang}] K7.06: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
+/* ---------- K7.09: Namen im Modus karten (Bauoption, Mauer, Türme, Tooltip) ---------- */
+for (const lang of ['de', 'en']){
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=0', { lang }); await calm(p);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; __kf.selectTab('build'); __kf.selectPlot(0); __kf.requestRender(); }); await settle(p, 300);
+  const pick = await p.evaluate(() => { const b = document.querySelector('#ctxBuild [data-tooltip^="pick:fabrik"] b'); return b && b.textContent; });
+  check(pick === (lang === 'de' ? 'Manufaktur Nr. 1' : 'Manufactory no. 1'), `[${lang}] K7.09: Bauoption heißt Manufaktur ${show(pick)}`);
+  await p.evaluate(() => { const G = __kf.G; G.S.lvl.mauer = 2; G.S.lvl.turm_0 = 3; G.S.revealed.mauer = true; G.S.revealed.turm_0 = true; __kf.clearSelection(); __kf.selectTab('wall'); __kf.requestRender(); }); await settle(p, 300);
+  const subs = await p.evaluate(() => ['subMauer', 'subTurm0', 'subTurm2'].map(id => document.getElementById(id).textContent));
+  check(subs[0] === (lang === 'de' ? 'Mauer: Ringmauer' : 'Wall: Curtain Wall') && subs[1] === (lang === 'de' ? 'Turm oben: Wehrturm' : 'Top tower: Defence Tower') && subs[2] === (lang === 'de' ? 'Turm unten' : 'Bottom tower'), `[${lang}] K7.09: Stufennamen von Mauer und Türmen ${show(subs)}`);
+  const tip = await tipOf(p, '[data-tooltip="upg:mauer"]');
+  check((lang === 'de' ? /Ringmauer → Bastionsmauer ab Stufe 4/ : /Curtain Wall → Bastion Wall from level 4/).test(tip), `[${lang}] K7.09: Tooltip nennt die nächste Stufe ${show(tip)}`);
+  const raw = await p.evaluate(() => document.body.innerText.match(/\b(mauer|turm|haus|bld)\.[a-z0-9.]+|undefined|NaN/g));
+  check(!raw, `[${lang}] K7.09: keine rohen Schlüssel ${show(raw)}`);
+  check(errs.length === 0, `[${lang}] K7.09: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+{
+  const { ctx, p, errs } = await open('pacing=standard&entdecken=0&buehne=0');
+  await p.evaluate(() => { __kf.G.S.material = 1e5; __kf.selectTab('build'); __kf.selectPlot(0); __kf.requestRender(); }); await settle(p, 300);
+  const st = await p.evaluate(() => ({ pick: (document.querySelector('#ctxBuild [data-tooltip^="pick:fabrik"] b') || {}).textContent, sub: document.getElementById('subMauer').textContent }));
+  check(st.pick === 'Fabrik Nr. 1' && st.sub === 'Mauer', `standard: Namen wie bisher ${show(st)}`);
+  check(errs.length === 0, `standard (Namen): keine Konsolenfehler${show(errs)}`);
   await ctx.close();
 }
 

@@ -85,7 +85,7 @@ test('K7.02, K7.04: Texte in beiden Sprachen (Reiter, Stufen, Grenze, Erklärzei
   for (const lang of ['de', 'en']) for (const k of keys) assert.ok(I[lang][k], `${lang}: ${k}`);
   assert.equal(I.de['haus.stufe.1.name'], 'Gutshof'); assert.equal(I.de['haus.stufe.2.name'], 'Rathaus'); assert.equal(I.de['haus.stufe.3.name'], 'Residenz');
   assert.equal(I.en['haus.stufe.1.name'], 'Manor'); assert.equal(I.en['haus.stufe.2.name'], 'Town Hall'); assert.equal(I.en['haus.stufe.3.name'], 'Residence');
-  assert.equal(I.de['build.reason.fabrikGrenze.1'].replace('{n}', '3'), 'Höchstens 3 Fabriken, mehr mit Stadtrecht.');
+  assert.equal(I.de['build.reason.fabrikGrenze.1'].replace('{n}', '3'), 'Höchstens 3 Manufakturen, mehr mit Stadtrecht.');       // Teil 7 (REQ-K7.09): die Fabrik heißt Manufaktur
 });
 
 /* ---------- K7.03: Stufen über Karten, Ausbau, Flügel ---------- */

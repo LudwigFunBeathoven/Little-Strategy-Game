@@ -224,6 +224,10 @@ function tipContent(id){
       const u = C.UPGRADES[a], lv = S.lvl[a];
       const rows = [[t('tip.level'), u.max !== undefined ? `${lv}/${u.max}` : String(lv)]];
       if (!G.isMaxed(a)) rows.push(previewUpgrade(a), [t('tip.cost'), costText(u.cur, G.upCost(a))]);
+      if (S.pacing === 'karten' && (a === 'mauer' || u.base === 'turm')){                                 // Teil 7 (REQ-K7.09): Name des Bauwerks und der nächsten Stufe
+        const sn = stufenName(a === 'mauer' ? 'mauer' : 'turm', lv), pre = a === 'mauer' ? 'mauer.stufe.' : 'turm.stufe.';
+        rows.push([t('tip.stufenname'), sn.next ? t('tip.stufenname.next', { a: sn.cur ? t(pre + sn.cur) : '–', b: t(pre + sn.next[1]), n: sn.next[0] }) : t(pre + sn.cur)]);
+      }
       const base = baseOf(a), where = u.tower !== undefined ? t('tower.where', { lane: t('lane.' + u.tower) }) + ' ' : '';
       return { title: base === 'turm' && lv === 0 ? t('upg.turm.build') : t(`upg.${base}.name`),
                body: where + t(`upg.${base}.desc`, DESC_PARAMS[base]()), rows, reason: upgradeReason(a) };

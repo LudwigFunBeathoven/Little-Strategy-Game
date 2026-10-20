@@ -1537,8 +1537,8 @@ function create(){
     if (S.status !== 'running') return 'notRunning';
     if ((r.branch === 'pfad' && S.pacing !== 'karten') || (S.pacing === 'karten' && PFAD && (PFAD.entfallen || []).includes(id))) return 'notInMode';
     if (!forschungsort() || (r.nurUni && !has('universitaet'))) return 'noUni';                    // nurUni: Buchdruck braucht eine Universität (Teil 7)
-    if (r.gebaeude && S.pacing === 'karten' && !has(r.gebaeude)) return 'needsBuilding';           // Fernhandel braucht ein Kontor (Teil 7)
     if (!isOpen('forschung:' + id)) return 'closed';
+    if (r.gebaeude && S.pacing === 'karten' && !has(r.gebaeude)) return 'needsBuilding';           // Fernhandel braucht ein Kontor (Teil 7); erst nach der Karte (sonst stünde die Forschung ohne Karte offen da)
     if (!researchNext(id)) return 'maxed';
     if (S.research.locked && S.research.locked.includes(id)) return 'locked';   // nur Simulation: Paarvergleich gesperrt (REQ-6.06)
     if (r.requires && researchTier(r.requires.research) < r.requires.tier) return 'requires';

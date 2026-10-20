@@ -131,6 +131,8 @@ const KF_CONFIG = {
      (Grundform, Varianten, Sonderbauten, Weiterentwicklungen). Die Doktrin Zunftordnung senkt die Grenze (Stat fabrikGrenze, add). */
   /* Teil 7 (REQ-K7.06): Handelshaus (Weiterentwicklung des Kontors): Söldnerkompanie aus laeufer Läufern und werfer Werfern (eigene Typen, aktuelle Schmiede-Stufe), rückt sofort aus,
      ohne Versorgung; Kosten kosten × wachstum^(Zahl der Käufe), Abklingzeit cdS Sekunden */
+  /* Teil 7 (REQ-K7.09): historische Namen der Stufen von Mauer (Stufe des Ausbaus „Verstärkung“) und Türmen (Stufe des Turms), [ab Stufe, Name]; nur Anzeige im Modus karten, keine Regeln */
+  STUFENNAMEN: { mauer: [[0, 'palisade'], [2, 'ringmauer'], [4, 'bastionsmauer']], turm: [[1, 'wachturm'], [3, 'wehrturm'], [5, 'geschuetzturm']] },
   HANDELSHAUS: { kompanie: { laeufer: 6, werfer: 2 }, kosten: 600, wachstum: 1.15, cdS: 60 },
   HAUPTHAUS: { platz: 4, fabrikGrenze: [3, 4, 5],
     /* Teil 7 (REQ-K7.03): Stufe II und III kommen über die Karten Stadtrecht und Hofhaltung (data/kartenpfad.js, Familie weiterentwicklung, Feld haus); nach der Wahl kostet der Ausbau

@@ -63,10 +63,10 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   // Aufwerten
   await p.click('#ctxVariants .pick:nth-child(2)'); await settle(p, 300);
   const st = await p.evaluate(() => ({ upg: !!__kf.G.S.slots[0].upg, cell: document.querySelectorAll('#plotGrid button')[0].innerText.replace(/\s+/g, ' '), text: document.querySelector('#ctxText').textContent, picks: document.querySelectorAll('#ctxVariants .pick').length }));
-  check(st.upg && /Aufwertung noch/.test(st.cell) && /Manufaktur/.test(st.text) && st.picks === 0, `S.05: Aufwertung läuft, Raster und Kopf zeigen sie ${show(st)}`);
+  check(st.upg && /Aufwertung noch/.test(st.cell) && /Hofmanufaktur/.test(st.text) && st.picks === 0, `S.05: Aufwertung läuft, Raster und Kopf zeigen sie ${show(st)}`);
   await run(p, 11); await settle(p, 300);
   const done = await p.evaluate(() => ({ variant: __kf.G.S.slots[0].variant, title: document.querySelector('#ctxTitle').textContent, cell: document.querySelectorAll('#plotGrid button')[0].innerText.replace(/\s+/g, ' '), picks: document.querySelectorAll('#ctxVariants .pick').length }));
-  check(done.variant === 'manufaktur' && /Manufaktur/.test(done.title) && /Manufaktur/.test(done.cell) && done.picks === 0, `S.05: Variante steht, keine weitere Aufwertung angeboten ${show(done)}`);
+  check(done.variant === 'manufaktur' && /Hofmanufaktur/.test(done.title) && /Hofmanufaktur/.test(done.cell)       /* Teil 7: die Variante heißt Hofmanufaktur */ && done.picks === 0, `S.05: Variante steht, keine weitere Aufwertung angeboten ${show(done)}`);
   check(!(await vis(p, '#hudLines')), 'K6.02: kein Linienelement in der Leiste');
   check(errs.length === 0, `S.05: keine Konsolenfehler${show(errs)}`);
   await ctx.close();
@@ -177,25 +177,25 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   await ctx.close();
 }
 
-/* ---------- K6.06: Weiterentwicklung der Fabrik (Tooltip nennt die Zahl der ersetzten Varianten, Anzeigename, Abschluss) ---------- */
+/* ---------- K6.06: Weiterentwicklung der Fabrik (Tooltip nennt die Zahl der ersetzten Varianten, Anzeigename, Abschluss); seit Teil 7 ist die erste Stufe der Wasserrahmen ---------- */
 {
   const { ctx, p, errs } = await open('pacing=karten&entdecken=0&buehne=0'); await calm(p);
   await p.evaluate(() => {
     const G = __kf.G; G.S.t = 300; G.S.pfad.lastPickT = 300; G.S.material = 1e6;
     G.buildAt(0, 'fabrik'); G.buildAt(1, 'fabrik'); G.buildAt(2, 'fabrik'); G.buildAt(5, 'universitaet');
     G.S.slots[0].variant = 'manufaktur'; G.S.slots[1].variant = 'werkstatt'; G.S.slotVer++;
-    G.S.draft.stacks.dampfkraft = 1; G.S.draft.ver++; G.unlockKey('forschung:r_dampfkraft'); __kf.selectTab('uni'); __kf.requestRender();
+    G.S.draft.stacks.wasserrahmen = 1; G.S.draft.ver++; G.unlockKey('forschung:r_wasserrahmen'); __kf.selectTab('uni'); __kf.requestRender();
   });
   await settle(p, 400);
-  const tip = await tipOf(p, '[data-tooltip="res:r_dampfkraft"]');
-  check(/Ersetzt 2 Varianten/.test(tip) && /Dampfmühlen/.test(tip) && /Ertrag \+40 %/.test(tip) && !/research\.branchOf/.test(tip), `K6.06: Tooltip der Forschung nennt die ersetzten Varianten ${show(tip)}`);
+  const tip = await tipOf(p, '[data-tooltip="res:r_wasserrahmen"]');
+  check(/Ersetzt 2 Varianten/.test(tip) && /Fabriken/.test(tip) && /Ertrag \+30 %/.test(tip) && !/research\.branchOf/.test(tip), `K6.06: Tooltip der Forschung nennt die ersetzten Varianten ${show(tip)}`);
   await p.mouse.move(5, 5);
-  await p.evaluate(() => { const G = __kf.G; G.startResearch('r_dampfkraft'); G.rushResearch('r_dampfkraft'); G.tick(0.05); __kf.selectTab('build'); __kf.clearSelection(); __kf.requestRender(); }); await settle(p, 400);
-  const st = await p.evaluate(() => ({ v: __kf.G.S.slots.slice(0, 3).map(s => s.variant || null), w: __kf.G.S.stats.weiter, text: document.body.innerText.replace(/\s+/g, ' ') }));
+  await p.evaluate(() => { const G = __kf.G; G.startResearch('r_wasserrahmen'); G.rushResearch('r_wasserrahmen'); G.tick(0.05); __kf.selectTab('build'); __kf.clearSelection(); __kf.requestRender(); }); await settle(p, 400);
+  const st = await p.evaluate(() => ({ v: __kf.G.S.slots.slice(0, 3).map(s => s.variant || null), w: __kf.G.S.stats.weiter, text: document.querySelectorAll('#plotGrid button')[0].innerText.replace(/\s+/g, ' ') }));
   check(JSON.stringify(st.v) === '[null,null,null]' && st.w && st.w[0].ersetzt === 2, `K6.06: Grundvarianten ersetzt, Protokoll ${show(st.w)}`);
-  check(/Dampfmühle/.test(st.text), 'K6.06: der Platz heißt Dampfmühle');
+  check(/^Platz 1 Fabrik( ·|$)/.test(st.text), `K6.06, K7.09: der Platz heißt nach dem Wasserrahmen Fabrik ${show(st.text)}`);
   await p.evaluate(() => __kf.setLang('en')); await settle(p, 300);
-  check(/Steam mill/.test(await p.evaluate(() => document.body.innerText)), 'K6.06: englischer Name Steam mill');
+  check(/ Factory( ·|$)/.test(await p.evaluate(() => document.querySelectorAll('#plotGrid button')[0].innerText.replace(/\s+/g, ' '))), 'K6.06, K7.09: englischer Name Factory');
   const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
   check(JSON.stringify(audit.tips) === '[]' && JSON.stringify(audit.expl) === '[]', `K6.06: Tooltip- und Erklärzeilen-Audit leer ${show(audit)}`);
   check(errs.length === 0, `K6.06: keine Konsolenfehler${show(errs)}`);

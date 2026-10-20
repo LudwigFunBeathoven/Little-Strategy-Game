@@ -52,7 +52,7 @@ test('K6.01, K7.05: neue Fabriken über der gesenkten Grenze sind gesperrt; Zunf
 test('K6.01: Erklärzeile „Reiße zuerst N Fabriken ab.“ in beiden Sprachen', () => {
   const I = loadI18n();
   for (const lang of ['de', 'en']) for (const k of ['variant.reason.excess', 'variant.reason.excess.one']) assert.ok(I[lang][k], `${lang}: ${k}`);
-  assert.match(I.de['variant.reason.excess'], /Reiße zuerst \{n\} Fabriken ab\./);
+  assert.match(I.de['variant.reason.excess'], /Reiße zuerst \{n\} Manufakturen ab\./);       // Teil 7: Fabrik heißt im Modus karten Manufaktur
   assert.ok(I.de['variant.reason.excess'].includes('{n}') && I.en['variant.reason.excess'].includes('{n}'));
 });
 

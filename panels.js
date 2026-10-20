@@ -240,6 +240,13 @@ function nbPreviewText(i, type){
 
 /* ---------- Gebäude-Aufwertung (Teil 4, REQ-S.05): Namen, Werte, Aktionen am Gebäude ---------- */
 const variantParams = v => { const p = Object.assign({}, sonderbauParams()); v.effect.forEach((e, i) => { p['e' + (i + 1)] = effectValue(e); }); return p; };
+/* Historische Namen der Stufen von Mauer und Türmen (Teil 7, REQ-K7.09; nur Anzeige im Modus karten): Schlüssel der Stufe und der nächsten mit ihrer Ausbaustufe */
+function stufenName(kind, lvl){
+  const list = C.STUFENNAMEN[kind]; let cur = null, next = null;
+  for (const [ab, k] of list){ if (lvl >= ab) cur = k; else if (!next) next = [ab, k]; }
+  return { cur, next };
+}
+const wallName = () => stufenName('mauer', G.S.lvl.mauer), towerName = lane => stufenName('turm', G.S.lvl['turm_' + lane]);
 /* Anzeigename eines Platzes: Variante, sonst Grundgebäude */
 const slotName = sl => sl.type === 'haupthaus' ? t(`haus.stufe.${G.hausStufe()}.name`) : sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(G.weiterStufe(sl.type) ? `bld.${sl.type}.name.weiter${G.weiterStufe(sl.type) > 1 ? G.weiterStufe(sl.type) : ''}` : `bld.${sl.type}.name`);       // Haupthaus: Name der Stufe (Teil 7)       // Teil 6: nach der Weiterentwicklung heißt das Gebäude Dampfmühle bzw. Druckerei
 const variantTarget = sl => sl.upg && G.VAR[sl.upg.to] ? G.VAR[sl.upg.to] : null;
@@ -267,7 +274,7 @@ function updateVariantPicks(){
 function updatePicks(){
   for (const p of picks){
     const block = G.buildBlock(p.i, p.type), cost = G.buildCost(p.type), why = buildReason(block, cost, p.type);
-    setText(p.nm, p.type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1 }) : t(`bld.${p.type}.name`));
+    setText(p.nm, p.type === 'fabrik' ? t('bld.fabrik.nth', { n: G.factoryCount() + 1, name: t(G.weiterStufe('fabrik') ? `bld.fabrik.name.weiter${G.weiterStufe('fabrik') > 1 ? G.weiterStufe('fabrik') : ''}` : 'bld.fabrik.name') }) : t(`bld.${p.type}.name`));       // Teil 7: Name der Stufe (Manufaktur, Fabrik, Dampffabrik)
     setText(p.ex, t('ex.line', { effect: bldEffect(p.type, false), cost: costText('material', cost) }));
     setText(p.w, why || ''); setHidden(p.w, !why);
     setText(p.nb, nbPreviewText(p.i, p.type));
@@ -499,7 +506,7 @@ function optLimit(o){
 function pathStatus(){
   const out = [];
   for (const o of G.ALL_OPTIONS){
-    if (!o.pfad) continue;
+    if (!o.pfad || G.cardRemoved(o.id)) continue;                          // gestrichene Pfadkarten (Teil 7: Volle Auslastung) erscheinen nicht
     const taken = G.cardTaken(o.id) > 0, st = taken ? 'chosen' : G.cardExcluded(o.id) ? 'excluded' : G.optionAvailable(o) ? 'available' : 'locked';
     out.push({ kind: 'card', id: o.id, family: o.family, st });
     for (const rid of o.pfad.oeffnetForschung || []){
@@ -849,6 +856,10 @@ function renderPanels(){
   renderOpts();
   renderContext();
   renderDraftLock();
+  if (S.pacing === 'karten'){                                              // Teil 7 (REQ-K7.09): Stufennamen von Mauer und Türmen
+    setText($('subMauer'), t('wall.sub.name', { name: t('mauer.stufe.' + wallName().cur) }));
+    for (const lane of C.TOWER_LANES){ const n = towerName(lane).cur; setText($('subTurm' + lane), n ? t(`turm.sub.${lane}.name`, { name: t('turm.stufe.' + n) }) : t('sub.turm_' + lane)); }
+  }
   if (Disc.on()){                                                          // REQ-K2.04: Abschnitte ohne nutzbaren Inhalt entfallen
     for (const col of document.querySelectorAll('#panel-wall > div')) setHidden(col, !col.querySelector('.opt:not([hidden])'));
     setHidden($('armyKaserne'), !Disc.shows('army:kaserne'));
