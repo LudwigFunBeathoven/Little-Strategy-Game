@@ -31,7 +31,9 @@ function KF_BROWSER_BOT(G, profile, hooks){
     // Modus karten: ist das Raster voll und ein inzwischen freigeschaltetes Gebäude fehlt, reißt der Bot eine Fabrik ab (wie der Bot „gierig“); sonst blockiert ein früh gefülltes Raster die Kaserne
     if (free < 0 && !o.noBuild && G.pacing() === 'karten' && G.factoryCount() > 3){
       const want = ['kaserne', 'schmiede', 'universitaet', 'kontor'].find(b => !(o.forbid || []).includes(b) && !covered.includes(b) && !G.has(b) && G.isBuildable(b));
-      const i = want ? S.slots.findIndex(x => x && x.type === 'fabrik') : -1;
+      // Teil 7: zuerst ein zweites Exemplar räumen, eine Fabrik erst, wenn das fehlende Gebäude bezahlbar ist (sonst Abriss und Neubau im Kreis)
+      const dup = want && haus ? S.slots.findIndex((x, k) => x && C.ZWEITES[x.type] && S.slots.findIndex(y => y && y.type === x.type) !== k) : -1;
+      const i = dup >= 0 ? dup : want && (!haus || S.material >= G.buildCost(want)) ? S.slots.findIndex(x => x && x.type === 'fabrik') : -1;
       if (i >= 0) G.demolish(i);
     }
     // Teil 7: Raster voll, die Obergrenze erlaubt eine weitere Fabrik: das Gebäude, das ein Flügel ersetzt, weicht ihr
@@ -45,7 +47,8 @@ function KF_BROWSER_BOT(G, profile, hooks){
     if (free >= 0 && !o.noBuild){
       // erst je ein Spezialgebäude, dann Fabriken; ist keine weitere erlaubt, ein zweites Exemplar nach Kategorie (Teil 7, REQ-K7.10: der freie Platz auf Stufe I)
       const stands = b => S.slots.some(x => x && x.type === b);
-      const order = ['kaserne', 'schmiede', 'universitaet', 'kontor'].filter(b => !stands(b)).concat(['fabrik', KF_BROWSER_BOT.ZWEITES[o.kat || 'ohne']]);
+      const missing = ['kaserne', 'schmiede', 'universitaet', 'kontor'].filter(b => !stands(b) && !(o.forbid || []).includes(b) && !(haus && covered.includes(b)));
+      const order = missing.concat(['fabrik'], missing.length ? [] : [KF_BROWSER_BOT.ZWEITES[o.kat || 'ohne']]);       // ein zweites Exemplar erst, wenn kein Spezialgebäude mehr fehlt
       const type = G.factoryCount() < 3 ? 'fabrik' : order.find(b => !(o.forbid || []).includes(b) && !(fabWanted && covered.includes(b)) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
