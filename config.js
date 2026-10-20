@@ -129,6 +129,9 @@ const KF_CONFIG = {
   /* Teil 7 (REQ-K7.02, K7.04): Haupthaus im Mittelfeld des Rasters (platz), nur im Modus karten. Es steht ab Start auf Stufe I, lässt sich nicht abreißen und nicht aufwerten,
      gibt und erhält keine Nachbarschaftsboni. fabrikGrenze: erlaubte Fabrikplätze je Stufe (I, II, III); als Fabrikplatz zählt jedes Gebäude, das aus einer Fabrik hervorgeht
      (Grundform, Varianten, Sonderbauten, Weiterentwicklungen). Die Doktrin Zunftordnung senkt die Grenze (Stat fabrikGrenze, add). */
+  /* Teil 7 (REQ-K7.06): Handelshaus (Weiterentwicklung des Kontors): Söldnerkompanie aus laeufer Läufern und werfer Werfern (eigene Typen, aktuelle Schmiede-Stufe), rückt sofort aus,
+     ohne Versorgung; Kosten kosten × wachstum^(Zahl der Käufe), Abklingzeit cdS Sekunden */
+  HANDELSHAUS: { kompanie: { laeufer: 6, werfer: 2 }, kosten: 600, wachstum: 1.15, cdS: 60 },
   HAUPTHAUS: { platz: 4, fabrikGrenze: [3, 4, 5],
     /* Teil 7 (REQ-K7.03): Stufe II und III kommen über die Karten Stadtrecht und Hofhaltung (data/kartenpfad.js, Familie weiterentwicklung, Feld haus); nach der Wahl kostet der Ausbau
        kosten[Stufe] Material und dauert dauerS Sekunden Spielzeit. Jede neue Stufe öffnet einen Flügel nach Wahl (höchstens zwei je Partie, jeder einmal, endgültig). */
@@ -316,6 +319,9 @@ const KF_CONFIG = {
     armbrust:        { symbol: '\u25B3', key: '5', cost: 44, hp: 24, dmg: 12, cd: 1.8, range: 140, bounty: 20, speed: 34, farbton: 'rust' },
     katapult:        { symbol: '\u25CF', key: '6', cost: 70, hp: 40, dmg: 22, cd: 3.0, range: 170, bounty: 28, speed: 24, farbton: 'rust' },
     bogenschuetze:   { symbol: '\u25B2', cost: 36, hp: 22, dmg: 9, cd: 1.2, range: 120, bounty: 17, speed: 34, replacement: true, base: 'werfer',  farbton: 'brass' },
+    /* Teil 7 (REQ-K7.07): Geschütz aus der Gießerei, nur im Modus karten (weiter: erst nach der Weiterentwicklung der Schmiede, mit Kaserne); langsam, wenig Lebenspunkte, große Reichweite,
+       baseMult: Schaden an der gegnerischen Basis × (der gegnerische Turm ist kein Ziel eigener Einheiten); versorgung: belegt so viele Plätze der Versorgung (sonst 1) */
+    geschuetz:       { symbol: '\u25C9', key: '7', cost: 90, hp: 26, dmg: 12, cd: 2.5, range: 200, bounty: 30, speed: 20, farbton: 'ink', versorgung: 2, baseMult: 3, weiter: 'schmiede' },
   },
 
   /* Bauplätze: 3×3-Raster, alle ab Start offen (REQ-16.1).

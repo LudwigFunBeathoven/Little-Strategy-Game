@@ -148,9 +148,10 @@ function explUpgrade(id){
 function explUnit(id){
   if (G.unitDoctrineBlock(id)) return t('unit.reason.doctrine', { name: t(G.unitDoctrineBlock(id).nameKey) });
   if (!G.unitUnlocked(id)){ const src = G.unitSource(id); if (src) return sourceLabel(src) || lockedText(); }
-  if (G.supplyFull()) return t('tip.supplyFull', { n: G.S.queue.length, max: G.supplyCap() });   // Grund der Sperre (REQ-14.2)
+  if (G.supplyFull(G.ownType(id))) return t('tip.supplyFull', { n: G.queueSupply(), max: G.supplyCap() });   // Grund der Sperre (REQ-14.2); Teil 7: Versorgung je Einheit
   const own = G.ownType(id), hp = G.unitStats('p', own).hp;
-  return t(G.unitIsMerc() ? 'ex.unit.merc' : 'ex.unit', { role: t(G.unitRange('p', own) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee'), hp: fmt(hp), cost: costText('material', G.unitPrice(own)) });
+  const sup = G.supplyOf(own) > 1 ? ' · ' + t('unit.versorgung', { n: G.supplyOf(own) }) : '';       // Geschütz (Teil 7): belegt zwei Plätze der Versorgung
+  return t(G.unitIsMerc(own) ? 'ex.unit.merc' : 'ex.unit', { role: t(G.unitRange('p', own) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee') + sup, hp: fmt(hp), cost: costText('material', G.unitPrice(own)) });
 }
 function missing(cur, need, have){ return t('tip.missing', { n: costText(cur, Math.ceil(need - have)) }); }
 /* Wer einen gesperrten Inhalt öffnet: Karte oder Forschung (REQ-KP.01); id = Karten- oder Forschungs-Id */
@@ -211,7 +212,7 @@ function unitReason(id){
   if (S.status !== 'running') return t('tip.notRunning');
   if (G.unitDoctrineBlock(id)) return t('unit.reason.doctrine', { name: t(G.unitDoctrineBlock(id).nameKey) });
   if (!G.unitUnlocked(id)){ const src = G.unitSource(id); return (src && sourceLabel(src)) || lockedText(); }
-  if (G.supplyFull()) return t('tip.supplyFull', { n: S.queue.length, max: G.supplyCap() });
+  if (G.supplyFull(G.ownType(id))) return t('tip.supplyFull', { n: G.queueSupply(), max: G.supplyCap() });
   if (S.material < c) return missing('material', c, S.material);
   return null;
 }
@@ -314,6 +315,10 @@ function tipContent(id){
     case 'rush': { const act = S.research.active.find(x => x.id === a);
       return { title: t('research.rush'), body: t('tip.research.rush', { name: act ? researchName(G.RES[a], act.tier) : '' }),
                rows: act ? [[t('tip.cost'), costText('material', G.rushCost(a))], [t('research.time'), t('research.seconds', { s: Math.ceil(Math.max(0, act.timeS - act.t)) })]] : [] }; }
+    case 'kompanie': { const H = C.HANDELSHAUS, b = G.kompanieBlock(), k = S.kompanie || { n: 0, cd: 0 };       // Söldnerkompanie (Teil 7, REQ-K7.06)
+      return { title: t('kompanie.name'), body: t('tip.kompanie', { l: H.kompanie.laeufer, w: H.kompanie.werfer, s: H.cdS, p: pct(H.wachstum - 1) }),
+               rows: [[t('tip.cost'), costText('material', G.kompanieKosten())], [t('kompanie.count'), String(k.n)]],
+               reason: b === 'cooldown' ? t('ex.kompanie.cd', { s: Math.ceil(k.cd) }) : b === 'material' ? missing('material', G.kompanieKosten(), S.material) : b === 'notRunning' ? t('tip.notRunning') : null }; }
     case 'waveRush': { const b = G.waveRushBlock();
       return { title: t('wave.rush'), body: t('tip.wave.rush', { s: C.WAVE_RUSH.cdS }),
                rows: [[t('tip.cost'), costText('material', G.waveRushCost())], [t('front.supply'), `${S.queue.length}/${G.supplyCap()}`]],

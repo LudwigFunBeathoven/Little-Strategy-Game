@@ -190,6 +190,7 @@ function buildPanels(){
   }
   // Haupthaus (Teil 7, REQ-K7.03): Ausbau zur nächsten Stufe, ein Knopf je Flügel; einmal erzeugt
   hausAusbauEl = makeOpt($('hausAusbau'), '', 'haus:ausbau', () => G.hausAusbau());
+  kompanieEl = makeOpt($('optsKompanie'), '', 'kompanie', () => G.hireKompanie());       // Handelshaus: Söldnerkompanie (Teil 7, REQ-K7.06)
   for (const id of Object.keys(C.HAUPTHAUS.fluegel)){
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = 'fluegel:' + id;
@@ -404,6 +405,15 @@ function renderOpts(){
     if (activeTab === 'army' && !el.btn.hidden && open) NewMarks.view('unit:' + id);
     setText(el.expl, explUnit(id));
     setDis(el.btn, !!unitReason(id));
+  }
+  { // Söldnerkompanie im Reiter Armee, sobald das Kontor zum Handelshaus weiterentwickelt ist (Teil 7, REQ-K7.06)
+    const on = G.handelshaus(), H = C.HANDELSHAUS, cd = S.kompanie ? S.kompanie.cd : 0;
+    setHidden(kompanieEl.btn, !on);
+    if (on){
+      setText(kompanieEl.label, t('kompanie.name'));
+      setText(kompanieEl.expl, cd > 0 ? t('ex.kompanie.cd', { s: Math.ceil(cd) }) : t('ex.kompanie', { l: H.kompanie.laeufer, w: H.kompanie.werfer, cost: costText('material', G.kompanieKosten()) }));
+      setDis(kompanieEl.btn, !!G.kompanieBlock());
+    }
   }
   for (let i = 0; i < C.LANE_COUNT; i++){
     const r = optEls['repair_' + i];
@@ -649,6 +659,7 @@ function researchReason(id){
     case null: case 'maxed': return null;
     case 'notRunning': return t('tip.notRunning');
     case 'noUni': return t('tip.needsBuilding', { name: t('bld.universitaet.name') });
+    case 'needsBuilding': return t('tip.needsBuilding', { name: t(`bld.${r.gebaeude}.name`) });       // Fernhandel braucht ein Kontor (Teil 7)
     case 'requires': return t('research.requires', { name: researchName(G.RES[r.requires.research], r.requires.tier) });
     case 'closed': { const src = G.keySource('forschung:' + id); return t('kp.res.opensWith', { name: src && G.OPT[src] ? t(G.OPT[src].nameKey) : '' }); }
     case 'active': return t('research.running');
@@ -737,7 +748,7 @@ function renderResearch(){
 }
 let resDoneSeen = -1, toastTimer = null;
 /* ---------- Haupthaus (Teil 7, REQ-K7.02 – K7.04): Stufe, Obergrenze für Fabriken, Ausbau zur nächsten Stufe; Flügel ab Stufe II ---------- */
-let hausAusbauEl = null;
+let hausAusbauEl = null, kompanieEl = null;
 const fluegelEls = {};
 const fluegelParams = () => { const F = C.HAUPTHAUS.fluegel; return { z: pct(F.bibliothek.zeitFaktor - 1), b: pct(C.KARTEN.budget.stufen[F.bibliothek.budgetMax]), n: F.zeughaus.schmiedeStufen, p: pct(F.schatzkammer.deckelAnteil) }; };
 function hausReason(){
@@ -877,7 +888,7 @@ function renderPanels(){
   setText($('factoryStat'), G.fabrikGrenze() < Infinity ? t('fab.stat.grenze', { n: G.fabrikPlaetze(), max: G.fabrikGrenze(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) })       // Obergrenze des Haupthauses (Teil 7, REQ-K7.04)
     : t('fab.stat', { n: G.factoryCount(), rate: fmt1(G.factoryRate()), next: costText('material', G.factoryCost()) }));
   // Armee
-  setText($('queue'), `${S.queue.length}/${G.supplyCap()}`);
+  setText($('queue'), `${S.pacing === 'karten' ? G.queueSupply() : S.queue.length}/${G.supplyCap()}`);       // Teil 7: Geschütze belegen zwei Plätze
   setText($('ownCount'), fmt(G.ownOnField()));
   setText($('losses'), fmt(S.losses));
   setText($('kills'), fmt(S.kills));

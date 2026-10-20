@@ -44,6 +44,13 @@ const KF_PFAD = {
     { id: 'buchdruck', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['gebaut:universitaet'],
       oeffnetForschung: ['r_buchdruck'],
       nameKey: 'kp.card.buchdruck.name', descKey: 'kp.card.buchdruck.desc', tiers: [{ effect: [] }] },
+    /* Teil 7 (REQ-K7.06, K7.07): Weiterentwicklungen mit Schaden an der gegnerischen Basis – Kontor → Handelshaus (Söldnerkompanien), Schmiede → Gießerei (Geschütze) */
+    { id: 'fernhandel', kat: 'wirtschaft', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:kontor'],
+      oeffnetForschung: ['r_fernhandel'],
+      nameKey: 'kp.card.fernhandel.name', descKey: 'kp.card.fernhandel.desc', tiers: [{ effect: [] }] },
+    { id: 'geschuetzguss', familie: 'technologie', rarity: 'rare', gewicht: 10, abWahl: 3, benoetigt: ['forschungsort', 'gebaut:schmiede'],
+      oeffnetForschung: ['r_geschuetzguss'],
+      nameKey: 'kp.card.geschuetzguss.name', descKey: 'kp.card.geschuetzguss.desc', tiers: [{ effect: [] }] },
     /* ---------- Wagnis: spielverändernd mit Nachteil, dauerhaft (REQ-KP.07); Fernkämpfer und Armee setzen eine Kaserne voraus ---------- */
     { id: 'glaskanonen', kat: 'militaer', familie: 'wagnis', rarity: 'wagnis', gewicht: 4, abWahl: 5, benoetigt: ['gebaut:kaserne'],
       nameKey: 'kp.card.glaskanonen.name', descKey: 'kp.card.glaskanonen.desc',
@@ -58,6 +65,7 @@ const KF_PFAD = {
        ersetzt        Einheitenersatz { von: nach }
        weiter         Weiterentwicklung (Teil 6, REQ-K6.06) { bereich: Gebäudetyp }: Der Abschluss ersetzt die Grundvarianten aller Gebäude dieses Typs (ohne Erstattung); Sonderbauten bleiben, Ausbaustufen auch
        nurUni         Teil 7: nur in einer Universität erforschbar, nicht im Flügel Bibliothek des Haupthauses
+       gebaeude       Teil 7: ohne stehendes Gebäude dieses Typs keine Forschung (Fernhandel: Kontor)
      Geöffnet werden sie durch die Technologiekarte, die sie in oeffnetForschung nennt. Kosten und Dauer sind Startwerte (REQ-KP.04). */
   /* Forschungen, die im Modus karten entfallen: Schildträger (eine Pfadforschung ersetzt sie), Ingenieurskunst (Teil 4, REQ-S.03: nur Baukosten) und der Hörsaal (Teil 5, REQ-K5.05:
      das Forschungsbudget der Universität ersetzt ihn) */
@@ -92,6 +100,11 @@ const KF_PFAD = {
       tiers: [{ cost: 800, timeS: 60, effect: [{ stat: 'factoryYield', mul: 1.4 }, { stat: 'clickYield', mul: 2 }] }] },
     { id: 'r_buchdruck', branch: 'pfad', nameKey: 'kp.res.buchdruck.name', descKey: 'kp.res.buchdruck.desc', weiter: { bereich: 'universitaet' }, nurUni: true,       // nurUni (Teil 7): nicht in der Bibliothek
       tiers: [{ cost: 600, timeS: 50, effect: [{ stat: 'researchTime', mul: 0.5 }, { stat: 'budgetKurs', mul: 1.5 }] }] },
+    /* Teil 7: Handelshaus (Söldnerkompanien im Reiter Armee, C.HANDELSHAUS) und Gießerei (Geschütze in der Kaserne, C.UNITS.geschuetz); gebaeude: ohne dieses Gebäude keine Forschung */
+    { id: 'r_fernhandel', branch: 'pfad', nameKey: 'kp.res.fernhandel.name', descKey: 'kp.res.fernhandel.desc', weiter: { bereich: 'kontor' }, gebaeude: 'kontor',
+      tiers: [{ cost: 500, timeS: 40, effect: [] }] },
+    { id: 'r_geschuetzguss', branch: 'pfad', nameKey: 'kp.res.geschuetzguss.name', descKey: 'kp.res.geschuetzguss.desc', weiter: { bereich: 'schmiede' },
+      tiers: [{ cost: 500, timeS: 40, effect: [] }] },
     /* Ersatz für Mauerausbau III und Turmausbau (Teil 5): beide Stufen gehören zur Grundausstattung */
     { id: 'r_wehrgang', branch: 'pfad', nameKey: 'kp.res.wehrgang.name', descKey: 'kp.res.wehrgang.desc',
       tiers: [{ cost: 300, timeS: 40, effect: [{ stat: 'wallHp', mul: 1.3 }, { stat: 'repairCd', mul: 0.7 }] }] },

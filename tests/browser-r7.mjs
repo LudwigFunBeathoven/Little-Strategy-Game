@@ -113,6 +113,36 @@ for (const lang of ['de', 'en']){
   await ctx.close();
 }
 
+/* ---------- K7.06, K7.07: Handelshaus mit Söldnerkompanie, Gießerei mit Geschütz ---------- */
+for (const lang of ['de', 'en']){
+  const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1', { lang }); await calm(p);
+  await p.evaluate(() => { const G = __kf.G; G.S.material = 1e5; G.S.t = 300; for (const [i, b] of [[0, 'universitaet'], [1, 'kontor'], [2, 'schmiede'], [3, 'kaserne']]) G.buildAt(i, b);
+    for (const [c, r] of [['fernhandel', 'r_fernhandel'], ['geschuetzguss', 'r_geschuetzguss']]){ G.S.draft.stacks[c] = 1; G.S.draft.ver++; G.unlockKey('forschung:' + r); }
+    G.startResearch('r_fernhandel'); G.rushResearch('r_fernhandel'); G.startResearch('r_geschuetzguss'); G.rushResearch('r_geschuetzguss'); __kf.selectTab('army'); __kf.requestRender(); });
+  await settle(p, 400);
+  const st = await p.evaluate(() => { const k = document.querySelector('[data-tooltip="kompanie"]'), g = document.querySelector('[data-tooltip="unit:geschuetz"]');
+    return { hh: __kf.G.handelshaus(), k: k && !k.hidden && { text: k.innerText.replace(/\s+/g, ' '), dis: k.getAttribute('aria-disabled') }, g: g && !g.hidden && { text: g.innerText.replace(/\s+/g, ' '), dis: g.getAttribute('aria-disabled') } }; });
+  check(st.hh && st.k && st.k.dis !== 'true' && (lang === 'de' ? /Söldnerkompanie.*6 Läufer, 2 Werfer.*600 Material/ : /Mercenary company.*6 runners, 2 throwers.*600 material/).test(st.k.text), `[${lang}] K7.06: Söldnerkompanie im Reiter Armee mit Erklärzeile ${show(st.k)}`);
+  check(st.g && st.g.dis !== 'true' && (lang === 'de' ? /Geschütz/ : /Gun/).test(st.g.text), `[${lang}] K7.07: Geschütz in der Einheitenliste ${show(st.g)}`);
+  const n0 = await p.evaluate(() => __kf.G.S.units.filter(u => u.side === 'p').length);
+  await p.click('[data-tooltip="kompanie"]'); await settle(p, 300);
+  const after = await p.evaluate(() => ({ n: __kf.G.S.units.filter(u => u.side === 'p').length, ex: document.querySelector('[data-tooltip="kompanie"] .expl').textContent, dis: document.querySelector('[data-tooltip="kompanie"]').getAttribute('aria-disabled') }));
+  check(after.n - n0 === 8 && after.dis === 'true' && /\d+ s/.test(after.ex), `[${lang}] K7.06: Kompanie rückt aus, Abklingzeit sichtbar ${show(after)}`);
+  await p.click('[data-tooltip="unit:geschuetz"]'); await settle(p, 200);
+  const q = await p.evaluate(() => document.querySelector('#queue').textContent);
+  check(/^2\//.test(q), `[${lang}] K7.07: Geschütz belegt zwei Plätze der Versorgung ${show(q)}`);
+  const tip = await tipOf(p, '[data-tooltip="kompanie"]');
+  check(/60 s/.test(tip) && /15/.test(tip), `[${lang}] K7.06: Tooltip nennt Abklingzeit und Anstieg ${show(tip)}`);
+  await p.evaluate(() => { __kf.selectTab('build'); __kf.requestRender(); }); await settle(p, 300);
+  const cells = await p.evaluate(() => [1, 2].map(i => document.querySelectorAll('#plotGrid button')[i].innerText.replace(/\s+/g, ' ')));
+  check((lang === 'de' ? /Handelshaus/ : /Trading House/).test(cells[0]) && (lang === 'de' ? /Gießerei/ : /Foundry/).test(cells[1]), `[${lang}] K7.06/K7.07: Namen nach der Weiterentwicklung im Raster ${show(cells)}`);
+  if (lang === 'de'){ await p.evaluate(() => { __kf.selectTab('army'); __kf.requestRender(); }); await settle(p, 300); await shot(p, 'armee-kompanie-geschuetz'); }
+  const audit = await p.evaluate(() => ({ tips: __kf.tooltipAudit(), expl: __kf.explAudit() }));
+  check(!audit.tips.length && !audit.expl.length, `[${lang}] K7.06: Tooltips und Erklärzeilen vollständig ${show(audit)}`);
+  check(errs.length === 0, `[${lang}] K7.06: keine Konsolenfehler${show(errs)}`);
+  await ctx.close();
+}
+
 /* ---------- Standardmodus: kein Haupthaus ---------- */
 {
   const { ctx, p, errs } = await open('pacing=standard');

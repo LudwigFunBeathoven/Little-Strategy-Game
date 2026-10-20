@@ -688,6 +688,31 @@ function create(){
     emit('fluegelGewaehlt', { id });
     return true;
   }
+  /* ---------- Handelshaus: Söldnerkompanien (Teil 7, REQ-K7.06) ----------
+     Nach der Weiterentwicklung des Kontors rückt gegen Material sofort eine Kompanie aus (eigene Gruppe, ohne Versorgung, Schmiede-Stufe wie alle Einheiten); der Preis steigt je Kauf, Abklingzeit cdS. */
+  const HH = C.HANDELSHAUS;
+  const handelshaus = () => S.pacing === 'karten' && weiterDone('kontor') && has('kontor');
+  const kompanie = () => S.kompanie || (S.kompanie = { n: 0, cd: 0 });
+  const kompanieKosten = () => Math.ceil(HH.kosten * Math.pow(HH.wachstum, kompanie().n));
+  function kompanieBlock(){
+    if (S.status !== 'running') return 'notRunning';
+    if (!handelshaus()) return 'notAvailable';
+    if (kompanie().cd > 0) return 'cooldown';
+    if (S.material < kompanieKosten()) return 'material';
+    return null;
+  }
+  function hireKompanie(){
+    if (kompanieBlock()) return false;
+    const k = kompanie(), cost = kompanieKosten();
+    S.material -= cost; k.n++; k.cd = HH.cdS;
+    const types = [...new Array(HH.kompanie.laeufer).fill(ownType('laeufer')), ...new Array(HH.kompanie.werfer).fill(ownType('werfer'))];
+    const g = addGroup('p', assignLanes(types, strongerLane(S.nextEnemy)), deployX());
+    for (const u of S.units) if (u.form === g.id) u.kompanie = true;
+    (S.stats.kompanien = S.stats.kompanien || []).push({ t: +S.t.toFixed(1), kosten: cost });       // Protokoll (REQ-K7.12)
+    log('log.kompanie', { n: types.length });
+    emit('waveDeparted', { side: 'p', size: types.length });
+    return true;
+  }
   const repairCost = () => Math.ceil(C.REPAIR_COST * mMul('repairCost'));
   /* Reparatur je Abschnitt (REQ-13.6). Ein gefallener Abschnitt steht danach wieder, sein Turm feuert wieder. */
   function repair(i, factor = 1){
@@ -714,6 +739,7 @@ function create(){
       hp: s.hp, maxHp: s.hp, dmg: s.dmg,
       cdMax: s.cdMax, cd: 0, flash: 0, bob: rnd() * 6, row: 0, col: 0, rowSize: 1,
     };
+    if (p && C.UNITS[type].baseMult) u.baseMult = C.UNITS[type].baseMult;       // Geschütz (Teil 7): mehr Schaden an der gegnerischen Basis
     u.cd = u.cdMax * C.COMBAT.spawnStagger * rnd();                  // Versatz beim Entstehen: kein Gleichtakt einer Welle (REQ-6.02)
     return u;
   }
@@ -801,22 +827,26 @@ function create(){
   /* Kauf legt die Einheit in die Warteschlange; sie rückt mit der nächsten Welle aus (REQ-14.1/14.2) */
   /* Söldner (Karte Söldnertruppe, Teil 6, vorher Linie Wirtschaft Stufe 3): Einheiten über dem Versorgungslimit gegen Aufschlag; sie belegen keine Versorgung (merc in der Warteschlange) */
   const mercRule = () => S.pacing === 'karten' && mAdd('soeldner') > 0;
-  const queueSupply = () => { let n = 0; for (const q of S.queue) if (!q.merc) n++; return n; };
-  const atSupplyCap = () => queueSupply() >= supplyCap();
-  const supplyFull = () => atSupplyCap() && !mercRule();                      // mit Söldnern ist die Warteschlange nie voll
-  const unitIsMerc = () => atSupplyCap() && mercRule();
-  const unitPrice = type => Math.ceil(unitCost(type) * (atSupplyCap() && mercRule() ? C.SOELDNER.kostenFaktor : 1));
+  const supplyOf = type => (type && C.UNITS[type].versorgung) || 1;                 // Versorgung je Einheit (Teil 7: Geschütz 2), sonst 1
+  const queueSupply = () => { let n = 0; for (const q of S.queue) if (!q.merc) n += supplyOf(q.type); return n; };
+  const atSupplyCap = type => queueSupply() + supplyOf(type) > supplyCap();
+  const supplyFull = type => atSupplyCap(type) && !mercRule();                // mit Söldnern ist die Warteschlange nie voll
+  const unitIsMerc = type => atSupplyCap(type) && mercRule();
+  const unitPrice = type => Math.ceil(unitCost(type) * (atSupplyCap(type) && mercRule() ? C.SOELDNER.kostenFaktor : 1));
   /* Schildträger erst nach der Forschung (REQ-5.07, Zweig D) */
   /* Doktrin Massenaufgebot (Teil 6, REQ-K6.05): nur Läufer (und ihr Ersatz) sind kaufbar; gibt die Doktrin zurück, die die Einheit sperrt */
   const unitDoctrineBlock = type => S.pacing === 'karten' && mAdd('onlyRunners') > 0 && !isRunner(type) ? DOK.massenaufgebot : null;
-  const unitUnlocked = type => (!C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0) && isOpen('einheit:' + type) && !unitDoctrineBlock(type);
+  /* Teil 7 (REQ-K7.07): Einheiten einer Weiterentwicklung (Feld weiter, Geschütz) erst nach deren Abschluss und mit Kaserne; nur im Modus karten */
+  const weiterUnitOk = type => { const w = C.UNITS[type].weiter; return !w || (S.pacing === 'karten' && weiterDone(w) && has('kaserne')); };
+  const unitUnlocked = type => (!C.UNITS[type].research || mAdd(C.UNITS[type].research) > 0) && weiterUnitOk(type) && isOpen('einheit:' + type) && !unitDoctrineBlock(type);
   function spawn(type){
-    const cost = unitPrice(ownType(type)), merc = atSupplyCap() && mercRule();
-    if (S.status !== 'running' || supplyFull() || S.material < cost || !unitUnlocked(type)) return false;
+    const cost = unitPrice(ownType(type)), merc = atSupplyCap(ownType(type)) && mercRule();
+    if (S.status !== 'running' || supplyFull(ownType(type)) || S.material < cost || !unitUnlocked(type)) return false;
     S.material -= cost;
     type = ownType(type);
     S.queue.push(merc ? { type, merc: true } : { type });
     if (merc) S.stats.mercs = (S.stats.mercs || 0) + 1;
+    if (S.pacing === 'karten'){ const g = S.stats.gekauft = S.stats.gekauft || {}; g[type] = (g[type] || 0) + 1; }       // Protokoll (Teil 7): gekaufte Einheiten je Typ, darunter Geschütze
     emit('unitBought', { type });
     return true;
   }
@@ -865,7 +895,7 @@ function create(){
       // eine Gruppe über alle Lanes: Armee, falls es keine gibt, sonst Nachschub (REQ-5.06)
       const g = addGroup('p', assignLanes(types, strongerLane(S.nextEnemy)), deployX());
       if (opts.boost > 0) for (const u of S.units) if (u.form === g.id){ u.hp *= 1 + opts.boost; u.maxHp *= 1 + opts.boost; u.dmg *= 1 + opts.boost; }       // Gegenstoß: stärkere Welle
-      if (opts.baseMult > 1) for (const u of S.units) if (u.form === g.id) u.baseMult = opts.baseMult;                                               // Ausbruch (Teil 6: Teil der Doktrin Ausfall): mehr Schaden an der gegnerischen Basis
+      if (opts.baseMult > 1) for (const u of S.units) if (u.form === g.id) u.baseMult = (u.baseMult || 1) * opts.baseMult;                                               // Ausbruch (Teil 6: Teil der Doktrin Ausfall): mehr Schaden an der gegnerischen Basis
       S.queue = [];
       S.lastOrder = bought;
       S.stats.maxArmy = Math.max(S.stats.maxArmy || 0, S.units.filter(u => u.side === 'p').length);
@@ -1507,6 +1537,7 @@ function create(){
     if (S.status !== 'running') return 'notRunning';
     if ((r.branch === 'pfad' && S.pacing !== 'karten') || (S.pacing === 'karten' && PFAD && (PFAD.entfallen || []).includes(id))) return 'notInMode';
     if (!forschungsort() || (r.nurUni && !has('universitaet'))) return 'noUni';                    // nurUni: Buchdruck braucht eine Universität (Teil 7)
+    if (r.gebaeude && S.pacing === 'karten' && !has(r.gebaeude)) return 'needsBuilding';           // Fernhandel braucht ein Kontor (Teil 7)
     if (!isOpen('forschung:' + id)) return 'closed';
     if (!researchNext(id)) return 'maxed';
     if (S.research.locked && S.research.locked.includes(id)) return 'locked';   // nur Simulation: Paarvergleich gesperrt (REQ-6.06)
@@ -1678,6 +1709,7 @@ function create(){
     }
     for (const s of S.sections) s.repairCd = Math.max(0, (s.repairCd || 0) - dt);
     if (S.waveRushCd) S.waveRushCd = Math.max(0, S.waveRushCd - dt);
+    if (S.kompanie && S.kompanie.cd > 0) S.kompanie.cd = Math.max(0, S.kompanie.cd - dt);
     if (lv('moertel') > 0) S.sections.forEach((s, i) => { if (s.hp > 0) s.hp = Math.min(sectionMax(i), s.hp + C.FX_MOERTEL_REGEN * lv('moertel') * dt); });
     // Maurerkolonne: stehende Mauern heilen, wenn sie WALL_REGEN_DELAY_S nicht getroffen wurden; das Tor nie (REQ-18.6)
     const wallRegen = mAdd('wallRegenPct') / 100;
@@ -1815,6 +1847,7 @@ function create(){
     newGame, adopt, snapshot, tick, on, releaseHold, holdActive: () => !!S.hold,
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
+    handelshaus, kompanieKosten, kompanieBlock, hireKompanie, supplyOf, queueSupply,
     hausStufe, fabrikGrenze, fabrikPlaetze, hasFluegel, forschungsort, zeughausDeckt, zeughausMax, zinsQuelle, budgetMax, uniPlaetze, hausNext, hausKarte, hausKosten, hausBlock, hausAusbau, fluegelFrei, fluegelBlock, chooseFluegel, hausKarteOffen,
     enemyWaveSize, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,

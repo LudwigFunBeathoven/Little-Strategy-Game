@@ -26,7 +26,7 @@ function KF_BROWSER_BOT(G, profile, hooks){
       if (G.fluegelFrei() > 0){ const f = KF_BROWSER_BOT.KAT_FLUEGEL[o.kat || 'ohne'].concat(Object.keys(C.HAUPTHAUS.fluegel)).find(id => G.fluegelBlock(id) === null); if (f) G.chooseFluegel(f); }
     }
     const reserve = haus && G.hausBlock() === 'material' ? G.hausKosten() : 0;       // Rücklage für den Ausbau: Tausch, Ausbauten und Forschung warten
-    const covered = haus ? KF_BROWSER_BOT.covered(G) : [];                   // Gebäude, deren Grundfunktion ein gewählter Flügel übernimmt
+    const covered = haus ? KF_BROWSER_BOT.covered(G).filter(b => !G.weiterDone(b)) : [];       // ein weiterentwickeltes Gebäude (Handelshaus, Gießerei) bleibt stehen                   // Gebäude, deren Grundfunktion ein gewählter Flügel übernimmt
     const fabWanted = haus && G.fabrikPlaetze() < G.fabrikGrenze();
     // Modus karten: ist das Raster voll und ein inzwischen freigeschaltetes Gebäude fehlt, reißt der Bot eine Fabrik ab (wie der Bot „gierig“); sonst blockiert ein früh gefülltes Raster die Kaserne
     if (free < 0 && !o.noBuild && G.pacing() === 'karten' && G.factoryCount() > 3){
@@ -57,12 +57,15 @@ function KF_BROWSER_BOT(G, profile, hooks){
       const pr = KF_BROWSER_BOT.pfadResearch(G), r = pr ? G.RES[pr] : G.RESEARCH.find(x => G.researchBlock(x.id) === null);
       if (r && S.material > G.researchCost(r.id) * 2 && G.startResearch(r.id) && h.researched) h.researched(r.id);
     }
+    // Söldnerkompanien (Teil 7, REQ-K7.12): der Wirtschafts-Bot kauft, sobald das Material über dem Doppelten des Preises liegt
+    if (o.kat === 'wirtschaft' && G.pacing() === 'karten' && !G.kompanieBlock() && S.material - reserve > 2 * G.kompanieKosten()) G.hireKompanie();
     if (o.noUnits) return;
     // Welle vorziehen (REQ-6.07 c): halbe Versorgung in der Warteschlange und doppelte Kosten im Bestand
     if (G.waveRushBlock && !G.waveRushBlock() && S.queue.length * 2 >= G.supplyCap() && S.material >= 2 * G.waveRushCost()) G.rushWave();
     for (let k = 0; k < 4; k++){
       if (G.ownOnField() + S.queue.length >= o.cap || G.supplyFull()) break;
-      if (!(mix % 3 === 2 && G.unitUnlocked('werfer') ? G.spawn('werfer') : G.spawn('laeufer'))) break;
+      const gun = mix % 4 === 3 && G.unitUnlocked('geschuetz');                // Teil 7: mit der Gießerei jede vierte Einheit ein Geschütz
+      if (!(gun ? G.spawn('geschuetz') : mix % 3 === 2 && G.unitUnlocked('werfer') ? G.spawn('werfer') : G.spawn('laeufer'))) break;
       mix++;
     }
   }
@@ -81,13 +84,14 @@ function KF_BROWSER_BOT(G, profile, hooks){
 
 /* Pfadkarten (REQ-KP.09): Im Modus 'karten' wählt der Bot aus dem Angebot die Karte, die in seiner Pfadreihenfolge am weitesten vorn steht;
    steht keine darin, gilt die bisherige Regel der Strategie (null). Drei Pfad-Varianten messen die Strategievielfalt. */
+KF_BROWSER_BOT.NEUTRAL_WEITER = ['geschuetzguss'];
 KF_BROWSER_BOT.PFAD_ORDER = {
-  militaer: ['fortgeschritteneTaktiken', 'eiserneKlingen', 'ballistik', 'befestigungskunde'],       // Teil 5: nur noch Technologie-Karten (Bau-Karten entfallen)
-  wissen:   ['eiserneKlingen', 'befestigungskunde', 'fortgeschritteneTaktiken', 'ballistik'],
-  festung:  ['befestigungskunde', 'eiserneKlingen', 'fortgeschritteneTaktiken', 'ballistik'],
+  militaer: ['fortgeschritteneTaktiken', 'eiserneKlingen', 'ballistik', 'befestigungskunde', 'geschuetzguss'],       // Teil 5: nur noch Technologie-Karten (Bau-Karten entfallen); Teil 7: Geschützguss zuletzt
+  wissen:   ['eiserneKlingen', 'befestigungskunde', 'fortgeschritteneTaktiken', 'ballistik', 'geschuetzguss'],
+  festung:  ['befestigungskunde', 'eiserneKlingen', 'fortgeschritteneTaktiken', 'ballistik', 'geschuetzguss'],
 };
 /* Pfadforschung: die Bots erforschen, was ihre Karten geöffnet haben, vor der Grundforschung (REQ-KP.09) */
-KF_BROWSER_BOT.PFAD_RESEARCH = ['r_dampfkraft', 'r_buchdruck', 'r_eisenwaffen', 'r_reiter', 'r_schild', 'r_wehrgang', 'r_schiessscharten'];
+KF_BROWSER_BOT.PFAD_RESEARCH = ['r_dampfkraft', 'r_buchdruck', 'r_fernhandel', 'r_geschuetzguss', 'r_eisenwaffen', 'r_reiter', 'r_schild', 'r_wehrgang', 'r_schiessscharten'];
 KF_BROWSER_BOT.pfadResearch = function(G){
   if (G.pacing() !== 'karten') return null;
   return KF_BROWSER_BOT.PFAD_RESEARCH.find(id => G.RES[id] && G.researchBlock(id) === null) || null;
@@ -100,6 +104,8 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, kat){
     let bestI = null, score = 0;
     offer.forEach((id, i) => { const o = G.OPT[id], s = [].concat((o && o.kat) || []).filter(k => k === kat).length * (o && o.doktrin ? 2 : 1); if (s > score){ score = s; bestI = i; } });
     if (bestI !== null) return bestI;
+    const ni = offer.findIndex(id => KF_BROWSER_BOT.NEUTRAL_WEITER.includes(id));   // Teil 7: neutrale Weiterentwicklung (Geschützguss), wenn keine Karte der eigenen Kategorie im Angebot ist
+    if (ni >= 0) return ni;
   }
   const order = KF_BROWSER_BOT.PFAD_ORDER[variant || 'militaer'] || KF_BROWSER_BOT.PFAD_ORDER.militaer;
   let best = null, rank = Infinity;
