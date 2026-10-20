@@ -761,7 +761,7 @@ for (const lang of ['de', 'en']){
   check(s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task') && s6.marked.join() === 'tab-cards', `[${lang}] Kartenwahl: Sprechblase mit Erzählung und Auftrag am Reiter „Karten“`);
   check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Kartenwahl: Sprechblase verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
   check(await p.evaluate(() => document.querySelector('#hintBox').hidden), `[${lang}] Kartenwahl: kein Erstkontakt-Hinweis während des Tutorials`);
-  await p.waitForTimeout(500); await p.click('#draftOffer .card-pick'); await p.waitForTimeout(400);
+  await p.waitForTimeout(500); await p.click('#draftOffer .card-pick'); await p.waitForFunction(() => __kf.Tutorial.view().phase === 'farewell', null, { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(400);
   const f1 = await tutState(p);
   check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1') && f1.task === null, `[${lang}] Abschied 1 nach der Kartenwahl`);
   check(await p.evaluate(() => __kf.Cam.x === 0), `[${lang}] Abschied: Kamera zeigt das Reich, die Figur steht vor dem Tor`);
