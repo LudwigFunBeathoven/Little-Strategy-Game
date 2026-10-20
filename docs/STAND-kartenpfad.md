@@ -343,3 +343,19 @@ Anforderungen: `docs/anforderungen-kartenpfad-7.md`.
 25. **Flügel des Bots ohne Kategorie: Kanzlei + Bibliothek** (die Anforderung nennt nur die Kategorie-Bots; mit Zeughaus riss er die Schmiede ab und brauchte 20:17 min).
 26. **Kalibrierung nur auf Normal** (`basisFaktor` 9,5); Leicht und Schwer unverändert.
 27. **Zunftordnung bei vollem Bestand:** Der Bestand über der gesenkten Grenze bleibt, das Zunfthaus ist gesperrt (Regel aus Teil 6).
+
+## Teil 8 und 9: EP-Pacing, Reichweiten, Kartenbereinigung, Text (Branch `exp/kartenpfad`, REQ-K8.01 – K8.09, REQ-K9.01 – K9.09, Spielstand-Version 12, ab T.6 gegebenenfalls 13)
+
+Anforderungen: `docs/anforderungen-kartenpfad-8-9.md`.
+
+| Inkrement | Inhalt | Status |
+|---|---|---|
+| T.0 | K8.01 Basismessung und EP-Diagnose. Kern: je Stufenaufstieg Zeitpunkt (`S.stats.stufenT`), je Wahl Wartezeit am Mindestabstand `w`, Übertrag `ue` (EP über der erreichten Stufe, Anteil der Kosten der nächsten) und wartende Stufen `rest` (`S.stats.wahlen`, nur Modus karten, keine Regeländerung). Sitzungsprotokoll: `stufen[]`, `xpBySourceAt` (Minute 5, 10, 15). Werkzeuge: `tools/ep-kennzahlen.mjs` (gemeinsame Kennzahlen), `tools/ep-protokoll.mjs` (Auswertung eines Sitzungsprotokolls), `tools/basis-p8.mjs` (Auswertung einer Messreihe), `tools/reichweiten-p8.mjs` (Reichweitentabelle). Messung `kartenpfad8-basis` (50 Partien je Feld, Stand nach Teil 7 mit Instrumentierung, Auswertung `reports/kartenpfad8-basis-auswertung.txt`), Reichweiten `reports/kartenpfad8-reichweiten-vorher.txt`. Tests `tests/ep8.test.mjs`. Befund: Hypothese bestätigt (siehe unten). | fertig |
+
+### Befund T.0 (Normal, durchschnitt, 50 Partien je Bot)
+- **Die Hypothese stimmt.** Anteil gebremster Wahlen (Wartezeit über 5 s): Militär 53 %, Wirtschaft 80 %, Verteidigung 55 %, ohne Kategorie 57 %. Mittlerer Abstand zwischen zwei Wahlen nach Minute 10: 51,6 / 45,1 / 50,4 / 51,1 s, bei Wirtschaft also der Mindestabstand von 45 s. Auf Schwer sind es 82–95 % gebremste Wahlen.
+- **Der Überschuss staut sich als wartende Stufen, er verfällt nicht.** Der Höchstwert wartender Stufen liegt im Median bei 1 (Militär), 2 (ohne Kategorie), 18 (Wirtschaft) und 21 (Verteidigung): Der Spieler zieht dann am Ende der Partie nur noch Karten aus einem Rückstau. Der Übertrag in die nächste Stufe beträgt im Median 12–36 % der Stufenkosten.
+- **Treiber des späten Überschusses (Minute 10–15):** Schaden an der gegnerischen Basis (Militär 95 %, ohne Kategorie 92 %, Verteidigung 59 % der EP in diesem Zeitraum) und das Forschungsbudget (Wirtschaft 50 %, Verteidigung 26 %). Abschüsse liefern nur 5–13 %. Die EP je Minute zwischen Minute 10 und 15: 80 (Militär), 94 (ohne Kategorie), 141 (Verteidigung), 462 (Wirtschaft). Die Stufenkosten wachsen dagegen nur um 5 % je Schritt (Schritt 17: 153 EP).
+- **Anzeigefehler:** Bei wartender Wahl steht der Balken voll und `hud.xpEta` rechnet mit `need − cur = 0`, es erscheint „Karte in 0:00“. Behebung in T.1 (K8.03).
+- **Kein Programmfehler in der Stufenlogik:** Die Abbruchregel „nach T.0“ greift nicht; T.1 beginnt mit dem Balancing.
+- **Reichweiten:** Werfer 105, Bogenschütze 120, Armbrustschütze 140, Katapult 170, Geschütz 200; eigener Turm 120 (+20 je Ausbaustufe), gegnerischer Turm 95. Der Werfer überragt den gegnerischen Turm schon heute um 10. Die Vorgabe der Leiter (K8.05) hebt den Bogenschützen auf 136,5, den Armbrustschützen auf 157,5, das Katapult auf 189 und das Geschütz auf 231; alle liegen über der Grundreichweite des eigenen Turms (120) und des gegnerischen (95). **Die Turmbedingung aus K8.06 (gegnerische Fernkämpfer nicht über die Grundreichweite der Türme hinaus) lässt sich mit der Leiter nicht erfüllen**; es gilt die Abbruchregel zu T.3/T.4.

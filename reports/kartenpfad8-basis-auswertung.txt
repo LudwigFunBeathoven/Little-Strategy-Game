@@ -1,0 +1,79 @@
+AUSWERTUNG kartenpfad8-basis (normal, durchschnitt; Rohdaten reports/kartenpfad8-basis-*.json)
+
+Taktung der Kartenwahl
+
+| Bot | Partien | Wahlen (Median) | gebremste Wahlen (Wartezeit > 5 s) | Wartezeit Mittel | Übertrag Median (Anteil der Stufenkosten) | Abstand bis Min. 10 | Abstand nach Min. 10 | wartende Stufen (Median des Höchstwerts) |
+|---|---|---|---|---|---|---|---|---|
+| militaer | 50 | 13 | 53 % | 14,8 s | 12 % | 62,1 s | 51,6 s | 1 |
+| wirtschaft | 50 | 20 | 80 % | 31,7 s | 36 % | 47,8 s | 45,1 s | 18 |
+| verteidigung | 50 | 22 | 55 % | 19,0 s | 13 % | 57,1 s | 50,4 s | 21 |
+| ohne | 50 | 15 | 57 % | 18,9 s | 16 % | 66,7 s | 51,1 s | 2 |
+
+Gebremste Wahlen und Abstand nach Minute 10 in allen Feldern (Bot ohne Kategorie und Kategorie-Bots, ohne Druck)
+
+| Bot | Grad | Profil | gebremst | Abstand nach Min. 10 | Wahlen | Siege | Patt |
+|---|---|---|---|---|---|---|---|
+| militaer | normal | aktiv | 51 % | 52,8 s | 12 | 98 % | 2 % |
+| militaer | normal | durchschnitt | 53 % | 51,6 s | 13 | 100 % | 0 % |
+| militaer | normal | gelegentlich | 57 % | 57,8 s | 13 | 92 % | 0 % |
+| militaer | schwer | aktiv | 88 % | 49,2 s | 14 | 98 % | 2 % |
+| militaer | schwer | durchschnitt | 86 % | 47,9 s | 13 | 86 % | 0 % |
+| militaer | schwer | gelegentlich | 0 % | – s | 0 | 0 % | 0 % |
+| wirtschaft | normal | aktiv | 73 % | 45,0 s | 18 | 100 % | 0 % |
+| wirtschaft | normal | durchschnitt | 80 % | 45,1 s | 20 | 90 % | 4 % |
+| wirtschaft | normal | gelegentlich | 83 % | 45,4 s | 21 | 78 % | 0 % |
+| wirtschaft | schwer | aktiv | 95 % | 45,0 s | 19 | 98 % | 0 % |
+| wirtschaft | schwer | durchschnitt | 95 % | 45,0 s | 21 | 78 % | 0 % |
+| wirtschaft | schwer | gelegentlich | 0 % | – s | 0 | 0 % | 0 % |
+| verteidigung | normal | aktiv | 45 % | 49,3 s | 16 | 98 % | 0 % |
+| verteidigung | normal | durchschnitt | 55 % | 50,4 s | 22 | 94 % | 6 % |
+| verteidigung | normal | gelegentlich | 63 % | 50,3 s | 22 | 88 % | 2 % |
+| verteidigung | schwer | aktiv | 93 % | 45,4 s | 18 | 100 % | 0 % |
+| verteidigung | schwer | durchschnitt | 90 % | 47,0 s | 22 | 88 % | 0 % |
+| verteidigung | schwer | gelegentlich | 0 % | – s | 0 | 0 % | 0 % |
+| ohne | leicht | aktiv | 23 % | 52,7 s | 11 | 100 % | 0 % |
+| ohne | leicht | durchschnitt | 41 % | 54,7 s | 15 | 94 % | 4 % |
+| ohne | leicht | gelegentlich | 48 % | 61,9 s | 17 | 68 % | 12 % |
+| ohne | normal | aktiv | 44 % | 51,6 s | 13 | 98 % | 0 % |
+| ohne | normal | durchschnitt | 57 % | 51,1 s | 15 | 96 % | 2 % |
+| ohne | normal | gelegentlich | 58 % | 62,7 s | 16 | 76 % | 2 % |
+| ohne | schwer | aktiv | 87 % | 47,5 s | 15 | 98 % | 0 % |
+| ohne | schwer | durchschnitt | 82 % | 50,0 s | 18 | 84 % | 2 % |
+| ohne | schwer | gelegentlich | 0 % | – s | 0 | 0 % | 0 % |
+
+EP je Quelle, kumuliert (Median über die Partien; normal, durchschnitt) und Anteil an der Summe
+
+| Bot | Minute | gesamt | kill | tower | base | wave | budget | lager | trade | bounty | andere |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| militaer | 5 | 411 (50/50) | 231 (56 %) | 0 (0 %) | 97 (24 %) | 72 (18 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| militaer | 10 | 794 (41/50) | 281 (35 %) | 0 (0 %) | 440 (55 %) | 72 (9 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| militaer | 15 | 1193 (15/50) | 329 (28 %) | 0 (0 %) | 821 (69 %) | 72 (6 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| wirtschaft | 5 | 476 (50/50) | 243 (51 %) | 0 (0 %) | 76 (16 %) | 86 (18 %) | 82 (17 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| wirtschaft | 10 | 1381 (50/50) | 273 (20 %) | 0 (0 %) | 387 (28 %) | 86 (6 %) | 578 (42 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| wirtschaft | 15 | 3689 (42/50) | 398 (11 %) | 0 (0 %) | 912 (25 %) | 72 (2 %) | 1738 (47 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| verteidigung | 5 | 437 (50/50) | 226 (52 %) | 0 (0 %) | 70 (16 %) | 72 (16 %) | 49 (11 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| verteidigung | 10 | 859 (50/50) | 252 (29 %) | 0 (0 %) | 305 (36 %) | 72 (8 %) | 223 (26 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| verteidigung | 15 | 1563 (42/50) | 336 (21 %) | 0 (0 %) | 719 (46 %) | 72 (5 %) | 409 (26 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| ohne | 5 | 418 (50/50) | 226 (54 %) | 0 (0 %) | 79 (19 %) | 86 (21 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| ohne | 10 | 808 (50/50) | 288 (36 %) | 0 (0 %) | 372 (46 %) | 86 (11 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+| ohne | 15 | 1278 (28/50) | 350 (27 %) | 0 (0 %) | 804 (63 %) | 72 (6 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) |
+
+EP-Ertrag je Quelle im Zeitraum Minute 10–15 (Differenz der Mediane) – welche Quelle treibt den späten Überschuss?
+
+| Bot | kill | tower | base | wave | budget | lager | trade | bounty | andere | EP/min 10–15 | Stufenkosten Schritt (Median der Wahlen 12–15) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| militaer | 48 (12 %) | 0 (0 %) | 381 (95 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 80 | – |
+| wirtschaft | 125 (5 %) | 0 (0 %) | 525 (23 %) | -14 (-1 %) | 1160 (50 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 462 | – |
+| verteidigung | 84 (12 %) | 0 (0 %) | 414 (59 %) | 0 (0 %) | 186 (26 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 141 | – |
+| ohne | 62 (13 %) | 0 (0 %) | 432 (92 %) | -14 (-3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 94 | – |
+
+Dauer und Patt (normal, durchschnitt)
+
+| Bot | Siege | Patt | Dauer Median |
+|---|---|---|---|
+| militaer | 100 % | 0 % | 12:44 |
+| wirtschaft | 90 % | 4 % | 16:28 |
+| verteidigung | 94 % | 6 % | 20:39 |
+| ohne | 96 % | 2 % | 15:34 |
+
+Patt-Quote ohne Schalter, Bot ohne Kategorie, alle Felder: 2,4 % (450 Partien)
