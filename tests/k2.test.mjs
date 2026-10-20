@@ -33,7 +33,7 @@ test('K2.03: keine Karte nennt in Wirkungszeile oder Beschreibung eine andere Ka
   const names = { de: new Map(), en: new Map() };
   for (const lang of ['de', 'en']){
     for (const o of [...BONUS, ...PFAD]) names[lang].set(o.id, I[lang][o.nameKey]);
-    for (const r of RES) names[lang].set(r.id, I[lang][r.nameKey]);
+    for (const r of RES) if (!core.KF_PFAD.entfallen.includes(r.id)) names[lang].set(r.id, I[lang][r.nameKey]);       // Forschungen, die im Modus karten entfallen, tragen keinen Namen, den eine Karte meiden müsste (Teil 9: gleicher Name wie Schildträger)
   }
   const thing = lang => new Set(Object.keys(I[lang]).filter(k => /^(bld|unit)\.[a-z_]+\.name$/.test(k)).map(k => I[lang][k]));       // Gebäude und Einheiten dürfen genannt werden (Wirkung)
   const own = k => new Set([k.id, ...(k.oeffnetForschung || [])]);
@@ -59,6 +59,6 @@ test('K2.06: dynamische Hinweise (disc:…) sind je Browser einmal; fremde Kennu
 });
 
 test('K2.03/K2.06: Texte der Karten, Hinweise und Marken liegen in beiden Sprachen', () => {
-  for (const k of ['kp.card.drawback', 'kp.card.excludesGeneric', 'hint.disc.new', 'hint.disc.done', 'mark.new'])
+  for (const k of ['kp.card.excludesGeneric', 'hint.disc.new', 'hint.disc.done', 'mark.new'])
     for (const lang of ['de', 'en']) assert.ok(I[lang][k], `${lang} ${k}`);
 });

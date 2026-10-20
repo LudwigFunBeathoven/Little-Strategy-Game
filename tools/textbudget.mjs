@@ -7,7 +7,7 @@ import { loadCore, loadI18n } from './load-core.mjs';
 /* Budgets (Deutsch, höchstens Zeichen); Englisch + 15 % (R3). Element → Schlüsselmuster. */
 export const BUDGET = { karte: 22, wirkung: 40, nachteil: 40, bedingung: 30, gebaeude: 110, tooltip: 180, hinweis: 100 };
 export const ELEMENT = [
-  ['karte',     /^(?:draft|kp\.card)\.[A-Za-z0-9_]+\.name(?:\.karten)?$/],
+  ['karte',     /^(?:draft|kp\.card|doctrine)\.[A-Za-z0-9_]+\.name(?:\.karten)?$/],
   ['wirkung',   /^kp\.eff\.[A-Za-z0-9_]+(?:\.t\d)?(?:\.karten)?$/],
   ['nachteil',  /^kp\.drawback\.[A-Za-z0-9_]+(?:\.t\d)?(?:\.karten)?$/],
   ['bedingung', /^kp\.cond\.[A-Za-z0-9_]+(?:\.karten)?$/],

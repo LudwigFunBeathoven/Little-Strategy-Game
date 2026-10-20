@@ -1,0 +1,32 @@
+Textinventar Modus karten (Zeichen mit eingesetzten Beispielwerten)
+
+Sichtbare Schlüssel: 869
+Zeichen gesamt: Deutsch 31094, Englisch 28101
+
+| Element | Schlüssel | Zeichen de | Zeichen en | Budget de / en | über dem Budget |
+|---|---|---|---|---|---|
+| ohne Budget | 519 | 12174 | 11192 | – | 0 |
+| gebaeude | 6 | 566 | 516 | 110 / 126 | 2 |
+| tooltip | 227 | 15332 | 13594 | 180 / 206 | 4 |
+| karte | 54 | 602 | 639 | 22 / 25 | 1 |
+| hinweis | 14 | 812 | 712 | 100 / 114 | 0 |
+| wirkung | 49 | 1608 | 1448 | 40 / 46 | 7 |
+
+Verstöße gegen R3 (14):
+
+| Schlüssel | Element | de | Budget | en | Budget | Text (de) |
+|---|---|---|---|---|---|---|
+| `bld.kaserne.desc.karten` | gebaeude | 133 ! | 110 | 123 | 126 | Hebt das Versorgungslimit, ausbaubar mit Quartieren. Eine zweite Kaserne schickt je Welle einen Läufer mehr und hat eige |
+| `bld.universitaet.desc.karten` | gebaeude | 114 ! | 110 | 94 | 126 | Eine Karte mehr je Angebot und ein Forschungsplatz. Eine zweite Universität bringt einen weiteren Forschungsplatz. |
+| `kp.card.fortgeschritteneTaktiken.name` | karte | 25 ! | 22 | 16 | 25 | Fortgeschrittene Taktiken |
+| `tip.kat.counts` | tooltip | 287 ! | 180 | 263 ! | 206 | Jede gewählte Karte zählt einmal für ihre Kategorie, jede weitere Stufe derselben Karte ebenfalls; eine Doktrin zählt 25 |
+| `doctrine.bollwerk.desc` | tooltip | 234 ! | 180 | 211 ! | 206 | Manufakturen lassen sich zur Bastion aufwerten, einem Turm im Raster, der über die Mauer feuert (Schaden 25 % über einem |
+| `doctrine.ausfall.desc` | tooltip | 192 ! | 180 | 164 | 206 | Nach jeder abgewehrten Gegnerwelle rückt sofort ein Gegenstoß aus, 25 % stärker und mit 25-fachem Schaden an der gegneri |
+| `tip.budget.body.karten` | tooltip | 184 ! | 180 | 173 | 206 | Wandelt 25 % des laufenden Materialertrags (Manufakturen und Presse) in EP um, Kurs 25 EP je Material. Die Einstellung l |
+| `kp.eff.hofhaltung` | wirkung | 44 ! | 40 | 42 | 46 | Rathaus → Residenz: 5 Manufakturen, 1 Flügel |
+| `kp.eff.stadtrecht` | wirkung | 43 ! | 40 | 42 | 46 | Gutshof → Rathaus: 4 Manufakturen, 1 Flügel |
+| `kp.eff.ausfall` | wirkung | 41 ! | 40 | 42 | 46 | Gegenstoß, Basisschaden ×25; Reparatur ×2 |
+| `kp.eff.elite` | wirkung | 41 ! | 40 | 35 | 46 | Leben und Schaden ×2, Versorgung halbiert |
+| `kp.eff.freihandel` | wirkung | 41 ! | 40 | 37 | 46 | Material und EP tauschbar; Türme Stufe 25 |
+| `kp.eff.fabrikmiliz` | wirkung | 41 ! | 40 | 39 | 46 | Manufakturen stellen Läufer, Ertrag −25 % |
+| `kp.eff.grenzfeste` | wirkung | 41 ! | 40 | 32 | 46 | Turm-Abschüsse ×25 Material, Wellen +25 % |

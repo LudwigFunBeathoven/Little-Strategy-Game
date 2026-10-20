@@ -75,7 +75,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   const tLock = Date.now() - t0;
   check(tLock >= 380, `K2.02: Eingabesperre endet frühestens 400 ms nach dem Erscheinen (${tLock} ms)`);
   // Vorderseite: Band, Name, Symbol, genau eine Wirkungszeile, Stufenpunkte, einheitliche Rückseite
-  const face = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(c => ({ band: c.querySelector('.kc-fam').textContent, name: c.querySelector('.kc-name').textContent, art: !!c.querySelector('.kc-art').textContent,
+  const face = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(c => ({ band: (c.querySelector('.kc-fam') || { textContent: (c.getAttribute('aria-label') || '').split(', ')[1] }).textContent, name: c.querySelector('.kc-name').textContent, art: !!c.querySelector('.kc-art').textContent,
     eff: c.querySelector('.kc-desc').textContent, effLen: c.querySelector('.kc-desc').textContent.length, dots: c.querySelector('.kc-tier').textContent, back: !!c.querySelector('.kc-back'), lines: c.querySelectorAll('.kc-desc, .kc-unlock, .kc-needs').length })));
   check(face.every(f => f.band && f.name && f.art && f.eff && f.effLen <= 44 && /[●○]/.test(f.dots) && f.back && f.lines === 1), `K2.03: Karte mit Band, Name, Symbol, einer Wirkungszeile ≤ 44 Zeichen, Stufenpunkten, Rückseite ${JSON.stringify(face[0])}`);
   const det = await p.evaluate(() => { document.querySelectorAll('.kcard')[0].focus(); return document.getElementById('stageDetail').textContent; });

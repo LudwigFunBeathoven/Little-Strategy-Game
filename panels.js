@@ -463,6 +463,7 @@ function optParams(o, tier){
   if (o.condition && o.condition.value !== undefined) p.c1 = o.condition.value < 1 ? pct(o.condition.value) : o.condition.value;
   if (o.synergy) p.syn = pct(o.synergy.perCard);
   if (o.synergie){ p.syn = pct(Math.abs(o.synergie.perCard || 0)); p.max = C.KATEGORIEN.deckel; if (o.synergie.fix) p.e1 = fmtNum(o.synergie.fix.mul); }       // Synergiekarten (Teil 6, REQ-K6.03)
+  if (o.pfad && o.pfad.haus) p.gr = C.HAUPTHAUS.fabrikGrenze[o.pfad.haus - 1];       // Stadtrecht und Hofhaltung: Obergrenze für Manufakturen der neuen Stufe (Teil 9, R6)
   if (o.doktrin) Object.assign(p, doktrinParams(o.doktrin));
   for (const e of tr.effect || []){                                                                      // Regeländerungen der Stufen 2 und 3 (Teil 5, REQ-K5.06): neue Schwelle c2
     if (e.stat === 'drumsMin') p.c2 = o.condition.value + e.add;

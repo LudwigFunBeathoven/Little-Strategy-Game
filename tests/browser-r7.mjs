@@ -87,7 +87,7 @@ for (const lang of ['de', 'en']){
   const { ctx, p, errs } = await open('pacing=karten&entdecken=1&buehne=1&zeit=pause', { lang }); await calm(p);
   await p.evaluate(() => { const G = __kf.G; G.S.material = 5000; G.S.t = 200; G.S.pfad.choices = 1; G.S.pendingLevels = 1; G.S.pendingDraft = { level: 2, options: ['stadtrecht', 'drill', 'bessereFabriken'], rerolled: 0 }; __kf.requestRender(); });
   await settle(p, 2200);
-  const card = await p.evaluate(() => { const c = document.querySelector('.kcard.fam-weiterentwicklung'); return c && { band: c.querySelector('.kc-fam').textContent, name: c.querySelector('.kc-name').textContent, eff: c.querySelector('.kc-desc').textContent }; });
+  const card = await p.evaluate(() => { const c = document.querySelector('.kcard.fam-weiterentwicklung'); return c && { band: c.getAttribute('aria-label').split(', ')[1], name: c.querySelector('.kc-name').textContent, eff: c.querySelector('.kc-desc').textContent }; });
   check(!!card && card.band === (lang === 'de' ? 'Weiterentwicklung' : 'Development') && card.eff.length <= 44 && card.name === (lang === 'de' ? 'Stadtrecht' : 'Town Charter'), `[${lang}] K7.03: Karte Stadtrecht mit Band Weiterentwicklung und Wirkungszeile ${show(card)}`);
   await p.click('.kcard.fam-weiterentwicklung'); await settle(p, 1800);
   await p.evaluate(() => { __kf.selectTab('haus'); __kf.requestRender(); }); await settle(p, 300);

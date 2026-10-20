@@ -1,0 +1,8696 @@
+{
+ "rows": [
+  {
+   "key": "meta.locale",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "num.thousand",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "num.million",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "num.billion",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "time.hm",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "time.m",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hdr.clock",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hdr.kills",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hdr.newGame",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.material",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.perSecond",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.perClick",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "slot.label",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "sub.mauer",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "btn.click",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "opt.max",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "cost.material",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "cost.xp",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "front.field",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "front.losses",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.laeufer.name",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.laeufer.short",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.werfer.name",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.werfer.short",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.role.melee",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.role.ranged",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.schmiede.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.schmiede.desc",
+   "element": "gebaeude",
+   "de": 64,
+   "deLimit": 110,
+   "deOver": false,
+   "en": 53,
+   "enLimit": 126,
+   "enOver": false
+  },
+  {
+   "key": "bld.universitaet.name",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.presse.name",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.presse.desc",
+   "element": "tooltip",
+   "de": 87,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 93,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "upg.mauer.name",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.mauer.desc",
+   "element": "tooltip",
+   "de": 65,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 61,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "upg.turm.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.turm.build",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.turm.desc",
+   "element": "tooltip",
+   "de": 110,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 105,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "upg.reichweite.name",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.reichweite.desc",
+   "element": "tooltip",
+   "de": 14,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "upg.kadenz.name",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.kadenz.desc",
+   "element": "tooltip",
+   "de": 20,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 16,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "diff.leicht.name",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "diff.leicht.desc",
+   "element": null,
+   "de": 55,
+   "deLimit": null,
+   "deOver": false,
+   "en": 49,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "diff.normal.name",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "diff.normal.desc",
+   "element": null,
+   "de": 35,
+   "deLimit": null,
+   "deOver": false,
+   "en": 24,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "diff.schwer.name",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "diff.schwer.desc",
+   "element": null,
+   "de": 64,
+   "deLimit": null,
+   "deOver": false,
+   "en": 59,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.eyebrow",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.title",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.language",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.difficulty",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.discard",
+   "element": null,
+   "de": 41,
+   "deLimit": null,
+   "deOver": false,
+   "en": 35,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.go",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.back",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.record",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "lang.de",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "lang.en",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "result.won.eyebrow",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "result.lost.eyebrow",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "result.won.title",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "result.lost.title",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "result.won.text",
+   "element": null,
+   "de": 36,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "result.record",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "result.again",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "lane.player",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "lane.enemy",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "lane.aria",
+   "element": null,
+   "de": 112,
+   "deLimit": null,
+   "deOver": false,
+   "en": 116,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.start",
+   "element": null,
+   "de": 47,
+   "deLimit": null,
+   "deOver": false,
+   "en": 43,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.firstWave",
+   "element": null,
+   "de": 82,
+   "deLimit": null,
+   "deOver": false,
+   "en": 75,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.built",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.turret",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.newOption",
+   "element": null,
+   "de": 24,
+   "deLimit": null,
+   "deOver": false,
+   "en": 23,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.alarm",
+   "element": null,
+   "de": 52,
+   "deLimit": null,
+   "deOver": false,
+   "en": 57,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.won",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 21,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.lost",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 21,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "foot.version",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "foot.save",
+   "element": null,
+   "de": 51,
+   "deLimit": null,
+   "deOver": false,
+   "en": 48,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.cost",
+   "element": "tooltip",
+   "de": 6,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.level",
+   "element": "tooltip",
+   "de": 5,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 5,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.missing",
+   "element": "tooltip",
+   "de": 9,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.maxed",
+   "element": "tooltip",
+   "de": 20,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 21,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.needsBuilding",
+   "element": "tooltip",
+   "de": 20,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.needsTower",
+   "element": "tooltip",
+   "de": 23,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 21,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.baseFull",
+   "element": "tooltip",
+   "de": 26,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.notRunning",
+   "element": "tooltip",
+   "de": 21,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 19,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.matRate",
+   "element": "tooltip",
+   "de": 10,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.perClick",
+   "element": "tooltip",
+   "de": 18,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 18,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.baseMax",
+   "element": "tooltip",
+   "de": 21,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.thorns",
+   "element": "tooltip",
+   "de": 14,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 12,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.regen",
+   "element": "tooltip",
+   "de": 17,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 17,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.turretDmg",
+   "element": "tooltip",
+   "de": 11,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 12,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.turretRange",
+   "element": "tooltip",
+   "de": 14,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.turretRate",
+   "element": "tooltip",
+   "de": 18,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 16,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.baseHp",
+   "element": "tooltip",
+   "de": 12,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.unitHp",
+   "element": "tooltip",
+   "de": 12,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.unitDmg",
+   "element": "tooltip",
+   "de": 7,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 6,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.range",
+   "element": "tooltip",
+   "de": 10,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 5,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.click.body",
+   "element": "tooltip",
+   "de": 179,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 170,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.unit.body",
+   "element": "tooltip",
+   "de": 175,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 147,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.new.body",
+   "element": "tooltip",
+   "de": 57,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 52,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.lang.body",
+   "element": "tooltip",
+   "de": 63,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 62,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.start.body",
+   "element": "tooltip",
+   "de": 57,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 43,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.back.body",
+   "element": "tooltip",
+   "de": 54,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 44,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.again.body",
+   "element": "tooltip",
+   "de": 27,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 25,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "bld.kaserne.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.kontor.desc",
+   "element": "gebaeude",
+   "de": 51,
+   "deLimit": 110,
+   "deOver": false,
+   "en": 44,
+   "enLimit": 126,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.queueMax",
+   "element": "tooltip",
+   "de": 16,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.interest",
+   "element": "tooltip",
+   "de": 24,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 23,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "slot.cancel",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "slot.demolish",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "demolish.confirm",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "build.reason.locked",
+   "element": null,
+   "de": 34,
+   "deLimit": null,
+   "deOver": false,
+   "en": 36,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.demolished",
+   "element": null,
+   "de": 52,
+   "deLimit": null,
+   "deOver": false,
+   "en": 47,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.refund",
+   "element": "tooltip",
+   "de": 10,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 6,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.demolish.body",
+   "element": "tooltip",
+   "de": 57,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 49,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.confirmDemolish.body",
+   "element": "tooltip",
+   "de": 38,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 39,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.cancel.body",
+   "element": "tooltip",
+   "de": 35,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 35,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.pick.body",
+   "element": "tooltip",
+   "de": 34,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "hdr.level",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "phase.early",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "phase.mid",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "phase.late",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "panel.levels",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 22,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "level.progress",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "level.uniOn",
+   "element": null,
+   "de": 45,
+   "deLimit": null,
+   "deOver": false,
+   "en": 39,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "level.uniOff",
+   "element": null,
+   "de": 46,
+   "deLimit": null,
+   "deOver": false,
+   "en": 42,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "level.none",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.eyebrow",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.text",
+   "element": null,
+   "de": 115,
+   "deLimit": null,
+   "deOver": false,
+   "en": 93,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.queue",
+   "element": null,
+   "de": 41,
+   "deLimit": null,
+   "deOver": false,
+   "en": 25,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.choose",
+   "element": "tooltip",
+   "de": 57,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 51,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.category",
+   "element": "tooltip",
+   "de": 3,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.limit",
+   "element": "tooltip",
+   "de": 5,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "log.levelUp",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.draft",
+   "element": null,
+   "de": 31,
+   "deLimit": null,
+   "deOver": false,
+   "en": 29,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.unlocked",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.emergency",
+   "element": null,
+   "de": 38,
+   "deLimit": null,
+   "deOver": false,
+   "en": 39,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegserfahrung.name.karten",
+   "element": "karte",
+   "de": 9,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 14,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegserfahrung.desc.karten",
+   "element": "tooltip",
+   "de": 117,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 106,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.role",
+   "element": "tooltip",
+   "de": 3,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "lane.0",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "lane.1",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "lane.2",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "repair.0",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "repair.1",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "repair.2",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.repair.gate",
+   "element": "tooltip",
+   "de": 65,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 64,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.repair.wall",
+   "element": "tooltip",
+   "de": 105,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 91,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tower.where",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.fallen",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "sub.turm_0",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "sub.turm_2",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.wallDown",
+   "element": null,
+   "de": 57,
+   "deLimit": null,
+   "deOver": false,
+   "en": 65,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.line",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.unit",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 27,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.repair",
+   "element": null,
+   "de": 33,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "front.supply",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.supplyFull",
+   "element": "tooltip",
+   "de": 21,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 17,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "upg.qualitaet.name",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.qualitaet.desc",
+   "element": "tooltip",
+   "de": 135,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 110,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.strength",
+   "element": "tooltip",
+   "de": 21,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 19,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "bld.fabrik.nth",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fx.fabrik",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fx.schmiede",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fx.kaserne",
+   "element": null,
+   "de": 23,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fx.universitaet",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 21,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fx.kontor",
+   "element": null,
+   "de": 44,
+   "deLimit": null,
+   "deOver": false,
+   "en": 44,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.newTowerOption",
+   "element": null,
+   "de": 34,
+   "deLimit": null,
+   "deOver": false,
+   "en": 34,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.tierOf",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.maxed",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.next",
+   "element": "tooltip",
+   "de": 13,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "ex.card",
+   "element": null,
+   "de": 29,
+   "deLimit": null,
+   "deOver": false,
+   "en": 24,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.maurerkolonne.name",
+   "element": "karte",
+   "de": 13,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.maurerkolonne.desc",
+   "element": "tooltip",
+   "de": 135,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 105,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.aushebung.name",
+   "element": "karte",
+   "de": 9,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.aushebung.desc",
+   "element": "tooltip",
+   "de": 61,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 48,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.turmkanoniere.name",
+   "element": "karte",
+   "de": 13,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.turmkanoniere.desc",
+   "element": "tooltip",
+   "de": 55,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 52,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "wave.siege",
+   "element": null,
+   "de": 42,
+   "deLimit": null,
+   "deOver": false,
+   "en": 33,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.siegeWarning",
+   "element": null,
+   "de": 83,
+   "deLimit": null,
+   "deOver": false,
+   "en": 67,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.siege",
+   "element": null,
+   "de": 77,
+   "deLimit": null,
+   "deOver": false,
+   "en": 74,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.lang.de",
+   "element": null,
+   "de": 36,
+   "deLimit": null,
+   "deOver": false,
+   "en": 32,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.lang.en",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 33,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.diff",
+   "element": null,
+   "de": 38,
+   "deLimit": null,
+   "deOver": false,
+   "en": 36,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.hints",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.resetHints",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.resetHints",
+   "element": null,
+   "de": 43,
+   "deLimit": null,
+   "deOver": false,
+   "en": 33,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.resetHints.done",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.resetHints.body",
+   "element": "tooltip",
+   "de": 143,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 147,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "ex.back",
+   "element": null,
+   "de": 31,
+   "deLimit": null,
+   "deOver": false,
+   "en": 21,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.start",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.again",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.cancel",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 22,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.demolish",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 26,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.click",
+   "element": null,
+   "de": 24,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.newGame",
+   "element": null,
+   "de": 25,
+   "deLimit": null,
+   "deOver": false,
+   "en": 23,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hint.title",
+   "element": "hinweis",
+   "de": 7,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "hint.ok",
+   "element": "hinweis",
+   "de": 10,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 6,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "ex.hintOk",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.hintOk.body",
+   "element": "tooltip",
+   "de": 105,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 79,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "budget.title",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "budget.text",
+   "element": null,
+   "de": 175,
+   "deLimit": null,
+   "deOver": false,
+   "en": 162,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "budget.needUni",
+   "element": null,
+   "de": 46,
+   "deLimit": null,
+   "deOver": false,
+   "en": 39,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "budget.step",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "budget.step.title",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.budget",
+   "element": null,
+   "de": 62,
+   "deLimit": null,
+   "deOver": false,
+   "en": 57,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.budget.off",
+   "element": null,
+   "de": 47,
+   "deLimit": null,
+   "deOver": false,
+   "en": 35,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.budget.off",
+   "element": "tooltip",
+   "de": 85,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 58,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.budget.rate",
+   "element": "tooltip",
+   "de": 21,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 22,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.budget.xp",
+   "element": "tooltip",
+   "de": 13,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.budget.mat",
+   "element": "tooltip",
+   "de": 19,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 19,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.m.budget",
+   "element": "tooltip",
+   "de": 16,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 15,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "hud.budget",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hint.demolish",
+   "element": "hinweis",
+   "de": 70,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 54,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "hint.siege",
+   "element": "hinweis",
+   "de": 63,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 51,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "tip.repairCd",
+   "element": "tooltip",
+   "de": 24,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 25,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "cost.free",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.clickAuto",
+   "element": null,
+   "de": 54,
+   "deLimit": null,
+   "deOver": false,
+   "en": 47,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.wirtschaft",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.armee",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.basis",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.automatisierung",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.sonderregel",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.rarity.common",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.rarity.rare",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.rarity.legendary",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.rarity",
+   "element": "tooltip",
+   "de": 10,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 6,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.synergy",
+   "element": "tooltip",
+   "de": 14,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegstrommeln.name",
+   "element": "karte",
+   "de": 14,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegstrommeln.desc",
+   "element": "tooltip",
+   "de": 42,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 43,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.schildwall.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.schildwall.desc",
+   "element": "tooltip",
+   "de": 53,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 38,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.drill.name",
+   "element": "karte",
+   "de": 5,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 5,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.drill.desc",
+   "element": "tooltip",
+   "de": 36,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 24,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.dauerauftrag.name",
+   "element": "karte",
+   "de": 12,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 14,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.dauerauftrag.desc",
+   "element": "tooltip",
+   "de": 112,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 91,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.grosseArmee.name",
+   "element": "karte",
+   "de": 11,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.grosseArmee.desc",
+   "element": "tooltip",
+   "de": 85,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 70,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.allesAufDieMitte.name",
+   "element": "karte",
+   "de": 19,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 17,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.allesAufDieMitte.desc",
+   "element": "tooltip",
+   "de": 98,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 85,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.gluecksritter.name",
+   "element": "karte",
+   "de": 12,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 14,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.gluecksritter.desc",
+   "element": "tooltip",
+   "de": 67,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 59,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "cam.realm",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "cam.front",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "cam.follow",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.cam.realm",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.cam.front",
+   "element": null,
+   "de": 24,
+   "deLimit": null,
+   "deOver": false,
+   "en": 25,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.cam.followOn",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 23,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.cam.followOff",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.cam.realm",
+   "element": "tooltip",
+   "de": 58,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 50,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.cam.front",
+   "element": "tooltip",
+   "de": 48,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 38,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.cam.follow",
+   "element": "tooltip",
+   "de": 79,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 75,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.world.title",
+   "element": "tooltip",
+   "de": 9,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 5,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.world.body",
+   "element": "tooltip",
+   "de": 137,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 124,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.scroll.title",
+   "element": "tooltip",
+   "de": 12,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.scroll.body",
+   "element": "tooltip",
+   "de": 84,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 72,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "ctx.building",
+   "element": null,
+   "de": 24,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "preview.own",
+   "element": null,
+   "de": 2,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "preview.enemy",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.skipIntro",
+   "element": null,
+   "de": 23,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.skipIntro.off",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.skipIntro.on",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.skipIntro.body",
+   "element": "tooltip",
+   "de": 130,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 141,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "start.oldSave",
+   "element": null,
+   "de": 83,
+   "deLimit": null,
+   "deOver": false,
+   "en": 65,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.soldiers",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.xp",
+   "element": null,
+   "de": 2,
+   "deLimit": null,
+   "deOver": false,
+   "en": 2,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.waves",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.walls",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.wall0s",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.gates",
+   "element": null,
+   "de": 3,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.wall2s",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.army",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.draft",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.hud.draft",
+   "element": null,
+   "de": 24,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.toLevel",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "army.fight",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "army.march",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "army.regroup",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "army.none",
+   "element": null,
+   "de": 1,
+   "deLimit": null,
+   "deOver": false,
+   "en": 1,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "army.paused",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.soldiers",
+   "element": "tooltip",
+   "de": 70,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 53,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.xpRate",
+   "element": "tooltip",
+   "de": 13,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.waves",
+   "element": "tooltip",
+   "de": 72,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 56,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.walls",
+   "element": "tooltip",
+   "de": 73,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 70,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.army",
+   "element": "tooltip",
+   "de": 54,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 53,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.time",
+   "element": "tooltip",
+   "de": 38,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.draft",
+   "element": "tooltip",
+   "de": 88,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 83,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "menu.pause",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "menu.resume",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "menu.lang",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.menu.pause",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.menu.resume",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.menu.lang",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.menu.resume",
+   "element": "tooltip",
+   "de": 89,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 66,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.menu.pause",
+   "element": "tooltip",
+   "de": 39,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.menu.lang",
+   "element": "tooltip",
+   "de": 39,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 36,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tab.build",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tab.wall",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tab.army",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tab.smithy",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tab.uni",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tab.cards",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tab.build",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tab.wall",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tab.army",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tab.smithy",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tab.uni",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tab.cards",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.tab.build",
+   "element": "tooltip",
+   "de": 46,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 46,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.tab.wall",
+   "element": "tooltip",
+   "de": 46,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 42,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.tab.army",
+   "element": "tooltip",
+   "de": 67,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 34,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.tab.smithy",
+   "element": "tooltip",
+   "de": 48,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 35,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.tab.uni",
+   "element": "tooltip",
+   "de": 38,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 34,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.tab.cards",
+   "element": "tooltip",
+   "de": 49,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 45,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "panel.build.hint",
+   "element": null,
+   "de": 52,
+   "deLimit": null,
+   "deOver": false,
+   "en": 42,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "sub.repair",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "panel.smithy.text",
+   "element": null,
+   "de": 52,
+   "deLimit": null,
+   "deOver": false,
+   "en": 52,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.grid.empty",
+   "element": "tooltip",
+   "de": 16,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "grid.free",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "grid.aria",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "grid.cell",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.midRefill",
+   "element": null,
+   "de": 69,
+   "deLimit": null,
+   "deOver": false,
+   "en": 63,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branch.lehre",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branch.archiv",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branch.forschung",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branch.freischaltung",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branchOf.lehre",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 24,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branchOf.archiv",
+   "element": null,
+   "de": 28,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branchOf.forschung",
+   "element": null,
+   "de": 32,
+   "deLimit": null,
+   "deOver": false,
+   "en": 30,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branchOf.freischaltung",
+   "element": null,
+   "de": 25,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.branchOf.pfad",
+   "element": null,
+   "de": 54,
+   "deLimit": null,
+   "deOver": false,
+   "en": 44,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.weitblick.name",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.weitblick.desc",
+   "element": "tooltip",
+   "de": 25,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.neuziehen.name",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.neuziehen.desc",
+   "element": "tooltip",
+   "de": 43,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 39,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.bann.name",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.bann.desc",
+   "element": "tooltip",
+   "de": 50,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 44,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.gluecksgriff.name",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.gluecksgriff.desc",
+   "element": "tooltip",
+   "de": 45,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 45,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.logistik.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.logistik.desc",
+   "element": "tooltip",
+   "de": 21,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 15,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.drill.name",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.drill.desc",
+   "element": "tooltip",
+   "de": 30,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 23,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.metallurgie.name",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.maurerkunst.name",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.maurerkunst.desc",
+   "element": "tooltip",
+   "de": 38,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 26,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.zweiterplatz.name",
+   "element": null,
+   "de": 23,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.zweiterplatz.desc",
+   "element": "tooltip",
+   "de": 30,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 23,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.schmiedeausbau.name",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.schmiedeausbau.desc",
+   "element": "tooltip",
+   "de": 64,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 59,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.expl",
+   "element": null,
+   "de": 28,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.time",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.seconds",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.requires",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 26,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.running",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 27,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "opt.noSupply",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 23,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.noSupply",
+   "element": "tooltip",
+   "de": 75,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 63,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.busy",
+   "element": null,
+   "de": 32,
+   "deLimit": null,
+   "deOver": false,
+   "en": 27,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.runningName",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.intro",
+   "element": null,
+   "de": 52,
+   "deLimit": null,
+   "deOver": false,
+   "en": 47,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hint.research.karten",
+   "element": "hinweis",
+   "de": 90,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 81,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "research.needUni",
+   "element": null,
+   "de": 38,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.research",
+   "element": null,
+   "de": 33,
+   "deLimit": null,
+   "deOver": false,
+   "en": 33,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.schild.name",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.schild.short",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.role.tank",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.reroll",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.draft.reroll",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 25,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.reroll",
+   "element": "tooltip",
+   "de": 65,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 66,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.ban",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.draft.ban",
+   "element": null,
+   "de": 36,
+   "deLimit": null,
+   "deOver": false,
+   "en": 30,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.ban",
+   "element": "tooltip",
+   "de": 96,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 86,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "menu.session",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.menu.session",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.menu.session",
+   "element": "tooltip",
+   "de": 152,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 138,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "sub.kaserne",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kaserne.status.built",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 34,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kaserne.status.none",
+   "element": null,
+   "de": 65,
+   "deLimit": null,
+   "deOver": false,
+   "en": 60,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kaserne.build",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.kaserne.build",
+   "element": null,
+   "de": 56,
+   "deLimit": null,
+   "deOver": false,
+   "en": 54,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.kaserne.build",
+   "element": "tooltip",
+   "de": 106,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 90,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.rush",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.research.rush",
+   "element": null,
+   "de": 30,
+   "deLimit": null,
+   "deOver": false,
+   "en": 27,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.research.rush",
+   "element": "tooltip",
+   "de": 106,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 96,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.doneToast",
+   "element": null,
+   "de": 35,
+   "deLimit": null,
+   "deOver": false,
+   "en": 29,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.research.before",
+   "element": "tooltip",
+   "de": 5,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 3,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.research.after",
+   "element": "tooltip",
+   "de": 6,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "hud.xpEta",
+   "element": null,
+   "de": 20,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.schmiede",
+   "element": null,
+   "de": 42,
+   "deLimit": null,
+   "deOver": false,
+   "en": 36,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.kaserne",
+   "element": null,
+   "de": 43,
+   "deLimit": null,
+   "deOver": false,
+   "en": 39,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.gets",
+   "element": null,
+   "de": 40,
+   "deLimit": null,
+   "deOver": false,
+   "en": 42,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.getsNone",
+   "element": null,
+   "de": 35,
+   "deLimit": null,
+   "deOver": false,
+   "en": 29,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.gives",
+   "element": null,
+   "de": 32,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.title",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.cell",
+   "element": null,
+   "de": 20,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.pct",
+   "element": null,
+   "de": 4,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "wave.rush",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.wave.rush",
+   "element": null,
+   "de": 47,
+   "deLimit": null,
+   "deOver": false,
+   "en": 39,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.wave.rushCd",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.wave.rush",
+   "element": "tooltip",
+   "de": 100,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 90,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.wave.rushEmpty",
+   "element": "tooltip",
+   "de": 37,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 22,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "hud.rateInterest",
+   "element": null,
+   "de": 29,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.name",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "menu.tutorial",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.skip",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.menu.tutorial",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.menu.tutorial",
+   "element": "tooltip",
+   "de": 113,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 104,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "start.tutorial",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.held",
+   "element": null,
+   "de": 1,
+   "deLimit": null,
+   "deOver": false,
+   "en": 1,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hint.wall",
+   "element": "hinweis",
+   "de": 80,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 73,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "hint.tower",
+   "element": "hinweis",
+   "de": 74,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 71,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "hint.smithy",
+   "element": "hinweis",
+   "de": 74,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 69,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "hint.neighbors",
+   "element": "hinweis",
+   "de": 72,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 68,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "mark.new",
+   "element": null,
+   "de": 3,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "start.recommended",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 25,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tutorial.on",
+   "element": null,
+   "de": 56,
+   "deLimit": null,
+   "deOver": false,
+   "en": 57,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tutorial.off",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.tutorial.switch.body",
+   "element": "tooltip",
+   "de": 118,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 93,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tut.fertigen.narr",
+   "element": null,
+   "de": 56,
+   "deLimit": null,
+   "deOver": false,
+   "en": 64,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.fertigen.task",
+   "element": null,
+   "de": 20,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.rekrutieren.narr",
+   "element": null,
+   "de": 57,
+   "deLimit": null,
+   "deOver": false,
+   "en": 49,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.rekrutieren.task",
+   "element": null,
+   "de": 23,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.ausruecken.narr",
+   "element": null,
+   "de": 81,
+   "deLimit": null,
+   "deOver": false,
+   "en": 63,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.ausruecken.task",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.karte.narr",
+   "element": null,
+   "de": 63,
+   "deLimit": null,
+   "deOver": false,
+   "en": 69,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.karte.task",
+   "element": null,
+   "de": 43,
+   "deLimit": null,
+   "deOver": false,
+   "en": 41,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.greet1",
+   "element": null,
+   "de": 54,
+   "deLimit": null,
+   "deOver": false,
+   "en": 43,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.greet2",
+   "element": null,
+   "de": 63,
+   "deLimit": null,
+   "deOver": false,
+   "en": 65,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.bye1.karten",
+   "element": null,
+   "de": 86,
+   "deLimit": null,
+   "deOver": false,
+   "en": 80,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.bye2",
+   "element": null,
+   "de": 56,
+   "deLimit": null,
+   "deOver": false,
+   "en": 57,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.xpBounty",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.more",
+   "element": null,
+   "de": 25,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.kp.hud.draft",
+   "element": null,
+   "de": 23,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.kp.card",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.stage.title",
+   "element": null,
+   "de": 36,
+   "deLimit": null,
+   "deOver": false,
+   "en": 32,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.stage.hint",
+   "element": null,
+   "de": 57,
+   "deLimit": null,
+   "deOver": false,
+   "en": 46,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.stage.later",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.kp.later",
+   "element": null,
+   "de": 36,
+   "deLimit": null,
+   "deOver": false,
+   "en": 34,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.kp.later",
+   "element": "tooltip",
+   "de": 123,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 104,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.deck.label",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 4,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.maurerkolonne",
+   "element": "wirkung",
+   "de": 35,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 32,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.dauerauftrag",
+   "element": "wirkung",
+   "de": 31,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.allesAufDieMitte",
+   "element": "wirkung",
+   "de": 31,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 33,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.grosseArmee",
+   "element": "wirkung",
+   "de": 20,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 16,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.gluecksritter",
+   "element": "wirkung",
+   "de": 26,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 23,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.aushebung",
+   "element": "wirkung",
+   "de": 20,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 16,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.turmkanoniere",
+   "element": "wirkung",
+   "de": 17,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 18,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.schildwall",
+   "element": "wirkung",
+   "de": 34,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 31,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.kriegserfahrung.karten",
+   "element": "wirkung",
+   "de": 21,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.kriegstrommeln",
+   "element": "wirkung",
+   "de": 26,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 24,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.drill",
+   "element": "wirkung",
+   "de": 35,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 24,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.drawback",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.excludesGeneric",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 29,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.glaskanonen",
+   "element": "wirkung",
+   "de": 36,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "hint.disc.new",
+   "element": "hinweis",
+   "de": 16,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 16,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "hint.disc.done",
+   "element": "hinweis",
+   "de": 29,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 26,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "panel.smithy.none",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.vorschau",
+   "element": null,
+   "de": 1,
+   "deLimit": null,
+   "deOver": false,
+   "en": 1,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.kp.vorschau",
+   "element": "tooltip",
+   "de": 34,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 38,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "ex.kp.vorschau",
+   "element": null,
+   "de": 20,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.stage.next",
+   "element": null,
+   "de": 34,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.deck.count",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.kp.deck",
+   "element": null,
+   "de": 34,
+   "deLimit": null,
+   "deOver": false,
+   "en": 30,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.kp.deck",
+   "element": "tooltip",
+   "de": 141,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 123,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.collection.hint",
+   "element": null,
+   "de": 82,
+   "deLimit": null,
+   "deOver": false,
+   "en": 81,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.collection.banned",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.collection.noneBanned",
+   "element": null,
+   "de": 20,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.bau",
+   "element": null,
+   "de": 3,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.technologie",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.wagnis",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.fam.bonus",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.fam.technologie",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.fam.wagnis",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.unlocks",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.opens",
+   "element": null,
+   "de": 20,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.needs",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.returns",
+   "element": null,
+   "de": 47,
+   "deLimit": null,
+   "deOver": false,
+   "en": 34,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.excludes",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.noBan",
+   "element": null,
+   "de": 36,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.built",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.lock.card",
+   "element": null,
+   "de": 31,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.lock.research",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.lock.opens",
+   "element": null,
+   "de": 28,
+   "deLimit": null,
+   "deOver": false,
+   "en": 27,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.unlockedKey",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.befestigungskunde.name",
+   "element": "karte",
+   "de": 17,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 18,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.befestigungskunde.desc",
+   "element": "tooltip",
+   "de": 29,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 30,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.group.grund",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.group.pfad",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.opensWith",
+   "element": null,
+   "de": 28,
+   "deLimit": null,
+   "deOver": false,
+   "en": 27,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.fortgeschritteneTaktiken.name",
+   "element": "karte",
+   "de": 25,
+   "deLimit": 22,
+   "deOver": true,
+   "en": 16,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.fortgeschritteneTaktiken.desc",
+   "element": "tooltip",
+   "de": 26,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 30,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.eiserneKlingen.name",
+   "element": "karte",
+   "de": 15,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.eiserneKlingen.desc",
+   "element": "tooltip",
+   "de": 25,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 30,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.reiter.name",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.reiter.desc",
+   "element": "tooltip",
+   "de": 24,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 24,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.schild.name",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.schild.desc",
+   "element": "tooltip",
+   "de": 30,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 32,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.eisenwaffen.name",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.eisenwaffen.desc",
+   "element": "tooltip",
+   "de": 95,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 88,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "unit.reiter.name",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.reiter.short",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.schwertkaempfer.name",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.schwertkaempfer.short",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.bogenschuetze.name",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.bogenschuetze.short",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.ballistik.name",
+   "element": "karte",
+   "de": 9,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.ballistik.desc",
+   "element": "tooltip",
+   "de": 24,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 28,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.glaskanonen.name",
+   "element": "karte",
+   "de": 11,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.glaskanonen.desc",
+   "element": "tooltip",
+   "de": 87,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 81,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.armbrust.name",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.armbrust.desc",
+   "element": "tooltip",
+   "de": 34,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.wehrgang.name",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.wehrgang.desc",
+   "element": "tooltip",
+   "de": 62,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 53,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.schiessscharten.name",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.schiessscharten.desc",
+   "element": "tooltip",
+   "de": 64,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 61,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "upg.ausbau.name.karten",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.ausbau.desc.karten",
+   "element": "tooltip",
+   "de": 87,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 73,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.katapult.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.katapult.desc",
+   "element": "tooltip",
+   "de": 27,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "unit.armbrust.name",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.armbrust.short",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.katapult.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.katapult.short",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.rarity.wagnis",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.path.head",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.path.status.chosen",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.path.status.available",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.path.status.locked",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.path.status.excluded",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.path.status.done",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.path.status.running",
+   "element": null,
+   "de": 5,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hint.variante",
+   "element": "hinweis",
+   "de": 77,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 63,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "var.werkstatt.name",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.werkstatt.desc",
+   "element": "tooltip",
+   "de": 39,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.werkstatt.eff",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.manufaktur.name",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.manufaktur.desc",
+   "element": "tooltip",
+   "de": 59,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 50,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.manufaktur.eff",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.wachstube.name",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.wachstube.desc",
+   "element": "tooltip",
+   "de": 75,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 56,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.wachstube.eff",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.exerzierplatz.name",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.exerzierplatz.desc",
+   "element": "tooltip",
+   "de": 72,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 52,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.exerzierplatz.eff",
+   "element": null,
+   "de": 33,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.garnison.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.garnison.desc",
+   "element": "tooltip",
+   "de": 96,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 78,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.garnison.eff",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.waffenschmiede.name",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.waffenschmiede.desc",
+   "element": "tooltip",
+   "de": 38,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.waffenschmiede.eff",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.ruestkammer.name",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.ruestkammer.desc",
+   "element": "tooltip",
+   "de": 37,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.ruestkammer.eff",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.variant",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 27,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.title",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.pick",
+   "element": null,
+   "de": 23,
+   "deLimit": null,
+   "deOver": false,
+   "en": 21,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.progress",
+   "element": null,
+   "de": 56,
+   "deLimit": null,
+   "deOver": false,
+   "en": 58,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.reason.upgrading",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 40,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.reason.done",
+   "element": null,
+   "de": 54,
+   "deLimit": null,
+   "deOver": false,
+   "en": 64,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.reason.excess",
+   "element": null,
+   "de": 32,
+   "deLimit": null,
+   "deOver": false,
+   "en": 32,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.reason.excess.one",
+   "element": null,
+   "de": 32,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.once",
+   "element": null,
+   "de": 58,
+   "deLimit": null,
+   "deOver": false,
+   "en": 59,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.variantStart",
+   "element": null,
+   "de": 55,
+   "deLimit": null,
+   "deOver": false,
+   "en": 55,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.variantDone",
+   "element": null,
+   "de": 35,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "variant.cell",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 22,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kaserne.status.upgrading",
+   "element": null,
+   "de": 58,
+   "deLimit": null,
+   "deOver": false,
+   "en": 60,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.variant.dur",
+   "element": "tooltip",
+   "de": 23,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 28,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.doktrin",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.rarity.doktrin",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.fam.doktrin",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.zunftordnung.name",
+   "element": "karte",
+   "de": 12,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.zunftordnung.desc",
+   "element": "tooltip",
+   "de": 176,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 152,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.stiftung.name",
+   "element": "karte",
+   "de": 8,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.stiftung.desc",
+   "element": "tooltip",
+   "de": 165,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 142,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.stehendesHeer.name",
+   "element": "karte",
+   "de": 14,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.stehendesHeer.desc",
+   "element": "tooltip",
+   "de": 157,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 131,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.vorstoss.name",
+   "element": "karte",
+   "de": 7,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.vorstoss.desc",
+   "element": "tooltip",
+   "de": 98,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 82,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.bollwerk.name",
+   "element": "karte",
+   "de": 8,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 7,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.bollwerk.desc",
+   "element": "tooltip",
+   "de": 234,
+   "deLimit": 180,
+   "deOver": true,
+   "en": 211,
+   "enLimit": 206,
+   "enOver": true
+  },
+  {
+   "key": "doctrine.ausfall.name",
+   "element": "karte",
+   "de": 7,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 6,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.ausfall.desc",
+   "element": "tooltip",
+   "de": 192,
+   "deLimit": 180,
+   "deOver": true,
+   "en": 164,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.zunftordnung",
+   "element": "wirkung",
+   "de": 39,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.stiftung",
+   "element": "wirkung",
+   "de": 40,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 36,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.stehendesHeer",
+   "element": "wirkung",
+   "de": 36,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.vorstoss",
+   "element": "wirkung",
+   "de": 38,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 36,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.bollwerk",
+   "element": "wirkung",
+   "de": 38,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 32,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.ausfall",
+   "element": "wirkung",
+   "de": 41,
+   "deLimit": 40,
+   "deOver": true,
+   "en": 42,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "var.zunfthaus.name",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.zunfthaus.desc",
+   "element": "tooltip",
+   "de": 82,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 86,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.zunfthaus.eff",
+   "element": null,
+   "de": 16,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.bastion.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.bastion.desc",
+   "element": "tooltip",
+   "de": 134,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 130,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.bastion.eff",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.stiftungshaus.name",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 14,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.stiftungshaus.desc",
+   "element": "tooltip",
+   "de": 57,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 52,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.stiftungshaus.eff",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.heerlager.name",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.heerlager.desc",
+   "element": "tooltip",
+   "de": 34,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.heerlager.eff",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "build.reason.limit",
+   "element": null,
+   "de": 66,
+   "deLimit": null,
+   "deOver": false,
+   "en": 60,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.unit.merc",
+   "element": null,
+   "de": 55,
+   "deLimit": null,
+   "deOver": false,
+   "en": 50,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.zahlmeisterei.name",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.zahlmeisterei.desc",
+   "element": "tooltip",
+   "de": 60,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 56,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.zahlmeisterei.eff",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.muenzschmiede.name",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "var.muenzschmiede.desc",
+   "element": "tooltip",
+   "de": 49,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 43,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "var.muenzschmiede.eff",
+   "element": null,
+   "de": 28,
+   "deLimit": null,
+   "deOver": false,
+   "en": 24,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.bessereFabriken.desc.t2.karten",
+   "element": "tooltip",
+   "de": 69,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 62,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.bessereFabriken.desc.t3.karten",
+   "element": "tooltip",
+   "de": 69,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 62,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegserfahrung.desc.t2.karten",
+   "element": "tooltip",
+   "de": 108,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 93,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.aushebung.desc.t2.karten",
+   "element": "tooltip",
+   "de": 92,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 67,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.drill.desc.t2.karten",
+   "element": "tooltip",
+   "de": 61,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 42,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegstrommeln.desc.t3.karten",
+   "element": "tooltip",
+   "de": 48,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 37,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.schildwall.desc.t2.karten",
+   "element": "tooltip",
+   "de": 81,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 72,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.maurerkolonne.desc.t3.karten",
+   "element": "tooltip",
+   "de": 136,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 115,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.turmkanoniere.desc.t2.karten",
+   "element": "tooltip",
+   "de": 40,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 36,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.turmkanoniere.desc.t3.karten",
+   "element": "tooltip",
+   "de": 77,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 72,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kat.militaer.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.wirtschaft.name",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.verteidigung.name",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.neutral.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.variant.kat",
+   "element": "tooltip",
+   "de": 9,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 8,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.querverbindung.name",
+   "element": "karte",
+   "de": 14,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.querverbindung.desc",
+   "element": "tooltip",
+   "de": 40,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 39,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.querverbindung",
+   "element": "wirkung",
+   "de": 32,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 31,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.lagerzehnt.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.lagerzehnt.desc",
+   "element": "tooltip",
+   "de": 60,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 67,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.lagerzehnt",
+   "element": "wirkung",
+   "de": 34,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 30,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.soeldnertruppe.name",
+   "element": "karte",
+   "de": 13,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 17,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.soeldnertruppe.desc",
+   "element": "tooltip",
+   "de": 106,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 76,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.soeldnertruppe",
+   "element": "wirkung",
+   "de": 33,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 35,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.rekrutenzug.name",
+   "element": "karte",
+   "de": 11,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 12,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.rekrutenzug.desc",
+   "element": "tooltip",
+   "de": 44,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 43,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.rekrutenzug.desc.t2.karten",
+   "element": "tooltip",
+   "de": 95,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 86,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.rekrutenzug",
+   "element": "wirkung",
+   "de": 30,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.durchbruch.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 12,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.durchbruch.desc",
+   "element": "tooltip",
+   "de": 65,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 40,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.durchbruch",
+   "element": "wirkung",
+   "de": 16,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 21,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.pluenderung.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 7,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.pluenderung.desc",
+   "element": "tooltip",
+   "de": 39,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.pluenderung",
+   "element": "wirkung",
+   "de": 31,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 30,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kat.now",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.art.zaehler",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.art.verstaerker",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.art.bruecke",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 6,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.counts.title",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kat.counts.item",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.kat.counts",
+   "element": "tooltip",
+   "de": 287,
+   "deLimit": 180,
+   "deOver": true,
+   "en": 263,
+   "enLimit": 206,
+   "enOver": true
+  },
+  {
+   "key": "tip.kat.lead",
+   "element": "tooltip",
+   "de": 5,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 5,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.kat",
+   "element": "tooltip",
+   "de": 9,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 8,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.draft.art",
+   "element": "tooltip",
+   "de": 3,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 4,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.gilde.name",
+   "element": "karte",
+   "de": 5,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 5,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.gilde.desc",
+   "element": "tooltip",
+   "de": 97,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 85,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.gilde",
+   "element": "wirkung",
+   "de": 32,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.waffenbrueder.name",
+   "element": "karte",
+   "de": 12,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 16,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.waffenbrueder.desc",
+   "element": "tooltip",
+   "de": 96,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 84,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.waffenbrueder",
+   "element": "wirkung",
+   "de": 29,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 29,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.wehrverband.name",
+   "element": "karte",
+   "de": 11,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 14,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.wehrverband.desc",
+   "element": "tooltip",
+   "de": 98,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 84,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.wehrverband",
+   "element": "wirkung",
+   "de": 39,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 34,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.bauordnung.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.bauordnung.desc",
+   "element": "tooltip",
+   "de": 39,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 35,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.bauordnung",
+   "element": "wirkung",
+   "de": 22,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 21,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.sammelruf.name",
+   "element": "karte",
+   "de": 9,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.sammelruf.desc",
+   "element": "tooltip",
+   "de": 159,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 146,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.sammelruf",
+   "element": "wirkung",
+   "de": 31,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 32,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegswirtschaft.name",
+   "element": "karte",
+   "de": 16,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 15,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.kriegswirtschaft.desc",
+   "element": "tooltip",
+   "de": 108,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 95,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.kriegswirtschaft",
+   "element": "wirkung",
+   "de": 37,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 32,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.wehrhandel.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 13,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.wehrhandel.desc",
+   "element": "tooltip",
+   "de": 110,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 93,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.wehrhandel",
+   "element": "wirkung",
+   "de": 34,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 27,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.grenzwacht.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 12,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.grenzwacht.desc",
+   "element": "tooltip",
+   "de": 113,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 106,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.grenzwacht",
+   "element": "wirkung",
+   "de": 33,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 34,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.elite.name",
+   "element": "karte",
+   "de": 5,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 5,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.elite.desc",
+   "element": "tooltip",
+   "de": 136,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 98,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.elite",
+   "element": "wirkung",
+   "de": 41,
+   "deLimit": 40,
+   "deOver": true,
+   "en": 35,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.massenaufgebot.name",
+   "element": "karte",
+   "de": 14,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.massenaufgebot.desc",
+   "element": "tooltip",
+   "de": 139,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 119,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.massenaufgebot",
+   "element": "wirkung",
+   "de": 38,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 40,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.freihandel.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 10,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.freihandel.desc",
+   "element": "tooltip",
+   "de": 174,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 158,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.freihandel",
+   "element": "wirkung",
+   "de": 41,
+   "deLimit": 40,
+   "deOver": true,
+   "en": 37,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.raubbau.name",
+   "element": "karte",
+   "de": 7,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 16,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.raubbau.desc",
+   "element": "tooltip",
+   "de": 152,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 137,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.raubbau",
+   "element": "wirkung",
+   "de": 36,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 28,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.fabrikmiliz.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 15,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.fabrikmiliz.desc",
+   "element": "tooltip",
+   "de": 131,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 107,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.fabrikmiliz",
+   "element": "wirkung",
+   "de": 41,
+   "deLimit": 40,
+   "deOver": true,
+   "en": 39,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.grenzfeste.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 15,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.grenzfeste.desc",
+   "element": "tooltip",
+   "de": 109,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 73,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.grenzfeste",
+   "element": "wirkung",
+   "de": 41,
+   "deLimit": 40,
+   "deOver": true,
+   "en": 32,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.zermuerbung.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "doctrine.zermuerbung.desc",
+   "element": "tooltip",
+   "de": 124,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 110,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.zermuerbung",
+   "element": "wirkung",
+   "de": 35,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 31,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "trade.toXp",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "trade.toMat",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.trade.toXp",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.trade.toMat",
+   "element": null,
+   "de": 19,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.trade.body",
+   "element": "tooltip",
+   "de": 176,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 167,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "trade.progress",
+   "element": null,
+   "de": 32,
+   "deLimit": null,
+   "deOver": false,
+   "en": 30,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "trade.reason.xp",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 37,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.reason.doctrine",
+   "element": null,
+   "de": 38,
+   "deLimit": null,
+   "deOver": false,
+   "en": 34,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "opt.towerCap",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 33,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.towerCap",
+   "element": "tooltip",
+   "de": 66,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 59,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "raubbau.cell",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.dampfkraft.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.dampfkraft.desc",
+   "element": "tooltip",
+   "de": 85,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 77,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.buchdruck.name",
+   "element": "karte",
+   "de": 9,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 14,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.buchdruck.desc",
+   "element": "tooltip",
+   "de": 45,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 40,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.dampfkraft.name",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.dampfkraft.desc",
+   "element": "tooltip",
+   "de": 110,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 115,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.buchdruck.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.buchdruck.desc",
+   "element": "tooltip",
+   "de": 113,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 105,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "bld.fabrik.name.weiter",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.universitaet.name.weiter",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.weiter.none",
+   "element": "tooltip",
+   "de": 23,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.weiter.one",
+   "element": "tooltip",
+   "de": 37,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 31,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.weiter.many",
+   "element": "tooltip",
+   "de": 39,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 33,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "log.weiter",
+   "element": null,
+   "de": 78,
+   "deLimit": null,
+   "deOver": false,
+   "en": 67,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.turmschule.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 12,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.turmschule.desc",
+   "element": "tooltip",
+   "de": 80,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 68,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.turmschule",
+   "element": "wirkung",
+   "de": 35,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 25,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.stachelwall.name",
+   "element": "karte",
+   "de": 11,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.stachelwall.desc",
+   "element": "tooltip",
+   "de": 77,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 74,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.stachelwall",
+   "element": "wirkung",
+   "de": 24,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 22,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "draft.handelskontor.name.karten",
+   "element": "karte",
+   "de": 11,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 15,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.handelskontor.desc.karten",
+   "element": "tooltip",
+   "de": 81,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 91,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.handelskontor.karten",
+   "element": "wirkung",
+   "de": 28,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 21,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "tab.haus",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.tab.haus",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.tab.haus",
+   "element": "tooltip",
+   "de": 103,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 95,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "bld.haupthaus.name",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.haupthaus.desc",
+   "element": "gebaeude",
+   "de": 98,
+   "deLimit": 110,
+   "deOver": false,
+   "en": 93,
+   "enLimit": 126,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.1.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.2.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.3.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.1.desc",
+   "element": null,
+   "de": 94,
+   "deLimit": null,
+   "deOver": false,
+   "en": 90,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.2.desc",
+   "element": null,
+   "de": 105,
+   "deLimit": null,
+   "deOver": false,
+   "en": 107,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.3.desc",
+   "element": null,
+   "de": 61,
+   "deLimit": null,
+   "deOver": false,
+   "en": 56,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.grenze",
+   "element": null,
+   "de": 38,
+   "deLimit": null,
+   "deOver": false,
+   "en": 34,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.grenze.label",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.grenze.value",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fx.haupthaus",
+   "element": null,
+   "de": 25,
+   "deLimit": null,
+   "deOver": false,
+   "en": 24,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fab.stat.grenze",
+   "element": null,
+   "de": 51,
+   "deLimit": null,
+   "deOver": false,
+   "en": 51,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "build.reason.fabrikGrenze.1",
+   "element": null,
+   "de": 47,
+   "deLimit": null,
+   "deOver": false,
+   "en": 49,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "build.reason.fabrikGrenze.2",
+   "element": null,
+   "de": 47,
+   "deLimit": null,
+   "deOver": false,
+   "en": 52,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "build.reason.fabrikGrenze.3",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 25,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "build.reason.fabrikGrenze.doktrin",
+   "element": null,
+   "de": 46,
+   "deLimit": null,
+   "deOver": false,
+   "en": 45,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.fam.weiterentwicklung",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.cat.weiterentwicklung",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.stadtrecht.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 12,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.stadtrecht.desc",
+   "element": "tooltip",
+   "de": 156,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 159,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.stadtrecht",
+   "element": "wirkung",
+   "de": 43,
+   "deLimit": 40,
+   "deOver": true,
+   "en": 42,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.hofhaltung.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 15,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.hofhaltung.desc",
+   "element": "tooltip",
+   "de": 155,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 153,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.hofhaltung",
+   "element": "wirkung",
+   "de": 44,
+   "deLimit": 40,
+   "deOver": true,
+   "en": 42,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.2.eff",
+   "element": null,
+   "de": 36,
+   "deLimit": null,
+   "deOver": false,
+   "en": 33,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.stufe.3.eff",
+   "element": null,
+   "de": 40,
+   "deLimit": null,
+   "deOver": false,
+   "en": 36,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.ausbau",
+   "element": null,
+   "de": 18,
+   "deLimit": null,
+   "deOver": false,
+   "en": 18,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.haus.ausbau",
+   "element": null,
+   "de": 28,
+   "deLimit": null,
+   "deOver": false,
+   "en": 28,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.ausbau.running",
+   "element": null,
+   "de": 34,
+   "deLimit": null,
+   "deOver": false,
+   "en": 31,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.ausbau.noCard",
+   "element": null,
+   "de": 29,
+   "deLimit": null,
+   "deOver": false,
+   "en": 26,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.haus.ausbau.body",
+   "element": "tooltip",
+   "de": 54,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 52,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.haus.ausbau",
+   "element": "tooltip",
+   "de": 87,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 88,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.title",
+   "element": null,
+   "de": 6,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.choose",
+   "element": null,
+   "de": 43,
+   "deLimit": null,
+   "deOver": false,
+   "en": 35,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.chosen",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.taken",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 15,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.noSlot",
+   "element": null,
+   "de": 48,
+   "deLimit": null,
+   "deOver": false,
+   "en": 40,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.allTaken",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 22,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.fluegel",
+   "element": null,
+   "de": 14,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.fluegel.body",
+   "element": "tooltip",
+   "de": 144,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 138,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.bibliothek.name",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.bibliothek.desc",
+   "element": null,
+   "de": 167,
+   "deLimit": null,
+   "deOver": false,
+   "en": 160,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.bibliothek.eff",
+   "element": null,
+   "de": 32,
+   "deLimit": null,
+   "deOver": false,
+   "en": 32,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.zeughaus.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.zeughaus.desc",
+   "element": null,
+   "de": 82,
+   "deLimit": null,
+   "deOver": false,
+   "en": 87,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.zeughaus.eff",
+   "element": null,
+   "de": 35,
+   "deLimit": null,
+   "deOver": false,
+   "en": 37,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.schatzkammer.name",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.schatzkammer.desc",
+   "element": null,
+   "de": 131,
+   "deLimit": null,
+   "deOver": false,
+   "en": 121,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.schatzkammer.eff",
+   "element": null,
+   "de": 31,
+   "deLimit": null,
+   "deOver": false,
+   "en": 38,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.kanzlei.name",
+   "element": null,
+   "de": 7,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.kanzlei.desc",
+   "element": null,
+   "de": 89,
+   "deLimit": null,
+   "deOver": false,
+   "en": 75,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "haus.fluegel.kanzlei.eff",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 23,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.hausStart",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 29,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.hausDone",
+   "element": null,
+   "de": 31,
+   "deLimit": null,
+   "deOver": false,
+   "en": 30,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "log.fluegel",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 23,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "panel.smithy.zeughaus",
+   "element": null,
+   "de": 75,
+   "deLimit": null,
+   "deOver": false,
+   "en": 73,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.zeughausMax",
+   "element": "tooltip",
+   "de": 44,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 44,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.bib",
+   "element": null,
+   "de": 85,
+   "deLimit": null,
+   "deOver": false,
+   "en": 77,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "research.runningBib",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "budget.bib",
+   "element": null,
+   "de": 45,
+   "deLimit": null,
+   "deOver": false,
+   "en": 43,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.fernhandel.name",
+   "element": "karte",
+   "de": 10,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 19,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.fernhandel.desc",
+   "element": "tooltip",
+   "de": 124,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 131,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.fernhandel",
+   "element": "wirkung",
+   "de": 38,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 41,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.geschuetzguss.name",
+   "element": "karte",
+   "de": 12,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.geschuetzguss.desc",
+   "element": "tooltip",
+   "de": 144,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 118,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.geschuetzguss",
+   "element": "wirkung",
+   "de": 30,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 22,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.fernhandel.name",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.fernhandel.desc",
+   "element": "tooltip",
+   "de": 120,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 135,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.geschuetzguss.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.geschuetzguss.desc",
+   "element": "tooltip",
+   "de": 129,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 117,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "bld.kontor.name.weiter",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.schmiede.name.weiter",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 7,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.geschuetz.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.geschuetz.short",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 3,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kompanie.name",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 17,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.kompanie",
+   "element": null,
+   "de": 62,
+   "deLimit": null,
+   "deOver": false,
+   "en": 60,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "ex.kompanie.cd",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 22,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kompanie.count",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 5,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.kompanie",
+   "element": "tooltip",
+   "de": 179,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 166,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "log.kompanie",
+   "element": null,
+   "de": 40,
+   "deLimit": null,
+   "deOver": false,
+   "en": 40,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "unit.versorgung",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.wasserrahmen.name",
+   "element": "karte",
+   "de": 12,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 11,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.wasserrahmen.desc",
+   "element": "tooltip",
+   "de": 99,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 90,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.wasserrahmen",
+   "element": "wirkung",
+   "de": 33,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 33,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.dampfkraft",
+   "element": "wirkung",
+   "de": 34,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 35,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.wasserrahmen.name",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.res.wasserrahmen.desc",
+   "element": "tooltip",
+   "de": 77,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 75,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "bld.fabrik.name.weiter2",
+   "element": null,
+   "de": 11,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "kp.card.forschungsort",
+   "element": null,
+   "de": 27,
+   "deLimit": null,
+   "deOver": false,
+   "en": 21,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.fabrik.name.karten",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.fabrik.desc.karten",
+   "element": "gebaeude",
+   "de": 106,
+   "deLimit": 110,
+   "deOver": false,
+   "en": 109,
+   "enLimit": 126,
+   "enOver": false
+  },
+  {
+   "key": "result.lost.text.karten",
+   "element": null,
+   "de": 100,
+   "deLimit": null,
+   "deOver": false,
+   "en": 87,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "slot.dialogText.karten",
+   "element": null,
+   "de": 133,
+   "deLimit": null,
+   "deOver": false,
+   "en": 133,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "fab.stat.karten",
+   "element": null,
+   "de": 49,
+   "deLimit": null,
+   "deOver": false,
+   "en": 49,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "draft.bessereFabriken.name.karten",
+   "element": "karte",
+   "de": 20,
+   "deLimit": 22,
+   "deOver": false,
+   "en": 20,
+   "enLimit": 25,
+   "enOver": false
+  },
+  {
+   "key": "draft.bessereFabriken.desc.karten",
+   "element": "tooltip",
+   "de": 30,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 24,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "kp.eff.bessereFabriken.karten",
+   "element": "wirkung",
+   "de": 29,
+   "deLimit": 40,
+   "deOver": false,
+   "en": 23,
+   "enLimit": 46,
+   "enOver": false
+  },
+  {
+   "key": "tip.budget.body.karten",
+   "element": "tooltip",
+   "de": 184,
+   "deLimit": 180,
+   "deOver": true,
+   "en": 173,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.material.karten",
+   "element": "tooltip",
+   "de": 66,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 65,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "research.metallurgie.desc.karten",
+   "element": "tooltip",
+   "de": 38,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 32,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "nb.fabrik.karten",
+   "element": null,
+   "de": 79,
+   "deLimit": null,
+   "deOver": false,
+   "en": 79,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.universitaet.karten",
+   "element": null,
+   "de": 88,
+   "deLimit": null,
+   "deOver": false,
+   "en": 85,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "nb.kontor.karten",
+   "element": null,
+   "de": 86,
+   "deLimit": null,
+   "deOver": false,
+   "en": 86,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.bauen.narr.karten",
+   "element": null,
+   "de": 81,
+   "deLimit": null,
+   "deOver": false,
+   "en": 78,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tut.bauen.task.karten",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 20,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "bld.kontor.name.karten",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hint.kontor.karten",
+   "element": "hinweis",
+   "de": 70,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 61,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "hint.buildings.karten",
+   "element": "hinweis",
+   "de": 80,
+   "deLimit": 100,
+   "deOver": false,
+   "en": 69,
+   "enLimit": 114,
+   "enOver": false
+  },
+  {
+   "key": "mauer.stufe.palisade",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 8,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "mauer.stufe.ringmauer",
+   "element": null,
+   "de": 9,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "mauer.stufe.bastionsmauer",
+   "element": null,
+   "de": 13,
+   "deLimit": null,
+   "deOver": false,
+   "en": 12,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "turm.stufe.wachturm",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "turm.stufe.wehrturm",
+   "element": null,
+   "de": 8,
+   "deLimit": null,
+   "deOver": false,
+   "en": 13,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "turm.stufe.geschuetzturm",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 9,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "wall.sub.name",
+   "element": null,
+   "de": 17,
+   "deLimit": null,
+   "deOver": false,
+   "en": 16,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "turm.sub.0.name",
+   "element": null,
+   "de": 21,
+   "deLimit": null,
+   "deOver": false,
+   "en": 21,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "turm.sub.2.name",
+   "element": null,
+   "de": 22,
+   "deLimit": null,
+   "deOver": false,
+   "en": 24,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.stufenname",
+   "element": "tooltip",
+   "de": 7,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 9,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.stufenname.next",
+   "element": "tooltip",
+   "de": 19,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 21,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "upg.ausbau2.name",
+   "element": null,
+   "de": 26,
+   "deLimit": null,
+   "deOver": false,
+   "en": 26,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "upg.ausbau2.desc",
+   "element": "tooltip",
+   "de": 94,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 83,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "bld.kaserne.desc.karten",
+   "element": "gebaeude",
+   "de": 133,
+   "deLimit": 110,
+   "deOver": true,
+   "en": 123,
+   "enLimit": 126,
+   "enOver": false
+  },
+  {
+   "key": "bld.universitaet.desc.karten",
+   "element": "gebaeude",
+   "de": 114,
+   "deLimit": 110,
+   "deOver": true,
+   "en": 94,
+   "enLimit": 126,
+   "enOver": false
+  },
+  {
+   "key": "build.reason.standing.karten",
+   "element": null,
+   "de": 40,
+   "deLimit": null,
+   "deOver": false,
+   "en": 36,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.kp.open",
+   "element": null,
+   "de": 10,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.kp.next",
+   "element": null,
+   "de": 20,
+   "deLimit": null,
+   "deOver": false,
+   "en": 19,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.kp.nextMin",
+   "element": null,
+   "de": 37,
+   "deLimit": null,
+   "deOver": false,
+   "en": 33,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.kp.noRate",
+   "element": null,
+   "de": 12,
+   "deLimit": null,
+   "deOver": false,
+   "en": 11,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "hud.kp.lost",
+   "element": null,
+   "de": 15,
+   "deLimit": null,
+   "deOver": false,
+   "en": 10,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.xpTotal",
+   "element": "tooltip",
+   "de": 9,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 8,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.xpLost",
+   "element": "tooltip",
+   "de": 13,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 7,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.xp.karten",
+   "element": "tooltip",
+   "de": 116,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 109,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "draft.durchbruch.desc.t2",
+   "element": "tooltip",
+   "de": 124,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 82,
+   "enLimit": 206,
+   "enOver": false
+  },
+  {
+   "key": "trade.reason.verfall",
+   "element": null,
+   "de": 50,
+   "deLimit": null,
+   "deOver": false,
+   "en": 52,
+   "enLimit": null,
+   "enOver": false
+  },
+  {
+   "key": "tip.hud.xpCap",
+   "element": "tooltip",
+   "de": 46,
+   "deLimit": 180,
+   "deOver": false,
+   "en": 40,
+   "enLimit": 206,
+   "enOver": false
+  }
+ ],
+ "totalDe": 31094,
+ "totalEn": 28101
+}

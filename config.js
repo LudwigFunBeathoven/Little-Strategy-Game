@@ -261,7 +261,8 @@ const KF_CONFIG = {
     hebenPct: 8,                // überfahrene oder fokussierte Karte hebt sich um so viel
     inhaltSymbole: { bau: '\u2302', einheit: '\u25B2', stufe: '\u21E7', forschung: '\u2697' },   // Symbole für Inhalte auf den Karten (Gebäude, Einheit, Ausbaustufe, Forschung)
     symbole: { wirtschaft: '\u25CE', armee: '\u2694', basis: '\u2616', automatisierung: '\u2699', sonderregel: '\u2605', bonus: '\u25C6', bau: '\u25A3', technologie: '\u2699', wagnis: '\u26A0', doktrin: '\u2691', weiterentwicklung: '\u2302' },
-    katSymbole: { wirtschaft: '\u25CE', militaer: '\u2694', verteidigung: '\u2616' },       // Kategorien der Karten (Teil 6, REQ-K6.03)
+    nachteilSymbol: '\u25BC',   // Nachteilszeile der Karten (Teil 9, REQ-K9.02): eigenes Zeichen vor der Zeile
+    katSymbole: { wirtschaft: '\u25CE', militaer: '\u2694', verteidigung: '\u2616', neutral: '\u25CB' },       // Kategorien der Karten (Teil 6, REQ-K6.03)
   },
 
   /* Tutorial „Erste Schritte“ (REQ-T.01 – T.04): Schritte in data/tutorial-steps.js, Texte in den Sprachdateien */

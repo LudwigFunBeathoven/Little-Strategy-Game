@@ -30,7 +30,10 @@ const Stage = (() => {
     el.stage.classList.toggle('two-rows', w < K.zweiZeilenBisPx);
   }
   const familyOf = o => o.family || 'bonus';
-  function symbol(o){ return (K.symbole[o.pfad ? o.family : o.category] || K.symbole.bonus) + '\uFE0E'; }       // U+FE0E: Textdarstellung, nie als farbiges Emoji (0.9.1)
+  function symbol(o){ return (K.symbole[o.pfad ? o.family : o.category] || K.symbole.bonus) + '\uFE0E'; }
+  /* Modus karten (Teil 9): im Band das Symbol der Familie, als Bildzeichen das der Kategorie (neutrale Karten: das der Familie) */
+  const famSymbol = o => (K.symbole[familyOf(o)] || K.symbole.bonus) + '\uFE0E';
+  const artSymbol = o => { const k = G.katsOf(o)[0]; return k ? K.katSymbole[k] + '\uFE0E' : famSymbol(o); };       // U+FE0E: Textdarstellung, nie als farbiges Emoji (0.9.1)
   /* Inhalte einer Pfadkarte mit Symbol: „Schaltet frei:“, „Öffnet Forschung:“ (REQ-KP.03) */
   const contentSymbol = key => K.inhaltSymbole[key.split(':')[0]] || '';
   function pathLines(o){
@@ -55,13 +58,16 @@ const Stage = (() => {
     return l.length ? l[0] : cardDesc(o, tier);
   }
   const hasDrawback = (o, tier) => { const tiers = G.tiersOf(o); return !!(tiers[Math.min(tier, tiers.length) - 1] || {}).drawback; };
+  /* Nachteilszeile (Teil 9, REQ-K9.02, Textregeln R1/R2): jede Karte mit Nachteil zeigt ihn in eigener Zeile auf der Fläche, mit eigenem Zeichen und eigener Farbe; bei Doktrinen ist es die Einschränkung */
+  const drawbackLine = (o, tier) => hasDrawback(o, tier) && hasKey('kp.drawback.' + o.id) ? t('kp.drawback.' + o.id, optParams(o, tier)) : '';
   /* Rahmenfarbe = Seltenheit, Band = Familie (Modus karten) bzw. Kategorie (Standard mit Bühne) */
-  const bandWord = o => o.pfad || o.doktrin ? t('kp.fam.' + o.family) : G.S.pacing === 'karten' ? (katLabel(o) || t('kp.fam.bonus')) : t('draft.cat.' + o.category);       // Modus karten: Bonuskarten zeigen ihre Kategorie (Teil 6)
+  const bandWord = o => G.S.pacing === 'karten' ? t('kp.fam.' + familyOf(o)) : o.pfad || o.doktrin ? t('kp.fam.' + o.family) : t('draft.cat.' + o.category);       // Modus karten (Teil 9): nur die Familie, als Aria-Label; draft.cat.* nur im Standardmodus
 
   function build(d){
     const list = el.stageCards; list.innerHTML = '';
     const n = d.options.length;
     if (!hoverMs.length || hoverMs.length !== n) hoverMs = new Array(n).fill(0);
+    const karten = G.S.pacing === 'karten';
     d.options.forEach((id, i) => {
       const o = G.OPT[id], tier = G.cardTaken(id) + 1;
       const b = document.createElement('button');
@@ -71,12 +77,21 @@ const Stage = (() => {
       b.style.setProperty('--delay', (i * K.aufdeckAbstandMs) + 'ms');
       const face = document.createElement('span'); face.className = 'kc-face';
       const head = document.createElement('span'); head.className = 'kc-head';
-      const sym = document.createElement('i'); sym.className = 'kc-sym'; sym.setAttribute('aria-hidden', 'true'); sym.textContent = symbol(o);
-      const fam = document.createElement('span'); fam.className = 'kc-fam'; fam.textContent = bandWord(o);
+      const sym = document.createElement('i'); sym.className = 'kc-sym'; sym.setAttribute('aria-hidden', 'true'); sym.textContent = karten ? famSymbol(o) : symbol(o);
       const num = document.createElement('span'); num.className = 'kc-key'; num.textContent = String(i + 1);
-      head.append(sym, fam, num);
+      if (karten){
+        /* Klassifikationen (Teil 9, REQ-K9.03): Kategorie = Farbe des Bandes mit Symbol, Familie = Rahmen, Seltenheit = Rahmenakzent; die Wörter stehen nur im Tooltip und im Aria-Label */
+        const ks = G.katsOf(o), kc = document.createElement('span'); kc.className = 'kc-kat'; kc.setAttribute('aria-hidden', 'true');
+        kc.textContent = (ks.length ? ks.map(k => K.katSymbole[k]).join('') : K.katSymbole.neutral) + '\uFE0E';
+        b.dataset.kat = ks[0] || 'neutral'; if (ks[1]) b.dataset.kat2 = ks[1];
+        b.setAttribute('aria-label', [cardName(o, tier), bandWord(o), katLabel(o) || t('kat.neutral.name')].join(', '));
+        head.append(sym, kc, num);
+      } else {
+        const fam = document.createElement('span'); fam.className = 'kc-fam'; fam.textContent = bandWord(o);
+        head.append(sym, fam, num);
+      }
       const nm = document.createElement('b'); nm.className = 'kc-name'; nm.textContent = cardName(o, tier);
-      const art = document.createElement('span'); art.className = 'kc-art'; art.setAttribute('aria-hidden', 'true'); art.textContent = symbol(o);
+      const art = document.createElement('span'); art.className = 'kc-art'; art.setAttribute('aria-hidden', 'true'); art.textContent = karten ? artSymbol(o) : symbol(o);
       const ds = document.createElement('span'); ds.className = 'kc-desc'; ds.textContent = effLine(o, tier);
       const now = o.synergie && G.S.pacing === 'karten' ? G.synergieNow(o.id, G.cardTaken(o.id) === 0) : null;           // Synergiekarten: aktueller Wert auf der Karte (Teil 6, REQ-K6.03)
       let nowEl = null; if (now){ nowEl = document.createElement('span'); nowEl.className = 'kc-now'; nowEl.textContent = t('kat.now', { v: synergieValueText(now) }); }
@@ -84,11 +99,10 @@ const Stage = (() => {
       const dots = document.createElement('span'); dots.className = 'kc-tier'; dots.setAttribute('aria-hidden', 'true');
       dots.textContent = '●'.repeat(tier) + '○'.repeat(G.tiersOf(o).length - tier);
       foot.append(dots);
-      if (hasDrawback(o, tier)){ const r = document.createElement('span'); r.className = 'kc-risk'; r.textContent = t('kp.card.drawback'); foot.appendChild(r); }
       const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.kp.card', { tier: optLimit(o) });
-      const kl = G.S.pacing === 'karten' ? katLabel(o) : '';                                                              // Kategorie am Fuß der Karte (Teil 6, REQ-K6.03)
-      if (kl){ const kc = document.createElement('span'); kc.className = 'kc-kat'; kc.dataset.kat = G.katsOf(o)[0]; kc.textContent = G.katsOf(o).map(k => K.katSymbole[k]).join('') + '\uFE0E ' + kl; foot.appendChild(kc); }
-      face.append(head, nm, art, ds, ...(nowEl ? [nowEl] : []), foot, ex);
+      const dl = drawbackLine(o, tier); let dEl = null;
+      if (dl){ dEl = document.createElement('span'); dEl.className = 'kc-drawback'; const di = document.createElement('i'); di.setAttribute('aria-hidden', 'true'); di.textContent = K.nachteilSymbol + '\uFE0E'; const dt = document.createElement('span'); dt.textContent = dl; dEl.append(di, dt); }
+      face.append(head, nm, art, ds, ...(dEl ? [dEl] : []), ...(nowEl ? [nowEl] : []), foot, ex);
       const back = document.createElement('span'); back.className = 'kc-back'; back.setAttribute('aria-hidden', 'true'); back.textContent = o.doktrin ? K.symbole.doktrin + '\uFE0E' : '\u25C6';       // Doktrinen haben eine eigene Rückseite (Teil 6, REQ-K6.04)
       b.append(face, back);
       b.addEventListener('click', () => choose(i));

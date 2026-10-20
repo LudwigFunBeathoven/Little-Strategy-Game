@@ -101,8 +101,8 @@ const run = async (p, secs) => { for (let i = 0; i < secs * 20; i++) await tick(
   check(await p.evaluate(() => document.querySelector('#katCounts').hidden), 'K6.03: Karten je Kategorie sind vor der ersten Synergiekarte nicht sichtbar (Entdecken)');
   let lvl = 0; const offer = ids => p.evaluate(([ids, lv]) => { const G = __kf.G; G.S.pendingDraft = { level: lv, options: ids, rerolled: 0 }; G.S.pendingLevels = Math.max(1, G.S.pendingLevels); __kf.requestRender(); }, [ids, ++lvl]);
   await offer(['waffenbrueder', 'kriegswirtschaft', 'maurerkolonne']); await settle(p, 1500);
-  const cards = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(e => ({ band: (e.querySelector('.kc-fam') || {}).textContent, kat: (e.querySelector('.kc-kat') || {}).textContent, now: (e.querySelector('.kc-now') || {}).textContent || '', desc: (e.querySelector('.kc-desc') || {}).textContent })));
-  check(cards.length === 3 && /Militär/.test(cards[0].kat) && /Wirtschaft \+ Militär/.test(cards[1].kat) && /Verteidigung/.test(cards[2].kat), `K6.03: Kategorie am Fuß der Karte, Brücke mit beiden ${show(cards)}`);
+  const cards = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(e => ({ band: (e.getAttribute('aria-label') || '').split(', ')[1], kat: e.getAttribute('aria-label') || '', now: (e.querySelector('.kc-now') || {}).textContent || '', desc: (e.querySelector('.kc-desc') || {}).textContent })));
+  check(cards.length === 3 && /Militär/.test(cards[0].kat) && /Wirtschaft \+ Militär/.test(cards[1].kat) && /Verteidigung/.test(cards[2].kat), `K6.03/K9.03: Kategorie im Aria-Label (auf der Karte Farbe und Symbol), Brücke mit beiden ${show(cards)}`);
   check(/derzeit \+21 %/.test(cards[0].now) && /derzeit [−-]15 %/.test(cards[1].now) && cards[2].now === '', `K6.03: Synergiekarten zeigen ihren aktuellen Wert, andere Karten nicht ${show(cards.map(c => c.now))}`);
   check(/Schaden \+7 % je Militärkarte/.test(cards[0].desc), `K6.03: Wirkungszeile der Synergiekarte ${show(cards[0].desc)}`);
   const tip = await tipOf(p, '.kcard:nth-child(1)');
