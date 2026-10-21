@@ -5,6 +5,8 @@
   "description": "Browser-Spiel zwischen Universal Paperclips und Age of War",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
+    "test:kurz": "node --test --test-reporter=dot tests/*.test.mjs",
+    "sim:kurz": "node tools/simulate.mjs --suite kurz | awk '/Patt-Quote/{print} /^ZIELE – Strategien/{p=1} p'",
     "simulate": "node tools/simulate.mjs",
     "test:browser": "node tests/browser-check.mjs && node tests/browser-k2.mjs && node tests/browser-k2-standard.mjs && node tests/browser-q6.mjs && node tests/browser-n5.mjs && node tests/browser-r7.mjs && node tests/browser-t8.mjs && node tests/browser-u9.mjs"
   }
