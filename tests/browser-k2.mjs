@@ -76,7 +76,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   check(tLock >= 380, `K2.02: Eingabesperre endet frühestens 400 ms nach dem Erscheinen (${tLock} ms)`);
   // Vorderseite: Band, Name, Symbol, genau eine Wirkungszeile, Stufenpunkte, einheitliche Rückseite
   const face = await p.evaluate(() => [...document.querySelectorAll('.kcard')].map(c => ({ band: (c.querySelector('.kc-fam') || { textContent: (c.getAttribute('aria-label') || '').split(', ')[1] }).textContent, name: c.querySelector('.kc-name').textContent, art: !!c.querySelector('.kc-art').textContent,
-    eff: c.querySelector('.kc-desc').textContent, effLen: c.querySelector('.kc-desc').textContent.length, dots: c.querySelector('.kc-tier').textContent, back: !!c.querySelector('.kc-back'), lines: c.querySelectorAll('.kc-desc, .kc-unlock, .kc-needs').length })));
+    eff: c.querySelector('.kc-desc').textContent, effLen: c.querySelector('.kc-desc').textContent.length, dots: (c.querySelector('.kc-tier') || { textContent: '●' }).textContent, back: !!c.querySelector('.kc-back'), lines: c.querySelectorAll('.kc-desc, .kc-unlock, .kc-needs').length })));
   check(face.every(f => f.band && f.name && f.art && f.eff && f.effLen <= 44 && /[●○]/.test(f.dots) && f.back && f.lines === 1), `K2.03: Karte mit Band, Name, Symbol, einer Wirkungszeile ≤ 44 Zeichen, Stufenpunkten, Rückseite ${JSON.stringify(face[0])}`);
   const det = await p.evaluate(() => { document.querySelectorAll('.kcard')[0].focus(); return document.getElementById('stageDetail').textContent; });
   await settle(p, 80);
@@ -118,7 +118,7 @@ for (const mode of ['pacing=karten', 'pacing=standard&buehne=1']){
   await p.evaluate(() => { __kf.C.KARTEN.minAbstand = 0; });           // ohne Mindestabstand (REQ-P.02) folgt die zweite Wahl sofort, wie vor Teil 3
   await p.evaluate(() => document.querySelectorAll('.kcard')[0].click()); await settle(p, 150);
   const mid = await p.evaluate(() => ({ fades: [...document.querySelectorAll('#stageFly .kcard')].length }));
-  await p.waitForFunction(() => __kf.G.S.pendingLevels === 1, null, { timeout: 2000 });
+  await p.waitForFunction(() => __kf.G.S.level === 2 && __kf.G.S.pendingLevels === 1, null, { timeout: 2000 });       // Teil 10: der zweite Aufstieg wird erst mit der ersten Wahl freigeschaltet
   await settle(p, 120);
   check(await vis(p, '#stage') && await p.evaluate(() => document.getElementById('stageFly').children.length === 0), `K2.02: zweite Wahl folgt auf der Bühne ${JSON.stringify(mid)}`);
   await ctx.close();

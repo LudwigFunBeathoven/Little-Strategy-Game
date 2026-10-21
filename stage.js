@@ -179,14 +179,14 @@ const Stage = (() => {
     if (!reveal()){ commit(i, null); return; }
     leaving = true; Tip.hide();
     const o = G.OPT[d.options[i]], tg = effectTarget(o), cards = [...el.stageCards.children];
-    const more = G.S.pendingLevels > 1, sym = el.cardSym.getBoundingClientRect();
+    const more = G.offeneWahlen() > 1, sym = el.cardSym.getBoundingClientRect();
     cards.forEach((c, k) => flyClone(c, k === i ? (tg.el ? tg.el.getBoundingClientRect() : sym) : sym, k === i ? K.wirkflugMs : K.wirkflugMs, k !== i && more));
     el.stageCards.style.visibility = 'hidden'; el.stageTools.style.visibility = 'hidden'; el.stageDetail.style.visibility = 'hidden'; el.stageHead.style.visibility = 'hidden';
     document.body.classList.add('stage-leaving');
     setTimeout(() => { commit(i, tg); }, K.abraeumenMs);
   }
   function commit(i, tg){
-    const more = G.S.pendingLevels > 1;
+    const more = G.offeneWahlen() > 1;
     leaving = false; flyEls.forEach(e => e.remove()); flyEls = [];
     document.body.classList.remove('stage-leaving');
     for (const e of [el.stageCards, el.stageTools, el.stageDetail, el.stageHead]) e.style.visibility = '';
@@ -239,7 +239,7 @@ const Stage = (() => {
     }
     setHidden(el.stage, folded);
     if (folded) return;
-    const more = S.pendingLevels - 1;
+    const more = G.offeneWahlen() - 1;
     const headKey = d.level + ':' + more + ':' + lang;
     if (el.stageHead.dataset.k !== headKey){
       el.stageHead.dataset.k = headKey; el.stageHead.textContent = t('kp.stage.title', { n: d.level });

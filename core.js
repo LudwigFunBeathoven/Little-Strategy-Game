@@ -1456,6 +1456,7 @@ function create(){
     log('log.levelUp', { n: S.level });
   }
   const rueckstau = () => S.pacing === 'karten' ? Math.max(0, S.reached - (S.level - S.pendingLevels)) : 0;       // erreichte, noch nicht getroffene Wahlen (die offene eingeschlossen)
+  const offeneWahlen = () => S.pacing === 'karten' ? rueckstau() : S.pendingLevels;       // Anzeige: offene und bereits erreichte Wahlen (wie vor der Trennung von Schwelle und Aufstieg)
   function noteRueckstau(){ const r = rueckstau(); if (r > (S.stats.rueckMax || 0)) S.stats.rueckMax = r; }
   function gainXp(b, src){
     if (S.pacing === 'karten'){
@@ -2004,7 +2005,7 @@ function create(){
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     offerDraft, chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
-    phase, xpProgress, gainXp, rueckstau, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, baseRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    phase, xpProgress, gainXp, rueckstau, offeneWahlen, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, baseRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, incomeRate, upkeepRate, xpMult, setBudget, budgetStufe, budgetShare, budgetKurs, budgetAbnahme, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,

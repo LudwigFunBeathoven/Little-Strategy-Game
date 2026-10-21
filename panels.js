@@ -595,7 +595,7 @@ function renderDraft(){
   const list = $('draftOffer'); list.innerHTML = '';
   if (!d) return;
   setText($('draftTitle'), t('draft.eyebrow', { n: d.level }));
-  const more = S.pendingLevels - 1;
+  const more = G.offeneWahlen() - 1;
   setText($('draftText'), t('draft.text') + (more > 0 ? ' ' + t('draft.queue', { n: more }) : ''));
   // Bann: je angebotener Karte ein Knopf, solange Banne übrig sind (REQ-5.07)
   const bans = $('banTools'); bans.innerHTML = '';

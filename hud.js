@@ -116,7 +116,7 @@ function renderHud(){
   setText(E.diffLabel, S.status === 'setup' ? '' : t(`diff.${S.diff}.name`));
   // Offene Kartenwahl: auffälliger Hinweis, öffnet den Reiter Karten; kein automatischer Wechsel (REQ-5.03)
   setHidden(E.draftBtn, !(running && S.pendingDraft) || Stage.on());
-  if (S.pendingDraft) setText(E.draftBtn.querySelector('.expl'), t(Stage.on() ? 'ex.kp.hud.draft' : 'ex.hud.draft', { n: S.pendingLevels }));
+  if (S.pendingDraft) setText(E.draftBtn.querySelector('.expl'), t(Stage.on() ? 'ex.kp.hud.draft' : 'ex.hud.draft', { n: G.offeneWahlen() }));
   E.pauseBtn.setAttribute('aria-pressed', String(paused));
   setText(E.pauseBtn.querySelector('.btn-label'), t(paused ? 'menu.resume' : 'menu.pause'));
   setText(E.pauseBtn.querySelector('.expl'), t(paused ? 'ex.menu.resume' : 'ex.menu.pause'));
