@@ -23,6 +23,8 @@ const PACING_PARAM = ['standard', 'karten'].includes(URL_PARAMS.get('pacing')) ?
 /* ?druck=hoch (Teil 4, REQ-S.08): Testschalter, verstärkt die regulären Gegnerwellen ab Minute 4; sonst aus */
 const DRUCK_PARAM = URL_PARAMS.get('druck') === 'hoch' ? 'hoch' : null;
 /* ?gegnerfern=aus (Teil 8, REQ-K8.06): schaltet die gegnerischen Bogen- und Armbrustschützen ab (Vergleichsmessungen); sonst an */
+/* ?fluegel=<id> (Teil 11, REQ-K11.02): legt den ersten Flügel des Haupthauses fest (Vergleichsmessungen) */
+const FLUEGEL_PARAM = URL_PARAMS.get('fluegel') || null;
 const GEGNERFERN_PARAM = URL_PARAMS.get('gegnerfern') === 'aus' ? 'aus' : null;
 
 /* ================= Sprache ================= */
@@ -264,9 +266,9 @@ function tipContent(id){
     }
     case 'variant': {
       const i = Number(a), v = G.VAR[b];
-      const rows = [[t('tip.cost'), costText('material', G.variantCost(b))], [t('tip.variant.dur'), `${C.AUFWERTUNG.dauerS} s`]];
+      const rows = [[t('tip.cost'), costText('material', G.variantCost(b, i))], [t('tip.variant.dur'), `${Math.round(G.variantDauer(i))} s`]];
       rows.push([t('tip.variant.kat'), t(`kat.${v.kat}.name`)]);
-      return { title: t(v.nameKey), body: t(v.descKey, variantParams(v)) + ' ' + t('variant.once'), rows, reason: variantReason(G.variantBlock(i, b), b) };
+      return { title: t(v.nameKey), body: t(v.descKey, variantParams(v)) + ' ' + t('variant.once'), rows, reason: variantReason(G.variantBlock(i, b), b, i) };
     }
     case 'budget': {                                                              // Forschungsbudget (Teil 5, REQ-K5.05)
       const i = Number(a), sh = C.KARTEN.budget.stufen[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs') * G.budgetAbnahme(), gross = G.matRate() + G.autoPressCps() * G.clickPower();
@@ -347,7 +349,7 @@ function tipContent(id){
                rows: n ? [[t('tip.cost'), costText('material', G.hausKosten())], [t('tip.variant.dur'), `${C.HAUPTHAUS.dauerS} s`]] : [], reason: hausReason() }; }
     case 'fluegel': return { title: t(`haus.fluegel.${a}.name`), body: t(`haus.fluegel.${a}.desc`, fluegelParams()) + ' ' + t('tip.fluegel.body'), reason: G.S.haus && G.S.haus.fluegel.includes(a) ? null : fluegelReason(a) };
     case 'grid': { const sl = S.slots[a];
-      if (sl && sl.type === 'haupthaus') return { title: t('slot.label', { n: Number(a) + 1 }), body: slotName(sl) + ' · ' + t('bld.haupthaus.desc'), rows: [[t('haus.grenze.label'), t('haus.grenze.value', { n: G.fabrikGrenze(), m: G.fabrikPlaetze() })]] };
+      if (sl && sl.type === 'haupthaus') return { title: t('slot.label', { n: Number(a) + 1 }), body: slotName(sl) + ' · ' + t('bld.haupthaus.desc'), rows: [[t('haus.grenze.label'), t('haus.grenze.value', { n: G.fabrikGrenze(), m: G.fabrikPlaetze() })]].concat(S.haus.fluegel.filter(f => C.HAUPTHAUS.fluegel[f].nachbar).map(f => [t(`haus.fluegel.${f}.name`), `${t(`haus.nb.${f}`, { v: pct(Math.abs(C.HAUPTHAUS.fluegel[f].nachbar.wert * G.mMul('nbAll'))), max: C.HAUPTHAUS.fluegel[f].nachbar.max })} · ${fluegelPlaetzeText(f)}`])) };
       const rule = sl && G.NEIGHBORS.find(r => r.building === sl.type);
       return { title: t('slot.label', { n: Number(a) + 1 }), body: sl ? t(`bld.${sl.type}.name`) + ' · ' + t(`bld.${sl.type}.desc`) + (rule ? ' ' + t('nb.title') + ': ' + nbRuleText(rule) + '.' : '') : t('tip.grid.empty') }; }
   }
@@ -647,7 +649,7 @@ function startGame(diff, opts = {}){
   storageSet(C.DIFFICULTY_KEY, diff);
   TutUI.reset(); NewMarks.reset(); Disc.reset();
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
-    { pacing: PACING_PARAM || undefined, druck: DRUCK_PARAM || undefined, gegnerfern: GEGNERFERN_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
+    { pacing: PACING_PARAM || undefined, druck: DRUCK_PARAM || undefined, gegnerfern: GEGNERFERN_PARAM || undefined, fluegel: FLUEGEL_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
   if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
   resultShownFor = null;
   save();
@@ -682,6 +684,8 @@ function handleWorldClick(clientX, clientY){
 function wireWorldInput(){
   let down = null, dragging = false;
   const userScroll = x => { Cam.follow = false; Cam.touched = true; Cam.goTo(x); };
+  cv.addEventListener('pointermove', e => { if (down) return; const w = screenToWorld(e.clientX, e.clientY), r = plotRects.find(q => w.x >= q.x && w.x <= q.x + q.w && w.y >= q.y && w.y <= q.y + q.h); setHausHighlight(!!r && r.i === C.HAUPTHAUS.platz); });       // Teil 11: Haupthaus überfahren
+  cv.addEventListener('pointerleave', () => setHausHighlight(false));
   cv.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = { x: e.clientX, y: e.clientY, camX: Cam.x }; dragging = false; });
   window.addEventListener('pointermove', e => {
     if (!down) return;

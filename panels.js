@@ -150,6 +150,10 @@ function buildPanels(){
     const b = document.createElement('button');
     b.type = 'button'; b.setAttribute('role', 'gridcell'); b.dataset.tooltip = 'grid:' + i; b.tabIndex = i === 0 ? 0 : -1;
     b.innerHTML = '<span class="btn-label"></span><span class="expl"></span>';
+    b.addEventListener('pointerenter', () => { if (i === C.HAUPTHAUS.platz) setHausHighlight(true); });       // Teil 11: Haupthaus überfahren hebt die begünstigten Plätze hervor
+    b.addEventListener('pointerleave', () => { if (i === C.HAUPTHAUS.platz) setHausHighlight(false); });
+    b.addEventListener('focus', () => { if (i === C.HAUPTHAUS.platz) setHausHighlight(true); });
+    b.addEventListener('blur', () => { if (i === C.HAUPTHAUS.platz) setHausHighlight(false); });
     b.addEventListener('click', e => {
       selectPlot(i);
       if (e.detail === 0) requestAnimationFrame(() => { renderPanels(); const first = [...document.querySelectorAll('#ctxBuild .pick')].find(p => !isDis(p)); (first || b).focus(); });
@@ -228,11 +232,15 @@ const nbFmt = (rule, v) => (v > 0 ? '+' : v < 0 ? '−' : '') + (rule.stat === '
 const nbRuleText = rule => t(rule.nameKey, { v: nbFmt(rule, rule.per), max: fmtNum(rule.max) });
 /* K2.05: Bei Entdecken nennt die Vorschau keinen Partner, der noch gesperrt ist und nicht steht (z. B. „Kaserne neben Schmiede“ vor der Metallverarbeitung) */
 const nbKnown = type => !Disc.on() || G.has(type) || G.isBuildable(type);
+/* Teil 11 (REQ-K11.03): Bonus eines Flügels als Text (Wert vorzeichenbehaftet) und die begünstigten Plätze */
+const fluegelBonusText = (stat, v) => t('nb.stat.' + stat, { v: (v > 0 ? '+' : '−') + pct(Math.abs(v)) });
+const fluegelPlaetzeText = id => { const l = G.fluegelNachbarn(id); return l.length ? t('haus.nb.plaetze', { list: l.map(j => j + 1).join(', ') }) : t('haus.nb.keine'); };
 function nbPreviewText(i, type){
   const p = G.neighborPreview(i, type), parts = [];
   if (p.gets && !nbKnown(p.gets.rule.with)) p.gets = null;
   if (p.gets) parts.push(p.gets.n > 0 ? t('nb.gets', { rule: nbRuleText(p.gets.rule), n: p.gets.n, total: nbFmt(p.gets.rule, p.gets.value) })
                                       : t('nb.getsNone', { rule: nbRuleText(p.gets.rule) }));
+  for (const f of p.fluegel || []) parts.push(t('nb.fluegel', { name: t(`haus.fluegel.${f.id}.name`), bonus: fluegelBonusText(f.stat, f.wert) }));       // Teil 11: der Flügel als Geber
   for (const g of p.gives) parts.push(t('nb.gives', { name: t(`bld.${g.type}.name`), slot: g.slot + 1, delta: nbFmt(g.rule, g.delta) }));
   return parts.join(' · ');
 }
@@ -250,20 +258,20 @@ const wallName = () => stufenName('mauer', G.S.lvl.mauer), towerName = lane => s
 const slotName = sl => sl.type === 'haupthaus' ? t(`haus.stufe.${G.hausStufe()}.name`) : sl.variant && G.VAR[sl.variant] ? t(G.VAR[sl.variant].nameKey) : t(G.weiterStufe(sl.type) ? `bld.${sl.type}.name.weiter${G.weiterStufe(sl.type) > 1 ? G.weiterStufe(sl.type) : ''}` : `bld.${sl.type}.name`);       // Haupthaus: Name der Stufe (Teil 7)       // Teil 6: nach der Weiterentwicklung heißt das Gebäude Dampfmühle bzw. Druckerei
 const variantTarget = sl => sl.upg && G.VAR[sl.upg.to] ? G.VAR[sl.upg.to] : null;
 let vpicks = [];
-function variantReason(block, vid){
+function variantReason(block, vid, i){
   switch (block){
     case 'notRunning': return t('tip.notRunning');
     case 'upgrading': return t('variant.reason.upgrading');
     case 'done': return t('variant.reason.done');
     case 'excess': { const n = G.variantExcess(vid); return t(n === 1 ? 'variant.reason.excess.one' : 'variant.reason.excess', { n }); }
-    case 'material': return missing('material', G.variantCost(vid), G.S.material);
+    case 'material': return missing('material', G.variantCost(vid, i), G.S.material);
   }
   return null;
 }
 function updateVariantPicks(){
   for (const p of vpicks){
-    const block = G.variantBlock(p.i, p.vid), v = G.VAR[p.vid], why = variantReason(block, p.vid);
-    setText(p.ex, t('ex.variant', { effect: t(`var.${p.vid}.eff`, variantParams(v)), cost: costText('material', G.variantCost(p.vid)), s: C.AUFWERTUNG.dauerS }));
+    const block = G.variantBlock(p.i, p.vid), v = G.VAR[p.vid], why = variantReason(block, p.vid, p.i);
+    setText(p.ex, t('ex.variant', { effect: t(`var.${p.vid}.eff`, variantParams(v)), cost: costText('material', G.variantCost(p.vid, p.i)), s: Math.round(G.variantDauer(p.i)) }));
     setText(p.w, why || ''); setHidden(p.w, !why);
     setDis(p.b, !!block);
   }
@@ -298,7 +306,7 @@ function renderContext(){
   } else if (sl){
     const vt = variantTarget(sl), vd = sl.variant && G.VAR[sl.variant];
     setText($('ctxTitle'), t('ctx.building', { name: slotName(sl), n: sel.i + 1 }));
-    setText($('ctxText'), vt ? t('variant.progress', { name: t(vt.nameKey), s: Math.max(0, Math.ceil(C.AUFWERTUNG.dauerS - sl.upg.t)) })
+    setText($('ctxText'), vt ? t('variant.progress', { name: t(vt.nameKey), s: Math.max(0, Math.ceil((sl.upg.dauer || C.AUFWERTUNG.dauerS) - sl.upg.t)) })
       : `${t(`bld.${sl.type}.desc`)} ${bldEffect(sl.type, true)}.` + (vd ? ' ' + t(vd.descKey, variantParams(vd)) : ''));
   } else if (sec !== null){
     setText($('ctxTitle'), t('repair.' + sec));
@@ -318,7 +326,7 @@ function renderContext(){
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'pick'; b.dataset.tooltip = `variant:${sel.i}:${v.id}`;
       const nm = document.createElement('b'); nm.textContent = t('variant.pick', { name: t(v.nameKey) });
-      const c = document.createElement('span'); c.className = 'c'; c.textContent = costText('material', G.variantCost(v.id));
+      const c = document.createElement('span'); c.className = 'c'; c.textContent = costText('material', G.variantCost(v.id, sel.i));
       const d = document.createElement('span'); d.className = 'd'; d.textContent = t(v.descKey, variantParams(v));
       const ex = document.createElement('span'); ex.className = 'expl';
       const w = document.createElement('span'); w.className = 'w';
@@ -776,6 +784,7 @@ function fluegelReason(id){
   switch (G.fluegelBlock(id)){
     case 'notRunning': return t('tip.notRunning');
     case 'taken': return t('haus.fluegel.taken');
+    case 'forced': return t('haus.fluegel.forced');
     case 'noSlot': return t(G.hausStufe() >= C.HAUPTHAUS.fabrikGrenze.length ? 'haus.fluegel.allTaken' : 'haus.fluegel.noSlot');
   }
   return null;
@@ -802,6 +811,8 @@ function renderHaus(){
   if (!show) return;
   const frei = G.fluegelFrei();
   setText($('hausFluegelText'), frei ? t('haus.fluegel.choose') : t('haus.fluegel.chosen', { list: h.fluegel.map(id => t(`haus.fluegel.${id}.name`)).join(', ') }));
+  const nbl = $('hausNbList'); nbl.replaceChildren();       // Teil 11: Nachbarschaftsbonus und begünstigte Plätze je gewähltem Flügel
+  for (const id of h.fluegel){ const nb = C.HAUPTHAUS.fluegel[id].nachbar; if (!nb) continue; const li = document.createElement('li'); li.textContent = `${t(`haus.fluegel.${id}.name`)}: ${t(`haus.nb.${id}`, { v: pct(Math.abs(nb.wert * G.mMul('nbAll'))), max: nb.max })} · ${fluegelPlaetzeText(id)}`; nbl.appendChild(li); }
   const p = fluegelParams();
   for (const [id, e] of Object.entries(fluegelEls)){
     const taken = h.fluegel.includes(id);
@@ -891,7 +902,7 @@ function renderPanels(){
     setText(g.label, t('grid.cell', { n: i + 1 }));
     // Raster: Gebäude mit ihrem aktuellen Nachbarschaftsbonus (REQ-6.07 a)
     const nbv = sl ? G.neighborValue(i, sl.type) : 0, rule = sl ? G.NEIGHBORS.find(r => r.building === sl.type) : null;
-    setText(g.expl, sl ? slotName(sl) + (sl.upg ? ' · ' + t('variant.cell', { s: Math.max(0, Math.ceil(C.AUFWERTUNG.dauerS - sl.upg.t)) }) : '') + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') + (G.raubbauFactor(sl) !== 1 ? ' · ' + t('raubbau.cell', { f: fmt2(G.raubbauFactor(sl)) }) : '') : t('grid.free'));
+    setText(g.expl, sl ? slotName(sl) + (sl.upg ? ' · ' + t('variant.cell', { s: Math.max(0, Math.ceil((sl.upg.dauer || C.AUFWERTUNG.dauerS) - sl.upg.t)) }) : '') + (nbv && rule ? ' · ' + t('nb.cell', { total: nbFmt(rule, nbv) }) : '') + (G.raubbauFactor(sl) !== 1 ? ' · ' + t('raubbau.cell', { f: fmt2(G.raubbauFactor(sl)) }) : '') : t('grid.free'));
     g.btn.classList.toggle('built', !!sl);
     g.btn.setAttribute('aria-selected', String(!!sel && sel.kind === 'plot' && sel.i === i));
   }

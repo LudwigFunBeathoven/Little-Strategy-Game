@@ -246,7 +246,7 @@ function create(){
   /* Werte einer Einheit nach Typ und Seite (ohne Zufall); makeUnit und der Einheitenersatz nutzen dieselbe Rechnung */
   function unitStats(side, type){
     const spec = C.UNITS[type], p = side === 'p';
-    let hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (isThrower(type) ? mMul('werferHp') : 1) : enemyHpMult());
+    let hp = spec.hp * (p ? hpMultP() * mMul('unitHp') * (isThrower(type) ? mMul('werferHp') : 1) * (1 + flNbTotal('nbUnitHp')) : enemyHpMult());       // Zeughaus (Teil 11): neue Einheiten mit mehr Lebenspunkten, solange die Kaserne neben dem Haupthaus steht
     if (p && isRangedType(type) && mAdd('rangedHpOne') > 0) hp = 1;                                   // Wagnis „Glaskanonen“: Fernkämpfer haben 1 Lebenspunkt
     return { speed: spec.speed, range: unitRange(side, type), ranged: isRangedType(type), hp, dmg: spec.dmg * (p ? dmgMultP() : enemyDmgMult()), cdMax: spec.cd * (p ? cdMultP() : 1) };
   }
@@ -279,6 +279,36 @@ function create(){
   /* Flügel des Haupthauses (Teil 7, REQ-K7.03): je Stufe ab II einer nach Wahl; sie übernehmen Grundfunktionen eines Spezialgebäudes (C.HAUPTHAUS.fluegel) */
   const FL = C.HAUPTHAUS.fluegel;
   const hasFluegel = id => S.pacing === 'karten' && !!S.haus && (S.haus.fluegel || []).includes(id);
+  /* Nachbarschaftsboni der Flügel (Teil 11, REQ-K11.01): die begünstigten Plätze eines Flügels und der Bonus für einen Platz; Bauordnung (nbAll) multipliziert wie bei allen Nachbarschaftsboni */
+  function fluegelNachbarn(id, slots = S.slots){
+    const f = FL[id], nb = f && f.nachbar, out = [];
+    if (!nb || !hasFluegel(id)) return out;
+    for (const j of adjacent(C.HAUPTHAUS.platz, nbDiagonal()).sort((a, b) => a - b)){
+      const sl = slots[j];
+      if (!sl || sl.type === 'haupthaus' || sl.type === f.ersetzt || sl.upg || (nb.ziel !== 'alle' && sl.type !== nb.ziel)) continue;
+      out.push(j); if (out.length >= nb.max) break;
+    }
+    return out;
+  }
+  function flNbRaw(stat, i, slots = S.slots){
+    if (S.pacing !== 'karten' || !S.haus) return 0;
+    let v = 0;
+    for (const id of S.haus.fluegel){ const nb = FL[id] && FL[id].nachbar; if (nb && nb.stat === stat && fluegelNachbarn(id, slots).includes(i)) v += nb.wert; }
+    return v;
+  }
+  /* Bots (Teil 11, REQ-K11.02): freie Plätze neben dem Haupthaus, auf denen ein Gebäude dieses Typs von einem gewählten Flügel profitiert (der Flügel hat die Grenze seiner Gebäude noch nicht erreicht) */
+  function fluegelPlaetze(type){
+    const out = [];
+    if (S.pacing !== 'karten' || !S.haus) return out;
+    for (const id of S.haus.fluegel){
+      const f = FL[id], nb = f && f.nachbar;
+      if (!nb || f.ersetzt === type || (nb.ziel !== 'alle' && nb.ziel !== type) || fluegelNachbarn(id).length >= nb.max) continue;
+      for (const j of adjacent(C.HAUPTHAUS.platz, nbDiagonal()).sort((a, b) => a - b)) if (!S.slots[j] && !out.includes(j)) out.push(j);
+    }
+    return out;
+  }
+  const flNb = (stat, i) => flNbRaw(stat, i) * mMul('nbAll');
+  const flNbTotal = stat => S.pacing === 'karten' && S.haus ? S.slots.reduce((a, sl, i) => a + (sl ? flNb(stat, i) : 0), 0) : 0;
   const forschungsort = () => has('universitaet') || hasFluegel('bibliothek');             // Universität oder Bibliothek: Technologiekarten und Forschung
   const zeughausDeckt = id => id === 'qualitaet' && hasFluegel('zeughaus');                // Zeughaus: Schmiede-Ausbauten bis FL.zeughaus.schmiedeStufen ohne Schmiede
   const zeughausMax = id => zeughausDeckt(id) && !has('schmiede') && S.lvl[id] >= FL.zeughaus.schmiedeStufen;
@@ -324,7 +354,7 @@ function create(){
     const sl = slots[i];
     return mMul('nbFabrik') * (sl && sl.variant === 'zunfthaus' && !sl.upg ? C.DOKTRIN.zunfthaus.nachbarFaktor : 1);
   };
-  const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? rule.per * neighborCount(i, type, slots) * nbFactor(i, type, slots) * (S.pacing === 'karten' ? mMul('nbAll') : 1) : 0; };       // nbAll: Karte Bauordnung (Teil 6)
+  const neighborValue = (i, type, slots) => { const rule = NB_RULE[type]; return rule ? (rule.per * neighborCount(i, type, slots) + (type === 'fabrik' ? flNbRaw('nbFactoryYield', i, slots) : 0)) * nbFactor(i, type, slots) * (S.pacing === 'karten' ? mMul('nbAll') : 1) : 0; };       // Flügel (Teil 11): Bonus der Schatzkammer zählt als Nachbarschaftsbonus der Manufaktur       // nbAll: Karte Bauordnung (Teil 6)
   /* Summe der Regelwerte aller Gebäude eines Typs (Schmiede, Kaserne, Universität, Kontor gibt es je einmal) */
   const nbTotal = type => S.slots.reduce((a, sl, i) => a + (sl && sl.type === type && !sl.upg ? neighborValue(i, type) : 0), 0);
   /* Vorschau für Platz i und Typ: was das Gebäude dort erhielte und welchen Nachbarn es etwas gäbe */
@@ -337,7 +367,10 @@ function create(){
       const before = neighborValue(j, sl.type), after = neighborValue(j, sl.type, slots);
       if (after !== before) gives.push({ slot: j, type: sl.type, rule: NB_RULE[sl.type], delta: after - before });
     }
-    return { gets, gives };
+    // Flügel als Geber (Teil 11, REQ-K11.03): welche Flügel dem Gebäude an diesem Platz etwas geben
+    const fluegel = [];
+    if (S.pacing === 'karten' && S.haus) for (const id of S.haus.fluegel){ const nb = FL[id] && FL[id].nachbar; if (nb && fluegelNachbarn(id, slots).includes(i) && (nb.ziel === 'alle' || nb.ziel === type)) fluegel.push({ id, stat: nb.stat, wert: nb.wert * mMul('nbAll') }); }
+    return { gets, gives, fluegel };
   }
   /* Nutzen eines Bauplatzes für einen Typ, ohne Einheit: erhaltene plus gegebene Regelwerte, jeweils in Richtung des Vorteils
      (negative Regeln wie Einheitenkosten zählen als Gewinn, wenn sie sinken). Für Bots und Sortierung, nicht für Spielregeln. */
@@ -631,7 +664,8 @@ function create(){
   /* Aufwertungen, die für den Platz i angeboten werden: ohne Variante alle des Typs; mit einer Grundvariante nur die Sonderbauten (sie lösen sie ab, die Kosten fallen voll an) */
   const variantsFor = i => { const sl = S.slots[i]; return !sl || sl.upg ? [] : variantsOf(sl.type).filter(v => !sl.variant || (v.doktrin && !VAR[sl.variant].doktrin)); };
   const variantBase = type => type === 'fabrik' ? C.FACTORY_BASE_COST : C.BUILDING_COST[type];
-  const variantCost = vid => Math.ceil(variantBase(VAR[vid].basis) * (VAR[vid].kostenFaktor ?? (VAR[vid].doktrin ? C.DOKTRIN.sonderbau.kostenFaktor : C.AUFWERTUNG.kostenFaktor)) * mMul('variantCost'));
+  const variantCost = (vid, i) => Math.ceil(variantBase(VAR[vid].basis) * (VAR[vid].kostenFaktor ?? (VAR[vid].doktrin ? C.DOKTRIN.sonderbau.kostenFaktor : C.AUFWERTUNG.kostenFaktor)) * mMul('variantCost') * (i == null ? 1 : 1 + flNb('nbVariantCost', i)));       // Kanzlei (Teil 11): Aufwertung auf angrenzenden Plätzen billiger und kürzer
+  const variantDauer = i => C.AUFWERTUNG.dauerS * (1 + flNb('nbVariantCost', i));
   /* Die Aufwertung eines Typs ist sichtbar, sobald ein Gebäude des Typs steht und die Partie Minute abMinute erreicht hat */
   const variantVisible = type => S.pacing === 'karten' && variantsOf(type).length > 0 && S.t >= C.AUFWERTUNG.abMinute * 60 && S.slots.some(sl => sl && sl.type === type);
   function variantBlock(i, vid){
@@ -645,14 +679,14 @@ function create(){
     if (sl.variant && !(v.doktrin && !VAR[sl.variant].doktrin)) return 'done';                    // ein Sonderbau löst eine Grundvariante ab, sonst bleibt die Variante endgültig (Teil 5)
     if (sl.upg) return 'upgrading';
     if (!variantVisible(v.basis)) return 'hidden';
-    if (S.material < variantCost(vid)) return 'material';
+    if (S.material < variantCost(vid, i)) return 'material';
     return null;
   }
   function upgradeBuilding(i, vid){
     if (variantBlock(i, vid)) return false;
-    const cost = variantCost(vid), sl = S.slots[i];
+    const cost = variantCost(vid, i), sl = S.slots[i];
     S.material -= cost; sl.paid = (sl.paid || 0) + cost;
-    sl.upg = { to: vid, t: 0 }; S.slotVer++;
+    sl.upg = { to: vid, t: 0, dauer: variantDauer(i) }; S.slotVer++;
     S.stats.variantsStarted = (S.stats.variantsStarted || 0) + 1;
     log('log.variantStart', { building: '@bld.' + sl.type + '.name', slot: i + 1, name: '@' + VAR[vid].nameKey });
     emit('buildingUpgrade', { type: sl.type, slot: i, variant: vid });
@@ -662,7 +696,7 @@ function create(){
     S.slots.forEach((sl, i) => {
       if (!sl || !sl.upg) return;
       sl.upg.t += dt;
-      if (sl.upg.t < C.AUFWERTUNG.dauerS) return;
+      if (sl.upg.t < (sl.upg.dauer || C.AUFWERTUNG.dauerS)) return;
       const vid = sl.upg.to;
       delete sl.upg; sl.variant = vid; S.slotVer++;
       (S.stats.variants = S.stats.variants || []).push({ id: vid, t: +S.t.toFixed(1) });
@@ -709,6 +743,7 @@ function create(){
     if (!hausStufe()) return 'notInMode';
     if (S.haus.fluegel.includes(id)) return 'taken';
     if (!fluegelFrei()) return 'noSlot';
+    if (S.fluegelErst && !S.haus.fluegel.length && id !== S.fluegelErst) return 'forced';       // Testschalter ?fluegel=<id> (Teil 11, REQ-K11.02): der erste Flügel steht fest
     return null;
   }
   function chooseFluegel(id){
@@ -1711,8 +1746,9 @@ function create(){
     const uni = has('universitaet'), bib = hasFluegel('bibliothek');
     if (!uni && !bib) return;
     // Universität neben Fabriken forscht schneller (Nachbarschaft, REQ-6.07 a): Forschungszeit × (1 + Regelwert)
-    const speed = 1 / Math.max(0.1, 1 + nbTotal('universitaet')) / mMul('researchTime');       // researchTime: Weiterentwicklung Buchdruck (Teil 6): wirkt auch auf laufende Forschungen
-    const speedBib = 1 / FL.bibliothek.zeitFaktor / mMul('researchTime');
+    const rt = flNbTotal('nbResearchTime');       // Bibliothek (Teil 11): Manufakturen neben dem Haupthaus verkürzen jede Forschung
+    const speed = 1 / Math.max(0.1, 1 + nbTotal('universitaet') + rt) / mMul('researchTime');       // researchTime: Weiterentwicklung Buchdruck (Teil 6): wirkt auch auf laufende Forschungen
+    const speedBib = 1 / FL.bibliothek.zeitFaktor / Math.max(0.1, 1 + rt) / mMul('researchTime');
     for (const a of S.research.active){ if (a.bib ? bib : uni) a.t += dt * (a.bib ? speedBib : speed); }
     const done = S.research.active.filter(a => a.t >= a.timeS);
     if (!done.length) return;
@@ -1906,6 +1942,7 @@ function create(){
     S = freshState(diff, seed);
     S.pacing = opts.pacing || C.PACING_MODUS || 'standard';
     S.druck = opts.druck === 'hoch' ? 'hoch' : null;
+    S.fluegelErst = opts.fluegel && C.HAUPTHAUS.fluegel[opts.fluegel] ? opts.fluegel : null;
     S.gegnerfern = opts.gegnerfern !== 'aus';          // Testschalter ?gegnerfern=aus (Teil 8, REQ-K8.06): im Modus karten an
     if (S.pacing === 'karten') S.enemyBaseHp = diffCfg().enemyBaseHp;
     if (S.pacing === 'karten'){ S.haus = { stufe: 1, fluegel: [], bau: null }; S.slots[C.HAUPTHAUS.platz] = { type: 'haupthaus', paid: 0, fixed: true }; }       // Haupthaus Stufe I im Mittelfeld (Teil 7, REQ-K7.02)
@@ -1957,7 +1994,7 @@ function create(){
     doClick, buy, build, buildAt, demolish, unlockBuilding, repair, repairCost, spawn, makeUnit,
     addFormation, addGroup, layoutAll, formMembers, mainOf, supplyCap, supplyFull, waveIn, enemyWaveIn, ownOnField, armyState, ownWaveInterval, categoryCount, synergyValue, katsOf, katCounts, katLead, synergieNow, synergieEffects, weightKarten, xpNeed, xpVerfaellt, xpRestAbstandS, strongerLane, assignLanes, laneStrength, siegeIn, siegeAnnounced, enemyHpMult, enemyDmgMult,
     maxPerType, zweiteSteht, handelshaus, kompanieKosten, kompanieBlock, hireKompanie, supplyOf, queueSupply,
-    hausStufe, fabrikGrenze, fabrikPlaetze, hasFluegel, forschungsort, zeughausDeckt, zeughausMax, zinsQuelle, budgetMax, uniPlaetze, hausNext, hausKarte, hausKosten, hausBlock, hausAusbau, fluegelFrei, fluegelBlock, chooseFluegel, hausKarteOffen,
+    hausStufe, fabrikGrenze, fabrikPlaetze, hasFluegel, fluegelNachbarn, fluegelPlaetze, flNb, flNbTotal, variantDauer, forschungsort, zeughausDeckt, zeughausMax, zinsQuelle, budgetMax, uniPlaetze, hausNext, hausKarte, hausKosten, hausBlock, hausAusbau, fluegelFrei, fluegelBlock, chooseFluegel, hausKarteOffen,
     enemyWaveSize, rollEnemyWave, tiersOf, drawOptionsKarten, drawOptions, variantsFor, cardRemoved, DOK, DOKTRINEN, activeDoctrines, doktrinCount, doctrineLimit, doctrineExcess, variantExcess, ausbauRemoved, stachelStufen, weiterDone, weiterErsetzt, weiterResearch, weiterStufe, weiterNext, doktrinChance, towerBlocked, unitDoctrineBlock, freihandel, tradeBlock, tradeMaterialToXp, tradeXpToMaterial, xpFortschritt, raubbauFactor, raubbauStufen, bastionSlots, bastionDmg, bastionCd, bastionRange, bastionLane, standingVariants, variantsOf, variantCost, variantVisible, variantBlock, upgradeBuilding, VAR, VARIANTS, canBuy, isAvailable, isMaxed, noEffect, supplyCapped, upCost, unitCost, unitPrice, unitIsMerc, lagerDeckel, buildCost, factoryCost, factoryCount, factoryRate, builtCount, has, countType, lv,
     kaserneLevel, levelStrength, qualityMult,
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,

@@ -154,7 +154,15 @@ const KF_CONFIG = {
        zeughaus: Schmiede-Ausbauten (Qualität) bis Stufe schmiedeStufen ohne Schmiede
        schatzkammer: Zinsen auf den Materialbestand wie ein Kontor mit dem Anteil deckelAnteil an dessen Zinsdeckel (zählt nur ohne stehendes Kontor)
        kanzlei: so viele Karten je Angebot wie mit Universität (nicht zusätzlich) */
-    fluegel: { bibliothek: { zeitFaktor: 1.5, budgetMax: 1 }, zeughaus: { schmiedeStufen: 2 }, schatzkammer: { deckelAnteil: 0.5 }, kanzlei: {} },
+    fluegel: {
+      bibliothek:   { zeitFaktor: 1.5, budgetMax: 1, ersetzt: 'universitaet', nachbar: { ziel: 'fabrik', stat: 'nbResearchTime', wert: -0.05, max: 2 } },
+      zeughaus:     { schmiedeStufen: 2, ersetzt: 'schmiede', nachbar: { ziel: 'kaserne', stat: 'nbUnitHp', wert: 0.10, max: 2 } },
+      schatzkammer: { deckelAnteil: 0.5, ersetzt: 'kontor', nachbar: { ziel: 'fabrik', stat: 'nbFactoryYield', wert: 0.10, max: 2 } },
+      kanzlei:      { ersetzt: 'universitaet', nachbar: { ziel: 'alle', stat: 'nbVariantCost', wert: -0.15, max: 2 } },
+    },
+    /* Teil 11 (REQ-K11.01): Nachbarschaftsboni der Flügel, Eigenschaft des Flügels (nachbar): ziel = Gebäudetyp oder 'alle', stat = Wirkung (nbFactoryYield: Ertrag der Manufaktur, nbResearchTime: Forschungszeit,
+       nbUnitHp: Lebenspunkte neuer Einheiten, nbVariantCost: Kosten und Dauer der Aufwertung zur Variante), wert je begünstigtem Gebäude, max = höchstens so viele Gebäude je Flügel.
+       Begünstigt werden die orthogonal an das Haupthaus angrenzenden Plätze (mit Querverbindung auch die diagonalen), in der Reihenfolge der Plätze; nie das Haupthaus und nie das Gebäude, das der Flügel ersetzt. */
   },
   KATEGORIEN: { liste: ['wirtschaft', 'militaer', 'verteidigung'], doktrin: 2, deckel: 8, synergieAb: 2, vorsprung: 2, gewichtVorne: 2, poolMax: 42 },       // poolMax: 38 in Teil 6, 42 in Teil 7 (fünf neue Karten: Stadtrecht, Hofhaltung, Wasserrahmen, Fernhandel, Geschützguss)
   /* Teil 4 (REQ-S.08): Testschalter ?druck=hoch (Standard aus). Verstärkt die regulären Gegnerwellen ab Minute abMinute um faktor (Zahl der Einheiten); die Druckkurve selbst

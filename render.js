@@ -97,18 +97,23 @@ function drawBuilding(kind, cx, gy, s){
 
 /* Trefferflächen für Klicks, in Weltpixeln; beim Zeichnen des Reichs gefüllt */
 let plotRects = [], sectionRects = [];
+/* Teil 11 (REQ-K11.03): beim Überfahren (oder Auswählen) des Haupthauses werden die Plätze hervorgehoben, die ein Flügel begünstigt */
+let hausHighlight = false;
+function setHausHighlight(on){ hausHighlight = on; }
 function drawRealm(){
   const S = G.S, s = realmSize(), x0 = PAD, y0 = PAD, wt = Math.max(8, s * 0.06), gap = Math.max(4, s * 0.025);
   ctx.fillStyle = COL['surface-2']; ctx.fillRect(x0, y0, s, s);
   // Parzellen im 3×3-Raster
   const inner = s - 2 * wt - 4 * gap, cell = inner / C.GRID_SIZE;
   plotRects = [];
+  const hl = S.haus && (hausHighlight || (!!sel && sel.kind === 'plot' && sel.i === C.HAUPTHAUS.platz)) ? new Set(S.haus.fluegel.flatMap(id => [...G.fluegelNachbarn(id)])) : null;
   for (let i = 0; i < KlammerCore.SLOTS; i++){
     const r = Math.floor(i / C.GRID_SIZE), c = i % C.GRID_SIZE;
     const px = x0 + wt + gap + c * (cell + gap), py = y0 + wt + gap + r * (cell + gap);
     plotRects.push({ i, x: px, y: py, w: cell, h: cell });
     const on = !!sel && sel.kind === 'plot' && sel.i === i, sl = S.slots[i];
     ctx.fillStyle = sl ? COL.surface : COL.bg; ctx.fillRect(px, py, cell, cell);
+    if (hl && hl.has(i)){ ctx.globalAlpha = 0.3; ctx.fillStyle = COL.brass; ctx.fillRect(px, py, cell, cell); ctx.globalAlpha = 1; }
     ctx.strokeStyle = on ? COL.brass : COL['rule-strong']; ctx.lineWidth = on ? 3 : 1;
     if (!sl) ctx.setLineDash([4, 4]);
     ctx.strokeRect(px + 0.5, py + 0.5, cell - 1, cell - 1);
@@ -117,7 +122,7 @@ function drawRealm(){
       if (sl.upg) ctx.globalAlpha = 0.45;                                                   // Aufwertung läuft: das Gebäude ruht (Teil 4, REQ-S.05)
       drawBuilding(sl.type, px + cell / 2, py + cell * 0.72, cell / 34);
       ctx.globalAlpha = 1;
-      if (sl.upg){ const f = Math.min(1, sl.upg.t / C.AUFWERTUNG.dauerS); ctx.fillStyle = COL['surface-2']; ctx.fillRect(px + 4, py + cell - 9, cell - 8, 5); ctx.fillStyle = COL.brass; ctx.fillRect(px + 4, py + cell - 9, (cell - 8) * f, 5); }
+      if (sl.upg){ const f = Math.min(1, sl.upg.t / (sl.upg.dauer || C.AUFWERTUNG.dauerS)); ctx.fillStyle = COL['surface-2']; ctx.fillRect(px + 4, py + cell - 9, cell - 8, 5); ctx.fillStyle = COL.brass; ctx.fillRect(px + 4, py + cell - 9, (cell - 8) * f, 5); }
       // Markierung der Variante in der Farbe ihrer Kategorie (Teil 6: kein Zeichen mehr, nur die Farbe der Kategorie)
       else if (sl.variant && G.VAR[sl.variant]){
         const col = { militaer: COL.rust, wirtschaft: COL.brass, verteidigung: COL.steel }[G.VAR[sl.variant].kat], r = Math.max(4, cell * 0.09);

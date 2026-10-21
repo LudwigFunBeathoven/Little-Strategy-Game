@@ -35,7 +35,7 @@ if (!isMainThread){
   const jobs = [];
   if (SUITE === 'felder')
     for (const diff of DIFFS) for (const profile of PROFILES) for (let r = 0; r < RUNS; r++)
-      jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, gegnerfern: arg('gegnerfern', 'an') === 'aus' ? 'aus' : undefined, sampleXp: EP_AT, xpLog: arg('xplog', 'nein') === 'ja' || undefined, seed: seedOf(2, r) });
+      jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, gegnerfern: arg('gegnerfern', 'an') === 'aus' ? 'aus' : undefined, fluegel: arg('fluegel', '') || undefined, sampleXp: EP_AT, xpLog: arg('xplog', 'nein') === 'ja' || undefined, seed: seedOf(2, r) });
 
   if (SUITE === 'budget')
     for (const arm of [0, 1, 2]) for (const profile of PROFILES) for (const diff of DIFFS) for (let r = 0; r < RUNS; r++)
