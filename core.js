@@ -105,7 +105,7 @@ function freshState(diff, seed){
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0, waveSize: {},       // waveSize: Zahl der Einheiten je Gegnerwelle für die EP der abgewehrten Welle (Modus karten, Teil 5)
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
-    level: 0, reached: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
+    level: 0, reached: 0, lvlRef: 0, refCum: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
     research: { done: {}, active: [], ver: 0, banned: [], fresh: false },     // Forschungsbaum der Universität (REQ-5.07)
     clickTimes: [],
     stats: { prod: { early: { click: 0, auto: 0, time: 0 }, mid: { click: 0, auto: 0, time: 0 }, late: { click: 0, auto: 0, time: 0 } } },
@@ -389,7 +389,7 @@ function create(){
   const raubbauFactor = sl => raubbauOn() && sl && sl.type === 'fabrik' ? 1 + C.DOKTRIN.raubbau.bonus * raubbauStufen(sl) / C.DOKTRIN.raubbau.stufen : 1;
   const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) * raubbauFactor(sl) : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
-  const levelEff = () => S.pacing === 'karten' ? S.level + Math.max(0, S.reached - S.level) : S.level;       // Teil 10: Stärke und Phase folgen den erreichten Schwellen, nicht den getroffenen Wahlen (wie vor der Trennung von Schwelle und Aufstieg)
+  const levelEff = () => S.pacing === 'karten' ? S.level + Math.max(0, S.lvlRef - S.level) : S.level;       // Teil 10: Stärke und Phase folgen den EP (Referenzkurve KARTEN.schwellenRef), nicht den getroffenen Wahlen und nicht der Kostenkurve der Wahlen
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * levelEff();
   const qualityLevel = () => lv('qualitaet') + Math.floor(mAdd('startSmith'));       // startSmith: Karte Rekrutenzug Stufe II (Teil 6, vorher Linie Militär Stufe 2): Einheiten starten mit der nächsten Schmiede-Stufe
   const qualityMult  = () => Math.pow(1 + (C.FX_QUALITAET + mAdd('qualityBonus')) * mMul('smithEffect'), qualityLevel());       // smithEffect: Waffenschmiede (Teil 4)
@@ -1439,6 +1439,9 @@ function create(){
      Dynamischer Anstieg (C.KARTEN.schwellen.dyn, Arm B des Experiments): wird eine Schwelle früher als ref Sekunden nach der vorigen erreicht, steigen die Kosten der nächsten um ref/Abstand, höchstens max. */
   function reachLevels(){
     const dyn = C.KARTEN.schwellen.dyn;
+    // Referenzstufe für Stärke und Phase: feste Kurve, unabhängig von Kostenkurve, Mindestabstand und Aufstiegen (Teil 10)
+    const R = C.KARTEN.schwellenRef, f = (C.KARTEN.schwellenFaktor && C.KARTEN.schwellenFaktor[S.diff]) ?? 1, xm = mMul('xpNeed');
+    for (;;){ const step = R.start * Math.pow(R.wachstum, S.lvlRef) * f; if (S.xpTotal < (S.refCum + step) * xm) break; S.refCum += step; S.lvlRef++; }
     while (S.xpTotal >= xpNeed(S.reached + 1)){
       S.reached++;
       (S.stats.stufenT = S.stats.stufenT || []).push(+S.t.toFixed(1));       // Zeitpunkt der erreichten Schwelle (Teil 8, REQ-K8.01: Wartezeit am Mindestabstand)

@@ -21,6 +21,7 @@ const KF_CONFIG = {
        Schwelle (kumuliert) der Wahl n = Summe der Schritte 1 … n; Schritt k = start × wachstum^(k−1) × schwellenFaktor[Grad] (die Kurve ist für alle Grade gleich, der Faktor je Grad ist
        nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
        Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
+    schwellenRef: { start: 70, wachstum: 1.05 },       // Referenzkurve für Stärke und Phase (Teil 10): unabhängig von den Kosten der Wahlen
     schwellen: { start: 70, wachstum: 1.05, dyn: null },       // dyn: { ref, max } – dynamischer Anstieg (Teil 10, REQ-K10.05); null = aus
     uebertrag: null,                                // Teil 8 (REQ-K8.02, Hebel 3): { anteil: 0.25 } – wartet eine Stufe (Mindestabstand), geht in die nächste höchstens dieser Anteil ihrer Kosten über, weitere EP verfallen; null = unbegrenzt (Standard: Der Hebel schwächt die Bots stark, siehe Bericht kartenpfad-8)
     schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
