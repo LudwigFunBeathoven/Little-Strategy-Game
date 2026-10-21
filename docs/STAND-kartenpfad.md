@@ -389,10 +389,10 @@ Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`. Berichte: `docs/bericht
 | V.3 | Reichweiten 1,6 / 2,0 | fertig |
 | V.4 | Fernkämpfer halten | fertig |
 | V.5 | Rückstau: getrennte Schwelle und Aufstieg, Arme A–D, **Arm C2 vorläufig** | offen: PO-Entscheidung |
-| V.6 | Browser-Test mit Wartebedingungen | fertig (siehe Bericht für die zehn Läufe) |
+| V.6 | Browser-Test mit Wartebedingungen | fertig (zehn Läufe grün) |
 | V.7 | Messung, Bericht | fertig |
 | W.1–W.3 | Nachbarschaftsboni der Flügel, Bot-Regeln, `?fluegel`, Anzeige | fertig |
 | W.4 | Messung, Flügelvergleich, Kalibrierung | fertig, Ziele teils verfehlt (siehe Bericht Teil 11) |
-| W.5 | Berichte, Testleitfaden, Textübersicht, Testbuild | siehe Bericht Teil 11 |
+| W.5 | Berichte, Testleitfaden, Textübersicht, Testbuild | fertig (Testbuild: https://claude.ai/artifact/HjGbypR1DtE4z6yyZiFv2i) |
 
 Offene Entscheidungen des PO: gegnerische Reichweitenobergrenze 120 oder 140; Rückstau-Arm (C2 bestätigen oder ändern); Umgang mit den verfehlten Zielen aus K11.04.

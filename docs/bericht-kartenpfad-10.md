@@ -88,13 +88,13 @@ Mögliche nächste Schritte, nach Entscheidung des PO: (a) Kurve zwischen A5 und
 | K10.03 | Tabelle, Reihenfolge, Gegnerobergrenze | erfüllt mit der Abweichung 140 statt 120 (Befund 2); [Mensch] offen |
 | K10.04 | Unit-Test (5 %), Simulation, Patt höchstens +1 Prozentpunkt | erfüllt (Patt sinkt); Bildfolge: nicht erstellt (siehe Nicht getestet); [Mensch] offen |
 | K10.05 | Rückstau, Wahlen, Profile, CV, Tabelle, Unit-Test | **nicht vollständig erfüllt**; Tabelle und Unit-Test erfüllt; Arm C2 vorläufig |
-| K10.06 | zehn Läufe grün je Sprache | siehe Browser-Läufe unten |
-| K10.07 | Golden-Test, Unit-Tests, Browser-Prüfpunkte | Golden-Test und Unit-Tests grün (`npm run test:kurz`) |
+| K10.06 | zehn Läufe grün je Sprache | erfüllt: zehn aufeinanderfolgende Läufe von `tests/browser-check.mjs` (je Lauf beide Sprachen, 406 Prüfpunkte, 0 Fehler) auf dem endgültigen Stand; zwei frühere Läufe unter Last (parallele Simulation) scheiterten an einer zu knappen Obergrenze der Wartebedingung (120 s → 300 s) |
+| K10.07 | Golden-Test, Unit-Tests, Browser-Prüfpunkte | erfüllt (`npm run test:kurz` grün, alle Browser-Prüfungen grün) |
 
 ## Nicht getestet, Abweichungen, offene Punkte
 
 - **Bildfolge einer Lane mit haltenden Fernkämpfern** (K10.04): nicht erstellt; die Haltung ist in den Unit-Tests über Abstand und Position belegt.
-- **Zehn Läufe des Browser-Tests:** Ergebnis im nächsten Abschnitt.
+- **Weitere Browser-Prüfungen** (`browser-k2`, `-k2-standard`, `-q6`, `-n5`, `-t8`, `-u9`, `-r7`, `-v10`, `-w11`): grün; `browser-k2` K2.02 und die Kartenseite mussten an die getrennte Freischaltung angepasst werden (der zweite Aufstieg kommt erst mit der ersten Wahl).
 - **Entscheidung 1 (PO): Obergrenze der gegnerischen Reichweite** 120 (Grundreichweite, wie K10.03 formuliert) oder 140 (Turm mit einer Stufe, Entscheidung Teil 8). Schalter `KARTEN.gegnerReichweiteMax`.
 - **Entscheidung 2 (PO): Rückstau.** C2 bestätigen, nachstellen (a) oder (b), oder das Kriterium am Spieltest messen.
 - **Katapult 1,8 und Fernkampfverhalten auch für den Gegner:** wie vorgeschlagen umgesetzt.
