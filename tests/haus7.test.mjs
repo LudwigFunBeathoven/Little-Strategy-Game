@@ -75,7 +75,7 @@ test('K7.04: Die Automatik (Karte „Fließband“) und Bots können die Grenze 
   const snap = JSON.parse(JSON.stringify(G.snapshot()));
   const H = core.KlammerCore.create(); H.FX.on = false; H.adopt(snap);
   assert.equal(H.S.slots[4].type, 'haupthaus'); assert.equal(H.hausStufe(), 1); assert.equal(H.buildBlock(3, 'fabrik'), 'fabrikGrenze');
-  assert.equal(core.KlammerCore.SAVE_VERSION, 13); assert.match(core.KF_CONFIG.SAVE_KEY, /v13$/);
+  assert.equal(core.KlammerCore.SAVE_VERSION, 14); assert.match(core.KF_CONFIG.SAVE_KEY, /v14$/);
 });
 
 test('K7.02, K7.04: Texte in beiden Sprachen (Reiter, Stufen, Grenze, Erklärzeile)', () => {

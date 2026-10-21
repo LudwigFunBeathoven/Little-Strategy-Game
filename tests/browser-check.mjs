@@ -28,6 +28,19 @@ const urlTutorial = base + 'index.html?dev=1&pacing=standard&entdecken=0&buehne=
 const b = await chromium.launch();
 let failed = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failed++; };
+/* Wartebedingungen statt Wartezeiten nach Uhr (Teil 10, REQ-K10.06): Die Kartenknöpfe nehmen Klicks erst nach der Sperre an (aria-disabled), die Sprechblase wechselt ihren Text erst nach dem Klick */
+/* Klickt die erste Karte, bis die Wahl getroffen ist (Zustand: keine offene Wahl mehr); ein Klick in der Sperrzeit wird vom Spiel ignoriert und wiederholt */
+async function pickCard(p, sel = '#draftOffer .card-pick'){
+  for (let i = 0; i < 40; i++){
+    if (!(await p.evaluate(() => !!__kf.G.S.pendingDraft))) return true;
+    if (await p.evaluate(s => { const b = document.querySelector(s); return !!b && b.getAttribute('aria-disabled') !== 'true'; }, sel)) await p.click(sel, { timeout: 2000 }).catch(() => {});
+    await p.waitForTimeout(100);
+  }
+  return false;
+}
+const cardReady = p => p.waitForFunction(() => { const b = document.querySelector('#draftOffer .card-pick'); return !!b && b.getAttribute('aria-disabled') !== 'true'; }, null, { timeout: 10000 });
+const narrIs = (p, text) => p.waitForFunction(t => document.querySelector('#tutBubbleNarr').textContent === t, text, { timeout: 5000 }).catch(() => {});
+const phaseIs = (p, ph) => p.waitForFunction(x => __kf.Tutorial.view().phase === x, ph, { timeout: 8000 }).catch(() => {});
 const show = list => list.length ? ' ' + JSON.stringify(list.slice(0, 3)) : '';
 
 for (const lang of ['de', 'en']){
@@ -370,7 +383,7 @@ for (const dsf of [1, 2]){
   await p.mouse.up(); await p.waitForTimeout(150);
   const after = await p.evaluate(() => ({ tab: __kf.tab, clicks: __kf.G.S.clicks }));
   check(held === 'army' && after.tab === 'cards' && after.clicks === clicks0 + 1, `Kartenwahl bei gehaltenem Klick: Reiter erst nach dem Loslassen (${held} → ${after.tab}), Klick gezählt (${after.clicks - clicks0})`);
-  await p.waitForTimeout(450); await p.click('#draftOffer .card-pick'); await p.waitForTimeout(120);
+  await pickCard(p); await p.waitForTimeout(120);
   // Kaserne im Reiter Armee: ohne Kaserne Status und Knopf „Kaserne bauen“ → Reiter Bauen, Kaserne vorausgewählt
   await p.evaluate(() => { delete __kf.G.S.draft.stacks.bauleitung; __kf.G.S.draft.ver++; __kf.G.S.material = 1e5; __kf.selectTab('army'); }); await p.waitForTimeout(100);       // Bauleitung baute sonst selbst Fabriken auf den gewählten Platz
   const k0 = await p.evaluate(() => ({ status: document.querySelector('#kaserneStatus').textContent, btn: !document.querySelector('[data-tooltip="kaserneBuild"]').hidden }));
@@ -761,13 +774,14 @@ for (const lang of ['de', 'en']){
   check(s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task') && s6.marked.join() === 'tab-cards', `[${lang}] Kartenwahl: Sprechblase mit Erzählung und Auftrag am Reiter „Karten“`);
   check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Kartenwahl: Sprechblase verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
   check(await p.evaluate(() => document.querySelector('#hintBox').hidden), `[${lang}] Kartenwahl: kein Erstkontakt-Hinweis während des Tutorials`);
-  await p.waitForTimeout(500); await p.click('#draftOffer .card-pick'); await p.waitForFunction(() => __kf.Tutorial.view().phase === 'farewell', null, { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(400);
+  await pickCard(p); await phaseIs(p, 'farewell'); await narrIs(p, await tx(p, 'tut.bye1'));
   const f1 = await tutState(p);
   check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1') && f1.task === null, `[${lang}] Abschied 1 nach der Kartenwahl ${JSON.stringify(f1)} ${await tx(p, 'tut.bye1')}`);
+  await p.waitForFunction(() => __kf.Cam.x === 0, null, { timeout: 5000 }).catch(() => {});       // die Kamera fährt zum Reich (Zustand statt Uhr)
   check(await p.evaluate(() => __kf.Cam.x === 0), `[${lang}] Abschied: Kamera zeigt das Reich, die Figur steht vor dem Tor`);
-  await p.click('#tutBubble'); await p.waitForTimeout(250);
+  await p.click('#tutBubble'); await narrIs(p, await tx(p, 'tut.bye2'));
   check((await tutState(p)).narr === await tx(p, 'tut.bye2'), `[${lang}] Abschied 2 nach Klick`);
-  await p.click('#tutBubble'); await p.waitForTimeout(250);
+  await p.click('#tutBubble'); await phaseIs(p, 'leaving');
   check((await tutState(p)).phase === 'leaving', `[${lang}] danach geht die Figur durch das Tor zurück`);
   await p.waitForFunction(() => !__kf.Tutorial.active(), null, { timeout: 15000 }); await p.waitForTimeout(150);
   check(await p.evaluate(() => document.querySelector('#tutBubble').hidden && document.querySelector('#tutSkipBtn').hidden && document.querySelectorAll('.tut-target').length === 0 && !__kf.G.holdActive() && __kf.G.S.status === 'running'), `[${lang}] Ende: Figur, Zeile, Rahmen und Knopf verschwunden, freies Spiel`);
@@ -1070,7 +1084,7 @@ for (const lang of ['de', 'en']){
   check(s6.stage && s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task'), `[${lang}] Tutorial/karten: erste Kartenwahl auf der Bühne mit Erzählung und Auftrag ${JSON.stringify([s6.stage, s6.tab])}`);
   check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Tutorial/karten: Sprechblase sitzt über der Bühne und verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 5000 });
-  await p.click('.kcard >> nth=0'); await p.waitForTimeout(1100);
+  await p.click('.kcard >> nth=0'); await phaseIs(p, 'farewell'); await p.waitForTimeout(100);
   const f1 = await tutState(p);
   check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1.karten'), `[${lang}] Tutorial/karten: Abschied 1 im Modus karten „${f1.narr}“`);
   check(errs.length === 0, `[${lang}] Tutorial/karten: keine Fehler${show(errs)}`);
@@ -1165,7 +1179,7 @@ for (const lang of ['de', 'en']){
   check(s6.stage && s6.narr === await tx(p, 'tut.karte.narr') && s6.task === await tx(p, 'tut.karte.task'), `[${lang}] Tutorial/Vorgabe: erste Kartenwahl auf der Bühne mit Erzählung und Auftrag ${JSON.stringify([s6.stage, s6.tab])}`);
   check(s6.bubbleBottom <= s6.cardsTop, `[${lang}] Tutorial/Vorgabe: Sprechblase sitzt über der Bühne und verdeckt keine Karte (${Math.round(s6.bubbleBottom)} ≤ ${Math.round(s6.cardsTop)})`);
   await p.waitForFunction(() => !document.getElementById('stageCards').classList.contains('locked'), null, { timeout: 5000 });
-  await p.click('.kcard >> nth=0'); await p.waitForTimeout(1100);
+  await p.click('.kcard >> nth=0'); await phaseIs(p, 'farewell'); await p.waitForTimeout(100);
   const f1 = await tutState(p);
   check(f1.phase === 'farewell' && f1.narr === await tx(p, 'tut.bye1'), `[${lang}] Tutorial/Vorgabe: Abschied 1 „${f1.narr}“`);
   // Während des Abschieds folgt eine weitere Wahl (zwei verschiedene Kartentypen in der Sammlung); danach verschwindet der Quartiermeister

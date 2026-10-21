@@ -378,6 +378,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
     enemyBaseFrac: S.enemyBaseHp / G.diffCfg().enemyBaseHp, supplyEnd: G.supplyCap(), kills: S.kills, losses: S.losses, matRateEnd: Math.round(G.matRate() * 10) / 10,
     grid, wallLost: Math.round(wallLost), variants: S.stats.variants || [],
+    rueckMax: S.stats.rueckMax || 0, rueck2T: Math.round(S.stats.rueck2T || 0),       // Teil 10 (REQ-K10.05): größter Rückstau (erreichte, nicht getroffene Wahlen) und Sekunden mit mehr als einer
     haus: S.stats.haus || [], fluegel: S.stats.fluegel || [], kompanien: (S.stats.kompanien || []).length, gekauft: S.stats.gekauft || {},       // Teil 7 (REQ-K7.12)
     nbEnd: Math.round(1000 * S.slots.reduce((a, x, k) => a + (x && x.type === 'fabrik' && !x.upg ? G.neighborValue(k, 'fabrik') : 0), 0)) / 1000, slotsEnd: S.slots.map(x => x ? x.type : null),       // Teil 7 (REQ-K7.01): Summe der Nachbarschaftswerte der Fabriken am Ende, Belegung am Ende
     weiter: S.stats.weiter || [], katCounts: G.katCounts(), synergie: Object.fromEntries(Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0 && G.OPT[k] && G.OPT[k].synergie).map(k => [k, (({ n, value }) => ({ n, value }))(G.synergieNow(k))])),

@@ -22,12 +22,12 @@ function game(pacing = 'karten', seed = 7){
 const LADDER = ['werfer', 'bogenschuetze', 'armbrust', 'katapult', 'geschuetz'];
 
 test('K8.05: Grundreichweiten im Modus karten: strikte Leiter mit mindestens 10 % Abstand, nach den Faktoren auf R_W, keine Reichweite sinkt', () => {
-  const { G, C } = game(); const RW = C.UNITS.werfer.range, F = { werfer: 1, bogenschuetze: 1.3, armbrust: 1.5, katapult: 1.8, geschuetz: 2.2 };
+  const { G, C } = game(); const RW = C.UNITS.werfer.range, F = { werfer: 1, bogenschuetze: 1.3, armbrust: 1.6, katapult: 1.8, geschuetz: 2.0 };
   const r = LADDER.map(id => G.baseRange(id));
   for (let i = 1; i < r.length; i++) assert.ok(r[i] >= r[i - 1] * 1.1, `${LADDER[i]} ${r[i]} mindestens 10 % über ${LADDER[i - 1]} ${r[i - 1]}`);
   for (const id of LADDER){ assert.ok(Math.abs(G.baseRange(id) - RW * F[id]) <= 1, `${id}: ${G.baseRange(id)} gegen ${RW * F[id]}`); assert.ok(G.baseRange(id) >= C.UNITS[id].range, `${id} sinkt nicht`); }
   assert.equal(G.baseRange('werfer'), RW, 'Werfer unverändert');
-  for (const id of LADDER) assert.equal(G.unitRange('e', id), Math.min(C.UNITS[id].range, C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel), `gegnerische ${id}: keine Leiter, höchstens Turm mit einer Reichweitenstufe`);
+  for (const id of LADDER) assert.equal(G.unitRange('e', id), Math.min(G.baseRange(id), C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel), `gegnerische ${id}: dieselbe Leiter (Teil 10), höchstens Turm mit einer Reichweitenstufe`);
   const { G: S } = game('standard'); for (const id of LADDER) assert.equal(S.baseRange(id), C.UNITS[id].range, `Standardmodus: ${id} unverändert`);
 });
 
@@ -42,16 +42,16 @@ test('K8.05: Die Leiter gilt auf allen Schmiede-Stufen und mit allen Ausbauten; 
   for (let i = 1; i < base.length; i++) assert.ok(base[i] > base[i - 1]);
 });
 
-test('K8.05: Lange Wurfarme (+25/+50 für Werfer und Bogenschütze) wirken wie bisher additiv; die Karte kann Bogenschütze und Werfer über die Grundreichweiten der nächsten Stufen heben (bekannte Folge, im Bericht)', () => {
+test('K8.05/K10.03: Lange Wurfarme (+25/+50 für Werfer und Bogenschütze) wirken additiv; der Bogenschütze bleibt dabei unter der Armbrust (Reihenfolge der Leiter)', () => {
   const { G, C } = game();
   for (const [stufe, add] of [[1, 25], [2, 50]]){
     G.S.draft.stacks = { langeWurfarme: stufe }; G.S.draft.ver++;
-    assert.equal(G.unitRange('p', 'werfer'), C.UNITS.werfer.range + add); assert.equal(G.unitRange('p', 'bogenschuetze'), G.baseRange('bogenschuetze') + add);
+    assert.equal(G.unitRange('p', 'werfer'), C.UNITS.werfer.range + add); assert.equal(G.unitRange('p', 'bogenschuetze'), Math.min(G.baseRange('bogenschuetze') + add, G.baseRange('armbrust') - 1));
     assert.equal(G.unitRange('p', 'armbrust'), G.baseRange('armbrust'), 'Armbrust nicht betroffen');
     assert.equal(G.unitRange('e', 'werfer'), C.UNITS.werfer.range, 'Gegner nicht betroffen');
   }
-  // Stufe 2: Werfer 155 < Armbrust 158 (Leiter hält), Bogenschütze 187 > Armbrust 158 (die Leiter kippt)
-  assert.ok(G.unitRange('p', 'werfer') < G.unitRange('p', 'armbrust')); assert.ok(G.unitRange('p', 'bogenschuetze') > G.unitRange('p', 'armbrust'));
+  // Stufe 2 (Teil 10): Werfer 155 < Bogenschütze (187, gedeckelt unter der Armbrust: 167) < Armbrust 168 – die Leiter hält
+  assert.ok(G.unitRange('p', 'werfer') < G.unitRange('p', 'bogenschuetze')); assert.ok(G.unitRange('p', 'bogenschuetze') < G.unitRange('p', 'armbrust'));
 });
 
 /* ---------- K8.06 Gegner mit Bogen- und Armbrustschützen ---------- */
@@ -87,7 +87,7 @@ test('K8.06: Die Belagerungswelle (dreifache Größe) mischt Fernkämpfer bei; d
   assert.ok(count(w, 'bogenschuetze') > 0 && count(w, 'armbrust') > 0, 'Belagerungswelle');
   const L = G.unitStats('e', 'laeufer'), B = G.unitStats('e', 'bogenschuetze'), A = G.unitStats('e', 'armbrust');
   assert.ok(Math.abs(B.hp / L.hp - C.UNITS.bogenschuetze.hp / C.UNITS.laeufer.hp) < 1e-9 && Math.abs(A.dmg / L.dmg - C.UNITS.armbrust.dmg / C.UNITS.laeufer.dmg) < 1e-9, 'gleiche Skalierung wie Läufer');
-  assert.equal(B.range, C.UNITS.bogenschuetze.range); assert.equal(A.range, C.UNITS.armbrust.range);
+  assert.equal(B.range, C.KARTEN.reichweiten.bogenschuetze); assert.equal(A.range, C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel);       // Teil 10: gegnerische Schützen folgen der Leiter, Armbrust von 168 auf den Turm mit einer Stufe begrenzt
 });
 
 /* ---------- K8.07 Belagerungsgerät entfällt, Durchbruch Stufe II; K8.08 Grenzfeste ---------- */

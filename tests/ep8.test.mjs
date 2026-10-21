@@ -18,16 +18,17 @@ const run = (G, seconds) => { for (let i = 0; i < 20 * seconds; i++){ G.S.sectio
 
 test('K8.01: eine gleich erreichte Stufe erscheint ohne Wartezeit; weitere Stufen warten den Mindestabstand ab und wachsen als Rückstau (ohne Übertragsgrenze)', () => {
   const { G, C } = game(); C.KARTEN.uebertrag = null;
-  G.gainXp(G.xpNeed(4) + 1, 'kill');                      // vier Stufen auf einmal
+  G.gainXp(G.xpNeed(4) + 1, 'kill');                      // vier Schwellen auf einmal (Teil 10: ein Schub, ein Aufstieg)
   const w = G.S.stats.wahlen;
   assert.equal(w.length, 1, 'erste Wahl sofort');
+  assert.equal(G.S.level, 1); assert.equal(G.S.pendingLevels, 1); assert.equal(G.rueckstau(), 4);
   assert.equal(w[0].w, 0); assert.equal(w[0].rest, 3);
   assert.equal(G.S.stats.stufenT.length, 4);
   neutral(G); run(G, C.KARTEN.minAbstand + 1);
   assert.equal(w.length, 2, 'zweite Wahl nach dem Mindestabstand');
   assert.ok(Math.abs(w[1].w - C.KARTEN.minAbstand) < 0.2, `Wartezeit ${w[1].w}`);
   assert.equal(w[1].rest, 2);
-  assert.ok(w[1].ue > 0 && w[1].ue < 1, `Übertrag ${w[1].ue}`);
+  assert.ok(w[1].ue > 1, `Übertrag ${w[1].ue}: mehr als eine Stufe liegt über dem Stand`);
 });
 
 test('K8.01: Wartezeit entfällt, wenn die Stufe erst nach dem Mindestabstand erreicht wird', () => {

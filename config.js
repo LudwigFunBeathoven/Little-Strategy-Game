@@ -3,7 +3,7 @@
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
   VERSION: '0.9.2-kartenpfad-8',
-  SAVE_KEY: 'klammerfront.save.v13',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
+  SAVE_KEY: 'klammerfront.save.v14',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -21,15 +21,17 @@ const KF_CONFIG = {
        Schwelle (kumuliert) der Wahl n = Summe der Schritte 1 … n; Schritt k = start × wachstum^(k−1) × schwellenFaktor[Grad] (die Kurve ist für alle Grade gleich, der Faktor je Grad ist
        nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
        Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
-    schwellen: { start: 70, wachstum: 1.05 },
+    schwellen: { start: 70, wachstum: 1.05, dyn: null },       // dyn: { ref, max } – dynamischer Anstieg (Teil 10, REQ-K10.05); null = aus
     uebertrag: null,                                // Teil 8 (REQ-K8.02, Hebel 3): { anteil: 0.25 } – wartet eine Stufe (Mindestabstand), geht in die nächste höchstens dieser Anteil ihrer Kosten über, weitere EP verfallen; null = unbegrenzt (Standard: Der Hebel schwächt die Bots stark, siehe Bericht kartenpfad-8)
     schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
     minAbstand: 45,
-    /* Reichweitenleiter der Fernkämpfer (Teil 8, REQ-K8.05): Grundreichweiten im Modus karten, bezogen auf die des Werfers R_W (UNITS.werfer.range = 105): Bogenschütze 1,3 · R_W, Armbrustschütze 1,5 · R_W,
-       Katapult 1,8 · R_W, Geschütz 2,2 · R_W (gerundet); mindestens 10 % Abstand je Stufe, keine Reichweite sinkt. Der Standardmodus behält die Werte in UNITS. */
+    /* Reichweitenleiter der Fernkämpfer (Teil 8, REQ-K8.05): Grundreichweiten im Modus karten, bezogen auf die des Werfers R_W (UNITS.werfer.range = 105): Bogenschütze 1,3 · R_W, Armbrustschütze 1,6 · R_W,
+       Katapult 1,8 · R_W, Geschütz 2,0 · R_W (gerundet; Teil 10: 1,6 und 2,0); mindestens 10 % Abstand je Stufe, keine Reichweite sinkt. Der Standardmodus behält die Werte in UNITS. */
     /* Gegner mit Fernkämpfern (Teil 8, REQ-K8.06, experimentell): ab dem ab-fachen der Größe der ersten Welle ersetzen Läufer zufällig Bogenschützen bzw. Armbrustschützen, je Typ höchstens anteil der Welle. */
     gegnerFern: { bogen: { ab: 1.5, anteil: 0.25 }, armbrust: { ab: 2.5, anteil: 0.25 } },
-    reichweiten: { bogenschuetze: 137, armbrust: 158, katapult: 189, geschuetz: 231 },
+    fernHalt: true,                                 // Teil 10 (REQ-K10.04): Fernkämpfer bleiben stehen, sobald ein Ziel in Reichweite ist (false = Verhalten von Teil 8, für Vergleichsmessungen)
+    reichweitenFolge: ['werfer', 'bogenschuetze', 'armbrust', 'katapult', 'geschuetz'],       // Reihenfolge der Leiter: aufsteigende Reichweite, auch mit Ausbauten und Karten
+    reichweiten: { bogenschuetze: 137, armbrust: 168, katapult: 189, geschuetz: 210 },       // Teil 10 (REQ-K10.03): 1,3 / 1,6 / 1,8 / 2,0 · R_W (Teil 8: 1,3 / 1,5 / 1,8 / 2,2)
     /* EP-Quellen aus dem Spielfluss neben den Abschüssen (Teil 5, REQ-K5.03): Schaden an der gegnerischen Basis und vollständig abgewehrte Gegnerwellen. Die Mitte der Partie bringt sonst kaum EP,
        weil die Belagerung die regulären Gegnerwellen aufhält (Befund 4.1). */
     epBasis: { proProzent: 10 },                  // EP je 1 % der Lebenspunkte der gegnerischen Basis, die eigene Einheiten und Karten abtragen

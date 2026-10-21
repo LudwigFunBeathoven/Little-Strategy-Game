@@ -236,11 +236,12 @@ function tipContent(id){
     }
     case 'unit': {
       const spec = C.UNITS[a], o = G.ownType(a), st = G.unitStats('p', o);
-      return { title: t(`unit.${o}.name`), body: t('tip.unit.body', { max: G.supplyCap(), k: spec.key }),
+      const karten = S.pacing === 'karten';       // Teil 10 (REQ-K10.02): im Modus karten beschreibt der Tooltip die Einheit; die Ausrückregel steht im Reiter Armee
+      return { title: t(`unit.${o}.name`), body: karten ? t(`unit.${o}.desc`) : t('tip.unit.body', { max: G.supplyCap(), k: spec.key }),
                rows: [[t('tip.m.role'), t(G.unitRange('p', o) > C.RANGED_MIN_RANGE ? 'unit.role.ranged' : 'unit.role.melee')],
                       [t('tip.m.unitHp'), fmt(st.hp)],
                       [t('tip.m.unitDmg'), fmt1(st.dmg)],
-                      [t('tip.m.range'), fmt(G.unitRange('p', o))], [t('tip.cost'), costText('material', G.unitPrice(o))]],
+                      [t('tip.m.range'), fmt(G.unitRange('p', o))], [t('tip.cost'), costText('material', G.unitPrice(o))]].concat(karten ? [[t('tip.m.key'), spec.key]] : [], karten && G.unitIsMerc(o) ? [[t('tip.m.merc'), t('tip.merc.value')]] : []),
                reason: unitReason(a) };
     }
     case 'repair': {
@@ -308,7 +309,7 @@ function tipContent(id){
     case 'skipIntro': return { title: t('start.skipIntro'), body: t('tip.skipIntro.body') };
     case 'tutorialSwitch': return { title: t('start.tutorial'), body: t('tip.tutorial.switch.body') };
     case 'hintOk': return { title: t('hint.ok'), body: t('tip.hintOk.body') };
-    case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a) };
+    case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a, { max: G.supplyCap() }) };
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
     case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };

@@ -5,8 +5,9 @@ import { writeFileSync } from 'node:fs';
 import { loadCore, loadI18n } from './load-core.mjs';
 
 /* Budgets (Deutsch, höchstens Zeichen); Englisch + 15 % (R3). Element → Schlüsselmuster. */
-export const BUDGET = { karte: 22, wirkung: 40, nachteil: 40, bedingung: 30, gebaeude: 110, tooltip: 180, hinweis: 100 };
+export const BUDGET = { karte: 22, einheit: 140, wirkung: 40, nachteil: 40, bedingung: 30, gebaeude: 110, tooltip: 180, hinweis: 100 };
 export const ELEMENT = [
+  ['einheit',   /^unit\.[a-z]+\.desc$/],
   ['karte',     /^(?:draft|kp\.card|doctrine)\.[A-Za-z0-9_]+\.name(?:\.karten)?$/],
   ['wirkung',   /^kp\.eff\.[A-Za-z0-9_]+(?:\.t\d)?(?:\.karten)?$/],
   ['nachteil',  /^kp\.drawback\.[A-Za-z0-9_]+(?:\.t\d)?(?:\.karten)?$/],
@@ -23,9 +24,10 @@ export function sichtbar(){
   const I = loadI18n(), core = loadCore(), P = core.KF_PFAD;
   const gone = new Set([...P.entfallenKarten, ...P.entfallen.map(r => r.replace(/^r_/, '')), ...P.entfallenAusbauten]);
   const hidden = k => { const m = k.match(/^(?:draft|kp\.eff|kp\.drawback|kp\.cond|kp\.card|research|upg)\.([a-zA-Z_0-9]+)(\.|$)/); return !!m && gone.has(m[1]); };
+  const NIE = ['tip.unit.body'];       // Teil 10: im Modus karten ersetzt unit.<id>.desc die Ausrückregel im Einheitentooltip
   const keys = [];
   for (const k of Object.keys(I.de)){
-    if (hidden(k)) continue;
+    if (hidden(k) || NIE.includes(k)) continue;
     if (!k.endsWith('.karten') && I.de[k + '.karten'] !== undefined) continue;          // der Modus karten zeigt den überschreibenden Schlüssel
     keys.push(k);
   }

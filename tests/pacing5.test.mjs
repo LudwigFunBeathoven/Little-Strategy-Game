@@ -116,7 +116,7 @@ test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühesten
   neutral(G); immortal(G);                                   // soeben gewählt
   const level = G.S.level;
   G.gainXp(G.xpNeed(level + 3) - G.S.xpTotal + 1);                  // drei Schwellen auf einmal
-  assert.equal(G.S.pendingLevels, 3);
+  assert.equal(G.rueckstau(), 3, 'drei erreichte Schwellen'); assert.equal(G.S.pendingLevels, 1, 'aber nur ein Aufstieg');
   assert.equal(G.S.pendingDraft, null, 'aufgeschoben: Mindestabstand nicht erreicht');
   const xp = G.S.xpTotal;
   const p = G.xpProgress(); assert.equal(p.cur, p.need, 'Balken steht voll, solange die Wahl aufgeschoben ist');
@@ -129,7 +129,7 @@ test('Mindestabstand: bei hohem EP-Ertrag erscheint die nächste Wahl frühesten
   assert.ok(G.S.xpTotal >= xp, 'EP gehen nicht verloren');
   neutral(G); immortal(G);
   assert.equal(G.S.pendingDraft, null);
-  assert.equal(G.S.pendingLevels, 2);
+  assert.equal(G.rueckstau(), 2);
   run(G, min - 1);
   assert.equal(G.S.pendingDraft, null);
   run(G, 2, () => G.S.pendingDraft);

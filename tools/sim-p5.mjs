@@ -17,7 +17,7 @@ const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, see
   xpPassive: r.xpPassive, xpBounty: r.xpBounty, xpSrc: r.xpSrc, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
   wallLost: r.wallLost, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers,
   doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills,
-  weiter: r.weiter || [], katCounts: r.katCounts, synergie: r.synergie, doktrinP: r.doktrinP || [], trade: r.trade, milizUnits: r.milizUnits, zermuerbt: r.zermuerbt, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, gekauft: r.gekauft });
+  weiter: r.weiter || [], katCounts: r.katCounts, synergie: r.synergie, doktrinP: r.doktrinP || [], trade: r.trade, milizUnits: r.milizUnits, zermuerbt: r.zermuerbt, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, gekauft: r.gekauft, rueckMax: r.rueckMax, rueck2T: r.rueck2T });
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
@@ -215,5 +215,5 @@ if (!isMainThread){
   }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
     arm: r.arm, variant: r.variant, druckName: r.druckName, doktrinen: r.doktrinen, doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, upkeep: r.upkeep, towerKills: r.towerKills, variants: r.variants, xpSrc: r.xpSrc, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
-    grid: r.grid, wallLost: r.wallLost, synergie: r.synergie, katCounts: r.katCounts, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, weiter: r.weiter, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, gekauft: r.gekauft, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t * 10) / 10, lt: w.lt, w: w.w, ue: w.ue, rest: w.rest })), xpSrcAt: r.xpSrcAt, xpLog: r.xpLog })) }));
+    grid: r.grid, wallLost: r.wallLost, synergie: r.synergie, katCounts: r.katCounts, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, weiter: r.weiter, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, rueckMax: r.rueckMax, rueck2T: r.rueck2T, gekauft: r.gekauft, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t * 10) / 10, lt: w.lt, w: w.w, ue: w.ue, rest: w.rest })), xpSrcAt: r.xpSrcAt, xpLog: r.xpLog })) }));
 }

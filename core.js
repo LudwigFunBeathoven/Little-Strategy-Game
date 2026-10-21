@@ -56,7 +56,7 @@ const adjacent = (i, diagonal = false) => { const g = C.GRID_SIZE, r = Math.floo
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 13;                      // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+const SAVE_VERSION = 14;                      // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 /* Werfer und seine Ersatzeinheiten teilen die Werfer-Karten (Lange Wurfarme …) */
 const isThrower = type => (C.UNITS[type].base || type) === 'werfer';
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
@@ -98,14 +98,14 @@ function freshState(diff, seed){
     turretCd: {}, enemyTurretCd: 0,
     gegnerfern: true,                 // Teil 8 (REQ-K8.06): gegnerische Wellen mischen Bogen- und Armbrustschützen bei (nur Modus karten)
     druck: null,                      // Testschalter ?druck=hoch (Teil 4, REQ-S.08): null | 'hoch'; verstärkt die regulären Gegnerwellen ab C.DRUCK.hoch.abMinute
-    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, pDoktrin: C.DOKTRIN.p.start },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
+    pacing: 'standard', unlocks: {}, replace: {}, pacingVer: 0, pfad: { choices: 0, lastPickT: 0, pDoktrin: C.DOKTRIN.p.start, mult: [], reachT: 0 },    // Pacing-Modus, geöffnete Schlüssel, Einheitenersatz (REQ-KP.01); ohne Modus leer
     budget: 0,                        // Forschungsbudget (Teil 5): Index in C.KARTEN.budget.stufen
     milizT: 0,                        // Doktrin Fabrikmiliz (Teil 6): Zeit seit dem letzten Aufgebot
     haus: null,                       // Haupthaus (Teil 7, REQ-K7.02): { stufe } im Modus karten, sonst null
     clicks: 0, kills: 0, losses: 0, firstWaveSeen: false, alarms: 0, waveSize: {},       // waveSize: Zahl der Einheiten je Gegnerwelle für die EP der abgewehrten Welle (Modus karten, Teil 5)
     hold: null,                       // Schonfrist (REQ-T.03): null | { maxS, size } – solange gesetzt, rückt die erste Gegnerwelle nicht aus
     firstBounty: false,               // Kriegsbeute (REQ-T2.04): ist die erste Gegnerwelle besiegt, reichen die EP mindestens für die erste Kartenwahl
-    level: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
+    level: 0, reached: 0, pendingLevels: 0, pendingDraft: null, draft: { stacks: {}, ver: 0 }, emergencyUsed: 0,
     research: { done: {}, active: [], ver: 0, banned: [], fresh: false },     // Forschungsbaum der Universität (REQ-5.07)
     clickTimes: [],
     stats: { prod: { early: { click: 0, auto: 0, time: 0 }, mid: { click: 0, auto: 0, time: 0 }, late: { click: 0, auto: 0, time: 0 } } },
@@ -391,8 +391,17 @@ function create(){
   const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost') * (isRunner(type) ? mMul('runnerCost') : 1) * (1 + nbTotal('schmiede'))));       // runnerCost: Doktrin Massenaufgebot (Teil 6)
   const spawnX       = () => PBW + mAdd('spawnOffset');
   /* Reichweitenleiter (Teil 8, REQ-K8.05): im Modus karten gelten die Grundreichweiten aus C.KARTEN.reichweiten (Werfer < Bogenschütze < Armbrustschütze < Katapult < Geschütz); der Standardmodus behält C.UNITS */
-  const baseRange    = (type, side = 'p') => side === 'p' && S.pacing === 'karten' && C.KARTEN.reichweiten && C.KARTEN.reichweiten[type] != null ? C.KARTEN.reichweiten[type] : side === 'p' ? C.UNITS[type].range : Math.min(C.UNITS[type].range, C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel);       // die Leiter gilt für eigene Einheiten; gegnerische Einheiten reichen nie weiter als ein eigener Turm mit einer Reichweitenstufe (PO-Entscheidung zu Teil 8)
-  const unitRange    = (side, type) => baseRange(type, side) + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
+  const baseRange    = (type, side = 'p') => {
+    const lad = S.pacing === 'karten' && C.KARTEN.reichweiten && C.KARTEN.reichweiten[type] != null ? C.KARTEN.reichweiten[type] : C.UNITS[type].range;
+    return side === 'p' ? lad : Math.min(lad, C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel);       // Teil 10 (REQ-K10.03): auch gegnerische Bogen- und Armbrustschützen folgen der Leiter, reichen aber nie weiter als ein eigener Turm mit einer Reichweitenstufe (PO-Entscheidung zu Teil 8)
+  };
+  /* Teil 10 (REQ-K10.03): Die Reihenfolge der Leiter gilt auch mit Ausbauten und Karten – eine Einheit reicht nie so weit wie die nächste Stufe der Leiter (Lange Wurfarme heben Werfer und Bogenschützen,
+     der Bogenschütze bleibt aber unter der Armbrust). Im Standardmodus gibt es keine Leiter. */
+  const rangeRaw     = (side, type) => baseRange(type, side) + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
+  function unitRange(side, type){
+    const F = C.KARTEN.reichweitenFolge, i = side === 'p' && S.pacing === 'karten' && F ? F.indexOf(type) : -1;
+    return i < 0 || i === F.length - 1 ? rangeRaw(side, type) : Math.min(rangeRaw(side, type), unitRange(side, F[i + 1]) - 1);
+  }
   const PHASES       = ['early', 'mid', 'late'];
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   /* Modus karten (Teil 5, REQ-K5.03): Kartenwahlen aus dem Spielfluss. Die EP-Schwelle der Wahl n ist die Summe der Schritte 1 … n der Kurve C.KARTEN.schwellen
@@ -401,7 +410,8 @@ function create(){
     if (S.pacing !== 'karten') return xpForLevel(n);
     const k = C.KARTEN.schwellen, f = (C.KARTEN.schwellenFaktor && C.KARTEN.schwellenFaktor[S.diff]) ?? 1;
     let s = 0;
-    for (let i = 1; i <= n; i++) s += k.start * Math.pow(k.wachstum, i - 1) * f;
+    const mult = S.pfad.mult || [];
+    for (let i = 1; i <= n; i++) s += k.start * Math.pow(k.wachstum, i - 1) * f * (mult[i - 1] ?? 1);       // mult: dynamischer Anstieg (Teil 10, REQ-K10.05), sonst 1
     return s;
   }
   /* Mindestabstand (Modus karten): eine fällige Wahl erscheint frühestens minAbstand Sekunden nach der letzten; die EP darüber bleiben erhalten. Er verzögert nur. */
@@ -513,7 +523,7 @@ function create(){
      (nie unter den Stand der erreichten Stufe); kursEp × kursMaterial < 1: der Tausch im Kreis verliert. */
   const freihandel = () => S.pacing === 'karten' && mAdd('freihandel') > 0;
   const FH = C.DOKTRIN.freihandel;
-  const xpFortschritt = () => S.xpTotal - xpNeed(S.level);                                   // EP über dem Stand der erreichten Stufe (tauschbar)
+  const xpFortschritt = () => S.xpTotal - xpNeed(S.pacing === 'karten' ? S.reached : S.level);                                   // EP über dem Stand der erreichten Stufe (tauschbar)
   function tradeBlock(dir){
     if (S.status !== 'running') return 'notRunning';
     if (!freihandel()) return 'notAvailable';
@@ -813,7 +823,7 @@ function create(){
         const rows = [];
         for (const g of [melee, ranged]) for (let i = 0; i < g.length; i += R) rows.push(g.slice(i, i + R));
         rows.forEach((r, ri) => r.forEach((u, ci) => {
-          u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; u.x = Math.min(W, Math.max(0, f.x - dir * ri * C.ROW_GAP)); u.moving = f.moving;       // hintere Reihen bleiben im Feld (Testspiele: Fernkämpfer großer Gegnerarmeen standen sonst hinter der gegnerischen Basis)
+          u.row = ri; u.col = ci; u.rowSize = r.length; u.formSize = m.length; const sx = Math.min(W, Math.max(0, f.x - dir * ri * C.ROW_GAP)); u.x = u.back ? (dir > 0 ? Math.min(u.x, sx) : Math.max(u.x, sx)) : sx; u.moving = f.moving;       // u.back: ein haltender Fernkämpfer bleibt hinter seinem Platz stehen (Teil 10, REQ-K10.04)       // hintere Reihen bleiben im Feld (Testspiele: Fernkämpfer großer Gegnerarmeen standen sonst hinter der gegnerischen Basis)
           if (u.laneF !== u.lane && u.toOff == null) u.toOff = colOffset(ci);
         }));
         f.rows = Math.max(f.rows, rows.length);
@@ -1235,6 +1245,15 @@ function create(){
     }
     g.size = 0;
   }
+  /* Fernkämpfer-Haltung (Teil 10, REQ-K10.04): hat die Einheit ein gültiges Ziel – Gegner ihrer Lane, Mauer, Tor oder Basis – in Reichweite, bleibt sie stehen und feuert */
+  const fernHaltOn = () => S.pacing === 'karten' && C.KARTEN.fernHalt !== false;       // Schalter für Vergleichsmessungen (KF_OVERRIDE); der Standardmodus bleibt unverändert
+  function holds(u, foes, dir, side){
+    if (u.laneF !== u.lane) return false;
+    const reach = u.range;
+    if ((baseX(side) - u.x) * dir <= reach) return true;
+    for (const f of foes[u.lane]) if (f.hp > 0 && f.laneF === f.lane && Math.abs(f.x - u.x) <= reach) return true;
+    return false;
+  }
   function updateArmies(dt){
     // Mitglieder je Gruppe in einem Durchlauf; Lage der Gegner zu Tickbeginn (Leistung: REQ-5.05)
     const mem = new Map();
@@ -1296,6 +1315,7 @@ function create(){
       }
       // Bewegung nur im Marsch; bis auf Kontaktreichweite, Nachschub höchstens bis hinter die Armee
       g.moving = false;
+      const fernHalt = fernHaltOn();
       if (g.state === 'march' && members.length){
         let step = groupSpeed(g, members) * dt;
         for (const d of dist) step = Math.min(step, Math.max(0, d - AR.contactRange));
@@ -1304,7 +1324,19 @@ function create(){
           const rear = main.x - dir * (main.rows) * C.ROW_GAP;           // eine Reihe Abstand hinter der letzten Reihe
           step = Math.min(step, Math.max(0, (rear - g.x) * dir));
         }
-        if (step > 0){ g.x += dir * step; for (const u of members) u.x += dir * step; g.moving = true; }
+        if (step > 0){ g.x += dir * step; g.moving = true; }
+        for (const u of members){
+          if (!u.ranged || !fernHalt){ if (step > 0) u.x += dir * step; continue; }
+          // Fernkämpfer (Teil 10, REQ-K10.04): Ziel in Reichweite → stehen bleiben und feuern; sonst vorrücken, bis das nächste Ziel in Reichweite kommt; nie zurückweichen
+          if (holds(u, foes, dir, g.side)){ u.moving = false; if (step > 0) u.back = true; continue; }
+          if (step > 0 && !u.back) u.x += dir * step;
+        }
+      }
+      if (fernHalt) for (const u of members) if (u.ranged && u.back){        // Nachrücken auf den Platz in der Formation, wenn kein Ziel mehr in Reichweite ist (in jedem Zustand der Armee)
+        if (holds(u, foes, dir, g.side)){ u.moving = false; continue; }
+        const slot = Math.min(W, Math.max(0, g.x - dir * (u.row || 0) * C.ROW_GAP)), adv = (u.speed || C.UNITS[u.type].speed) * dt;
+        u.x = dir > 0 ? Math.min(slot, u.x + adv) : Math.max(slot, u.x - adv); u.moving = true;
+        if ((slot - u.x) * dir <= 0.01) u.back = false;
       }
     }
     // Nachschub hinter der Armee verschmilzt mit ihr
@@ -1366,6 +1398,26 @@ function create(){
   /* ---------- EP-Stufen und Draft (REQ-02, REQ-5.02) ---------- */
   /* EP aus einer Quelle ('kill', 'tower', 'base', 'wave', 'budget', 'passive', 'bounty'). Modus karten (Teil 5, REQ-K5.04): Lehrjahre (xpGain) wirkt auf alle EP-Quellen;
      Abschüsse tragen den Faktor schon in ihrem Wert (bountyMult), die Kriegsbeute des Tutorials bleibt unberührt. Zähler je Quelle für Bericht und Protokoll. */
+  /* Modus karten (Teil 10, REQ-K10.05): Schwellen und Aufstiege sind getrennt. Eine erreichte Schwelle (S.reached) wird zum Aufstieg (S.level) erst, wenn keine Wahl mehr offen ist;
+     die EP darüber bleiben erhalten. So entsteht nie ein Stapel offener Wahlen; ein Rückstau zeigt sich als Abstand zwischen erreichten Schwellen und getroffenen Wahlen (rueckstau).
+     Dynamischer Anstieg (C.KARTEN.schwellen.dyn, Arm B des Experiments): wird eine Schwelle früher als ref Sekunden nach der vorigen erreicht, steigen die Kosten der nächsten um ref/Abstand, höchstens max. */
+  function reachLevels(){
+    const dyn = C.KARTEN.schwellen.dyn;
+    while (S.xpTotal >= xpNeed(S.reached + 1)){
+      S.reached++;
+      (S.stats.stufenT = S.stats.stufenT || []).push(+S.t.toFixed(1));       // Zeitpunkt der erreichten Schwelle (Teil 8, REQ-K8.01: Wartezeit am Mindestabstand)
+      if (dyn){ const dt = S.t - S.pfad.reachT; S.pfad.mult[S.reached] = S.reached < 2 ? 1 : Math.min(dyn.max, Math.max(1, dyn.ref / Math.max(dt, 1e-6))); }
+      S.pfad.reachT = S.t;
+    }
+    noteRueckstau();
+  }
+  function grantLevel(){
+    if (S.level >= S.reached || S.pendingLevels > 0 || S.pendingDraft) return;
+    S.level++; S.pendingLevels++;
+    log('log.levelUp', { n: S.level });
+  }
+  const rueckstau = () => S.pacing === 'karten' ? Math.max(0, S.reached - (S.level - S.pendingLevels)) : 0;       // erreichte, noch nicht getroffene Wahlen (die offene eingeschlossen)
+  function noteRueckstau(){ const r = rueckstau(); if (r > (S.stats.rueckMax || 0)) S.stats.rueckMax = r; }
   function gainXp(b, src){
     if (S.pacing === 'karten'){
       if (src !== 'kill' && src !== 'tower' && src !== 'bounty') b *= mMul('xpGain');
@@ -1374,11 +1426,13 @@ function create(){
     if (S.xpLog) S.xpLog.push([+S.t.toFixed(2), src || 'other', +b.toFixed(3)]);       // Werkzeug (Simulation, Teil 8): Einzelereignisse der EP für Näherungsrechnungen
     S.xp += b; S.xpTotal += b;
     const U = S.pacing === 'karten' ? C.KARTEN.uebertrag : null;       // Teil 8 (REQ-K8.02): eine wartende Stufe zugleich; EP darüber hinaus gehen nur bis zum Übertrag in die nächste Stufe, der Rest verfällt
-    while (S.xpTotal >= xpNeed(S.level + 1) && !(U && S.pendingLevels > 0)){
+    if (S.pacing === 'karten' && !U){ reachLevels(); grantLevel(); }       // Teil 10 (REQ-K10.05): ein EP-Schub kann mehrere Schwellen erreichen, schaltet aber höchstens einen Aufstieg frei
+    else while (S.xpTotal >= xpNeed(S.level + 1) && !(U && S.pendingLevels > 0)){
       S.level++; S.pendingLevels++;
       if (S.pacing === 'karten') (S.stats.stufenT = S.stats.stufenT || []).push(+S.t.toFixed(1));       // Zeitpunkt des Stufenaufstiegs (Teil 8, REQ-K8.01: Wartezeit am Mindestabstand)
       log('log.levelUp', { n: S.level });
     }
+    if (S.pacing === 'karten' && U) S.reached = S.level;       // Hebel „Übertrag“ (Teil 8): Aufstieg und Schwelle fallen zusammen
     if (U && S.pendingLevels > 0){
       const lim = xpNeed(S.level) + U.anteil * (xpNeed(S.level + 1) - xpNeed(S.level));
       if (S.xpTotal > lim){ const ex = S.xpTotal - lim; S.xpTotal = lim; S.xp = Math.max(0, S.xp - ex); S.stats.xpVerfall = (S.stats.xpVerfall || 0) + ex; }
@@ -1528,7 +1582,7 @@ function create(){
     if (S.pacing === 'karten'){                                           // Protokoll je Wahl: Nummer, Erscheinen, Wahl (REQ-P.06)
       const d = S.pendingDraft, lt = (S.stats.stufenT || [])[d.level - 1], vor = S.stats.wahlen && S.stats.wahlen.length ? S.pfad.lastPickT : 0, cost = xpNeed(S.level + 1) - xpNeed(S.level);
       // Teil 8 (REQ-K8.01): lt Zeitpunkt der Stufe, w Wartezeit am Mindestabstand (Balken voll, Wahl noch nicht erschienen), ue Übertrag (EP über der erreichten Stufe, Anteil der Kosten der nächsten), rest weitere wartende Stufen
-      (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, t: Math.round(S.t * 10) / 10, tp: null, lt: lt ?? null, w: lt == null ? null : Math.round(Math.max(0, S.t - Math.max(lt, vor)) * 10) / 10, ue: Math.round((S.xpTotal - xpNeed(S.level)) / cost * 1000) / 1000, rest: S.pendingLevels - 1 });
+      (S.stats.wahlen = S.stats.wahlen || []).push({ n: d.level, t: Math.round(S.t * 10) / 10, tp: null, lt: lt ?? null, w: lt == null ? null : Math.round(Math.max(0, S.t - Math.max(lt, vor)) * 10) / 10, ue: Math.round((S.xpTotal - xpNeed(S.level)) / cost * 1000) / 1000, rest: Math.max(0, rueckstau() - 1) });
     }
   }
   /* Neu ziehen (REQ-5.07): alle Optionen der offenen Wahl neu ziehen, je Wahl höchstens mAdd('rerolls')-mal */
@@ -1690,6 +1744,7 @@ function create(){
     log('log.draft', { name: '@' + o.nameKey, tier: S.draft.stacks[o.id] });
     S.pendingDraft = null;
     S.pendingLevels--;
+    if (S.pacing === 'karten') grantLevel();
     if (S.stats.wahlen && S.stats.wahlen.length) S.stats.wahlen[S.stats.wahlen.length - 1].tp = Math.round(S.t * 10) / 10;
     if (S.pendingLevels > 0 && draftReady()) offerDraft();
     emit('cardChosen', { id: o.id });
@@ -1748,7 +1803,10 @@ function create(){
     S.t += dt;
     S.stats.prod[phase()].time += dt;
     // Aufgeschobene Wahl (Mindestabstand, REQ-P.02) erscheint, sobald der Abstand erreicht ist
-    if (S.pacing === 'karten' && !S.pendingDraft && S.pendingLevels > 0 && draftReady()) offerDraft();
+    if (S.pacing === 'karten'){
+      if (!S.pendingDraft){ grantLevel(); if (S.pendingLevels > 0 && draftReady()) offerDraft(); }
+      const r = rueckstau(); if (r >= 2) S.stats.rueck2T = (S.stats.rueck2T || 0) + dt;       // Kennzahl: Zeit mit mehr als einer offenen Wahl
+    }
     addProduction(matRate() * dt);
     addProduction(autoPressCps() * clickPower() * dt);
     if (S.pacing === 'karten' && mAdd('upkeep') > 0) payUpkeep(dt);
@@ -1905,7 +1963,7 @@ function create(){
     buildBlock, isBuildable, introShows, refundFor, kontorCap, kontorNext, waveRushCost, waveRushBlock, rushWave,
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     offerDraft, chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
-    phase, xpProgress, gainXp, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, baseRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
+    phase, xpProgress, gainXp, rueckstau, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, baseRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
     clickPower, matRate, incomeRate, upkeepRate, xpMult, setBudget, budgetStufe, budgetShare, budgetKurs, budgetAbnahme, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,
