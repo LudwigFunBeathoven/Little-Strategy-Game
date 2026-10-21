@@ -367,8 +367,8 @@ Anforderungen: `docs/anforderungen-kartenpfad-8-9.md`.
 | T.1 | K8.02 EP-Hebel (Übertragsgrenze `KARTEN.uebertrag`, abnehmender Budgetertrag `budget.abnahme`) implementiert, **ausgeschaltet**; K8.03 Anzeige des Fortschritts (Mindestabstand, Verfall) | fertig; Ziel „gebremst ≤ 15 %“ nicht erreicht, Entscheidung PO |
 | T.2 | K8.04 Manufaktur ohne Ordnungszahl | fertig |
 | T.3 | K8.05 Reichweitenleiter (eigene Einheiten) | fertig |
-| T.4 | K8.06 Gegner mit Bogen- und Armbrustschützen (`?gegnerfern=aus`) | fertig; Turmbedingung nicht erfüllbar, Gegner behalten alte Reichweiten |
-| T.5 | K8.07 Belagerungsgerät entfernt, K8.08 Grenzfeste ×1,10 | fertig; Bestätigung PO fehlt |
+| T.4 | K8.06 Gegner mit Bogen- und Armbrustschützen (`?gegnerfern=aus`) | fertig; Gegner reichen höchstens so weit wie ein Turm mit einer Reichweitenstufe (PO) |
+| T.5 | K8.07 Belagerungsgerät entfernt, K8.08 Grenzfeste ×1,10 | fertig; vom PO bestätigt |
 | T.6 | K8.09 Messung, Spielstand 13, `docs/bericht-kartenpfad-8.md` | fertig |
 | U.0–U.2 | Textinventar, Nachteilszeile, Klassifikationen | fertig |
 | U.3 | Kürzen: R3 ohne Verstoß, Zeichen de −4,3 % (Ziel −25 % nicht erreicht) | fertig, Entscheidung PO |

@@ -50,7 +50,7 @@ Vor der Kürzung hatten sieben Texte das Budget überschritten (u. a. `tip.kat.c
 
 - Der Browser-Test `tests/browser-check.mjs` schwankt in den Prüfpunkten „Abschied 1“ und „Abschied 2“ (Timing). Ich habe eine Wartebedingung eingebaut; im letzten Lauf grün, zuvor in drei von vier Läufen rot (abwechselnd de und en). Ursache vermutlich die Kartenanimation vor dem Abschied. Nicht abschließend geklärt.
 
-## Entscheidungen des PO
+## Entscheidungen des PO (entschieden am 21.10.2026)
 
-1. −25 % fallen lassen oder Inhalte benennen, die entfallen dürfen (Kandidaten: Hinweise in `hint.*`, Tutorial-Erzählung, Protokollzeilen).
-2. Elf R6-Ausnahmen bestätigen.
+1. Weitere Kürzung erst nach einem Spieltest.
+2. Die elf R6-Ausnahmen bleiben bis dahin bestehen.

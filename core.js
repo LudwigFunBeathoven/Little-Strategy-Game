@@ -391,7 +391,7 @@ function create(){
   const unitCost     = type => mMul('unitCost') === 0 ? 0 : Math.max(1, Math.round(C.UNITS[type].cost * mMul('unitCost') * (isRunner(type) ? mMul('runnerCost') : 1) * (1 + nbTotal('schmiede'))));       // runnerCost: Doktrin Massenaufgebot (Teil 6)
   const spawnX       = () => PBW + mAdd('spawnOffset');
   /* Reichweitenleiter (Teil 8, REQ-K8.05): im Modus karten gelten die Grundreichweiten aus C.KARTEN.reichweiten (Werfer < Bogenschütze < Armbrustschütze < Katapult < Geschütz); der Standardmodus behält C.UNITS */
-  const baseRange    = (type, side = 'p') => side === 'p' && S.pacing === 'karten' && C.KARTEN.reichweiten && C.KARTEN.reichweiten[type] != null ? C.KARTEN.reichweiten[type] : C.UNITS[type].range;       // die Leiter gilt für eigene Einheiten; gegnerische Fernkämpfer behalten ihre Werte (Abbruchregel zu K8.05/K8.06)
+  const baseRange    = (type, side = 'p') => side === 'p' && S.pacing === 'karten' && C.KARTEN.reichweiten && C.KARTEN.reichweiten[type] != null ? C.KARTEN.reichweiten[type] : side === 'p' ? C.UNITS[type].range : Math.min(C.UNITS[type].range, C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel);       // die Leiter gilt für eigene Einheiten; gegnerische Einheiten reichen nie weiter als ein eigener Turm mit einer Reichweitenstufe (PO-Entscheidung zu Teil 8)
   const unitRange    = (side, type) => baseRange(type, side) + (side === 'p' && isThrower(type) ? mAdd('werferRange') : 0);
   const PHASES       = ['early', 'mid', 'late'];
   const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';

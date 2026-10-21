@@ -27,7 +27,7 @@ test('K8.05: Grundreichweiten im Modus karten: strikte Leiter mit mindestens 10 
   for (let i = 1; i < r.length; i++) assert.ok(r[i] >= r[i - 1] * 1.1, `${LADDER[i]} ${r[i]} mindestens 10 % über ${LADDER[i - 1]} ${r[i - 1]}`);
   for (const id of LADDER){ assert.ok(Math.abs(G.baseRange(id) - RW * F[id]) <= 1, `${id}: ${G.baseRange(id)} gegen ${RW * F[id]}`); assert.ok(G.baseRange(id) >= C.UNITS[id].range, `${id} sinkt nicht`); }
   assert.equal(G.baseRange('werfer'), RW, 'Werfer unverändert');
-  for (const id of LADDER) assert.equal(G.unitRange('e', id), C.UNITS[id].range, `gegnerische ${id}: keine Reichweitenänderung (Abbruchregel K8.05/K8.06)`);
+  for (const id of LADDER) assert.equal(G.unitRange('e', id), Math.min(C.UNITS[id].range, C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel), `gegnerische ${id}: keine Leiter, höchstens Turm mit einer Reichweitenstufe`);
   const { G: S } = game('standard'); for (const id of LADDER) assert.equal(S.baseRange(id), C.UNITS[id].range, `Standardmodus: ${id} unverändert`);
 });
 
@@ -116,4 +116,13 @@ test('K8.07: Durchbruch Stufe II wirkt wie Stufe 2 von Belagerungsgerät: Stehen
 test('K8.08: Grenzfeste verlängert den Abstand der eigenen Wellen nur noch um 10 % (vorher 25 %); der Effekt bleibt', () => {
   const { G } = game(); const d = G.DOK.grenzfeste;
   assert.equal(JSON.stringify(d.drawback.map(x => [x.stat, x.mul])), JSON.stringify([['ownWaveInterval', 1.1]])); assert.equal(JSON.stringify(d.effect.map(x => [x.stat, x.add])), JSON.stringify([['towerKillMaterial', 3]]));
+});
+
+/* PO-Entscheidung zu Teil 8: Kein Gegner reicht weiter als ein eigener Turm mit einer Reichweitenstufe (Standard: Grundreichweite + rangePerLevel; im Modus karten bringt schon die erste Stufe der Turmschule mehr) */
+test('Gegnerische Reichweiten liegen nie über dem Turm mit einer Reichweitenstufe', () => {
+  for (const pacing of ['karten', 'standard']){
+    const { G, C } = game(pacing); const grenze = C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel;
+    for (const type of Object.keys(C.UNITS)) assert.ok(G.baseRange(type, 'e') <= grenze, `${pacing}: ${type} ${G.baseRange(type, 'e')} ≤ ${grenze}`);
+    for (const type of ['bogenschuetze', 'armbrust']) assert.ok(G.baseRange(type, 'e') <= grenze);
+  }
 });

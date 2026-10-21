@@ -78,9 +78,9 @@ Die Fernkämpfer senken die Siegquote um 0 bis 10 Prozentpunkte und verkürzen d
 
 ## Abweichungen und Auslegungen
 
-1. **Turmbedingung (K8.05/K8.06):** Die Leiter hebt jede eigene Fernkampfreichweite über die Grundreichweite des eigenen Turms (120) und des gegnerischen (95). Die Bedingung „gegnerische Fernkämpfer nicht über die Turmreichweite“ ist damit nicht erfüllbar. Nach der Abbruchregel behalten die **Gegner** ihre bisherigen Reichweiten (Bogen 120, Armbrust 140); die Leiter gilt nur für eigene Einheiten (`baseRange(type, side)`). Folge: Die gegnerische Armbrust (140) überragt den eigenen Turm (120). **Entscheidung des PO nötig.**
+1. **Turmbedingung (K8.05/K8.06):** Die Leiter hebt jede eigene Fernkampfreichweite über die Grundreichweite des eigenen Turms (120) und des gegnerischen (95). Die Bedingung „gegnerische Fernkämpfer nicht über die Turmreichweite“ ist damit nicht erfüllbar. Nach der Abbruchregel behalten die **Gegner** ihre bisherigen Reichweiten (Bogen 120, Armbrust 140); die Leiter gilt nur für eigene Einheiten (`baseRange(type, side)`). Folge: Die gegnerische Armbrust (140) überragt den Grundturm (120). **Entschieden:** Obergrenze „Turm mit einer Reichweitenstufe“ (siehe unten).
 2. **Hebel des EP-Pacings:** Übertragsgrenze und abnehmender Budgetertrag sind implementiert, aber ausgeschaltet. Gründe: Mit Übertragsgrenze 25 % sank die Siegquote der Wirtschafts- und Verteidigungs-Bots deutlich; das Pausieren von Budget und Tausch bei Verfall (`xpVerfaellt`) milderte das, behob es aber nicht. Abbruchregel T.1 (nach drei Kalibrierschritten außerhalb des Korridors): berichten, nicht weiter einstellen.
-3. **Belagerungsgerät (K8.07):** Entfernt wie vorgeschlagen. Die Partien des Bots ohne Kategorie wurden dadurch im Test ohne Gegner-Fernkämpfer von 15:34 auf 19:30 länger, mit Fernkämpfern auf 14:55 (Rest-Effekt der Kombination). Die Alternative „Karte ohne Nachteil nur mit Gießerei“ ist nicht umgesetzt. **Bestätigung des PO fehlt.**
+3. **Belagerungsgerät (K8.07):** Entfernt wie vorgeschlagen. Die Partien des Bots ohne Kategorie wurden dadurch im Test ohne Gegner-Fernkämpfer von 15:34 auf 19:30 länger, mit Fernkämpfern auf 14:55 (Rest-Effekt der Kombination). Die Alternative „Karte ohne Nachteil nur mit Gießerei“ ist nicht umgesetzt. Vom PO bestätigt.
 4. **Durchbruch Stufe II** erhält `siegeDps +2` als Ersatz für den Wegfall des Belagerungsgeräts.
 
 ## Auffälligkeiten (berichtet, nicht wegbalanciert)
@@ -89,8 +89,9 @@ Die Fernkämpfer senken die Siegquote um 0 bis 10 Prozentpunkte und verkürzen d
 - Verteidigung, Normal, Druck hoch: Siegquote 70–74 % und Partien von fast 20 min.
 - Patt Leicht (gelegentlich) ohne Kategorie: 12 % (unverändert gegenüber vorher).
 
-## Entscheidungen des PO
+## Entscheidungen des PO (entschieden am 21.10.2026)
 
-1. EP-Pacing: (a) Rückstau akzeptieren und nur die Anzeige verbessern (aktueller Stand), (b) Hebel zuschalten und die Bots dafür nachkalibrieren, (c) Durchsatz begrenzen (neuer Mechanismus, z. B. EP-Quelle Basisschaden mit abnehmendem Ertrag), (d) das Ziel neu fassen. Empfehlung: (c) prüfen, weil die Bots schwächer werden, wenn nur der Verfall greift.
-2. Gegnerische Reichweiten: Leiter auch für Gegner (dann überragen sie die eigenen Türme) oder wie jetzt.
-3. Belagerungsgerät: endgültig entfernen oder als Karte ohne Nachteil mit Gießerei erhalten.
+1. **EP-Pacing:** Der Rückstau wird vorerst akzeptiert; Hebel bleiben ausgeschaltet.
+2. **Gegnerische Reichweiten:** Kein Gegner reicht weiter als ein eigener Turm mit einer Reichweitenstufe (120 + 20 = 140; im Modus karten bringt die erste Stufe der Turmschule 144). Umgesetzt als Obergrenze in `baseRange` für gegnerische Einheiten; die heutigen Werte (Bogen 120, Armbrust 140) liegen darunter, das Verhalten ändert sich nicht. Test in `tests/t8.test.mjs`. Die gegnerische Armbrust (140) überragt damit den Grundturm (120), aber keinen ausgebauten.
+3. **Belagerungsgerät:** Endgültig entfernt.
+4. **Textkürzung:** Erst Spieltest, danach Entscheidung über weitere Kürzung.
