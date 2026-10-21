@@ -376,3 +376,23 @@ Anforderungen: `docs/anforderungen-kartenpfad-8-9.md`.
 | U.7 | Sprach-Audit R3–R6, `docs/texte-kartenpfad.md`, `docs/bericht-kartenpfad-9.md`, `docs/testleitfaden-kartenpfad-9.md` | fertig |
 
 Offen: Privater Testbuild für Teil 8/9 nicht neu veröffentlicht; `tests/browser-check.mjs` (Abschied 1/2) schwankt im Timing.
+
+
+## Teil 10 und 11: Nacharbeiten, Fernkampfverhalten, Rückstau, Flügel als Nachbarn (Branch `exp/kartenpfad`, REQ-K10.01 – K10.07, REQ-K11.01 – K11.05, Spielstand-Version 14)
+
+Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`. Berichte: `docs/bericht-kartenpfad-10.md`, `docs/bericht-kartenpfad-11.md`. Testleitfaden: `docs/testleitfaden-kartenpfad-11.md`.
+
+| Inkrement | Inhalt | Status |
+|---|---|---|
+| V.0–V.1 | Diagnose; Platzhalter, Leiste, Darstellungstest | fertig |
+| V.2 | Einheitentexte | fertig |
+| V.3 | Reichweiten 1,6 / 2,0 | fertig |
+| V.4 | Fernkämpfer halten | fertig |
+| V.5 | Rückstau: getrennte Schwelle und Aufstieg, Arme A–D, **Arm C2 vorläufig** | offen: PO-Entscheidung |
+| V.6 | Browser-Test mit Wartebedingungen | fertig (siehe Bericht für die zehn Läufe) |
+| V.7 | Messung, Bericht | fertig |
+| W.1–W.3 | Nachbarschaftsboni der Flügel, Bot-Regeln, `?fluegel`, Anzeige | fertig |
+| W.4 | Messung, Flügelvergleich, Kalibrierung | fertig, Ziele teils verfehlt (siehe Bericht Teil 11) |
+| W.5 | Berichte, Testleitfaden, Textübersicht, Testbuild | siehe Bericht Teil 11 |
+
+Offene Entscheidungen des PO: gegnerische Reichweitenobergrenze 120 oder 140; Rückstau-Arm (C2 bestätigen oder ändern); Umgang mit den verfehlten Zielen aus K11.04.

@@ -1,0 +1,130 @@
+{
+ "ohne/schatzkammer": {
+  "siege": 0.98,
+  "patt": 0,
+  "dauer": 803.3,
+  "nb": 0.98,
+  "wahlen": 11,
+  "belegt": 4
+ },
+ "ohne/bibliothek": {
+  "siege": 0.98,
+  "patt": 0,
+  "dauer": 802.2,
+  "nb": 0.36,
+  "wahlen": 11,
+  "belegt": 4
+ },
+ "ohne/zeughaus": {
+  "siege": 0.98,
+  "patt": 0,
+  "dauer": 822.3,
+  "nb": 0.24,
+  "wahlen": 10,
+  "belegt": 4
+ },
+ "ohne/kanzlei": {
+  "siege": 0.96,
+  "patt": 0,
+  "dauer": 810.6,
+  "nb": 0.36,
+  "wahlen": 11,
+  "belegt": 4
+ },
+ "militaer/schatzkammer": {
+  "siege": 0.94,
+  "patt": 0.02,
+  "dauer": 759.9,
+  "nb": 0.98,
+  "wahlen": 9,
+  "belegt": 4
+ },
+ "militaer/bibliothek": {
+  "siege": 0.96,
+  "patt": 0.04,
+  "dauer": 765.5,
+  "nb": 0.24,
+  "wahlen": 9,
+  "belegt": 4
+ },
+ "militaer/zeughaus": {
+  "siege": 0.98,
+  "patt": 0,
+  "dauer": 757.8,
+  "nb": 0.24,
+  "wahlen": 9,
+  "belegt": 4
+ },
+ "militaer/kanzlei": {
+  "siege": 0.92,
+  "patt": 0.04,
+  "dauer": 780.2,
+  "nb": 0.24,
+  "wahlen": 9,
+  "belegt": 4
+ },
+ "wirtschaft/schatzkammer": {
+  "siege": 0.76,
+  "patt": 0.02,
+  "dauer": 920.8,
+  "nb": 1.48,
+  "wahlen": 12,
+  "belegt": 4
+ },
+ "wirtschaft/bibliothek": {
+  "siege": 0.74,
+  "patt": 0,
+  "dauer": 935.2,
+  "nb": 1.1,
+  "wahlen": 13,
+  "belegt": 4
+ },
+ "wirtschaft/zeughaus": {
+  "siege": 0.86,
+  "patt": 0,
+  "dauer": 898.6,
+  "nb": 1.48,
+  "wahlen": 12,
+  "belegt": 4
+ },
+ "wirtschaft/kanzlei": {
+  "siege": 0.8,
+  "patt": 0.02,
+  "dauer": 915.9,
+  "nb": 1.1,
+  "wahlen": 12,
+  "belegt": 4
+ },
+ "verteidigung/schatzkammer": {
+  "siege": 0.98,
+  "patt": 0,
+  "dauer": 892.6,
+  "nb": 0.98,
+  "wahlen": 12,
+  "belegt": 4
+ },
+ "verteidigung/bibliothek": {
+  "siege": 0.96,
+  "patt": 0,
+  "dauer": 925,
+  "nb": 0.24,
+  "wahlen": 12,
+  "belegt": 4
+ },
+ "verteidigung/zeughaus": {
+  "siege": 0.98,
+  "patt": 0,
+  "dauer": 904.8,
+  "nb": 0.24,
+  "wahlen": 12,
+  "belegt": 4
+ },
+ "verteidigung/kanzlei": {
+  "siege": 0.92,
+  "patt": 0.02,
+  "dauer": 915.5,
+  "nb": 0.36,
+  "wahlen": 12,
+  "belegt": 4
+ }
+}

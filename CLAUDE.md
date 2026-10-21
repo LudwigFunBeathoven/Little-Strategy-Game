@@ -4,7 +4,7 @@
 - Browser-Spiel zwischen *Universal Paperclips* (Clicker/Idle) und *Age of War* (Lane-Kampf).
 - Spielziel: die gegnerische Basis zerstören. Niederlage: das eigene Tor fällt.
 - Kernschleife: klicken und Fabriken im 3×3-Raster bauen → Material → Einheiten in Wellen über drei Lanes schicken → Abschüsse bringen EP → Stufenaufstieg bietet Spezialkarten (Kartenpfad: Doktrinen, Weiterentwicklungen, Haupthaus).
-- Stand: v0.9.2-kartenpfad-8, Branch `exp/kartenpfad`. Änderungen: `CHANGELOG.md`; Branch-Stand: `docs/STAND-kartenpfad.md`.
+- Stand: v0.9.2-kartenpfad-10, Branch `exp/kartenpfad`. Änderungen: `CHANGELOG.md`; Branch-Stand: `docs/STAND-kartenpfad.md`.
 
 ## Der Nutzer
 - Nick ist Product Owner, kein Entwickler. Änderungen in Klartext erklären, Fachbegriffe kurz übersetzen.
@@ -18,7 +18,7 @@
 - Keine sichtbaren Texte außerhalb von `i18n/de.js` und `i18n/en.js` (identische Schlüssel). Platzhalter `{n}`, Zahlen über `Intl.NumberFormat`. Textregeln und Zeichenbudgets: `tools/textbudget.mjs`, `tests/sprache.test.mjs`.
 - `core.js` kennt weder `document`, `window` noch `localStorage`. Zufall nur über `S.rng` (seedbar).
 - Jedes interaktive Element: `data-tooltip` und Erklärzeile `<span class="expl">` („Wirkung · Kosten“). Prüfung: `index.html?dev=1`, `__kf.explAudit()`. Gesperrte Knöpfe über `aria-disabled`.
-- Spielstand-Format: `v` in `freshState` und `SAVE_KEY` zusammen erhöhen (aktuell 13).
+- Spielstand-Format: `v` in `freshState` und `SAVE_KEY` zusammen erhöhen (aktuell 14).
 - Modus `standard` bleibt unverändert (`tests/unveraendert.test.mjs`, feste Seeds nicht ohne Grund neu erzeugen).
 
 ## Branches

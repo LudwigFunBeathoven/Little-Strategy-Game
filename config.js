@@ -2,7 +2,7 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.2-kartenpfad-8',
+  VERSION: '0.9.2-kartenpfad-10',
   SAVE_KEY: 'klammerfront.save.v14',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',

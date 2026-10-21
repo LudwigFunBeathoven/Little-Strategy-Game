@@ -1,6 +1,6 @@
 # Klammerfront – alle Texte des Spiels
 
-Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-8. Quelle: `i18n/de.js` und `i18n/en.js` (1024 Schlüssel, in beiden Sprachen identisch).
+Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-10. Quelle: `i18n/de.js` und `i18n/en.js` (1049 Schlüssel, in beiden Sprachen identisch).
 
 Lesehilfe:
 - **Schlüssel** ist der Name im Code. Platzhalter in geschweiften Klammern (`{n}`, `{name}`) füllt das Spiel zur Laufzeit.
@@ -12,10 +12,10 @@ Lesehilfe:
 1. [Allgemein und Zahlen](#allgemein-und-zahlen) (35)
 2. [Start, Schwierigkeit, Ergebnis](#start-schwierigkeit-ergebnis) (29)
 3. [Ressourcenleiste und Kopfzeilen](#ressourcenleiste-und-kopfzeilen) (42)
-4. [Reiter und Arbeitsbereich](#reiter-und-arbeitsbereich) (54)
+4. [Reiter und Arbeitsbereich](#reiter-und-arbeitsbereich) (59)
 5. [Gebäude](#gebäude) (37)
-6. [Haupthaus und Flügel (Teil 7)](#haupthaus-und-flügel-teil-7) (32)
-7. [Einheiten und Armee](#einheiten-und-armee) (30)
+6. [Haupthaus und Flügel (Teil 7)](#haupthaus-und-flügel-teil-7) (39)
+7. [Einheiten und Armee](#einheiten-und-armee) (39)
 8. [Ausbauten (Upgrades)](#ausbauten-upgrades) (25)
 9. [Forschung und Budget](#forschung-und-budget) (55)
 10. [Spezialkarten (Kartenwahl)](#spezialkarten-kartenwahl) (159)
@@ -23,7 +23,7 @@ Lesehilfe:
 12. [Gebäude-Varianten](#gebäude-varianten) (48)
 13. [Doktrinen, Kategorien, Handel](#doktrinen-kategorien-handel) (42)
 14. [Erklärzeilen der Knöpfe](#erklärzeilen-der-knöpfe) (60)
-15. [Tooltips](#tooltips) (121)
+15. [Tooltips](#tooltips) (125)
 16. [Hinweise](#hinweise) (17)
 17. [Tutorial](#tutorial) (21)
 18. [Ereignisprotokoll](#ereignisprotokoll) (27)
@@ -171,6 +171,7 @@ Lesehilfe:
 | `nb.cell` |  | 20 | Nachbarschaft: {total} | Neighbours: {total} |
 | `nb.fabrik` |  | 67 | Fabrik neben Fabrik: {v} Ertrag je angrenzender Fabrik (höchstens {max}) | Factory next to factory: {v} output per adjacent factory (at most {max}) |
 | `nb.fabrik.karten` | karten | 79 | Manufaktur neben Manufaktur: {v} Ertrag je angrenzender Manufaktur (höchstens {max}) | Manufactory next to manufactory: {v} output per adjacent manufactory (at most {max}) |
+| `nb.fluegel` |  | 21 | Flügel {name}: {bonus} | Wing {name}: {bonus} |
 | `nb.gets` |  | 40 | Hier: {rule} – {n} Nachbar(n), zusammen {total} | Here: {rule} – {n} neighbour(s), {total} in total |
 | `nb.getsNone` |  | 35 | Hier: kein Nachbarschaftsbonus ({rule}) | Here: no neighbour bonus ({rule}) |
 | `nb.gives` |  | 32 | Gibt {name} auf Platz {slot}: {delta} | Gives {name} on plot {slot}: {delta} |
@@ -179,6 +180,10 @@ Lesehilfe:
 | `nb.kontor.karten` | karten | 79 | Kontor neben Manufaktur: Zinsdeckel {v} je angrenzender Manufaktur (höchstens {max}) | Trading post next to manufactory: interest cap {v} per adjacent manufactory (at most {max}) |
 | `nb.pct` |  | 4 | {v} % | {v}% |
 | `nb.schmiede` |  | 42 | Schmiede neben Kaserne: Einheitenkosten {v} | Smithy next to barracks: unit cost {v} |
+| `nb.stat.nbFactoryYield` |  | 11 | {v} % Ertrag | {v}% yield |
+| `nb.stat.nbResearchTime` |  | 19 | {v} % Forschungszeit | {v}% research time |
+| `nb.stat.nbUnitHp` |  | 33 | {v} % Lebenspunkte neuer Einheiten | {v}% health of new units |
+| `nb.stat.nbVariantCost` |  | 36 | {v} % Kosten und Dauer der Aufwertung | {v}% cost and time of upgrades |
 | `nb.title` |  | 13 | Nachbarschaft | Neighbours |
 | `nb.universitaet` |  | 80 | Universität neben Fabrik: Forschungszeit {v} je angrenzender Fabrik (höchstens {max}) | University next to factory: research time {v} per adjacent factory (at most {max}) |
 | `nb.universitaet.karten` | karten | 88 | Universität neben Manufaktur: Forschungszeit {v} je angrenzender Manufaktur (höchstens {max}) | University next to manufactory: research time {v} per adjacent manufactory (at most {max}) |
@@ -263,6 +268,7 @@ Lesehilfe:
 | `haus.fluegel.bibliothek.name` |  | 10 | Bibliothek | Library |
 | `haus.fluegel.choose` |  | 43 | Wähle einen Flügel. Die Wahl ist endgültig. | Choose a wing. The choice is final. |
 | `haus.fluegel.chosen` |  | 11 | Gewählt: {list} | Chosen: {list} |
+| `haus.fluegel.forced` |  | 64 | Der erste Flügel ist durch den Testschalter ?fluegel festgelegt. | The first wing is fixed by the test switch ?fluegel. |
 | `haus.fluegel.kanzlei.desc` |  | 89 | Eine Karte mehr je Angebot, wie mit einer Universität; beide zusammen bringen nicht mehr. | One more card per offer, as with a university; both together bring no more. |
 | `haus.fluegel.kanzlei.eff` |  | 26 | Eine Karte mehr je Angebot | One more card per offer |
 | `haus.fluegel.kanzlei.name` |  | 7 | Kanzlei | Chancery |
@@ -278,6 +284,12 @@ Lesehilfe:
 | `haus.grenze` |  | 38 | Obergrenze: {n} Manufakturen · stehen {m} | Cap: {n} manufactories · standing {m} |
 | `haus.grenze.label` |  | 12 | Manufakturen | Manufactories |
 | `haus.grenze.value` |  | 18 | {m} von höchstens {n} | {m} of at most {n} |
+| `haus.nb.bibliothek` |  | 60 | −{v} % Forschungszeit je angrenzender Manufaktur, höchstens {max} | −{v}% research time per adjacent manufactory, at most {max} |
+| `haus.nb.kanzlei` |  | 71 | −{v} % Kosten und Dauer der Aufwertung angrenzender Gebäude, höchstens {max} | −{v}% cost and time of upgrades of adjacent buildings, at most {max} |
+| `haus.nb.keine` |  | 29 | begünstigt: noch kein Gebäude | benefits: no building yet |
+| `haus.nb.plaetze` |  | 20 | begünstigt: Platz {list} | benefits: plot {list} |
+| `haus.nb.schatzkammer` |  | 52 | +{v} % Ertrag je angrenzender Manufaktur, höchstens {max} | +{v}% yield per adjacent manufactory, at most {max} |
+| `haus.nb.zeughaus` |  | 71 | +{v} % Lebenspunkte neuer Einheiten je angrenzender Kaserne, höchstens {max} | +{v}% health of new units per adjacent barracks, at most {max} |
 | `haus.stufe.1.desc` |  | 94 | Ein Gutshof verwaltet höchstens drei Manufakturen. Die Karte Stadtrecht macht ihn zum Rathaus. | A manor runs at most three manufactories. The card Town Charter turns it into a town hall. |
 | `haus.stufe.1.name` |  | 7 | Gutshof | Manor |
 | `haus.stufe.2.desc` |  | 105 | Das Rathaus verwaltet vier Manufakturen und hat einen Flügel. Die Karte Hofhaltung macht es zur Residenz. | The town hall runs four manufactories and has one wing. The card Court Household turns it into a residence. |
@@ -298,27 +310,36 @@ Lesehilfe:
 | `army.regroup` |  | 7 | Sammeln | Regrouping |
 | `kompanie.count` |  | 10 | Angeworben | Hired |
 | `kompanie.name` |  | 15 | Söldnerkompanie | Mercenary company |
+| `unit.armbrust.desc` |  | 109 | Fernkämpfer mit hohem Schaden je Schuss. Reicht weiter als der Bogen, schießt aber langsamer und kostet mehr. | Ranged unit with high damage per shot. Outranges the archer, but fires slower and costs more. |
 | `unit.armbrust.name` |  | 15 | Armbrustschütze | Crossbowman |
 | `unit.armbrust.short` |  | 8 | Armbrust | Crossbow |
+| `unit.bogenschuetze.desc` |  | 120 | Fernkämpfer, ersetzt den Werfer. Größere Reichweite und mehr Schaden, dafür teurer; ohne Nahkampfreihe davor verwundbar. | Ranged unit, replaces the thrower. Longer range and more damage, but dearer; exposed without a melee line in front. |
 | `unit.bogenschuetze.name` |  | 12 | Bogenschütze | Archer |
 | `unit.bogenschuetze.short` |  | 5 | Bogen | Archer |
+| `unit.geschuetz.desc` |  | 128 | Schwerste Waffe der Gießerei: größte Reichweite, dreifacher Schaden an der Basis. Belegt zwei Versorgung, ist teuer und langsam. | Heaviest weapon of the foundry: longest range, triple damage to the base. Takes two supply, is dear and slow. |
 | `unit.geschuetz.name` |  | 8 | Geschütz | Gun |
 | `unit.geschuetz.short` |  | 8 | Geschütz | Gun |
+| `unit.katapult.desc` |  | 99 | Wurfmaschine mit großer Reichweite und hohem Schaden je Wurf. Feuert selten, ist teuer und langsam. | Siege engine with long range and high damage per throw. Fires rarely, is dear and slow. |
 | `unit.katapult.name` |  | 8 | Katapult | Catapult |
 | `unit.katapult.short` |  | 8 | Katapult | Catapult |
+| `unit.laeufer.desc` |  | 89 | Leichter Nahkämpfer, die billigste Einheit. Stark in der Masse, einzeln rasch geschlagen. | Light melee unit, the cheapest of all. Strong in numbers, quickly beaten one on one. |
 | `unit.laeufer.name` |  | 6 | Läufer | Runner |
 | `unit.laeufer.short` |  | 6 | Läufer | Runner |
 | `unit.reason.doctrine` |  | 38 | Gesperrt durch die Doktrin {name}. | Locked by the doctrine {name}. |
+| `unit.reiter.desc` |  | 120 | Nahkämpfer mit dem höchsten Schaden je Sekunde. Dafür teurer als Läufer und Schwertkämpfer, bei kaum mehr Lebenspunkten. | Melee unit with the highest damage per second. Costs more than runner and swordsman, with barely more health. |
 | `unit.reiter.name` |  | 6 | Reiter | Rider |
 | `unit.reiter.short` |  | 6 | Reiter | Rider |
 | `unit.role.melee` |  | 8 | Nahkampf | Melee |
 | `unit.role.ranged` |  | 9 | Fernkampf | Ranged |
 | `unit.role.tank` |  | 13 | Nahkampf, zäh | melee, tough |
+| `unit.schild.desc` |  | 111 | Zäher Nahkämpfer für die erste Reihe. Die meisten Lebenspunkte, wenig Schaden, langsam: bremst die ganze Armee. | Tough melee unit for the front row. Most health, little damage, slow: holds back the whole army. |
 | `unit.schild.name` |  | 12 | Schildträger | Shield bearer |
 | `unit.schild.short` |  | 6 | Schild | Shield |
+| `unit.schwertkaempfer.desc` |  | 98 | Nahkämpfer mit Eisenwaffen, ersetzt den Läufer. Mehr Schaden und Lebenspunkte, dafür etwas teurer. | Melee unit with iron weapons, replaces the runner. More damage and health, but slightly dearer. |
 | `unit.schwertkaempfer.name` |  | 14 | Schwertkämpfer | Swordsman |
 | `unit.schwertkaempfer.short` |  | 7 | Schwert | Sword |
 | `unit.versorgung` |  | 13 | {n} Versorgung | {n} supply |
+| `unit.werfer.desc` |  | 96 | Fernkämpfer, der aus der zweiten Reihe wirft. Billig mit Reichweite, hält aber am wenigsten aus. | Ranged unit that throws from the second row. Cheap with range, but takes the least damage. |
 | `unit.werfer.name` |  | 6 | Werfer | Thrower |
 | `unit.werfer.short` |  | 6 | Werfer | Thrower |
 
@@ -999,7 +1020,9 @@ Lesehilfe:
 | `tip.m.baseMax` |  | 21 | Max. Lebenspunkte Tor | Max. gate health |
 | `tip.m.budget` |  | 16 | Forschungsbudget | Research budget |
 | `tip.m.interest` |  | 24 | Zinsdeckel je Auszahlung | Interest cap per payout |
+| `tip.m.key` |  | 5 | Taste | Key |
 | `tip.m.matRate` |  | 10 | Material/s | Material/s |
+| `tip.m.merc` |  | 7 | Söldner | Mercenary |
 | `tip.m.perClick` |  | 18 | Material pro Klick | Material per click |
 | `tip.m.queueMax` |  | 16 | Versorgungslimit | Supply cap |
 | `tip.m.range` |  | 10 | Reichweite | Range |
@@ -1018,6 +1041,7 @@ Lesehilfe:
 | `tip.menu.resume` |  | 89 | Die Partie ist pausiert (verdeckter Tab oder geladener Spielstand). Klick setzt sie fort. | The game is paused (hidden tab or loaded save). Click to continue. |
 | `tip.menu.session` |  | 63 | Debug-Modus: lädt das Sitzungsprotokoll dieser Partie herunter. | Debug mode: downloads the session log of this game. |
 | `tip.menu.tutorial` |  | 79 | Beendet die Anleitung sofort. Die Partie läuft weiter, die Schonfrist entfällt. | Ends the guide at once. The game carries on, the grace period ends. |
+| `tip.merc.value` |  | 16 | keine Versorgung | no supply |
 | `tip.missing` |  | 9 | Fehlt: {n} | Missing: {n} |
 | `tip.needsBuilding` |  | 20 | Benötigt: {name} | Requires: {name} |
 | `tip.needsTower` |  | 23 | Erst den Turm errichten | Build the tower first |
@@ -1041,6 +1065,7 @@ Lesehilfe:
 | `tip.stufenname.next` |  | 19 | {a} → {b} ab Stufe {n} | {a} → {b} from level {n} |
 | `tip.supplyFull` |  | 21 | Versorgung voll: {n}/{max} | Supply full: {n}/{max} |
 | `tip.tab.army` |  | 67 | Einheiten in die Warteschlange stellen, Wellenvorschau, Ereignisse. | Queue units, wave preview, events. |
+| `tip.tab.army.karten` | karten | 169 | Einheiten kaufen, Wellenvorschau, Ereignisse. Gekaufte Einheiten rücken mit der nächsten Welle aus, verteilt auf die drei Lanes; höchstens {max} je Welle (Versorgungslimit). | Buy units, wave preview, events. Bought units march out with the next wave, spread over the three lanes; at most {max} per wave (supply cap). |
 | `tip.tab.build` |  | 46 | Bauplätze im Reich: bauen, ausbauen, abreißen. | Plots in your realm: build, upgrade, demolish. |
 | `tip.tab.cards` |  | 49 | Offene Kartenwahl und gewählte Karten mit Stufen. | Open card choice and chosen cards with tiers. |
 | `tip.tab.haus` |  | 103 | Das Haupthaus in der Mitte deines Reichs: seine Stufe bestimmt, wie viele Manufakturen du bauen darfst. | The main hall at the centre of your realm: its level sets how many manufactories you may build. |
