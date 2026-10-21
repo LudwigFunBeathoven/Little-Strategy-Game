@@ -89,7 +89,7 @@ for (const lang of ['de', 'en']){
   check(!!card && card.band === (lang === 'de' ? 'Doktrin' : 'Doctrine') && card.eff.length > 0 && card.eff.length <= 44 && card.ex.length > 5 && card.risk, `[${lang}] K5.07: Doktrinkarte mit Familie, Wirkungszeile (höchstens 44 Zeichen), Erklärzeile und Nachteilszeile ${show(card)}`);
   await p.hover('.kcard.fam-doktrin'); await settle(p, 200);
   const det = await p.evaluate(() => document.querySelector('#stageDetail').textContent);
-  check((lang === 'de' ? /Obergrenze für Manufakturen sinkt um 1/ : /manufactory cap drops by 1/).test(det) && (lang === 'de' ? /Zunfthäuser/ : /guildhalls/).test(det), `[${lang}] K5.07: Detailzeile nennt Effekt und Einschränkung ${show(det)}`);
+  check((lang === 'de' ? /Manufakturgrenze −1/ : /Manufactory limit −1/).test(det) && (lang === 'de' ? /Nachbarbonus ×3/ : /neighbour bonus ×3/).test(det), `[${lang}] K5.07: Detailzeile nennt Effekt und Einschränkung ${show(det)}`);
   await p.click('.kcard.fam-doktrin'); await settle(p, 1800);
   check(await p.evaluate(() => __kf.G.cardTaken('zunftordnung') === 1 && __kf.G.doktrinCount() === 1), `[${lang}] K5.07: Doktrin gewählt`);
   // die fünfte Fabrik ist gesperrt, mit Erklärzeile (Kontextkopf des leeren Platzes)

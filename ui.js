@@ -784,7 +784,7 @@ function boot(){
   setInterval(() => { if (G.S.status === 'running') save(); }, C.AUTOSAVE_MS);
 
   // Schnittstelle für automatisierte Browser-Tests; nur mit ?dev=1 oder ?debug=1 (im öffentlichen Spiel nicht vorhanden, REQ-R.05)
-  if (DEV || DEBUG) window.__kf = { G, C, t, save, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, Tutorial, TutUI,
+  if (DEV || DEBUG) window.__kf = { G, C, t, tipContent, save, session: () => Session.data, sessionReset: () => Session.reset(), unitLog: id => Session.unitLog(id), drawnPositions: () => drawnPositions(), screenToWorld, worldToScreen, requestRender, setLang, startGame, tooltipAudit, explAudit, Tip, Hints, showHint, Cam, benchDraw, Tutorial, TutUI,
                   selectPlot, selectSection, clearSelection, selectTab, setPaused, Disc, Stage,
                   get plotRects(){ return plotRects; }, get sectionRects(){ return sectionRects; }, get sel(){ return sel; }, get ctxSel(){ return sel || { kind: 'none' }; },
                   get tab(){ return activeTab; }, get paused(){ return paused; }, get lang(){ return lang; } };

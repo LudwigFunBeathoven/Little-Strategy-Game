@@ -464,7 +464,8 @@ function optParams(o, tier){
   if (o.synergie){ p.syn = pct(Math.abs(o.synergie.perCard || 0)); p.max = C.KATEGORIEN.deckel; if (o.synergie.fix) p.e1 = fmtNum(o.synergie.fix.mul); }       // Synergiekarten (Teil 6, REQ-K6.03)
   if (o.pfad && o.pfad.haus) p.gr = C.HAUPTHAUS.fabrikGrenze[o.pfad.haus - 1];       // Stadtrecht und Hofhaltung: Obergrenze für Manufakturen der neuen Stufe (Teil 9, R6)
   if (o.doktrin) Object.assign(p, doktrinParams(o.doktrin));
-  if (o.oeffnetForschung && G.RES[o.oeffnetForschung[0]]){ const rp = researchParams(G.RES[o.oeffnetForschung[0]], 1); for (const k in rp) if (p[k] === undefined) p[k] = rp[k]; }       // Technologiekarten nennen den Wert ihrer Forschung (Teil 9, R6)
+  const opens = (o.pfad || o).oeffnetForschung;
+  if (opens && G.RES[opens[0]]){ const rp = researchParams(G.RES[opens[0]], 1); for (const k in rp) if (p[k] === undefined) p[k] = rp[k]; }       // Technologiekarten nennen den Wert ihrer Forschung (Teil 9, R6)
   p.cap = C.SUPPLY_CAP_MAX;
   for (const e of tr.effect || []){                                                                      // Regeländerungen der Stufen 2 und 3 (Teil 5, REQ-K5.06): neue Schwelle c2
     if (e.stat === 'drumsMin') p.c2 = o.condition.value + e.add;

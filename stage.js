@@ -98,7 +98,7 @@ const Stage = (() => {
       const foot = document.createElement('span'); foot.className = 'kc-foot';
       const dots = document.createElement('span'); dots.className = 'kc-tier'; dots.setAttribute('aria-hidden', 'true');
       dots.textContent = '●'.repeat(tier) + '○'.repeat(G.tiersOf(o).length - tier);
-      foot.append(dots);
+      if (!karten || G.tiersOf(o).length > 1) foot.append(dots);       // Teil 10 (REQ-K10.01): einstufige Karten zeigen keinen einzelnen Punkt ohne Aussage
       const ex = document.createElement('span'); ex.className = 'expl'; ex.textContent = t('ex.kp.card', { tier: optLimit(o) });
       const dl = drawbackLine(o, tier); let dEl = null;
       if (dl){ dEl = document.createElement('span'); dEl.className = 'kc-drawback'; const di = document.createElement('i'); di.setAttribute('aria-hidden', 'true'); di.textContent = K.nachteilSymbol + '\uFE0E'; const dt = document.createElement('span'); dt.textContent = dl; dEl.append(di, dt); }
@@ -202,6 +202,10 @@ const Stage = (() => {
     const i = hover >= 0 ? hover : focusI, id = d.options[i];
     if (id === undefined){ setText(el.stageDetail, t('kp.stage.hint', { n: d.options.length })); return; }
     const o = G.OPT[id], tier = G.cardTaken(id) + 1;
+    if (G.S.pacing === 'karten'){                                                         // Teil 10 (REQ-K10.01, R1/R2): dieselben Zeilen wie auf der Karte, der Nachteil mit eigenem Zeichen statt als Fließtext
+      const dl = drawbackLine(o, tier);
+      setText(el.stageDetail, [`${cardName(o, tier)} – ${effLine(o, tier)}`, dl && `${K.nachteilSymbol}\uFE0E ${dl}`, optLimit(o)].filter(Boolean).join(' · ')); return;
+    }
     const parts = [`${cardName(o, tier)} – ${cardDesc(o, tier)}`, ...(o.family === 'technologie' ? pathLines(o) : []), o.pfad && (o.pfad.exklusivMit || []).length ? t('kp.card.excludesGeneric') : '', optLimit(o)].filter(Boolean);       // REQ-K2.03: nur die unmittelbare Wirkung, keine Folgekarten
     setText(el.stageDetail, parts.join(' · '));
   }
