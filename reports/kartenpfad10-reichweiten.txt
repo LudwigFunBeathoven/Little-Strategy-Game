@@ -1,0 +1,21 @@
+Reichweiten Modus karten (R_W = Werfer = 105)
+
+| Einheit | Teil 8 absolut | Teil 8 relativ | Teil 10 absolut | Teil 10 relativ | Anteil der Lane (896) | Gegner (Obergrenze 140) |
+|---|---|---|---|---|---|---|
+| werfer | 105 | 1,00 | 105 | 1,00 | 12 % | 105 |
+| bogenschuetze | 137 | 1,30 | 137 | 1,30 | 15 % | 137 |
+| armbrust | 158 | 1,50 | 168 | 1,60 | 19 % | 140 |
+| katapult | 189 | 1,80 | 189 | 1,80 | 21 % | 140 |
+| geschuetz | 231 | 2,20 | 210 | 2,00 | 23 % | 140 |
+
+Bauwerke und Maße
+
+| Größe | Wert |
+|---|---|
+| Grundreichweite eigener Türme | 120 (+20 je Reichweitenstufe) |
+| Grundreichweite gegnerischer Turm (Basis) | 95 |
+| Länge einer Lane | 1000 (zwischen den Basisrändern 896) |
+| Breite eigene / gegnerische Basis | 60 / 44 |
+| Nahkampf-Reichweite | 14 |
+
+Herkunft der Geschützreichweite 231 (Teil 8): reiner Grundwert 2,2 · 105 = 231; kein Ausbau und keine Karte war enthalten. Reichweitenwirksame Boni auf Einheiten: nur die Karte Lange Wurfarme (Stat werferRange, +25/+50, nur Werfer und Bogenschütze, additiv); Schmiede-Stufen, Ausbauten und Bastion ändern keine Einheitenreichweite.

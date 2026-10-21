@@ -22,10 +22,10 @@ const KF_CONFIG = {
        nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
        Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
     schwellenRef: { start: 70, wachstum: 1.05 },       // Referenzkurve für Stärke und Phase (Teil 10): unabhängig von den Kosten der Wahlen
-    schwellen: { start: 70, wachstum: 1.05, dyn: null },       // dyn: { ref, max } – dynamischer Anstieg (Teil 10, REQ-K10.05); null = aus
+    schwellen: { start: 70, wachstum: 1.35, dyn: null },       // Teil 10 (Arm C2, vorläufig): wachstum 1.05 → 1.35, Mindestabstand 45 → 40 s; die Stärke der Einheiten folgt der Referenzkurve schwellenRef       // dyn: { ref, max } – dynamischer Anstieg (Teil 10, REQ-K10.05); null = aus
     uebertrag: null,                                // Teil 8 (REQ-K8.02, Hebel 3): { anteil: 0.25 } – wartet eine Stufe (Mindestabstand), geht in die nächste höchstens dieser Anteil ihrer Kosten über, weitere EP verfallen; null = unbegrenzt (Standard: Der Hebel schwächt die Bots stark, siehe Bericht kartenpfad-8)
     schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
-    minAbstand: 45,
+    minAbstand: 40,
     /* Reichweitenleiter der Fernkämpfer (Teil 8, REQ-K8.05): Grundreichweiten im Modus karten, bezogen auf die des Werfers R_W (UNITS.werfer.range = 105): Bogenschütze 1,3 · R_W, Armbrustschütze 1,6 · R_W,
        Katapult 1,8 · R_W, Geschütz 2,0 · R_W (gerundet; Teil 10: 1,6 und 2,0); mindestens 10 % Abstand je Stufe, keine Reichweite sinkt. Der Standardmodus behält die Werte in UNITS. */
     /* Gegner mit Fernkämpfern (Teil 8, REQ-K8.06, experimentell): ab dem ab-fachen der Größe der ersten Welle ersetzen Läufer zufällig Bogenschützen bzw. Armbrustschützen, je Typ höchstens anteil der Welle. */

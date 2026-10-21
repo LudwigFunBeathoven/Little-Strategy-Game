@@ -1,0 +1,276 @@
+{
+ "A5": {
+  "rueck1": 0.54,
+  "rueckMax": 4,
+  "wahlenOhne": 12,
+  "dauerOhne": 769.7,
+  "rateAktiv": 0.8004225496657509,
+  "rateDurch": 0.8781032669575293,
+  "rateGeleg": 0.8943599162862164,
+  "cvMedian": 0.43049660659977235,
+  "bots": {
+   "ohne": {
+    "n": 50,
+    "siege": 0.98,
+    "patt": 0,
+    "wahlen": 12,
+    "dauer": 769.7,
+    "rueck1": 0.48,
+    "rueckMax": 3,
+    "cv": 0.40469397138654795
+   },
+   "militaer": {
+    "n": 50,
+    "siege": 0.98,
+    "patt": 0,
+    "wahlen": 9,
+    "dauer": 792.9000000000001,
+    "rueck1": 0.62,
+    "rueckMax": 4,
+    "cv": 0.5340511418347877
+   },
+   "wirtschaft": {
+    "n": 50,
+    "siege": 0.86,
+    "patt": 0,
+    "wahlen": 13.5,
+    "dauer": 898.95,
+    "rueck1": 0.52,
+    "rueckMax": 2,
+    "cv": 0.3724668267027948
+   },
+   "verteidigung": {
+    "n": 50,
+    "siege": 0.96,
+    "patt": 0.02,
+    "wahlen": 12.5,
+    "dauer": 903,
+    "rueck1": 0.54,
+    "rueckMax": 3,
+    "cv": 0.4524001055503418
+   }
+  },
+  "ok": {
+   "rueck": false,
+   "wahlen": true,
+   "dauer": false,
+   "profile": false,
+   "cv": true
+  },
+  "alle": false,
+  "override": {
+   "KARTEN": {
+    "schwellen": {
+     "wachstum": 1.3
+    }
+   }
+  }
+ },
+ "C1": {
+  "rueck1": 0.64,
+  "rueckMax": 3,
+  "wahlenOhne": 12,
+  "dauerOhne": 792.85,
+  "rateAktiv": 0.8348748858029508,
+  "rateDurch": 0.89456208103556,
+  "rateGeleg": 0.8782436866655466,
+  "cvMedian": 0.48738893266409683,
+  "bots": {
+   "ohne": {
+    "n": 50,
+    "siege": 1,
+    "patt": 0,
+    "wahlen": 12,
+    "dauer": 792.85,
+    "rueck1": 0.56,
+    "rueckMax": 3,
+    "cv": 0.4701963076531402
+   },
+   "militaer": {
+    "n": 50,
+    "siege": 0.9,
+    "patt": 0.04,
+    "wahlen": 10,
+    "dauer": 776.5,
+    "rueck1": 0.66,
+    "rueckMax": 3,
+    "cv": 0.5416299048603568
+   },
+   "wirtschaft": {
+    "n": 50,
+    "siege": 0.84,
+    "patt": 0,
+    "wahlen": 13.5,
+    "dauer": 892.55,
+    "rueck1": 0.7,
+    "rueckMax": 2,
+    "cv": 0.4186905727281447
+   },
+   "verteidigung": {
+    "n": 50,
+    "siege": 0.94,
+    "patt": 0.06,
+    "wahlen": 13,
+    "dauer": 929.2,
+    "rueck1": 0.64,
+    "rueckMax": 3,
+    "cv": 0.511139783910823
+   }
+  },
+  "ok": {
+   "rueck": false,
+   "wahlen": true,
+   "dauer": true,
+   "profile": false,
+   "cv": true
+  },
+  "alle": false,
+  "override": {
+   "KARTEN": {
+    "minAbstand": 40,
+    "schwellen": {
+     "wachstum": 1.3
+    }
+   }
+  }
+ },
+ "C2": {
+  "rueck1": 0.865,
+  "rueckMax": 3,
+  "wahlenOhne": 11,
+  "dauerOhne": 808.4000000000001,
+  "rateAktiv": 0.7601768263202531,
+  "rateDurch": 0.7836461692707227,
+  "rateGeleg": 0.7972115470551434,
+  "cvMedian": 0.5243830766198272,
+  "bots": {
+   "ohne": {
+    "n": 50,
+    "siege": 0.96,
+    "patt": 0,
+    "wahlen": 11,
+    "dauer": 808.4000000000001,
+    "rueck1": 0.8,
+    "rueckMax": 3,
+    "cv": 0.493746392331754
+   },
+   "militaer": {
+    "n": 50,
+    "siege": 0.96,
+    "patt": 0,
+    "wahlen": 9,
+    "dauer": 791.25,
+    "rueck1": 0.8,
+    "rueckMax": 3,
+    "cv": 0.5563815478972972
+   },
+   "wirtschaft": {
+    "n": 50,
+    "siege": 0.8,
+    "patt": 0.04,
+    "wahlen": 13,
+    "dauer": 931.25,
+    "rueck1": 0.94,
+    "rueckMax": 2,
+    "cv": 0.4954283213432068
+   },
+   "verteidigung": {
+    "n": 50,
+    "siege": 0.98,
+    "patt": 0,
+    "wahlen": 12,
+    "dauer": 907.95,
+    "rueck1": 0.92,
+    "rueckMax": 2,
+    "cv": 0.5323042543460003
+   }
+  },
+  "ok": {
+   "rueck": false,
+   "wahlen": false,
+   "dauer": true,
+   "profile": false,
+   "cv": true
+  },
+  "alle": false,
+  "override": {
+   "KARTEN": {
+    "minAbstand": 40,
+    "schwellen": {
+     "wachstum": 1.35
+    }
+   }
+  }
+ },
+ "D1": {
+  "rueck1": 0.315,
+  "rueckMax": 10,
+  "wahlenOhne": 13,
+  "dauerOhne": 766.2,
+  "rateAktiv": 0.9449796176784692,
+  "rateDurch": 1.0471954980969091,
+  "rateGeleg": 1.1109105056067383,
+  "cvMedian": 0.4266773824056379,
+  "bots": {
+   "ohne": {
+    "n": 50,
+    "siege": 1,
+    "patt": 0,
+    "wahlen": 13,
+    "dauer": 766.2,
+    "rueck1": 0.3,
+    "rueckMax": 5,
+    "cv": 0.5001222383382459
+   },
+   "militaer": {
+    "n": 50,
+    "siege": 0.94,
+    "patt": 0,
+    "wahlen": 11,
+    "dauer": 730.45,
+    "rueck1": 0.58,
+    "rueckMax": 5,
+    "cv": 0.525840303658675
+   },
+   "wirtschaft": {
+    "n": 50,
+    "siege": 0.86,
+    "patt": 0.02,
+    "wahlen": 18,
+    "dauer": 907.8499999999999,
+    "rueck1": 0.24,
+    "rueckMax": 10,
+    "cv": 0.3109894499228707
+   },
+   "verteidigung": {
+    "n": 50,
+    "siege": 1,
+    "patt": 0,
+    "wahlen": 14,
+    "dauer": 839.9000000000001,
+    "rueck1": 0.14,
+    "rueckMax": 6,
+    "cv": 0.43421029928779137
+   }
+  },
+  "ok": {
+   "rueck": false,
+   "wahlen": true,
+   "dauer": false,
+   "profile": false,
+   "cv": true
+  },
+  "alle": false,
+  "override": {
+   "KARTEN": {
+    "minAbstand": 40,
+    "schwellen": {
+     "dyn": {
+      "ref": 70,
+      "max": 12
+     }
+    }
+   }
+  }
+ }
+}
