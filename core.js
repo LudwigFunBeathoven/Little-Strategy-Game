@@ -389,7 +389,7 @@ function create(){
   const raubbauFactor = sl => raubbauOn() && sl && sl.type === 'fabrik' ? 1 + C.DOKTRIN.raubbau.bonus * raubbauStufen(sl) / C.DOKTRIN.raubbau.stufen : 1;
   const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) * raubbauFactor(sl) : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
-  const levelEff = () => S.pacing === 'karten' ? S.reached : S.level;       // Teil 10: Stärke und Phase folgen den erreichten Schwellen, nicht den getroffenen Wahlen (wie vor der Trennung von Schwelle und Aufstieg)
+  const levelEff = () => S.pacing === 'karten' ? S.level + Math.max(0, S.reached - S.level) : S.level;       // Teil 10: Stärke und Phase folgen den erreichten Schwellen, nicht den getroffenen Wahlen (wie vor der Trennung von Schwelle und Aufstieg)
   const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * levelEff();
   const qualityLevel = () => lv('qualitaet') + Math.floor(mAdd('startSmith'));       // startSmith: Karte Rekrutenzug Stufe II (Teil 6, vorher Linie Militär Stufe 2): Einheiten starten mit der nächsten Schmiede-Stufe
   const qualityMult  = () => Math.pow(1 + (C.FX_QUALITAET + mAdd('qualityBonus')) * mMul('smithEffect'), qualityLevel());       // smithEffect: Waffenschmiede (Teil 4)
