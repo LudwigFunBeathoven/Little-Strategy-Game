@@ -389,7 +389,8 @@ function create(){
   const raubbauFactor = sl => raubbauOn() && sl && sl.type === 'fabrik' ? 1 + C.DOKTRIN.raubbau.bonus * raubbauStufen(sl) / C.DOKTRIN.raubbau.stufen : 1;
   const matRate      = () => factoryRate() * S.slots.reduce((a, sl, i) => a + (sl && sl.type === 'fabrik' && !sl.upg ? (1 + neighborValue(i, 'fabrik')) * (1 + variantYield(sl)) * raubbauFactor(sl) : 0), 0);
   // Grundstärke steigt je Stufe (REQ-17.2), die Schmiede multipliziert darauf (REQ-17.3)
-  const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * S.level;
+  const levelEff = () => S.pacing === 'karten' ? S.reached : S.level;       // Teil 10: Stärke und Phase folgen den erreichten Schwellen, nicht den getroffenen Wahlen (wie vor der Trennung von Schwelle und Aufstieg)
+  const levelStrength = () => 1 + C.UNIT_STRENGTH_PER_LEVEL * levelEff();
   const qualityLevel = () => lv('qualitaet') + Math.floor(mAdd('startSmith'));       // startSmith: Karte Rekrutenzug Stufe II (Teil 6, vorher Linie Militär Stufe 2): Einheiten starten mit der nächsten Schmiede-Stufe
   const qualityMult  = () => Math.pow(1 + (C.FX_QUALITAET + mAdd('qualityBonus')) * mMul('smithEffect'), qualityLevel());       // smithEffect: Waffenschmiede (Teil 4)
   const hpMultP      = () => levelStrength() * qualityMult() * mMul('unitStrength');
@@ -426,7 +427,7 @@ function create(){
   /* Reichweitenleiter (Teil 8, REQ-K8.05): im Modus karten gelten die Grundreichweiten aus C.KARTEN.reichweiten (Werfer < Bogenschütze < Armbrustschütze < Katapult < Geschütz); der Standardmodus behält C.UNITS */
   const baseRange    = (type, side = 'p') => {
     const lad = S.pacing === 'karten' && C.KARTEN.reichweiten && C.KARTEN.reichweiten[type] != null ? C.KARTEN.reichweiten[type] : C.UNITS[type].range;
-    return side === 'p' ? lad : Math.min(lad, C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel);       // Teil 10 (REQ-K10.03): auch gegnerische Bogen- und Armbrustschützen folgen der Leiter, reichen aber nie weiter als ein eigener Turm mit einer Reichweitenstufe (PO-Entscheidung zu Teil 8)
+    return side === 'p' ? lad : Math.min(lad, C.KARTEN.gegnerReichweiteMax ?? (C.TOWER_RANGE + C.PLAYER_TURRET.rangePerLevel));       // Teil 10 (REQ-K10.03): auch gegnerische Bogen- und Armbrustschützen folgen der Leiter, reichen aber nie weiter als ein eigener Turm mit einer Reichweitenstufe (PO-Entscheidung zu Teil 8)
   };
   /* Teil 10 (REQ-K10.03): Die Reihenfolge der Leiter gilt auch mit Ausbauten und Karten – eine Einheit reicht nie so weit wie die nächste Stufe der Leiter (Lange Wurfarme heben Werfer und Bogenschützen,
      der Bogenschütze bleibt aber unter der Armbrust). Im Standardmodus gibt es keine Leiter. */
@@ -436,7 +437,7 @@ function create(){
     return i < 0 || i === F.length - 1 ? rangeRaw(side, type) : Math.min(rangeRaw(side, type), unitRange(side, F[i + 1]) - 1);
   }
   const PHASES       = ['early', 'mid', 'late'];
-  const phase        = () => S.level < C.PHASE_MID_LEVEL ? 'early' : S.level < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
+  const phase        = () => levelEff() < C.PHASE_MID_LEVEL ? 'early' : levelEff() < C.PHASE_LATE_LEVEL ? 'mid' : 'late';
   /* Modus karten (Teil 5, REQ-K5.03): Kartenwahlen aus dem Spielfluss. Die EP-Schwelle der Wahl n ist die Summe der Schritte 1 … n der Kurve C.KARTEN.schwellen
      (Schritt k = start × wachstum^(k−1), je Grad mit schwellenFaktor); die abgelaufene Spielzeit löst nie eine Wahl aus. Standard unverändert. */
   function xpSum(n){
@@ -1461,13 +1462,13 @@ function create(){
     if (S.xpLog) S.xpLog.push([+S.t.toFixed(2), src || 'other', +b.toFixed(3)]);       // Werkzeug (Simulation, Teil 8): Einzelereignisse der EP für Näherungsrechnungen
     S.xp += b; S.xpTotal += b;
     const U = S.pacing === 'karten' ? C.KARTEN.uebertrag : null;       // Teil 8 (REQ-K8.02): eine wartende Stufe zugleich; EP darüber hinaus gehen nur bis zum Übertrag in die nächste Stufe, der Rest verfällt
-    if (S.pacing === 'karten' && !U){ reachLevels(); grantLevel(); }       // Teil 10 (REQ-K10.05): ein EP-Schub kann mehrere Schwellen erreichen, schaltet aber höchstens einen Aufstieg frei
+    if (S.pacing === 'karten' && !U && C.KARTEN.stufenEinzeln !== false){ reachLevels(); grantLevel(); }       // Teil 10 (REQ-K10.05): ein EP-Schub kann mehrere Schwellen erreichen, schaltet aber höchstens einen Aufstieg frei
     else while (S.xpTotal >= xpNeed(S.level + 1) && !(U && S.pendingLevels > 0)){
       S.level++; S.pendingLevels++;
       if (S.pacing === 'karten') (S.stats.stufenT = S.stats.stufenT || []).push(+S.t.toFixed(1));       // Zeitpunkt des Stufenaufstiegs (Teil 8, REQ-K8.01: Wartezeit am Mindestabstand)
       log('log.levelUp', { n: S.level });
     }
-    if (S.pacing === 'karten' && U) S.reached = S.level;       // Hebel „Übertrag“ (Teil 8): Aufstieg und Schwelle fallen zusammen
+    if (S.pacing === 'karten' && (U || C.KARTEN.stufenEinzeln === false)) S.reached = S.level;       // Hebel „Übertrag“ (Teil 8): Aufstieg und Schwelle fallen zusammen
     if (U && S.pendingLevels > 0){
       const lim = xpNeed(S.level) + U.anteil * (xpNeed(S.level + 1) - xpNeed(S.level));
       if (S.xpTotal > lim){ const ex = S.xpTotal - lim; S.xpTotal = lim; S.xp = Math.max(0, S.xp - ex); S.stats.xpVerfall = (S.stats.xpVerfall || 0) + ex; }
