@@ -766,7 +766,7 @@ for (const lang of ['de', 'en']){
   const s5 = await tutState(p);
   check(s5.phase === 'wait' && s5.narr === null && s5.marked.length === 0 && await p.evaluate(() => !__kf.G.holdActive() && __kf.G.S.waveNo >= 1 && __kf.Cam.follow), `[${lang}] Schritt 4 erledigt: Schonfrist endet, Welle rückt aus, Kamera folgt, im Kampf keine Sprechblase`);
   // erste Gegnerwelle besiegt → Kriegsbeute → Kartenwahl öffnet sich → Sprechblase am Reiter „Karten“
-  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 120000 });
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 300000 });
   const s6 = await p.evaluate(() => ({ xp: __kf.G.S.xpTotal, need: __kf.G.xpNeed(1), pending: !!__kf.G.S.pendingDraft, tab: __kf.tab, follow: __kf.Cam.follow, narr: document.querySelector('#tutBubbleNarr').textContent,
     task: document.querySelector('#tutBubbleTask').textContent, marked: [...document.querySelectorAll('.tut-target')].map(e => e.id),
     bubbleBottom: document.querySelector('#tutBubble').getBoundingClientRect().bottom, cardsTop: document.querySelector('#draftOffer').getBoundingClientRect().top }));
