@@ -388,11 +388,17 @@ Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`. Berichte: `docs/bericht
 | V.2 | Einheitentexte | fertig |
 | V.3 | Reichweiten 1,6 / 2,0 | fertig |
 | V.4 | Fernkämpfer halten | fertig |
-| V.5 | Rückstau: getrennte Schwelle und Aufstieg, Arme A–D, **Arm C2 vorläufig** | offen: PO-Entscheidung |
+| V.5 | Rückstau: getrennte Schwelle und Aufstieg, Arme A–D, Arm C2 | fertig (C2 vom PO bestätigt) |
 | V.6 | Browser-Test mit Wartebedingungen | fertig (zehn Läufe grün) |
 | V.7 | Messung, Bericht | fertig |
 | W.1–W.3 | Nachbarschaftsboni der Flügel, Bot-Regeln, `?fluegel`, Anzeige | fertig |
 | W.4 | Messung, Flügelvergleich, Kalibrierung | fertig, Ziele teils verfehlt (siehe Bericht Teil 11) |
 | W.5 | Berichte, Testleitfaden, Textübersicht, Testbuild | fertig (Testbuild: https://claude.ai/artifact/HjGbypR1DtE4z6yyZiFv2i) |
 
-Offene Entscheidungen des PO: gegnerische Reichweitenobergrenze 120 oder 140; Rückstau-Arm (C2 bestätigen oder ändern); Umgang mit den verfehlten Zielen aus K11.04.
+Entscheidungen des PO (nach den Berichten): Gegner-Reichweite höchstens 140; Rückstau-Arm C2 gilt; Ziel Nachbarschaftswert auf 1,0 gesenkt. Verfehlt und akzeptiert: Siegquote Wirtschafts-Bot 80 %, 11 Wahlen (Bot ohne Kategorie).
+
+| Inkrement | Inhalt | Status |
+|---|---|---|
+| X.1 | Entscheidungen des PO einarbeitet | fertig |
+| X.2 | Tutorial erklärt das Haupthaus (Modus karten, Erklärschritt) | fertig |
+| X.3 | Testbericht `docs/berichte/test-0.9.2-kartenpfad-11.md`, Testbuild | fertig |

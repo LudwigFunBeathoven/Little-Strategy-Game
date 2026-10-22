@@ -24,6 +24,8 @@ const TutUI = (() => {
   function resolve(view){
     // Begrüßung und Abschied: Sprechblasen ohne Auftrag an der Figur, ein Klick zeigt die nächste (REQ-T2.02, T2.05)
     if (view.phase === 'greet' || view.phase === 'farewell') return { els: [], world: null, narrKey: view.textKey, taskKey: null, anchor: 'figure', clickable: true };
+    // Erklärschritt (Teil 11+, Modus karten): Sprechblase ohne Auftrag, der Rahmen liegt auf dem Platz des Haupthauses (im Reiter Bauen auch auf seinem Knopf)
+    if (view.phase === 'info') return { els: activeTab === 'build' ? [gridEls[C.HAUPTHAUS.platz].btn] : [], world: C.HAUPTHAUS.platz, narrKey: view.textKey, taskKey: null, anchor: 'figure', clickable: true };
     if (view.phase !== 'step') return null;
     const S = G.S, step = view.step, own = el => ({ els: [el], world: null, narrKey: step.narrKey, taskKey: step.taskKey, anchor: el, clickable: false });
     switch (step.target){
@@ -76,9 +78,9 @@ const TutUI = (() => {
   /* Sprechblase ohne Auftrag: nächste zeigen bzw. Begrüßung beenden (Klick oder Ablauf der Zeit) */
   function advanceBubble(byClick){
     const v = Tutorial.view();
-    if (v.phase !== 'greet' && v.phase !== 'farewell') return;
+    if (v.phase !== 'greet' && v.phase !== 'farewell' && v.phase !== 'info') return;
     if (byClick) Tutorial.noteBubbleClick();
-    if (v.phase === 'greet') Tutorial.advanceGreeting(); else Tutorial.advanceFarewell();
+    if (v.phase === 'greet') Tutorial.advanceGreeting(); else if (v.phase === 'info') Tutorial.advanceInfo(G.S.t); else Tutorial.advanceFarewell();
     requestRender();
   }
   /* Je Bild: Zeitablauf der Vorführung, Auto-Weiter der Sprechblasen, Abgang der Figur, Lage der Sprechblase */
@@ -95,7 +97,7 @@ const TutUI = (() => {
       }
     }
     const v = Tutorial.view();
-    if ((v.phase === 'greet' || v.phase === 'farewell') && !paused && !modalOpen && bubbleKey && now - shownAt >= T.greetMs) advanceBubble(false);
+    if ((v.phase === 'greet' || v.phase === 'farewell' || v.phase === 'info') && !paused && !modalOpen && bubbleKey && now - shownAt >= T.greetMs) advanceBubble(false);
     if (v.phase === 'leaving'){
       if (!leaveStart) leaveStart = now;
       if (now - leaveStart >= T.leaveMs) finish('completed');

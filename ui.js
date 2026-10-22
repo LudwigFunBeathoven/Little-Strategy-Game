@@ -650,7 +650,7 @@ function startGame(diff, opts = {}){
   TutUI.reset(); NewMarks.reset(); Disc.reset();
   G.newGame(diff, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0,
     { pacing: PACING_PARAM || undefined, druck: DRUCK_PARAM || undefined, gegnerfern: GEGNERFERN_PARAM || undefined, fluegel: FLUEGEL_PARAM || undefined, intro: storageGet(C.INTRO_SKIP_KEY) !== '1', hold: tut ? { maxS: C.TUTORIAL.holdMaxS, size: C.TUTORIAL.firstWaveSize, bounty: true } : undefined });
-  if (tut){ Tutorial.start(); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
+  if (tut){ Tutorial.start({ modus: G.S.pacing }); Cam.goTo(0); Cam.follow = false; } else { Tutorial.restore(null); Tutorial.markPlayed(); }
   resultShownFor = null;
   save();
   closeModal();

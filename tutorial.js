@@ -8,31 +8,35 @@ const KF_TUTORIAL = (() => {
 function create(steps, storage, key, scripts = {}){
   const greeting = scripts.greeting || [], farewell = scripts.farewell || [];
   const fresh = () => ({ active: false, done: {}, doneAt: {}, progress: {}, demoShown: {}, misses: {}, skippedAt: null, ended: null,
-                         greet: 0, bye: 0, greetingMs: null, bubbleClicks: 0 });
+                         greet: 0, bye: 0, greetingMs: null, bubbleClicks: 0, modus: null, info: {} });
   let st = fresh(), muted = 0;
   const subs = [];
   const notify = (type, id) => { for (const f of subs) f(type, id); };
   const store = (k, v) => { try { storage.set(k, v); } catch (e) { /* Speicher nicht verfügbar */ } };
   const load = k => { try { return storage.get(k); } catch (e) { return null; } };
 
-  const currentStep = () => st.active ? steps.find(s => !st.done[s.id]) || null : null;
+  /* Erklärschritte (info) gibt es nur im Modus, für den sie gelten (modus); sie haben kein Ereignis, sondern Sprechblasen ohne Auftrag (lines) */
+  const gilt = s => !s.modus || s.modus === st.modus;
+  const currentStep = () => st.active ? steps.find(s => !st.done[s.id] && gilt(s)) || null : null;
   const matches = (step, name, data) => step.on === name && Object.entries(step.where || {}).every(([k, v]) => data && data[k] === v);
 
   return {
     steps,
     /* Ein neues Tutorial beginnt (neue Partie). */
-    start(){ st = fresh(); st.active = true; store(key, 'started'); notify('start'); },
+    start(opts = {}){ st = fresh(); st.active = true; st.modus = opts.modus || null; store(key, 'started'); notify('start'); },
     /* Ereignis aus der Spiellogik; t = Spielzeit in Sekunden. Liefert die Kennungen der dabei erledigten Schritte. */
     event(name, data, t = 0){
       if (!st.active || muted) return [];
       const finished = [];
       for (const s of steps){
-        if (st.done[s.id] || !matches(s, name, data)) continue;
+        if (st.done[s.id] || s.info || !matches(s, name, data)) continue;
         st.progress[s.id] = (st.progress[s.id] || 0) + (s.sum ? Number(data[s.sum]) || 0 : 1);
         if (st.progress[s.id] >= s.need){ st.done[s.id] = true; st.doneAt[s.id] = +Number(t).toFixed(2); finished.push(s.id); }
       }
       // Klickt der Spieler schon auf „Fertigen“ oder erledigt er einen Schritt, endet die Begrüßung (REQ-T2.02)
       if (st.greet < greeting.length && (finished.length || (name === 'materialProduced' && data && data.source === 'click'))) st.greet = greeting.length;
+      // Erzählung wird nie nachgeholt: ein Erklärschritt, dessen Nachfolger der Spieler schon erledigt hat, entfällt
+      steps.forEach((s, i) => { if (s.info && gilt(s) && !st.done[s.id] && steps.slice(i + 1).some(x => !x.info && st.done[x.id])){ st.done[s.id] = true; st.doneAt[s.id] = +Number(t).toFixed(2); } });
       for (const id of finished) notify('done', id);
       return finished;
     },
@@ -45,6 +49,7 @@ function create(steps, storage, key, scripts = {}){
       if (st.greet < greeting.length) return { phase: 'greet', index: st.greet, textKey: greeting[st.greet] };
       const s = currentStep();
       if (s && s.silent) return { phase: 'wait', step: s, index: steps.indexOf(s) };
+      if (s && s.info){ const line = st.info[s.id] || 0; return { phase: 'info', step: s, index: steps.indexOf(s), line, textKey: s.lines[line] }; }
       if (s) return { phase: 'step', step: s, index: steps.indexOf(s) };
       if (st.bye < farewell.length) return { phase: 'farewell', index: st.bye, textKey: farewell[st.bye] };
       return { phase: 'leaving' };
@@ -53,6 +58,8 @@ function create(steps, storage, key, scripts = {}){
     advanceGreeting(){ if (st.greet < greeting.length) st.greet++; },
     endGreeting(){ st.greet = greeting.length; },
     advanceFarewell(){ if (st.bye < farewell.length) st.bye++; },
+    /* Erklärschritt: nächste Zeile zeigen; nach der letzten ist der Schritt erledigt */
+    advanceInfo(t = 0){ const s = currentStep(); if (!s || !s.info) return; const n = (st.info[s.id] || 0) + 1; st.info[s.id] = n; if (n >= s.lines.length){ st.done[s.id] = true; st.doneAt[s.id] = +Number(t).toFixed(2); notify('done', s.id); } },
     noteBubbleClick(){ st.bubbleClicks++; },
     noteGreeting(ms){ if (st.greetingMs === null) st.greetingMs = Math.round(ms); },
     /* Eine Partie ohne Tutorial hat begonnen: ab jetzt gilt es nicht mehr als erste Partie dieses Browsers (REQ-T2.01) */
@@ -93,7 +100,7 @@ function create(steps, storage, key, scripts = {}){
       st = fresh();
       if (o && typeof o === 'object'){
         for (const k of Object.keys(st)) if (k in o) st[k] = o[k];
-        for (const k of ['done', 'doneAt', 'progress', 'demoShown', 'misses']) if (!st[k] || typeof st[k] !== 'object') st[k] = {};
+        for (const k of ['done', 'doneAt', 'progress', 'demoShown', 'misses', 'info']) if (!st[k] || typeof st[k] !== 'object') st[k] = {};
       }
       notify('restore');
     },

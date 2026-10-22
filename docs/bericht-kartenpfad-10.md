@@ -1,12 +1,12 @@
 # Bericht Kartenpfad Teil 10: Nacharbeiten zu Teil 8 und 9
 
-Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-10 (Spielstand-Version 14). Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`. Rohdaten: `reports/kartenpfad10-*`. Messung: `tools/messung-v10.mjs`, Vergleich `tools/vergleich-v10.mjs`, Arme `tools/arme-v10.mjs`.
+Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-11 (Spielstand-Version 14). Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`. Rohdaten: `reports/kartenpfad10-*`. Messung: `tools/messung-v10.mjs`, Vergleich `tools/vergleich-v10.mjs`, Arme `tools/arme-v10.mjs`.
 
 ## Ergebnis
 
 1. Die offenen Platzhalter sind behoben, die Einheitentexte stehen, die Reichweiten sind umgestellt, Fernkämpfer halten aus maximaler Reichweite. Alles ist durch Tests gesichert.
 2. Das Fernkampfverhalten senkt die Patt-Quote (Bot ohne Kategorie, alle Felder: 2,9 % → 0,0 %), hebt die Siegquote des Verteidigungs-Bots (88 % → 98 %) und erhöht den Mauerverlust (Militär-Bot 48 → 293). Die Abbruchregel greift nicht.
-3. **Der Rückstau ist nicht vollständig gelöst.** Kein Arm erfüllt alle Kriterien (auch die Kurve von Teil 9 nicht). Gewählt ist **vorläufig Arm C2** (geringster Rückstau, Siegquoten erhalten): 87 % der Partien mit höchstens einer offenen Wahl, größter Rückstau 3. Verfehlt: 11 statt 12–16 Wahlen (Bot ohne Kategorie) und die Reihenfolge der Profile. Der PO entscheidet.
+3. **Der Rückstau ist nicht vollständig gelöst.** Kein Arm erfüllt alle Kriterien (auch die Kurve von Teil 9 nicht). **Der PO hat Arm C2 bestätigt** (geringster Rückstau): 87 % der Partien mit höchstens einer offenen Wahl, größter Rückstau 3. Verfehlt und damit akzeptiert: 11 statt 12–16 Wahlen (Bot ohne Kategorie), die Reihenfolge der Profile und die Siegquote des Wirtschafts-Bots (80 %).
 4. Zwei Befunde zur Sache, die der Auftrag nicht erwartet hat (unten): Stärke und Phase hingen an der Stufe; die gegnerische Reichweite liegt über der unausgebauten Turmreichweite.
 
 ## V.0 Diagnose
@@ -31,7 +31,7 @@ Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-10 (Spielstand-Version 14). An
 ## Befunde, die der Auftrag nicht erwartete
 
 1. **Die Stärke der Einheiten hing an der Stufe** (`UNIT_STRENGTH_PER_LEVEL`, `phase()`). Mit getrennten Aufstiegen sank die Siegquote des Wirtschafts-Bots von 88 % auf 32–66 %; ebenso brach sie bei jeder steileren Kostenkurve ein. Behoben: Stärke und Phase folgen einer Referenzkurve über die EP, unabhängig von Kostenkurve, Mindestabstand und Wahlen. Der Rückstau war damit bisher ein verdeckter Stärkegewinn.
-2. **Gegnerische Fernkämpfer außerhalb eines unausgebauten Turms.** K10.03 verlangt die Grundreichweite der eigenen Türme (120) als Obergrenze; umgesetzt ist die PO-Entscheidung aus Teil 8 (Turm mit einer Reichweitenstufe, 140). Gegnerische Bogen- und Armbrustschützen (137/140) halten damit außerhalb der Reichweite eines unausgebauten Turms. Der Schalter `KARTEN.gegnerReichweiteMax` erlaubt 120. **Entscheidung des PO nötig** (siehe offene Punkte).
+2. **Gegnerische Fernkämpfer außerhalb eines unausgebauten Turms.** K10.03 nennt die Grundreichweite der eigenen Türme (120) als Obergrenze; umgesetzt ist die PO-Entscheidung aus Teil 8 (Turm mit einer Reichweitenstufe, 140), **vom PO nach diesem Bericht bestätigt**. Gegnerische Bogen- und Armbrustschützen (137/140) halten damit außerhalb der Reichweite eines unausgebauten Turms. Der Schalter `KARTEN.gegnerReichweiteMax` erlaubt 120.
 
 ## K10.04: Siegquote, Patt, Mauerverlust, Dauer
 
@@ -70,14 +70,14 @@ Vollständige Tabellen aller Arme, auch der verworfenen, in `reports/kartenpfad1
 | A5 | wachstum 1,30 | 54 % | 4 | 12 ✓ | 12:50 ✗ | ✗ | 0,43 ✓ | 86 % |
 | B4 | dynamisch (ref 70 s, höchstens ×12) | 20 % | 15 | 13 ✓ | 13:04 ✓ | ✗ | 0,36 ✓ | 96 % |
 | C1 | A5 mit 40 s | 64 % | 3 | 12 ✓ | 13:13 ✓ | ✗ | 0,49 ✓ | 84 % |
-| **C2** | **A4 mit 40 s (gewählt, vorläufig)** | **87 %** | **3** | **11 ✗** | **13:28 ✓** | **✗** | **0,52 ✓** | **80 %** |
+| **C2** | **A4 mit 40 s (gewählt, vom PO bestätigt)** | **87 %** | **3** | **11 ✗** | **13:28 ✓** | **✗** | **0,52 ✓** | **80 %** |
 | D1 | B4 mit 40 s | 32 % | 10 | 13 ✓ | 12:46 ✗ | ✗ | 0,43 ✓ | 86 % |
 
 Weitere Arme der ersten Runde (A1 1,10; A2 1,15; B1 ref 90 s ×2; B2 ref 60 s ×3; B3 ref 70 s ×6) stehen in der Datei; sie liegen bei 2–14 % Rückstau-Erfüllung. In der ersten Runde war die Stärke noch an die Kostenkurve gekoppelt (Befund 1), die Siegquoten sind dort nicht vergleichbar.
 
-**Bewertung.** Kein Arm erfüllt alle Kriterien; die Abbruchregel gilt: gewählt wird der Arm mit dem geringsten Rückstau, vorläufig (C2). Der dynamische Anstieg (B, D) bleibt wirkungslos, solange der EP-Zufluss je Partie um mehr als das Zehnfache schwankt (Abschussserien bei haltenden Fernkämpfern); die Kosten der einen nächsten Stufe zu steigern genügt nicht. Das Kriterium „aktiv > durchschnitt > gelegentlich“ scheitert in allen Armen einschließlich der Ausgangskurve: die Profile des Bots unterscheiden sich im Wahltakt kaum (0,76–0,80 je Minute in C2). Das ist eine Eigenschaft der Bots und des Kriteriums (Wahlen je Minute der Partie, nicht je Minute Spielzeit mit Zufluss), nicht der Kurve. Rückstau in Nicks Partie: [Mensch] offen.
+**Bewertung.** Kein Arm erfüllt alle Kriterien; nach der Abbruchregel wurde der Arm mit dem geringsten Rückstau gewählt (C2), der PO hat ihn nach dem Bericht bestätigt. Der dynamische Anstieg (B, D) bleibt wirkungslos, solange der EP-Zufluss je Partie um mehr als das Zehnfache schwankt (Abschussserien bei haltenden Fernkämpfern); die Kosten der einen nächsten Stufe zu steigern genügt nicht. Das Kriterium „aktiv > durchschnitt > gelegentlich“ scheitert in allen Armen einschließlich der Ausgangskurve: die Profile des Bots unterscheiden sich im Wahltakt kaum (0,76–0,80 je Minute in C2). Das ist eine Eigenschaft der Bots und des Kriteriums (Wahlen je Minute der Partie, nicht je Minute Spielzeit mit Zufluss), nicht der Kurve. Rückstau in Nicks Partie: [Mensch] offen.
 
-Mögliche nächste Schritte, nach Entscheidung des PO: (a) Kurve zwischen A5 und A4 (wachstum 1,32) mit 40 s, um 12 Wahlen zu treffen; (b) den EP-Zufluss aus Abschüssen deckeln; (c) das Profil-Kriterium am Spielverhalten statt am Bot messen (Spieltest).
+Mögliche nächste Schritte, falls der Spieltest zu wenige Karten oder einen spürbaren Uhrwerk-Takt zeigt: (a) Kurve zwischen A5 und A4 (wachstum 1,32) mit 40 s, um 12 Wahlen zu treffen; (b) den EP-Zufluss aus Abschüssen deckeln; (c) das Profil-Kriterium am Spielverhalten statt am Bot messen (Spieltest).
 
 ## Abnahmetabelle
 
@@ -85,9 +85,9 @@ Mögliche nächste Schritte, nach Entscheidung des PO: (a) Kurve zwischen A5 und
 |---|---|---|
 | K10.01 | Darstellungstest, Bildschirmfotos | erfüllt (`tests/browser-v10.mjs`, `docs/bilder/kartenpfad10-*.png`); [Mensch] offen |
 | K10.02 | Test je Einheit, Budget, Suchtest, Tabelle | erfüllt (`tests/v10.test.mjs`, `reports/kartenpfad10-einheitentabelle.md`); [Mensch] offen |
-| K10.03 | Tabelle, Reihenfolge, Gegnerobergrenze | erfüllt mit der Abweichung 140 statt 120 (Befund 2); [Mensch] offen |
+| K10.03 | Tabelle, Reihenfolge, Gegnerobergrenze | erfüllt; Gegnerobergrenze 140 statt 120 (Befund 2, vom PO bestätigt); [Mensch] offen |
 | K10.04 | Unit-Test (5 %), Simulation, Patt höchstens +1 Prozentpunkt | erfüllt (Patt sinkt); Bildfolge: nicht erstellt (siehe Nicht getestet); [Mensch] offen |
-| K10.05 | Rückstau, Wahlen, Profile, CV, Tabelle, Unit-Test | **nicht vollständig erfüllt**; Tabelle und Unit-Test erfüllt; Arm C2 vorläufig |
+| K10.05 | Rückstau, Wahlen, Profile, CV, Tabelle, Unit-Test | **nicht vollständig erfüllt**; Tabelle und Unit-Test erfüllt; Arm C2 vom PO bestätigt |
 | K10.06 | zehn Läufe grün je Sprache | erfüllt: zehn aufeinanderfolgende Läufe von `tests/browser-check.mjs` (je Lauf beide Sprachen, 406 Prüfpunkte, 0 Fehler) auf dem endgültigen Stand; zwei frühere Läufe unter Last (parallele Simulation) scheiterten an einer zu knappen Obergrenze der Wartebedingung (120 s → 300 s) |
 | K10.07 | Golden-Test, Unit-Tests, Browser-Prüfpunkte | erfüllt (`npm run test:kurz` grün, alle Browser-Prüfungen grün) |
 
@@ -95,7 +95,6 @@ Mögliche nächste Schritte, nach Entscheidung des PO: (a) Kurve zwischen A5 und
 
 - **Bildfolge einer Lane mit haltenden Fernkämpfern** (K10.04): nicht erstellt; die Haltung ist in den Unit-Tests über Abstand und Position belegt.
 - **Weitere Browser-Prüfungen** (`browser-k2`, `-k2-standard`, `-q6`, `-n5`, `-t8`, `-u9`, `-r7`, `-v10`, `-w11`): grün; `browser-k2` K2.02 und die Kartenseite mussten an die getrennte Freischaltung angepasst werden (der zweite Aufstieg kommt erst mit der ersten Wahl).
-- **Entscheidung 1 (PO): Obergrenze der gegnerischen Reichweite** 120 (Grundreichweite, wie K10.03 formuliert) oder 140 (Turm mit einer Stufe, Entscheidung Teil 8). Schalter `KARTEN.gegnerReichweiteMax`.
-- **Entscheidung 2 (PO): Rückstau.** C2 bestätigen, nachstellen (a) oder (b), oder das Kriterium am Spieltest messen.
+- **Entscheidungen des PO nach dem Bericht:** (1) Obergrenze der gegnerischen Reichweite bleibt **140** (Turm mit einer Reichweitenstufe, wie in Teil 8); die Formulierung „Grundreichweite“ in K10.03 gilt damit nicht. Schalter `KARTEN.gegnerReichweiteMax` erlaubt weiter 120. (2) **C2** gilt (Wachstum 1,35, Mindestabstand 40 s). Ob es zu wenige Karten sind, zeigt der Spieltest; Alternative C1.
 - **Katapult 1,8 und Fernkampfverhalten auch für den Gegner:** wie vorgeschlagen umgesetzt.
 - **Spielstand-Version 14** (neue Felder `reached`, `lvlRef`, `pfad.mult`): ältere Spielstände gehen verloren.

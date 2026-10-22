@@ -1,6 +1,6 @@
 # Klammerfront – alle Texte des Spiels
 
-Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-10. Quelle: `i18n/de.js` und `i18n/en.js` (1049 Schlüssel, in beiden Sprachen identisch).
+Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-11. Quelle: `i18n/de.js` und `i18n/en.js` (1051 Schlüssel, in beiden Sprachen identisch).
 
 Lesehilfe:
 - **Schlüssel** ist der Name im Code. Platzhalter in geschweiften Klammern (`{n}`, `{name}`) füllt das Spiel zur Laufzeit.
@@ -25,7 +25,7 @@ Lesehilfe:
 14. [Erklärzeilen der Knöpfe](#erklärzeilen-der-knöpfe) (60)
 15. [Tooltips](#tooltips) (125)
 16. [Hinweise](#hinweise) (17)
-17. [Tutorial](#tutorial) (21)
+17. [Tutorial](#tutorial) (23)
 18. [Ereignisprotokoll](#ereignisprotokoll) (27)
 
 ## Allgemein und Zahlen
@@ -1126,6 +1126,8 @@ Lesehilfe:
 | `tut.fertigen.task` |  | 20 | Klicke auf Fertigen. | Click Produce. |
 | `tut.greet1` |  | 54 | Willkommen, Statthalter. Ich bin dein Quartiermeister. | Welcome, governor. I am your quartermaster. |
 | `tut.greet2` |  | 63 | Aus dem Osten nähern sich Wellen. Unser Tor liegt in ihrem Weg. | Waves are approaching from the east. Our gate lies in their path. |
+| `tut.haus1` |  | 76 | Das Haupthaus in der Mitte bestimmt, wie viele Manufakturen du bauen darfst. | The main hall in the middle sets how many manufactories you may build. |
+| `tut.haus2` |  | 83 | Karten bauen es aus. Jede Stufe bringt einen Flügel, der die Plätze daneben stärkt. | Cards expand it. Each tier brings a wing that strengthens the plots beside it. |
 | `tut.karte.narr` |  | 63 | Die erste Welle ist bestanden. Aus jeder Lage lernen wir etwas. | The first wave is behind us. We learn something from every situation. |
 | `tut.karte.task` |  | 43 | Wähle eine Karte. Sie verändert dein Reich. | Choose a card. It will change your realm. |
 | `tut.more` |  | 25 | Klicken, um weiterzulesen | Click to read on |

@@ -543,6 +543,8 @@ KF_I18N.de = {
   'tut.greet2': 'Aus dem Osten nähern sich Wellen. Unser Tor liegt in ihrem Weg.',
   'tut.bye1': 'Mauer, Türme, Schmiede, Universität – vieles wartet darauf, entdeckt zu werden.',
   'tut.bye1.karten': 'Mauer, Türme, Schmiede, Universität – alles steht bereit. Deine Karten weisen den Weg.',
+  'tut.haus1': 'Das Haupthaus in der Mitte bestimmt, wie viele Manufakturen du bauen darfst.',
+  'tut.haus2': 'Karten bauen es aus. Jede Stufe bringt einen Flügel, der die Plätze daneben stärkt.',
   'tut.bye2': 'Was neu ist, ist markiert. Bewahre das Tor, Statthalter.',
   'tut.xpBounty': '+{n} Erfahrung',
   'tut.more': 'Klicken, um weiterzulesen',

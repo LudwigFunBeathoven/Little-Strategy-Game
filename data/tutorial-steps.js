@@ -9,6 +9,8 @@
 const KF_TUTORIAL_STEPS = [
   { id: 'fertigen',    on: 'materialProduced', where: { source: 'click' }, sum: 'n', need: 10, target: 'click', demo: 'click', narrKey: 'tut.fertigen.narr',    taskKey: 'tut.fertigen.task' },
   { id: 'bauen',       on: 'buildingBuilt',                                           need: 1,  target: 'plot',  demo: 'plot',  narrKey: 'tut.bauen.narr',       taskKey: 'tut.bauen.task' },
+  /* Erklärschritt (Modus karten): das Haupthaus in der Mitte; zwei Sprechblasen ohne Auftrag, der Rahmen liegt auf dem Platz des Haupthauses. Er zählt nicht zu den fünf Dingen und entfällt, wenn der Spieler schon weiter ist. */
+  { id: 'haus',        info: true, modus: 'karten', lines: ['tut.haus1', 'tut.haus2'], target: 'haus' },
   { id: 'rekrutieren', on: 'unitBought',                                              need: 3,  target: 'units',                narrKey: 'tut.rekrutieren.narr', taskKey: 'tut.rekrutieren.task' },
   { id: 'ausruecken',  on: 'waveDeparted',     where: { side: 'p' },                  need: 1,  target: 'waves',                narrKey: 'tut.ausruecken.narr',  taskKey: 'tut.ausruecken.task' },
   { id: 'schlacht',    on: 'enemyWaveDefeated',                                       need: 1,  target: null,    silent: true },

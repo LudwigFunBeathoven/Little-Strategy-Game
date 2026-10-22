@@ -4,7 +4,7 @@
 - Browser-Spiel zwischen *Universal Paperclips* (Clicker/Idle) und *Age of War* (Lane-Kampf).
 - Spielziel: die gegnerische Basis zerstören. Niederlage: das eigene Tor fällt.
 - Kernschleife: klicken und Fabriken im 3×3-Raster bauen → Material → Einheiten in Wellen über drei Lanes schicken → Abschüsse bringen EP → Stufenaufstieg bietet Spezialkarten (Kartenpfad: Doktrinen, Weiterentwicklungen, Haupthaus).
-- Stand: v0.9.2-kartenpfad-10, Branch `exp/kartenpfad`. Änderungen: `CHANGELOG.md`; Branch-Stand: `docs/STAND-kartenpfad.md`.
+- Stand: v0.9.2-kartenpfad-11, Branch `exp/kartenpfad`. Änderungen: `CHANGELOG.md`; Branch-Stand: `docs/STAND-kartenpfad.md`.
 
 ## Der Nutzer
 - Nick ist Product Owner, kein Entwickler. Änderungen in Klartext erklären, Fachbegriffe kurz übersetzen.
@@ -84,5 +84,5 @@ Ein Entwicklungsgang ist ein Auftrag des PO an Claude Code (meist ein Anforderun
 - **Armee** (`S.forms`): eine Gruppe je Welle über alle Lanes, älteste = Armee. Zustände Marsch → Kampf → Sammeln. Gegen Pendeln (`tests/pendel.test.mjs`): Mindestverweildauer, feste Plätze, Ziel-Lane gebunden. Gekämpft wird je Einheit (`resolveCombat`).
 - **Tutorial:** `core.js` kennt es nur über Ereignisse (`G.on`) und die Schonfrist (`hold`); Schritte nur in `data/tutorial-steps.js`; `startGame` nur vom Startdialog und den URL-Parametern.
 - **Kartenbühne:** Wirkungszeile `kp.eff.<id>` (Pflicht je Karte), bei Nachteil `kp.drawback.<id>`; Klick in der Pause erzeugt nichts.
-- **Modus karten** (`PACING_MODUS`, `S.pacing`): Freischaltung über Karten und Forschungen (`schaltetFrei` in `data/kartenpfad.js`, nur dort ergänzen); Wahl fällig bei EP-Schwelle (`KARTEN.schwellen`), Mindestabstand 45 s; Partiedauer nur über `KARTEN.basisFaktor`; Haupthaus (Fabrikgrenze 3/4/5, Flügel); Weiterentwicklungen höchstens zwei je Gebäude; Doktrinen höchstens zwei je Partie mit bindender Einschränkung.
+- **Modus karten** (`PACING_MODUS`, `S.pacing`): Freischaltung über Karten und Forschungen (`schaltetFrei` in `data/kartenpfad.js`, nur dort ergänzen); Wahl fällig bei EP-Schwelle (`KARTEN.schwellen`), Mindestabstand 40 s; Partiedauer nur über `KARTEN.basisFaktor`; Haupthaus (Fabrikgrenze 3/4/5, Flügel); Weiterentwicklungen höchstens zwei je Gebäude; Doktrinen höchstens zwei je Partie mit bindender Einschränkung.
 - **Aus (Hebel vorhanden):** `KARTEN.uebertrag` und `KARTEN.budget.abnahme` (schwächen die Bots). Gegner-Reichweite höchstens Turm-Grundreichweite + eine Stufe (`baseRange`).

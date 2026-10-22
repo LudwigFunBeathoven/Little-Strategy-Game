@@ -1,6 +1,6 @@
 # Änderungen
 
-## v0.9.2-kartenpfad-10 – Branch `exp/kartenpfad`, Teil 10 und 11 (Oktober 2026; nicht auf `main` oder `MVP`)
+## v0.9.2-kartenpfad-11 – Branch `exp/kartenpfad`, Teil 10 und 11, Tutorial-Inkrement (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`, Berichte `docs/bericht-kartenpfad-10.md` und `-11.md`, Testleitfaden `docs/testleitfaden-kartenpfad-11.md`. **Spielstand-Version 14** (ältere Stände gehen verloren).
 - **Technologiekarten** zeigen den Wert der Forschung (Wasserrahmen +30 %, Dampfkraft +40 %) statt `{e1}`; einstufige Karten ohne Stufenpunkt; die Leiste unter der Bühne zeigt Wirkung und Nachteil getrennt.
 - **Einheitentexte:** Jeder Einheitentooltip beschreibt die Einheit (zwei Sätze), dazu „Taste“ und „Söldner“ in der Tabelle; die Ausrückregel steht im Reiter Armee.
@@ -8,6 +8,8 @@ Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`, Berichte `docs/bericht-
 - **Fernkämpfer halten** (eigene und gegnerische), sobald ein Ziel in Reichweite ist, und rücken nach dem Fall des Ziels vor.
 - **Rückstau:** Schwelle und Aufstieg sind getrennt (ein EP-Schub löst höchstens einen Aufstieg aus); vorläufig steilere Kosten (Wachstum 1,35, Mindestabstand 40 s, Arm C2); Stärke und Phase der Einheiten folgen einer festen Referenzkurve.
 - **Flügel mit Nachbarschaftsbonus:** Schatzkammer +10 % Ertrag, Bibliothek −5 % Forschungszeit, Zeughaus +10 % Lebenspunkte neuer Einheiten, Kanzlei −15 % Kosten und Dauer der Aufwertung; je Flügel höchstens zwei Gebäude auf den an das Haupthaus angrenzenden Plätzen; Hervorhebung beim Überfahren des Haupthauses. Schalter `?fluegel=<id>` legt den ersten Flügel fest.
+- **Tutorial (Modus karten):** erklärt nach der ersten Manufaktur das Haupthaus in der Mitte (zwei Sprechblasen ohne Auftrag, Rahmen auf dem Platz des Haupthauses); entfällt, wenn der Spieler schon weiter ist.
+- **Entscheidungen des PO:** Gegner-Reichweite höchstens 140; Rückstau-Arm C2 gilt (Wachstum 1,35, Abstand 40 s); Ziel Nachbarschaftswert gesenkt auf 1,0.
 - **Werkzeuge:** `tools/messung-v10.mjs`, `vergleich-v10.mjs`, `arme-v10.mjs`, `fluegelvergleich-v11.mjs`, `reichweiten-v10.mjs`, `einheitentabelle-v10.mjs`; Browser-Prüfungen `tests/browser-v10.mjs`, `tests/browser-w11.mjs`.
 
 ## v0.9.2-kartenpfad-8 – Branch `exp/kartenpfad`, Teil 8 und 9 (Oktober 2026; nicht auf `main` oder `MVP`)

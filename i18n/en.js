@@ -543,6 +543,8 @@ KF_I18N.en = {
   'tut.greet2': 'Waves are approaching from the east. Our gate lies in their path.',
   'tut.bye1': 'Walls, towers, smithy, university – much is waiting to be discovered.',
   'tut.bye1.karten': 'Walls, towers, smithy, university – everything is ready. Your cards show the way.',
+  'tut.haus1': 'The main hall in the middle sets how many manufactories you may build.',
+  'tut.haus2': 'Cards expand it. Each tier brings a wing that strengthens the plots beside it.',
   'tut.bye2': 'Whatever is new is marked. Look after the gate, governor.',
   'tut.xpBounty': '+{n} experience',
   'tut.more': 'Click to read on',

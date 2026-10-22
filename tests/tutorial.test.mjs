@@ -24,8 +24,8 @@ const click = (T, n = 10, t = 1) => { for (let i = 0; i < n; i++) T.event('mater
 
 test('Fünf Dinge: Klicken, Fabrik, Armee, Welle, Karte; dazwischen der Kampf ohne Sprechblase', () => {
   const { T, steps } = started();
-  assert.deepEqual([...steps.map(s => s.id)], ['fertigen', 'bauen', 'rekrutieren', 'ausruecken', 'schlacht', 'karte']);
-  assert.equal(steps.filter(s => !s.silent).length, 5, 'höchstens fünf Dinge (Grundsatz 5)');
+  assert.deepEqual([...steps.map(s => s.id)], ['fertigen', 'bauen', 'haus', 'rekrutieren', 'ausruecken', 'schlacht', 'karte']);
+  assert.equal(steps.filter(s => !s.silent && !s.info).length, 5, 'höchstens fünf Dinge (Grundsatz 5); der Erklärschritt „haus“ zählt nicht dazu');
   assert.equal(T.view().step.id, 'fertigen');
   click(T, 9); assert.equal(T.view().step.id, 'fertigen', '9 Material genügen nicht');
   click(T, 1, 12); assert.equal(T.view().step.id, 'bauen');
@@ -182,6 +182,11 @@ test('Texte: Erzählung höchstens 90, Auftrag höchstens 30 Zeichen, Begrüßun
   const events = ['materialProduced', 'buildingBuilt', 'unitBought', 'waveDeparted', 'enemyWaveDefeated', 'cardChosen'];
   assert.equal(new Set(steps.map(s => s.id)).size, steps.length, 'Kennungen eindeutig');
   for (const s of steps){
+    if (s.info){
+      assert.equal(s.modus, 'karten', `${s.id}: Erklärschritt nur im Modus karten`); assert.ok(s.lines.length >= 1 && s.lines.length <= 2); assert.equal(s.target, 'haus');
+      for (const l of ['de', 'en']) for (const k of s.lines){ assert.ok(I[l][k], `${k} in ${l}`); assert.ok(I[l][k].length <= 90, `${k} (${l}) hat ${I[l][k].length} Zeichen`); }
+      continue;
+    }
     assert.ok(events.includes(s.on), `${s.id}: Ereignis ${s.on}`);
     assert.ok(s.need > 0, `${s.id}: Schwellenwert`);
     assert.ok(['click', 'plot', 'units', 'waves', 'cards', null].includes(s.target), `${s.id}: Ziel`);
@@ -204,4 +209,34 @@ test('Schritt 3 nennt die Einheit wie das Spiel (Läufer / Runner)', () => {
   assert.match(I.en['tut.rekrutieren.task'].toLowerCase(), new RegExp(I.en['unit.laeufer.name'].toLowerCase()));
   assert.match(I.de['tut.fertigen.task'], new RegExp(I.de['btn.click']));
   assert.match(I.en['tut.fertigen.task'], new RegExp(I.en['btn.click']));
+});
+
+/* ---------- Erklärschritt „haus“ (Modus karten) ---------- */
+const kartenTut = () => { const x = tut(); x.T.start({ modus: 'karten' }); x.T.endGreeting(); return x; };
+test('Haus: Im Modus karten erklärt das Tutorial nach der ersten Manufaktur das Haupthaus (zwei Sprechblasen ohne Auftrag), danach folgt der Kauf der Einheiten', () => {
+  const { T } = kartenTut();
+  click(T); T.event('buildingBuilt', { type: 'fabrik', slot: 0 }, 20);
+  let v = T.view(); assert.equal(v.phase, 'info'); assert.equal(v.step.id, 'haus'); assert.equal(v.textKey, 'tut.haus1'); assert.equal(v.line, 0);
+  T.advanceInfo(21); v = T.view(); assert.equal(v.phase, 'info'); assert.equal(v.textKey, 'tut.haus2');
+  T.advanceInfo(22); v = T.view(); assert.equal(v.phase, 'step'); assert.equal(v.step.id, 'rekrutieren');
+  assert.equal(T.isDone('haus'), true);
+});
+test('Haus: Ist der Spieler schon weiter (Einheiten gekauft), entfällt die Erklärung; sie wird nie nachgeholt', () => {
+  const { T } = kartenTut();
+  click(T); T.event('buildingBuilt', {}, 20);
+  for (let i = 0; i < 3; i++) T.event('unitBought', {}, 21);          // vor der Erklärung gekauft
+  assert.equal(T.isDone('haus'), true); assert.equal(T.view().step.id, 'ausruecken');
+});
+test('Haus: Im Standardmodus (und ohne Modus) gibt es den Erklärschritt nicht', () => {
+  for (const modus of ['standard', null]){
+    const x = tut(); x.T.start({ modus }); x.T.endGreeting();
+    click(x.T); x.T.event('buildingBuilt', {}, 20);
+    assert.equal(x.T.view().step.id, 'rekrutieren');
+  }
+});
+test('Haus: Der Stand des Erklärschritts übersteht Speichern und Laden', () => {
+  const { T } = kartenTut();
+  click(T); T.event('buildingBuilt', {}, 20); T.advanceInfo(21);
+  const snap = T.snapshot(), y = tut(); y.T.restore(JSON.parse(JSON.stringify(snap)));
+  assert.equal(y.T.view().textKey, 'tut.haus2');
 });

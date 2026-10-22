@@ -8,6 +8,7 @@ Zweck: Spieltest mit Menschen nach Teil 10 und 11. Teil 7 bis 9 wie in `docs/tes
    - **Einheitentexte:** Jeder Einheitentooltip beschreibt die Einheit (was sie ist, Stärke und Schwäche). Die Ausrückregel steht im Tooltip des Reiters Armee.
    - **Reichweiten:** Werfer 105, Bogenschütze 137, Armbrustschütze 168, Katapult 189, Geschütz 210. Gegner reichen höchstens 140.
    - **Fernkämpfer halten:** Sobald ein Ziel in Reichweite ist, bleiben Fernkämpfer (eigene und gegnerische) stehen und feuern von dort; die Nahkämpfer laufen weiter.
+   - **Tutorial erklärt das Haupthaus** (nur im Modus karten, bei aktivem Tutorial, `?tutorial=1`): nach der ersten Manufaktur zwei Sprechblasen, der Rahmen liegt auf dem Haupthaus.
    - **Flügel mit Nachbarschaftsbonus:** Schatzkammer (+10 % Ertrag je angrenzender Manufaktur), Bibliothek (−5 % Forschungszeit je angrenzender Manufaktur), Zeughaus (+10 % Lebenspunkte neuer Einheiten je angrenzender Kaserne), Kanzlei (−15 % Kosten und Dauer der Aufwertung angrenzender Gebäude); je Flügel höchstens zwei Gebäude. Das Haupthaus hervorheben (überfahren oder auswählen) zeigt die begünstigten Plätze.
 2. Schalter: `?druck=hoch`, `?pacing=standard`, `?gegnerfern=aus`, **neu** `?fluegel=<schatzkammer|bibliothek|zeughaus|kanzlei>` (legt den ersten Flügel fest). Keine Parameter `?lang=`, `?difficulty=`, `?tutorial=` anhängen.
 3. Privates Fenster, mindestens 1280×720; eine Person zusätzlich auf einem Telefon (375 px Breite).
@@ -39,6 +40,9 @@ Zweck: Spieltest mit Menschen nach Teil 10 und 11. Teil 7 bis 9 wie in `docs/tes
 7. Hast du gesehen, welche Plätze ein Flügel stärkt, ohne dass es erklärt wurde? Wo?
 8. Hast du eine Manufaktur oder Kaserne gezielt neben das Haupthaus gebaut? Wolltest du es, hast du es gemerkt, war es sinnvoll?
 9. Welchen Flügel hast du gewählt und warum? Welcher war nie interessant?
+
+**Tutorial**
+12. Hast du verstanden, wozu das Haupthaus in der Mitte da ist? War die Erklärung zu früh, zu lang oder passend? (Nur Personen mit Tutorial.)
 
 **Lesbarkeit**
 10. [Telefon, 375 px] Ist die Karte lesbar? Wird etwas abgeschnitten? (Bildschirmfoto.)
