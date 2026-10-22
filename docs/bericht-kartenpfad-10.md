@@ -88,7 +88,7 @@ Mögliche nächste Schritte, falls der Spieltest zu wenige Karten oder einen sp�
 | K10.03 | Tabelle, Reihenfolge, Gegnerobergrenze | erfüllt; Gegnerobergrenze 140 statt 120 (Befund 2, vom PO bestätigt); [Mensch] offen |
 | K10.04 | Unit-Test (5 %), Simulation, Patt höchstens +1 Prozentpunkt | erfüllt (Patt sinkt); Bildfolge: nicht erstellt (siehe Nicht getestet); [Mensch] offen |
 | K10.05 | Rückstau, Wahlen, Profile, CV, Tabelle, Unit-Test | **nicht vollständig erfüllt**; Tabelle und Unit-Test erfüllt; Arm C2 vom PO bestätigt |
-| K10.06 | zehn Läufe grün je Sprache | erfüllt: zehn aufeinanderfolgende Läufe von `tests/browser-check.mjs` (je Lauf beide Sprachen, 406 Prüfpunkte, 0 Fehler) auf dem endgültigen Stand; zwei frühere Läufe unter Last (parallele Simulation) scheiterten an einer zu knappen Obergrenze der Wartebedingung (120 s → 300 s) |
+| K10.06 | zehn Läufe grün je Sprache | erfüllt: zehn aufeinanderfolgende Läufe von `tests/browser-check.mjs` (je Lauf beide Sprachen, 406 Prüfpunkte, 0 Fehler) auf dem endgültigen Stand; zwei frühere Läufe unter Last (parallele Simulation) scheiterten an einer zu knappen Obergrenze der Wartebedingung (120 s → 300 s); eine weitere Zeitüberschreitung trat auf, wenn die erste Tutorial-Welle zufällig verloren ging (Test schickt jetzt Nachschub). Endstand `b1143ca`: zehn Läufe nacheinander, je 406 Prüfpunkte, 0 Fehler |
 | K10.07 | Golden-Test, Unit-Tests, Browser-Prüfpunkte | erfüllt (`npm run test:kurz` grün, alle Browser-Prüfungen grün) |
 
 ## Nicht getestet, Abweichungen, offene Punkte
