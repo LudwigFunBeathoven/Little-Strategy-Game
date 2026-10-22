@@ -1,6 +1,8 @@
 # Testbericht v0.9.2-kartenpfad-11
 
-Branch `exp/kartenpfad` · Commit siehe unten · Anforderungen `docs/anforderungen-kartenpfad-10-11.md`, dazu das Tutorial-Inkrement X.2 · Ausführlich: `docs/bericht-kartenpfad-10.md`, `-11.md`.
+Branch `exp/kartenpfad` · Code-Stand `b1143ca` · Anforderungen `docs/anforderungen-kartenpfad-10-11.md`, dazu das Tutorial-Inkrement X.2 · Ausführlich: `docs/bericht-kartenpfad-10.md`, `-11.md`.
+
+Spielbarer Testbuild (Protokoll an, Modus karten): https://claude.ai/artifact/HjGbypR1DtE4z6yyZiFv2i (Version 3, privat).
 
 ## Umgesetzt
 - **K10.01** Technologiekarten zeigen den Wert der Forschung (Wasserrahmen +30 %, Dampfkraft +40 %); keine offenen `{…}` auf Karten und in Tooltips.
