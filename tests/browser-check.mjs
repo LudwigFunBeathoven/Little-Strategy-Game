@@ -766,7 +766,13 @@ for (const lang of ['de', 'en']){
   const s5 = await tutState(p);
   check(s5.phase === 'wait' && s5.narr === null && s5.marked.length === 0 && await p.evaluate(() => !__kf.G.holdActive() && __kf.G.S.waveNo >= 1 && __kf.Cam.follow), `[${lang}] Schritt 4 erledigt: Schonfrist endet, Welle rückt aus, Kamera folgt, im Kampf keine Sprechblase`);
   // erste Gegnerwelle besiegt → Kriegsbeute → Kartenwahl öffnet sich → Sprechblase am Reiter „Karten“
-  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 300000 });
+  // Gewinnt die erste Welle (drei Läufer gegen zwei) einmal nicht, hängt das Tutorial bis zum Sieg; der Test hilft dann mit Nachschub, statt zu warten (Zufall der Partie, REQ-K10.06)
+  for (let i = 0; i < 60; i++){
+    const ok = await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 5000 }).then(() => true).catch(() => false);
+    if (ok) break;
+    await p.evaluate(() => { const G = __kf.G; G.S.material = Math.max(G.S.material, 500); for (let k = 0; k < 3; k++) G.spawn('laeufer'); });
+  }
+  await p.waitForFunction(() => __kf.Tutorial.view().step && __kf.Tutorial.view().step.id === 'karte' && !document.querySelector('#tutBubble').hidden, null, { timeout: 60000 });
   const s6 = await p.evaluate(() => ({ xp: __kf.G.S.xpTotal, need: __kf.G.xpNeed(1), pending: !!__kf.G.S.pendingDraft, tab: __kf.tab, follow: __kf.Cam.follow, narr: document.querySelector('#tutBubbleNarr').textContent,
     task: document.querySelector('#tutBubbleTask').textContent, marked: [...document.querySelectorAll('.tut-target')].map(e => e.id),
     bubbleBottom: document.querySelector('#tutBubble').getBoundingClientRect().bottom, cardsTop: document.querySelector('#draftOffer').getBoundingClientRect().top }));
