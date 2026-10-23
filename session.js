@@ -65,6 +65,8 @@ const Session = (() => {
       P.haupthaus = (S.stats.haus || []).slice(); P.fluegel = (S.stats.fluegel || []).slice();
       P.fabrikplaetze = P.fabrikplaetze || [];
       while (P.fabrikplaetze.length <= Math.floor(S.t / 60)) P.fabrikplaetze.push({ min: P.fabrikplaetze.length, n: G.fabrikPlaetze(), grenze: G.fabrikGrenze() });
+      P.budgetJeMinute = P.budgetJeMinute || [];       // Teil 12 (REQ-K12.07): Anteil des Forschungsbudgets zu Beginn jeder Minute
+      while (P.budgetJeMinute.length <= Math.floor(S.t / 60)) P.budgetJeMinute.push({ min: P.budgetJeMinute.length, anteil: G.budgetShare() });
       P.kompanien = (S.stats.kompanien || []).slice(); P.geschuetze = (S.stats.gekauft && S.stats.gekauft.geschuetz) || 0;
       P.gebaeudeEnde = S.slots.map(x => x ? x.type : null);
       // Teil 8 (REQ-K8.01): Stufenaufstiege (Zeitpunkt, Wartezeit am Mindestabstand, Übertrag) und EP je Quelle bei Minute 5, 10, 15

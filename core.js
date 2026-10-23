@@ -56,7 +56,7 @@ const adjacent = (i, diagonal = false) => { const g = C.GRID_SIZE, r = Math.floo
 /* Stufenschwellen: kumulierte Erfahrungspunkte (EP) für Stufe n */
 const xpStep = n => C.XP_BASE * Math.pow(C.XP_GROWTH, n - 1);
 function xpForLevel(n){ let s = 0; for (let k = 1; k <= n; k++) s += xpStep(k); return s; }
-const SAVE_VERSION = 14;                      // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
+const SAVE_VERSION = 15;                      // bei inkompatiblen Änderungen am Spielstand erhöhen (mit SAVE_KEY)
 /* Werfer und seine Ersatzeinheiten teilen die Werfer-Karten (Lange Wurfarme …) */
 const isThrower = type => (C.UNITS[type].base || type) === 'werfer';
 const isRangedType = type => C.UNITS[type].range > C.RANGED_MIN_RANGE;
@@ -548,7 +548,24 @@ function create(){
   const budgetShare = () => C.KARTEN.budget.stufen[budgetStufe()] || 0;
   /* Abnehmender Ertrag (Teil 8, REQ-K8.02): Der Kurs sinkt mit der Summe der EP, die das Budget bisher geliefert hat (Kurs × 1 / (1 + Summe / abnahme)); ohne abnahme unverändert. */
   const budgetAbnahme = () => C.KARTEN.budget.abnahme ? 1 / (1 + (((S.stats.xpSrc || {}).budget) || 0) / C.KARTEN.budget.abnahme) : 1;
-  const budgetKurs  = () => C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[budgetStufe()] * mMul('budgetKurs') * budgetAbnahme();
+  const budgetKurs  = (stufe = budgetStufe()) => C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[stufe] * mMul('budgetKurs') * budgetAbnahme();
+  /* Preis der nächsten Karte (Teil 12, REQ-K12.04): Material, das beim aktuellen Kurs fehlende EP deckt, und die Zeit bis zur Wahl bei einer gemessenen EP-Rate (EP je Sekunde, alle Quellen).
+     Das Budget zählt zum Ertrag brutto (Fabriken und Presse); Lehrjahre (xpGain) wirkt auch auf seine EP. */
+  const budgetBrutto = () => matRate() + autoPressCps() * clickPower();
+  const budgetEpRate = (stufe = budgetStufe()) => S.pacing !== 'karten' || xpVerfaellt() ? 0 : budgetBrutto() * (C.KARTEN.budget.stufen[stufe] || 0) * budgetKurs(stufe) * mMul('xpGain');
+  const kartenFehlt  = () => { const x = xpProgress(); return x.state === 'offen' ? 0 : Math.max(0, x.need - x.cur); };
+  const budgetVorschau = rate => {
+    if (S.pacing !== 'karten' || budgetMax() < 0) return null;
+    const fehlt = kartenFehlt(), kurs = budgetKurs() * mMul('xpGain'), rest = xpRestAbstandS(), eigen = budgetEpRate(), ohne = Math.max(0, rate - eigen);
+    const epZeit = r => r > 0 ? fehlt / r : null, zeit = r => r > 0 ? Math.max(fehlt / r, rest) : null;
+    const jetzt = zeit(ohne + eigen), j = budgetStufe() + 1;
+    let naechste = null;
+    if (j <= budgetMax()){
+      const r = ohne + budgetEpRate(j), spaeter = zeit(r), frueher = jetzt != null && spaeter != null ? Math.max(0, jetzt - spaeter) : null;
+      naechste = { stufe: j, anteil: C.KARTEN.budget.stufen[j], sekunden: spaeter, frueher, abstandHaelt: frueher != null && frueher < 1 && rest > 0 && epZeit(r) != null && epZeit(r) <= rest };
+    }
+    return { fehlt, kurs, material: kurs > 0 ? fehlt / kurs : null, sekunden: jetzt, restAbstand: rest, naechste };
+  };
   function setBudget(i){
     if (S.pacing !== 'karten' || !(i >= 0 && i <= budgetMax())) return false;
     S.budget = i; return true;
@@ -2006,7 +2023,7 @@ function create(){
     cardExcluded, sourceReachable, canBan, isPathFamily, keyNameKey, unitSource: type => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen['einheit:' + type] || null : null, keySource: key => PACING_DERIVED && S.pacing === 'karten' ? PACING_DERIVED.quellen[key] || null : null, isOpen, unlockKey, pacingKeys: () => PACING_DERIVED, ALL_OPTIONS, stageSource, sourceMet, ownType, unitStats, replaceUnit, pacing: () => S.pacing,
     offerDraft, chooseDraft, rerollDraft, rerollsLeft, banOption, bansLeft, RES, RESEARCH, researchTier, researchSlots, researchNext, researchCost, researchBlock, startResearch, rushCost, rushResearch, unitUnlocked,
     phase, xpProgress, gainXp, rueckstau, offeneWahlen, draftSize, colOffset, lateralOf, neighborCount, neighborValue, neighborPreview, neighborGain, NEIGHBORS, adjacent, mMul, mAdd, spawnX, unitRange, baseRange, OPT, cardTaken, cardTier, cardWeight, optionAvailable,
-    clickPower, matRate, incomeRate, upkeepRate, xpMult, setBudget, budgetStufe, budgetShare, budgetKurs, budgetAbnahme, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
+    clickPower, matRate, incomeRate, upkeepRate, xpMult, setBudget, budgetStufe, budgetShare, budgetKurs, budgetAbnahme, budgetEpRate, budgetVorschau, kartenFehlt, autoPressCps, hpMultP, dmgMultP, cdMultP, bountyMult, diffCfg,
     sectionMax, sectionUp, gateHp, towerBuilt, towerActive, 
     turretDmg, turretRange, turretCd,
   };

@@ -86,6 +86,18 @@ function fmt(n){
 const fmt1 = n => nf1.format(n);
 const fmt2 = n => nf2.format(n);                      // bis zu zwei Nachkommastellen (z. B. 0,15 EP je Sekunde)
 const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const dauerText = s => s < 90 ? `${Math.max(1, Math.round(s))} s` : clock(Math.round(s));
+/* Preis der nächsten Karte in Material und Wirkung der nächsten Reglerstufe (Teil 12, REQ-K12.04); Reiter Universität und Tooltip des Stapels zeigen dieselben Zeilen. */
+function budgetZeilen(){
+  const v = G.budgetVorschau(xpRate()); if (!v) return [];
+  const z = [v.fehlt <= 0 ? t('budget.next.now') : v.material != null ? t('budget.next', { m: fmt(Math.ceil(v.material)) }) : null];
+  const n = v.naechste;
+  if (n && v.fehlt > 0 && n.frueher != null){
+    const d = pct(n.anteil - G.budgetShare());
+    z.push(n.abstandHaelt ? t('budget.hold', { n: d }) : n.frueher >= 1 ? t('budget.gain', { n: d, s: dauerText(n.frueher) }) : t('budget.nogain', { n: d }));
+  }
+  return z.filter(Boolean);
+}
 function dur(sec){
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
   return h > 0 ? t('time.hm', { h, m }) : t('time.m', { m: Math.max(1, m) });
@@ -314,10 +326,10 @@ function tipContent(id){
     case 'tab':   return { title: t('tab.' + a), body: t('tip.tab.' + a, { max: G.supplyCap() }) };
     case 'hud':   return hudTip(a);
     case 'menu':  return { title: t('menu.' + a), body: t('tip.menu.' + a) };
-    case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
+    case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck'), rows: budgetZeilen().map(z => [z, '']) };
     case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'draftBtn': return { title: t('hud.draft'), body: t('tip.hud.draft') };
-    case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck') };
+    case 'deck': return { title: t('kp.deck.label'), body: t('tip.kp.deck'), rows: budgetZeilen().map(z => [z, '']) };
     case 'later': return { title: t('kp.stage.later'), body: t('tip.kp.later') };
     case 'rush': { const act = S.research.active.find(x => x.id === a);
       return { title: t('research.rush'), body: t('tip.research.rush', { name: act ? researchName(G.RES[a], act.tier) : '' }),

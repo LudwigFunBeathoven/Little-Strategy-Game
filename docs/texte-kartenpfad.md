@@ -1,6 +1,6 @@
 # Klammerfront – alle Texte des Spiels
 
-Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-11. Quelle: `i18n/de.js` und `i18n/en.js` (1051 Schlüssel, in beiden Sprachen identisch).
+Stand: Branch `exp/kartenpfad`, v0.9.2-kartenpfad-12. Quelle: `i18n/de.js` und `i18n/en.js` (1056 Schlüssel, in beiden Sprachen identisch).
 
 Lesehilfe:
 - **Schlüssel** ist der Name im Code. Platzhalter in geschweiften Klammern (`{n}`, `{name}`) füllt das Spiel zur Laufzeit.
@@ -17,7 +17,7 @@ Lesehilfe:
 6. [Haupthaus und Flügel (Teil 7)](#haupthaus-und-flügel-teil-7) (39)
 7. [Einheiten und Armee](#einheiten-und-armee) (39)
 8. [Ausbauten (Upgrades)](#ausbauten-upgrades) (25)
-9. [Forschung und Budget](#forschung-und-budget) (55)
+9. [Forschung und Budget](#forschung-und-budget) (60)
 10. [Spezialkarten (Kartenwahl)](#spezialkarten-kartenwahl) (159)
 11. [Kartenpfad: Pfadkarten, Wirkungszeilen, Pfadforschung](#kartenpfad-pfadkarten-wirkungszeilen-pfadforschung) (190)
 12. [Gebäude-Varianten](#gebäude-varianten) (48)
@@ -378,7 +378,12 @@ Lesehilfe:
 | Schlüssel | Modus | Zeichen | Deutsch | Englisch |
 |---|---|---|---|---|
 | `budget.bib` |  | 45 | Ohne Universität höchstens {n} % (Bibliothek). | Without a university at most {n}% (library). |
+| `budget.gain` |  | 34 | +{n} %: nächste Karte ≈ {s} früher | +{n} %: next card ≈ {s} sooner |
+| `budget.hold` |  | 43 | +{n} %: Mindestabstand hält die Karte zurück | +{n} %: the minimum interval holds the card back |
 | `budget.needUni` |  | 46 | Das Forschungsbudget braucht eine Universität. | The research budget needs a university. |
+| `budget.next` |  | 26 | Nächste Karte ≈ {m} Material | Next card ≈ {m} material |
+| `budget.next.now` |  | 29 | Die nächste Karte ist bereit. | The next card is ready. |
+| `budget.nogain` |  | 19 | +{n} %: kaum Wirkung | +{n} %: hardly any effect |
 | `budget.step` |  | 4 | {n} % | {n}% |
 | `budget.step.title` |  | 21 | Forschungsbudget {n} % | Research budget {n}% |
 | `budget.text` |  | 151 | {n} % des Materialertrags fließen in die Forschung und kommen als EP zurück ({k} EP je Material). Größerer Anteil, schlechterer Kurs. Jederzeit änderbar. | {n}% of material income goes into research and returns as XP ({k} XP per material). Larger share, worse rate. Change it any time. |

@@ -696,6 +696,7 @@ function renderBudget(){
   if (!karten) return;
   const cur = G.budgetStufe();
   setText($('budgetText'), t(uni ? 'budget.text' : 'budget.needUni', { n: pct(G.budgetShare()), k: fmt2(G.budgetKurs()) }) + (uni && !G.has('universitaet') ? ' ' + t('budget.bib', { n: pct(C.KARTEN.budget.stufen[max]) }) : ''));
+  setText($('budgetNext'), uni ? budgetZeilen().join(' · ') : '');
   C.KARTEN.budget.stufen.forEach((sh, i) => {
     const b = budgetBtns[i], k = C.KARTEN.budget.kurs * C.KARTEN.budget.kursFaktor[i] * G.mMul('budgetKurs') * G.budgetAbnahme();
     setText(b.querySelector('.btn-label'), t('budget.step', { n: pct(sh) }));
