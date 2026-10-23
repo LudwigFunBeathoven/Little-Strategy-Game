@@ -4,7 +4,7 @@
 - Browser-Spiel zwischen *Universal Paperclips* (Clicker/Idle) und *Age of War* (Lane-Kampf).
 - Spielziel: die gegnerische Basis zerstören. Niederlage: das eigene Tor fällt.
 - Kernschleife: klicken und Fabriken im 3×3-Raster bauen → Material → Einheiten in Wellen über drei Lanes schicken → Abschüsse bringen EP → Stufenaufstieg bietet Spezialkarten (Kartenpfad: Doktrinen, Weiterentwicklungen, Haupthaus).
-- Stand: v0.9.2-kartenpfad-11, Branch `exp/kartenpfad`. Änderungen: `CHANGELOG.md`; Branch-Stand: `docs/STAND-kartenpfad.md`.
+- Stand: v0.9.2-kartenpfad-12, Branch `exp/kartenpfad`. Änderungen: `CHANGELOG.md`; Branch-Stand: `docs/STAND-kartenpfad.md`.
 
 ## Der Nutzer
 - Nick ist Product Owner, kein Entwickler. Änderungen in Klartext erklären, Fachbegriffe kurz übersetzen.
@@ -18,7 +18,7 @@
 - Keine sichtbaren Texte außerhalb von `i18n/de.js` und `i18n/en.js` (identische Schlüssel). Platzhalter `{n}`, Zahlen über `Intl.NumberFormat`. Textregeln und Zeichenbudgets: `tools/textbudget.mjs`, `tests/sprache.test.mjs`.
 - `core.js` kennt weder `document`, `window` noch `localStorage`. Zufall nur über `S.rng` (seedbar).
 - Jedes interaktive Element: `data-tooltip` und Erklärzeile `<span class="expl">` („Wirkung · Kosten“). Prüfung: `index.html?dev=1`, `__kf.explAudit()`. Gesperrte Knöpfe über `aria-disabled`.
-- Spielstand-Format: `v` in `freshState` und `SAVE_KEY` zusammen erhöhen (aktuell 14).
+- Spielstand-Format: `v` in `freshState` und `SAVE_KEY` zusammen erhöhen (aktuell 15).
 - Modus `standard` bleibt unverändert (`tests/unveraendert.test.mjs`, feste Seeds nicht ohne Grund neu erzeugen).
 
 ## Branches
@@ -56,6 +56,7 @@
 - Ausführlich: `npm test`; Browser: `npm run test:browser` (braucht Playwright, „übersprungen“ gilt nicht als bestanden).
 - Simulation: `node tools/simulate.mjs --runs 20 --suite ziele|strategie`, `--runs 50 --suite phasen` (Abnahme: 200). Ohne Dateiänderung: `KF_OVERRIDE='{"POST_SIEGE_GROWTH":0.5}' node tools/simulate.mjs …`.
 - Kartenpfad: Messung `node tools/messung-p6.mjs`, `tools/sim-p5.mjs --suite felder|budget|doktrin`, Auswertung `tools/basis-p8.mjs`, Protokoll `tools/ep-protokoll.mjs`, Bench `tools/bench-tick.mjs`.
+- EP als Investition (Teil 12): `tools/sim-p5.mjs --suite felder --budget <n>` (fester Budgetanteil in %), `--kombi alle` (alle Kursmultiplikatoren); Reihen `tools/messung-k12.mjs`, Kandidaten `tools/kalib-k12.mjs`, Kriterien `tools/auswertung-k12.mjs`, Tabellen `tools/basis-k12.mjs`.
 - URL: `?debug=1` (Protokoll), `?dev=1` (Audits), `?lang=`, `?difficulty=easy|normal|hard`, `?tutorial=0|1`, `?pacing=standard|karten`, `?druck=hoch`, `?gegnerfern=aus`, `?zeit=pause|langsam|lauf`, `?buehne=`, `?entdecken=`.
 
 ## Teststufen

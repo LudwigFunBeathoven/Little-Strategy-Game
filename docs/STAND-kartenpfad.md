@@ -402,3 +402,18 @@ Entscheidungen des PO (nach den Berichten): Gegner-Reichweite höchstens 140; R�
 | X.1 | Entscheidungen des PO einarbeitet | fertig |
 | X.2 | Tutorial erklärt das Haupthaus (Modus karten, Erklärschritt) | fertig |
 | X.3 | Testbericht `docs/berichte/test-0.9.2-kartenpfad-11.md`, Testbuild | fertig |
+
+## Teil 12: EP als Investition (`docs/anforderungen-kartenpfad-12.md`, Bericht `docs/bericht-kartenpfad-12.md`)
+
+| Inkrement | Inhalt | Status |
+|---|---|---|
+| X.0 (Teil 12) | Basismessung, Diagnose, Schalter `--budget` | fertig |
+| X.1 (Teil 12) | Kostenkurve 125 · 1,3^(n−1) (g über dem Bereich der Anforderung) | fertig, Entscheidung des PO offen |
+| X.2 (Teil 12) | Kurs 0,7, Regler 0–50 % in 10-%-Schritten, Spielstand 15 | fertig |
+| X.3 (Teil 12) | Budgetregel der Bots | fertig |
+| X.4 (Teil 12) | Kalibrierung (sieben Runden), Messung | fertig; Elastizität, Mindestabstand beim Optimum, Kombinationstest verfehlt |
+| X.5 (Teil 12) | Preis der nächsten Karte (Reiter Universität, Tooltip des Stapels) | fertig |
+| X.6 (Teil 12) | Bericht, Testleitfaden, Textübersicht, Testbuild | fertig (Testbuild: https://claude.ai/artifact/BNHYA6Trav5sajVWyqeG92) |
+
+Offene Entscheidungen des PO: g = 1,3 gegen g ≤ 1,20; Kurs-Grundwert 0,7; Elastizitätskriterium; Deckel auf den Kurs-Gesamtfaktor; Mindestabstand in der frühen Phase.
+

@@ -1,5 +1,15 @@
 # Änderungen
 
+## v0.9.2-kartenpfad-12 – Branch `exp/kartenpfad`, Teil 12 „EP als Investition“ (Oktober 2026; nicht auf `main` oder `MVP`)
+Anforderung: `docs/anforderungen-kartenpfad-12.md`, Bericht `docs/bericht-kartenpfad-12.md`, Testleitfaden `docs/testleitfaden-kartenpfad-12.md`. **Spielstand-Version 15** (ältere Stände gehen verloren).
+- **Kosten der Kartenwahlen:** E(n) = 125 · 1,3^(n−1) (vorher 70 · 1,35^(n−1)). Die erste Karte kommt nach etwa 97 s statt nach 76 s. **Abweichung:** g = 1,3 liegt über dem Bereich der Anforderung (1,08–1,20); Begründung im Bericht, Entscheidung des PO offen.
+- **Forschungsbudget:** Regler 0 bis 50 % in 10-%-Schritten (vorher 0 / 25 / 50 %), Kurs 0,7 EP je Material (vorher 0,08), flachere Degression (bei 50 % noch 80 % des Kurses bei 10 %). Beim Budget 30 % liefert es 61–73 % der EP in den Stufen 5–9 (vorher 12 %).
+- **Preis der nächsten Karte:** Reiter Universität und Tooltip des Stapels zeigen „Nächste Karte ≈ N Material“ und „+10 %: nächste Karte ≈ N s früher“.
+- **Partiedauer:** `basisFaktor` Normal 9,5 → 10,5 (Leicht 8,8, Schwer 8,3).
+- **Bots:** fester Budgetanteil je Strategie (ohne Kategorie 40 %, Militär 20 %, Wirtschaft 30 %, Verteidigung 30 %); Simulationsschalter `--budget <n>` und `--kombi alle`; Messwerkzeuge `tools/messung-k12.mjs`, `basis-k12.mjs`, `kalib-k12.mjs`, `auswertung-k12.mjs`.
+- **Protokoll:** `budgetJeMinute` (Anteil des Budgets zu Beginn jeder Minute).
+- **Messung (Normal, durchschnitt):** Rückstau 96 % der Partien mit höchstens einer offenen Wahl, größter Wert 2 (Teil 11: 87 %, 3); Siegquote Wirtschafts-Bot 100 % (80 %); Patt 0,0 %. **Verfehlt:** Elastizität ab Stufe 10, Mindestabstand beim Optimum, Kombinationstest aller Kursmultiplikatoren (Bericht, Abschnitte 4, 7).
+
 ## v0.9.2-kartenpfad-11 – Branch `exp/kartenpfad`, Teil 10 und 11, Tutorial-Inkrement (Oktober 2026; nicht auf `main` oder `MVP`)
 Anforderungen: `docs/anforderungen-kartenpfad-10-11.md`, Berichte `docs/bericht-kartenpfad-10.md` und `-11.md`, Testleitfaden `docs/testleitfaden-kartenpfad-11.md`. **Spielstand-Version 14** (ältere Stände gehen verloren).
 - **Technologiekarten** zeigen den Wert der Forschung (Wasserrahmen +30 %, Dampfkraft +40 %) statt `{e1}`; einstufige Karten ohne Stufenpunkt; die Leiste unter der Bühne zeigt Wirkung und Nachteil getrennt.
