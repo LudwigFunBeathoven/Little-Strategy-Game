@@ -1,0 +1,176 @@
+## Bot ohne: Elastizität und Kennzahlen je Budget (normal, durchschnitt)
+
+| Budget | Partien | Siege | Dauer (Median) | Wahlen (Median) | gebremst (>5 s) | gebremst bis Stufe 6 | Abstand Stufe 5 | Abstand Stufe 10 | Abstand Stufe 13 | Patt |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 % | 50 | 96 % | 13:31 | 11 | 25 % | 16 % | 92,8 s (50) | 43,5 s (32) | – s (0) | 0 % |
+| 10 % | 50 | 98 % | 13:33 | 11 | 27 % | 16 % | 101,1 s (50) | 40,1 s (31) | – s (0) | 0 % |
+| 20 % | 50 | 100 % | 13:50 | 11 | 26 % | 15 % | 91,3 s (50) | 40,1 s (38) | – s (0) | 0 % |
+| 30 % | 50 | 98 % | 13:42 | 12 | 22 % | 16 % | 84,2 s (50) | 40,3 s (40) | 243,1 s (2) | 0 % |
+| 40 % | 50 | 90 % | 14:18 | 12 | 22 % | 17 % | 91,6 s (50) | 40,1 s (38) | 259,2 s (2) | 2 % |
+| Regel des Bots | 50 | 96 % | 13:31 | 11 | 25 % | 16 % | 92,8 s (50) | 43,5 s (32) | – s (0) | 0 % |
+
+Abstand bis zur nächsten Wahl gegenüber Budget 0 % (Elastizität):
+
+| Budget | Stufe 5 | Stufe 10 | Stufe 13 |
+|---|---|---|---|
+| 10 % | +9 % | -8 % | – |
+| 20 % | -2 % | -8 % | – |
+| 30 % | -9 % | -7 % | – |
+| 40 % | -1 % | -8 % | – |
+
+EP je Quelle und Stufenbereich, Bot ohne, Budget 0 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 469 | 366 (78 %) | 0 (0 %) | 3 (1 %) | 90 (19 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 10 (2 %) | 50 |
+| 5–9 | 2319 | 1694 (73 %) | 0 (0 %) | 355 (15 %) | 212 (9 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 58 (3 %) | 44 |
+| 10–13 | 6910 | 5705 (83 %) | 0 (0 %) | 220 (3 %) | 1066 (15 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 6 |
+
+EP je Quelle und Stufenbereich, Bot ohne, Budget 30 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 468 | 355 (76 %) | 0 (0 %) | 3 (1 %) | 90 (19 %) | 17 (4 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 3 (1 %) | 50 |
+| 5–9 | 2320 | 1467 (63 %) | 0 (0 %) | 354 (15 %) | 86 (4 %) | 271 (12 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 142 (6 %) | 47 |
+| 10–13 | 6934 | 5406 (78 %) | 0 (0 %) | 447 (6 %) | 947 (14 %) | 233 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 6 |
+
+EP je Quelle und Stufenbereich, Bot ohne, Budget Regel (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 469 | 366 (78 %) | 0 (0 %) | 3 (1 %) | 90 (19 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 10 (2 %) | 50 |
+| 5–9 | 2319 | 1694 (73 %) | 0 (0 %) | 355 (15 %) | 212 (9 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 58 (3 %) | 44 |
+| 10–13 | 6910 | 5705 (83 %) | 0 (0 %) | 220 (3 %) | 1066 (15 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 6 |
+
+## Bot militaer: Elastizität und Kennzahlen je Budget (normal, durchschnitt)
+
+| Budget | Partien | Siege | Dauer (Median) | Wahlen (Median) | gebremst (>5 s) | gebremst bis Stufe 6 | Abstand Stufe 5 | Abstand Stufe 10 | Abstand Stufe 13 | Patt |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 % | 50 | 96 % | 13:12 | 9 | 22 % | 15 % | 94,6 s (50) | 40,1 s (15) | – s (0) | 0 % |
+| 10 % | 50 | 92 % | 13:35 | 9 | 19 % | 15 % | 117,9 s (50) | 40,1 s (19) | 71,3 s (1) | 0 % |
+| 20 % | 50 | 84 % | 13:07 | 9 | 19 % | 15 % | 97,7 s (50) | 71,3 s (15) | 215,9 s (3) | 6 % |
+| 30 % | 50 | 94 % | 12:44 | 9 | 20 % | 15 % | 98,2 s (50) | 40,1 s (17) | 147,1 s (2) | 2 % |
+| 40 % | 50 | 94 % | 13:42 | 10 | 21 % | 16 % | 96,3 s (50) | 40,1 s (19) | 173,7 s (3) | 0 % |
+| Regel des Bots | 50 | 96 % | 13:12 | 9 | 22 % | 15 % | 94,6 s (50) | 40,1 s (15) | – s (0) | 0 % |
+
+Abstand bis zur nächsten Wahl gegenüber Budget 0 % (Elastizität):
+
+| Budget | Stufe 5 | Stufe 10 | Stufe 13 |
+|---|---|---|---|
+| 10 % | +25 % | +0 % | – |
+| 20 % | +3 % | +78 % | – |
+| 30 % | +4 % | +0 % | – |
+| 40 % | +2 % | +0 % | – |
+
+EP je Quelle und Stufenbereich, Bot militaer, Budget 0 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 472 | 365 (77 %) | 0 (0 %) | 3 (1 %) | 100 (21 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 4 (1 %) | 50 |
+| 5–9 | 2315 | 1668 (72 %) | 0 (0 %) | 635 (27 %) | 64 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 30 |
+| 10–13 | 6928 | 5819 (84 %) | 0 (0 %) | 102 (1 %) | 1060 (15 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 4 |
+
+EP je Quelle und Stufenbereich, Bot militaer, Budget 30 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 466 | 352 (76 %) | 0 (0 %) | 3 (1 %) | 86 (18 %) | 15 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 10 (2 %) | 50 |
+| 5–9 | 2315 | 1451 (63 %) | 0 (0 %) | 423 (18 %) | 94 (4 %) | 287 (12 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 60 (3 %) | 39 |
+| 10–13 | 6928 | 5839 (84 %) | 0 (0 %) | 29 (0 %) | 958 (14 %) | 184 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 2 |
+
+EP je Quelle und Stufenbereich, Bot militaer, Budget Regel (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 472 | 365 (77 %) | 0 (0 %) | 3 (1 %) | 100 (21 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 4 (1 %) | 50 |
+| 5–9 | 2315 | 1668 (72 %) | 0 (0 %) | 635 (27 %) | 64 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 30 |
+| 10–13 | 6928 | 5819 (84 %) | 0 (0 %) | 102 (1 %) | 1060 (15 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 4 |
+
+## Bot wirtschaft: Elastizität und Kennzahlen je Budget (normal, durchschnitt)
+
+| Budget | Partien | Siege | Dauer (Median) | Wahlen (Median) | gebremst (>5 s) | gebremst bis Stufe 6 | Abstand Stufe 5 | Abstand Stufe 10 | Abstand Stufe 13 | Patt |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 % | 50 | 98 % | 14:36 | 12 | 29 % | 21 % | 86,1 s (50) | 40,1 s (35) | 83,8 s (5) | 0 % |
+| 10 % | 50 | 96 % | 14:51 | 12 | 27 % | 24 % | 96,0 s (50) | 40,1 s (39) | 69,5 s (8) | 2 % |
+| 20 % | 50 | 86 % | 14:48 | 12 | 25 % | 23 % | 86,9 s (50) | 40,1 s (37) | 95,4 s (12) | 2 % |
+| 30 % | 50 | 84 % | 15:08 | 12 | 23 % | 23 % | 87,2 s (50) | 42,9 s (38) | 93,1 s (8) | 2 % |
+| 40 % | 50 | 92 % | 14:52 | 12 | 26 % | 25 % | 79,7 s (50) | 44,1 s (37) | 40,1 s (11) | 0 % |
+| Regel des Bots | 50 | 80 % | 15:33 | 13 | 22 % | 26 % | 81,0 s (50) | 45,7 s (43) | 81,8 s (14) | 4 % |
+
+Abstand bis zur nächsten Wahl gegenüber Budget 0 % (Elastizität):
+
+| Budget | Stufe 5 | Stufe 10 | Stufe 13 |
+|---|---|---|---|
+| 10 % | +11 % | +0 % | -17 % |
+| 20 % | +1 % | +0 % | +14 % |
+| 30 % | +1 % | +7 % | +11 % |
+| 40 % | -7 % | +10 % | -52 % |
+
+EP je Quelle und Stufenbereich, Bot wirtschaft, Budget 0 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 473 | 366 (77 %) | 0 (0 %) | 3 (1 %) | 100 (21 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 4 (1 %) | 50 |
+| 5–9 | 2315 | 1659 (72 %) | 0 (0 %) | 415 (18 %) | 141 (6 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 100 (4 %) | 49 |
+| 10–13 | 6922 | 5649 (82 %) | 0 (0 %) | 311 (4 %) | 979 (14 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 15 |
+
+EP je Quelle und Stufenbereich, Bot wirtschaft, Budget 30 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 468 | 358 (76 %) | 0 (0 %) | 3 (1 %) | 90 (19 %) | 15 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 2 (0 %) | 50 |
+| 5–9 | 2314 | 1249 (54 %) | 0 (0 %) | 432 (19 %) | 46 (2 %) | 466 (20 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 121 (5 %) | 47 |
+| 10–13 | 6915 | 4968 (72 %) | 0 (0 %) | 334 (5 %) | 845 (12 %) | 633 (9 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 135 (2 %) | 19 |
+
+EP je Quelle und Stufenbereich, Bot wirtschaft, Budget Regel (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 469 | 352 (75 %) | 0 (0 %) | 3 (1 %) | 90 (19 %) | 19 (4 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 5 (1 %) | 50 |
+| 5–9 | 2315 | 1291 (56 %) | 0 (0 %) | 433 (19 %) | 46 (2 %) | 533 (23 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 12 (1 %) | 48 |
+| 10–13 | 6918 | 4808 (69 %) | 0 (0 %) | 397 (6 %) | 864 (12 %) | 724 (10 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 125 (2 %) | 27 |
+
+## Bot verteidigung: Elastizität und Kennzahlen je Budget (normal, durchschnitt)
+
+| Budget | Partien | Siege | Dauer (Median) | Wahlen (Median) | gebremst (>5 s) | gebremst bis Stufe 6 | Abstand Stufe 5 | Abstand Stufe 10 | Abstand Stufe 13 | Patt |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 % | 50 | 94 % | 15:26 | 11 | 24 % | 13 % | 103,6 s (50) | 40,1 s (40) | 155,2 s (5) | 4 % |
+| 10 % | 50 | 90 % | 15:21 | 12 | 26 % | 14 % | 94,2 s (50) | 40,1 s (39) | 152,5 s (6) | 2 % |
+| 20 % | 50 | 96 % | 15:52 | 12 | 23 % | 14 % | 98,9 s (50) | 40,1 s (41) | 95,6 s (3) | 0 % |
+| 30 % | 50 | 94 % | 15:25 | 12 | 21 % | 15 % | 87,9 s (50) | 40,1 s (41) | 146,1 s (4) | 6 % |
+| 40 % | 50 | 92 % | 15:17 | 12 | 20 % | 15 % | 93,9 s (50) | 40,1 s (43) | 156,0 s (2) | 2 % |
+| Regel des Bots | 50 | 98 % | 15:18 | 12 | 22 % | 14 % | 96,4 s (50) | 40,1 s (43) | 162,5 s (1) | 0 % |
+
+Abstand bis zur nächsten Wahl gegenüber Budget 0 % (Elastizität):
+
+| Budget | Stufe 5 | Stufe 10 | Stufe 13 |
+|---|---|---|---|
+| 10 % | -9 % | +0 % | -2 % |
+| 20 % | -5 % | +0 % | -38 % |
+| 30 % | -15 % | +0 % | -6 % |
+| 40 % | -9 % | +0 % | +1 % |
+
+EP je Quelle und Stufenbereich, Bot verteidigung, Budget 0 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 472 | 366 (78 %) | 0 (0 %) | 2 (0 %) | 100 (21 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 4 (1 %) | 50 |
+| 5–9 | 2318 | 1684 (73 %) | 0 (0 %) | 427 (18 %) | 138 (6 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 69 (3 %) | 48 |
+| 10–13 | 6917 | 5551 (80 %) | 0 (0 %) | 274 (4 %) | 1018 (15 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 74 (1 %) | 17 |
+
+EP je Quelle und Stufenbereich, Bot verteidigung, Budget 30 % (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 468 | 358 (76 %) | 0 (0 %) | 2 (0 %) | 90 (19 %) | 14 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 4 (1 %) | 50 |
+| 5–9 | 2319 | 1423 (61 %) | 0 (0 %) | 418 (18 %) | 80 (3 %) | 300 (13 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 98 (4 %) | 50 |
+| 10–13 | 6912 | 5307 (77 %) | 60 (1 %) | 370 (5 %) | 984 (14 %) | 226 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 20 |
+
+EP je Quelle und Stufenbereich, Bot verteidigung, Budget Regel (Median der EP zwischen den erreichten Schwellen, Partien in Klammern)
+
+| Stufen | EP gesamt | kill | tower | base | wave | budget | lager | trade | bounty | passive | andere | Partien |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1–4 | 471 | 358 (76 %) | 0 (0 %) | 2 (0 %) | 100 (21 %) | 13 (3 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 50 |
+| 5–9 | 2316 | 1427 (62 %) | 17 (1 %) | 390 (17 %) | 108 (5 %) | 269 (12 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 105 (5 %) | 48 |
+| 10–13 | 6918 | 5410 (78 %) | 74 (1 %) | 252 (4 %) | 998 (14 %) | 160 (2 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 0 (0 %) | 24 (0 %) | 11 |
+

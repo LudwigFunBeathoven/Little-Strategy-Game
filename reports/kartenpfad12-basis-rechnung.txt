@@ -1,0 +1,67 @@
+## Kosten der Wahlen (Kurve 70 · 1.35^(n−1), Mindestabstand 40 s)
+
+| n | Kosten E(n) (EP) | kumuliert |
+|---|---|---|
+| 1 | 70 | 70 |
+| 2 | 95 | 165 |
+| 3 | 128 | 292 |
+| 4 | 172 | 464 |
+| 5 | 233 | 697 |
+| 6 | 314 | 1011 |
+| 7 | 424 | 1434 |
+| 8 | 572 | 2006 |
+| 9 | 772 | 2779 |
+| 10 | 1043 | 3821 |
+| 11 | 1407 | 5229 |
+| 12 | 1900 | 7129 |
+| 13 | 2565 | 9694 |
+| 14 | 3463 | 13157 |
+| 15 | 4675 | 17832 |
+| 16 | 6311 | 24143 |
+| 17 | 8520 | 32663 |
+| 18 | 11502 | 44165 |
+| 19 | 15528 | 59692 |
+| 20 | 20962 | 80655 |
+
+## Kurs des Forschungsbudgets (EP je Material)
+
+| Anteil | ohne | Akademie | Stiftungshaus | Lehrjahre II | alle drei | Kurs relativ zum kleinsten Anteil |
+|---|---|---|---|---|---|---|
+| 10 % | 0,080 | 0,120 | 0,160 | 0,100 | 0,300 | 100 % |
+| 20 % | 0,080 | 0,120 | 0,160 | 0,100 | 0,300 | 100 % |
+| 25 % | 0,080 | 0,120 | 0,160 | 0,100 | 0,300 | 100 % |
+| 30 % | 0,075 | 0,113 | 0,150 | 0,094 | 0,282 | 94 % |
+| 40 % | 0,066 | 0,098 | 0,131 | 0,082 | 0,246 | 82 % |
+| 50 % | 0,056 | 0,084 | 0,112 | 0,070 | 0,210 | 70 % |
+
+Stützstellen des Reglers: 0 % → Faktor 1, 25 % → Faktor 1, 50 % → Faktor 0.7; Zwischenwerte linear (nur Messung).
+
+## Materialpreis der nächsten Karte (Kosten E(n) geteilt durch den Kurs; alle EP aus dem Budget gedacht)
+
+| n | Budget 10 % | Budget 20 % | Budget 30 % | Budget 40 % |
+|---|---|---|---|---|
+| 1 | 875 | 875 | 931 | 1067 |
+| 2 | 1181 | 1181 | 1257 | 1441 |
+| 3 | 1595 | 1595 | 1696 | 1945 |
+| 5 | 2906 | 2906 | 3092 | 3544 |
+| 7 | 5297 | 5297 | 5635 | 6459 |
+| 9 | 9653 | 9653 | 10270 | 11772 |
+| 10 | 13032 | 13032 | 13864 | 15893 |
+| 11 | 17593 | 17593 | 18716 | 21455 |
+| 12 | 23751 | 23751 | 25267 | 28964 |
+| 13 | 32064 | 32064 | 34110 | 39102 |
+| 14 | 43286 | 43286 | 46049 | 52788 |
+| 15 | 58436 | 58436 | 62166 | 71263 |
+
+## Preisanstieg der übrigen Investitionen (Material je Kauf)
+
+| Investition | Preise der ersten Käufe | Faktor je Kauf |
+|---|---|---|
+| Manufaktur (1.–5.) | 30 · 48 · 77 · 123 · 197 | 1,60 |
+| Qualitätsstufe der Schmiede (1.–4.) | 80 · 200 · 500 · 1250 | 2,50 |
+| Quartier (1.–5.) | 250 · 500 · 1000 · 2000 · 4000 | 2,00 |
+| Einheit (Bogenschütze, je Kauf) | 36 · 36 · 36 | 1,00 |
+| Karte bei Budget 20 % (n = 1–12) | 875 · 1181 · 1595 · 2153 … | 1,35 |
+
+Mittlerer Faktor je Kauf: 2,00 (Manufaktur, Schmiede, Quartier), 1,68 mit der Einheit (Preis gleich).
+

@@ -1,0 +1,993 @@
+{
+ "messung": {
+  "ohne": {
+   "arme": {
+    "b0": {
+     "n": 50,
+     "siege": 0.96,
+     "patt": 0,
+     "dauer": 810.6,
+     "wahlen": 11,
+     "gebremst": 0.250936329588015,
+     "gebremst6": 0.15666666666666668,
+     "abstand": {
+      "5": 92.80000000000001,
+      "10": 43.5,
+      "13": null
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 32,
+      "13": 0
+     },
+     "rueckMax": 1,
+     "rueck2": 0.2,
+     "rueck3": 0.02
+    },
+    "b10": {
+     "n": 50,
+     "siege": 0.98,
+     "patt": 0,
+     "dauer": 812.7,
+     "wahlen": 11,
+     "gebremst": 0.269449715370019,
+     "gebremst6": 0.16333333333333333,
+     "abstand": {
+      "5": 101.10000000000002,
+      "10": 40.10000000000002,
+      "13": null
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 31,
+      "13": 0
+     },
+     "rueckMax": 1,
+     "rueck2": 0.18,
+     "rueck3": 0
+    },
+    "b20": {
+     "n": 50,
+     "siege": 1,
+     "patt": 0,
+     "dauer": 829.5,
+     "wahlen": 11,
+     "gebremst": 0.25504587155963304,
+     "gebremst6": 0.15,
+     "abstand": {
+      "5": 91.30000000000001,
+      "10": 40.10000000000002,
+      "13": null
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 38,
+      "13": 0
+     },
+     "rueckMax": 1,
+     "rueck2": 0.08,
+     "rueck3": 0
+    },
+    "b30": {
+     "n": 50,
+     "siege": 0.98,
+     "patt": 0,
+     "dauer": 821.8,
+     "wahlen": 12,
+     "gebremst": 0.21631205673758866,
+     "gebremst6": 0.16333333333333333,
+     "abstand": {
+      "5": 84.20000000000005,
+      "10": 40.299999999999955,
+      "13": 243.10000000000002
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 40,
+      "13": 2
+     },
+     "rueckMax": 1,
+     "rueck2": 0.1,
+     "rueck3": 0
+    },
+    "b40": {
+     "n": 50,
+     "siege": 0.9,
+     "patt": 0.02,
+     "dauer": 857.7,
+     "wahlen": 12,
+     "gebremst": 0.22142857142857142,
+     "gebremst6": 0.17333333333333334,
+     "abstand": {
+      "5": 91.60000000000002,
+      "10": 40.10000000000002,
+      "13": 259.20000000000005
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 38,
+      "13": 2
+     },
+     "rueckMax": 1,
+     "rueck2": 0.06,
+     "rueck3": 0
+    },
+    "regel": {
+     "n": 50,
+     "siege": 0.96,
+     "patt": 0,
+     "dauer": 810.6,
+     "wahlen": 11,
+     "gebremst": 0.250936329588015,
+     "gebremst6": 0.15666666666666668,
+     "abstand": {
+      "5": 92.80000000000001,
+      "10": 43.5,
+      "13": null
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 32,
+      "13": 0
+     },
+     "rueckMax": 1,
+     "rueck2": 0.2,
+     "rueck3": 0.02
+    }
+   },
+   "quellen_b0": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 469,
+     "kill": 366,
+     "wave": 90,
+     "base": 3,
+     "tower": 0,
+     "partien": 50,
+     "andere": 10
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2319,
+     "kill": 1694,
+     "wave": 212,
+     "base": 355,
+     "tower": 0,
+     "trade": 0,
+     "partien": 44,
+     "andere": 58
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6910,
+     "kill": 5705,
+     "wave": 1066,
+     "base": 220,
+     "tower": 0,
+     "partien": 6,
+     "andere": 0
+    }
+   ],
+   "quellen_b30": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 468,
+     "kill": 355,
+     "wave": 90,
+     "base": 3,
+     "budget": 17,
+     "tower": 0,
+     "partien": 50,
+     "andere": 3
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2320,
+     "kill": 1467,
+     "wave": 86,
+     "base": 354,
+     "budget": 271,
+     "tower": 0,
+     "partien": 47,
+     "andere": 142
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6934,
+     "kill": 5406,
+     "wave": 947,
+     "budget": 233,
+     "base": 447,
+     "tower": 0,
+     "partien": 6,
+     "andere": 0
+    }
+   ],
+   "quellen_regel": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 469,
+     "kill": 366,
+     "wave": 90,
+     "base": 3,
+     "tower": 0,
+     "partien": 50,
+     "andere": 10
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2319,
+     "kill": 1694,
+     "wave": 212,
+     "base": 355,
+     "tower": 0,
+     "trade": 0,
+     "partien": 44,
+     "andere": 58
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6910,
+     "kill": 5705,
+     "wave": 1066,
+     "base": 220,
+     "tower": 0,
+     "partien": 6,
+     "andere": 0
+    }
+   ]
+  },
+  "militaer": {
+   "arme": {
+    "b0": {
+     "n": 50,
+     "siege": 0.96,
+     "patt": 0,
+     "dauer": 792.2,
+     "wahlen": 9,
+     "gebremst": 0.22055674518201285,
+     "gebremst6": 0.15333333333333332,
+     "abstand": {
+      "5": 94.60000000000002,
+      "10": 40.10000000000002,
+      "13": null
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 15,
+      "13": 0
+     },
+     "rueckMax": 1,
+     "rueck2": 0.2,
+     "rueck3": 0.02
+    },
+    "b10": {
+     "n": 50,
+     "siege": 0.92,
+     "patt": 0,
+     "dauer": 814.6,
+     "wahlen": 9,
+     "gebremst": 0.19456066945606695,
+     "gebremst6": 0.15,
+     "abstand": {
+      "5": 117.89999999999998,
+      "10": 40.10000000000002,
+      "13": 71.29999999999995
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 19,
+      "13": 1
+     },
+     "rueckMax": 1,
+     "rueck2": 0.16,
+     "rueck3": 0
+    },
+    "b20": {
+     "n": 50,
+     "siege": 0.84,
+     "patt": 0.06,
+     "dauer": 787,
+     "wahlen": 9,
+     "gebremst": 0.1934156378600823,
+     "gebremst6": 0.15,
+     "abstand": {
+      "5": 97.69999999999999,
+      "10": 71.30000000000007,
+      "13": 215.9000000000001
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 15,
+      "13": 3
+     },
+     "rueckMax": 1,
+     "rueck2": 0.12,
+     "rueck3": 0.02
+    },
+    "b30": {
+     "n": 50,
+     "siege": 0.94,
+     "patt": 0.02,
+     "dauer": 763.8,
+     "wahlen": 9,
+     "gebremst": 0.20040899795501022,
+     "gebremst6": 0.15,
+     "abstand": {
+      "5": 98.19999999999999,
+      "10": 40.10000000000002,
+      "13": 147.0999999999999
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 17,
+      "13": 2
+     },
+     "rueckMax": 1,
+     "rueck2": 0.08,
+     "rueck3": 0
+    },
+    "b40": {
+     "n": 50,
+     "siege": 0.94,
+     "patt": 0,
+     "dauer": 821.9,
+     "wahlen": 10,
+     "gebremst": 0.21485943775100402,
+     "gebremst6": 0.15666666666666668,
+     "abstand": {
+      "5": 96.29999999999995,
+      "10": 40.10000000000002,
+      "13": 173.70000000000005
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 19,
+      "13": 3
+     },
+     "rueckMax": 1,
+     "rueck2": 0.16,
+     "rueck3": 0
+    },
+    "regel": {
+     "n": 50,
+     "siege": 0.96,
+     "patt": 0,
+     "dauer": 792.2,
+     "wahlen": 9,
+     "gebremst": 0.22055674518201285,
+     "gebremst6": 0.15333333333333332,
+     "abstand": {
+      "5": 94.60000000000002,
+      "10": 40.10000000000002,
+      "13": null
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 15,
+      "13": 0
+     },
+     "rueckMax": 1,
+     "rueck2": 0.2,
+     "rueck3": 0.02
+    }
+   },
+   "quellen_b0": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 472,
+     "kill": 365,
+     "wave": 100,
+     "base": 3,
+     "tower": 0,
+     "partien": 50,
+     "andere": 4
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2315,
+     "kill": 1668,
+     "wave": 64,
+     "base": 635,
+     "tower": 0,
+     "partien": 30,
+     "andere": 0
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6928,
+     "kill": 5819,
+     "wave": 1060,
+     "base": 102,
+     "tower": 0,
+     "partien": 4,
+     "andere": 0
+    }
+   ],
+   "quellen_b30": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 466,
+     "kill": 352,
+     "wave": 86,
+     "base": 3,
+     "budget": 15,
+     "tower": 0,
+     "partien": 50,
+     "andere": 10
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2315,
+     "kill": 1451,
+     "wave": 94,
+     "base": 423,
+     "budget": 287,
+     "tower": 0,
+     "partien": 39,
+     "andere": 60
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6928,
+     "kill": 5839,
+     "wave": 958,
+     "base": 29,
+     "budget": 184,
+     "partien": 2,
+     "andere": 0
+    }
+   ],
+   "quellen_regel": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 472,
+     "kill": 365,
+     "wave": 100,
+     "base": 3,
+     "tower": 0,
+     "partien": 50,
+     "andere": 4
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2315,
+     "kill": 1668,
+     "wave": 64,
+     "base": 635,
+     "tower": 0,
+     "partien": 30,
+     "andere": 0
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6928,
+     "kill": 5819,
+     "wave": 1060,
+     "base": 102,
+     "tower": 0,
+     "partien": 4,
+     "andere": 0
+    }
+   ]
+  },
+  "wirtschaft": {
+   "arme": {
+    "b0": {
+     "n": 50,
+     "siege": 0.98,
+     "patt": 0,
+     "dauer": 876.3,
+     "wahlen": 12,
+     "gebremst": 0.29411764705882354,
+     "gebremst6": 0.20666666666666667,
+     "abstand": {
+      "5": 86.09999999999997,
+      "10": 40.10000000000002,
+      "13": 83.79999999999995
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 35,
+      "13": 5
+     },
+     "rueckMax": 1,
+     "rueck2": 0.32,
+     "rueck3": 0
+    },
+    "b10": {
+     "n": 50,
+     "siege": 0.96,
+     "patt": 0.02,
+     "dauer": 891.4,
+     "wahlen": 12,
+     "gebremst": 0.2745762711864407,
+     "gebremst6": 0.23666666666666666,
+     "abstand": {
+      "5": 96,
+      "10": 40.10000000000002,
+      "13": 69.5
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 39,
+      "13": 8
+     },
+     "rueckMax": 1,
+     "rueck2": 0.18,
+     "rueck3": 0
+    },
+    "b20": {
+     "n": 50,
+     "siege": 0.86,
+     "patt": 0.02,
+     "dauer": 888.4,
+     "wahlen": 12,
+     "gebremst": 0.24873096446700507,
+     "gebremst6": 0.23,
+     "abstand": {
+      "5": 86.9,
+      "10": 40.10000000000002,
+      "13": 95.39999999999986
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 37,
+      "13": 12
+     },
+     "rueckMax": 1,
+     "rueck2": 0.14,
+     "rueck3": 0
+    },
+    "b30": {
+     "n": 50,
+     "siege": 0.84,
+     "patt": 0.02,
+     "dauer": 907.7,
+     "wahlen": 12,
+     "gebremst": 0.22866894197952217,
+     "gebremst6": 0.23,
+     "abstand": {
+      "5": 87.20000000000002,
+      "10": 42.89999999999998,
+      "13": 93.09999999999991
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 38,
+      "13": 8
+     },
+     "rueckMax": 1,
+     "rueck2": 0.06,
+     "rueck3": 0
+    },
+    "b40": {
+     "n": 50,
+     "siege": 0.92,
+     "patt": 0,
+     "dauer": 891.6,
+     "wahlen": 12,
+     "gebremst": 0.2576271186440678,
+     "gebremst6": 0.24666666666666667,
+     "abstand": {
+      "5": 79.69999999999999,
+      "10": 44.10000000000002,
+      "13": 40.10000000000002
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 37,
+      "13": 11
+     },
+     "rueckMax": 1,
+     "rueck2": 0.08,
+     "rueck3": 0
+    },
+    "regel": {
+     "n": 50,
+     "siege": 0.8,
+     "patt": 0.04,
+     "dauer": 933.4,
+     "wahlen": 13,
+     "gebremst": 0.21725239616613418,
+     "gebremst6": 0.25666666666666665,
+     "abstand": {
+      "5": 81,
+      "10": 45.700000000000045,
+      "13": 81.79999999999995
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 43,
+      "13": 14
+     },
+     "rueckMax": 1,
+     "rueck2": 0.06,
+     "rueck3": 0
+    }
+   },
+   "quellen_b0": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 473,
+     "kill": 366,
+     "wave": 100,
+     "base": 3,
+     "tower": 0,
+     "partien": 50,
+     "andere": 4
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2315,
+     "kill": 1659,
+     "wave": 141,
+     "base": 415,
+     "tower": 0,
+     "trade": 0,
+     "partien": 49,
+     "andere": 100
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6922,
+     "kill": 5649,
+     "wave": 979,
+     "base": 311,
+     "trade": 0,
+     "tower": 0,
+     "partien": 15,
+     "andere": 0
+    }
+   ],
+   "quellen_b30": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 468,
+     "kill": 358,
+     "wave": 90,
+     "base": 3,
+     "budget": 15,
+     "tower": 0,
+     "partien": 50,
+     "andere": 2
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2314,
+     "kill": 1249,
+     "wave": 46,
+     "base": 432,
+     "budget": 466,
+     "tower": 0,
+     "trade": 0,
+     "partien": 47,
+     "andere": 121
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6915,
+     "kill": 4968,
+     "wave": 845,
+     "base": 334,
+     "budget": 633,
+     "trade": 0,
+     "tower": 0,
+     "partien": 19,
+     "andere": 135
+    }
+   ],
+   "quellen_regel": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 469,
+     "kill": 352,
+     "wave": 90,
+     "base": 3,
+     "budget": 19,
+     "tower": 0,
+     "partien": 50,
+     "andere": 5
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2315,
+     "kill": 1291,
+     "wave": 46,
+     "base": 433,
+     "budget": 533,
+     "tower": 0,
+     "trade": 0,
+     "partien": 48,
+     "andere": 12
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6918,
+     "kill": 4808,
+     "wave": 864,
+     "base": 397,
+     "budget": 724,
+     "tower": 0,
+     "trade": 0,
+     "partien": 27,
+     "andere": 125
+    }
+   ]
+  },
+  "verteidigung": {
+   "arme": {
+    "b0": {
+     "n": 50,
+     "siege": 0.94,
+     "patt": 0.04,
+     "dauer": 926,
+     "wahlen": 11,
+     "gebremst": 0.24482758620689654,
+     "gebremst6": 0.13333333333333333,
+     "abstand": {
+      "5": 103.59999999999997,
+      "10": 40.10000000000002,
+      "13": 155.20000000000005
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 40,
+      "13": 5
+     },
+     "rueckMax": 1,
+     "rueck2": 0.22,
+     "rueck3": 0
+    },
+    "b10": {
+     "n": 50,
+     "siege": 0.9,
+     "patt": 0.02,
+     "dauer": 921.3,
+     "wahlen": 12,
+     "gebremst": 0.2573913043478261,
+     "gebremst6": 0.13666666666666666,
+     "abstand": {
+      "5": 94.19999999999999,
+      "10": 40.10000000000002,
+      "13": 152.5
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 39,
+      "13": 6
+     },
+     "rueckMax": 1,
+     "rueck2": 0.2,
+     "rueck3": 0
+    },
+    "b20": {
+     "n": 50,
+     "siege": 0.96,
+     "patt": 0,
+     "dauer": 951.7,
+     "wahlen": 12,
+     "gebremst": 0.22719449225473323,
+     "gebremst6": 0.14333333333333334,
+     "abstand": {
+      "5": 98.89999999999998,
+      "10": 40.10000000000002,
+      "13": 95.60000000000014
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 41,
+      "13": 3
+     },
+     "rueckMax": 1,
+     "rueck2": 0.1,
+     "rueck3": 0
+    },
+    "b30": {
+     "n": 50,
+     "siege": 0.94,
+     "patt": 0.06,
+     "dauer": 924.6,
+     "wahlen": 12,
+     "gebremst": 0.20770519262981574,
+     "gebremst6": 0.15333333333333332,
+     "abstand": {
+      "5": 87.90000000000003,
+      "10": 40.10000000000002,
+      "13": 146.0999999999999
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 41,
+      "13": 4
+     },
+     "rueckMax": 1,
+     "rueck2": 0.02,
+     "rueck3": 0
+    },
+    "b40": {
+     "n": 50,
+     "siege": 0.92,
+     "patt": 0.02,
+     "dauer": 917,
+     "wahlen": 12,
+     "gebremst": 0.2,
+     "gebremst6": 0.15,
+     "abstand": {
+      "5": 93.89999999999998,
+      "10": 40.10000000000002,
+      "13": 156
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 43,
+      "13": 2
+     },
+     "rueckMax": 1,
+     "rueck2": 0.02,
+     "rueck3": 0
+    },
+    "regel": {
+     "n": 50,
+     "siege": 0.98,
+     "patt": 0,
+     "dauer": 918.2,
+     "wahlen": 12,
+     "gebremst": 0.2189655172413793,
+     "gebremst6": 0.14333333333333334,
+     "abstand": {
+      "5": 96.40000000000003,
+      "10": 40.10000000000002,
+      "13": 162.5
+     },
+     "abstandAnzahl": {
+      "5": 50,
+      "10": 43,
+      "13": 1
+     },
+     "rueckMax": 1,
+     "rueck2": 0.08,
+     "rueck3": 0
+    }
+   },
+   "quellen_b0": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 472,
+     "kill": 366,
+     "wave": 100,
+     "base": 2,
+     "tower": 0,
+     "partien": 50,
+     "andere": 4
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2318,
+     "kill": 1684,
+     "wave": 138,
+     "base": 427,
+     "tower": 0,
+     "partien": 48,
+     "andere": 69
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6917,
+     "kill": 5551,
+     "wave": 1018,
+     "base": 274,
+     "tower": 0,
+     "partien": 17,
+     "andere": 74
+    }
+   ],
+   "quellen_b30": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 468,
+     "kill": 358,
+     "wave": 90,
+     "base": 2,
+     "budget": 14,
+     "tower": 0,
+     "partien": 50,
+     "andere": 4
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2319,
+     "kill": 1423,
+     "wave": 80,
+     "base": 418,
+     "budget": 300,
+     "tower": 0,
+     "partien": 50,
+     "andere": 98
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6912,
+     "kill": 5307,
+     "wave": 984,
+     "base": 370,
+     "budget": 226,
+     "tower": 60,
+     "partien": 20,
+     "andere": 0
+    }
+   ],
+   "quellen_regel": [
+    {
+     "von": 1,
+     "bis": 4,
+     "gesamt": 471,
+     "kill": 358,
+     "wave": 100,
+     "base": 2,
+     "budget": 13,
+     "tower": 0,
+     "partien": 50,
+     "andere": 0
+    },
+    {
+     "von": 5,
+     "bis": 9,
+     "gesamt": 2316,
+     "kill": 1427,
+     "wave": 108,
+     "base": 390,
+     "budget": 269,
+     "tower": 17,
+     "partien": 48,
+     "andere": 105
+    },
+    {
+     "von": 10,
+     "bis": 13,
+     "gesamt": 6918,
+     "kill": 5410,
+     "wave": 998,
+     "base": 252,
+     "budget": 160,
+     "tower": 74,
+     "partien": 11,
+     "andere": 24
+    }
+   ]
+  }
+ }
+}

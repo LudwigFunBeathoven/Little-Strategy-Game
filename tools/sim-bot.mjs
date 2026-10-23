@@ -287,15 +287,25 @@ function xpBins(log){
   for (const [t, src, b] of log){ const a = out[src] = out[src] || []; const i = Math.floor(t / 2); while (a.length <= i) a.push(0); a[i] = Math.round((a[i] + b) * 100) / 100; }
   return out;
 }
+/* Fester Budgetanteil (Teil 12, REQ-K12.01): Regler mit den Stufen 0 und pct %; der Kurs folgt zwischen den Stützstellen des Reglers (stufen, kursFaktor) linear, darunter und darüber bleibt er gleich. */
+export function kursFaktorBei(B, anteil){
+  const x = B.stufen, y = B.kursFaktor;
+  if (anteil <= x[1]) return y[1];
+  for (let i = 2; i < x.length; i++) if (anteil <= x[i]) return y[i - 1] + (y[i] - y[i - 1]) * (anteil - x[i - 1]) / (x[i] - x[i - 1]);
+  return y[y.length - 1];
+}
 export function playGame(job){
   const rule = job.nbOff ? KF_NEIGHBORS.find(r => r.building === job.nbOff) : null, per = rule ? rule.per : 0;
   if (rule) rule.per = 0;
-  try { return playGameInner(job); } finally { if (rule) rule.per = per; }
+  const B = C.KARTEN.budget, saved = job.budgetPct !== undefined ? { stufen: B.stufen, kursFaktor: B.kursFaktor } : null;
+  if (saved){ const a = job.budgetPct / 100; B.kursFaktor = [1, kursFaktorBei(saved, a)]; B.stufen = [0, a]; }
+  try { return playGameInner(job); } finally { if (rule) rule.per = per; if (saved){ B.stufen = saved.stufen; B.kursFaktor = saved.kursFaktor; } }
 }
-function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, startCards, xpLog, gegnerfern, fluegel }){
+function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, budgetPct, startCards, xpLog, gegnerfern, fluegel }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (budget !== undefined) prof.budget = budget;                          // Forschungsbudget (Teil 5): Stufe 0, 1, 2 (0, 25, 50 %)
+  if (budgetPct !== undefined) prof.budget = budgetPct > 0 ? 1 : 0;        // fester Anteil für alle Bots (Teil 12, REQ-K12.01; playGame stellt den Regler)
   if (pfad) prof.pfad = pfad;                                              // Pfad-Variante (REQ-KP.09): militaer | wissen | festung
   if (kat){ prof.kat = kat; prof.pfad = prof.pfad && pfad ? prof.pfad : KF_BROWSER_BOT.KAT_PFAD[kat]; }       // Kategorie-Bot (Teil 6, REQ-K6.08; vorher Linien-Bot): bevorzugt Karten, Doktrinen und Varianten seiner Kategorie
   const G = newGame(diff, seed, pacing, druck, gegnerfern, fluegel);
@@ -335,7 +345,8 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
   }
   const dirs = directionTracker({ lateralOf: G.lateralOf });
   const xpAt = sampleXp ? sampleXp.map(() => null) : null;                  // Referenzlauf (REQ-P.02): EP-Stand zu festen Zeitpunkten
-  let wallFall = null, sx = 0, xi = 0;
+  let wallFall = null, sx = 0, xi = 0, reachedSeen = 0;
+  const stufenSrc = [];                                                      // Teil 12: EP je Quelle (kumuliert) beim Erreichen jeder Schwelle
   const XP_AT = [300, 600, 900], xpSrcAt = {};
   // Teil 4 (REQ-S.09): Belegung des Rasters zu festen Zeitpunkten und Lebenspunkte, die die Mauer insgesamt verliert (Abnahme je Schritt, Reparatur zählt nicht)
   const GRID_AT = [120, 300, 600], grid = {}, wallPrev = G.S.sections.map(x => x.hp);
@@ -349,6 +360,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
       G.S.research.done[forceResearch.id] = 1; G.S.research.ver++;
     }
     bot.step();
+    while (G.S.reached > reachedSeen){ reachedSeen++; stufenSrc.push({ n: reachedSeen, t: Math.round(G.S.t * 10) / 10, total: Math.round(G.S.xpTotal), src: Object.fromEntries(Object.entries(G.S.stats.xpSrc || {}).map(([k, v]) => [k, Math.round(v)])), lager: Math.round(G.S.stats.tradeXp || 0) }); }
     dirs.sample(G.S, DT);
     if (xpAt) while (sx < sampleXp.length && G.S.t >= sampleXp[sx]) xpAt[sx++] = G.S.xpTotal;
     while (xi < XP_AT.length && G.S.t >= XP_AT[xi]) xpSrcAt[XP_AT[xi++]] = Object.assign({ total: G.S.xpTotal }, G.S.stats.xpSrc || {});       // Teil 8 (REQ-K8.01): EP je Quelle, kumuliert bei Minute 5, 10, 15
@@ -368,7 +380,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
   const lateMade = S.stats.prod.late.click + S.stats.prod.late.auto;
   const unused = lateMade > 0 ? Math.min(S.material, lateMade) / lateMade : null;
   return {
-    diff, profile, strategy, clickPolicy, seed,
+    diff, profile, strategy, clickPolicy, seed, budgetPct,
     status: S.status, t: S.t,
     combo: S.slots.filter(Boolean).map(x => x.type).sort().join('+') || '–',
     built: stats.built, demolished: stats.demolished,
@@ -380,7 +392,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
     enemyBaseFrac: S.enemyBaseHp / G.diffCfg().enemyBaseHp, supplyEnd: G.supplyCap(), kills: S.kills, losses: S.losses, matRateEnd: Math.round(G.matRate() * 10) / 10,
     grid, wallLost: Math.round(wallLost), variants: S.stats.variants || [],
-    rueckMax: S.stats.rueckMax || 0, rueck2T: Math.round(S.stats.rueck2T || 0),       // Teil 10 (REQ-K10.05): größter Rückstau (erreichte, nicht getroffene Wahlen) und Sekunden mit mehr als einer
+    stufenSrc, rueckMax: S.stats.rueckMax || 0, rueck2T: Math.round(S.stats.rueck2T || 0),       // Teil 10 (REQ-K10.05): größter Rückstau (erreichte, nicht getroffene Wahlen) und Sekunden mit mehr als einer
     haus: S.stats.haus || [], fluegel: S.stats.fluegel || [], kompanien: (S.stats.kompanien || []).length, gekauft: S.stats.gekauft || {},       // Teil 7 (REQ-K7.12)
     nbEnd: Math.round(1000 * S.slots.reduce((a, x, k) => a + (x && x.type === 'fabrik' && !x.upg ? G.neighborValue(k, 'fabrik') : 0), 0)) / 1000, slotsEnd: S.slots.map(x => x ? x.type : null),       // Teil 7 (REQ-K7.01): Summe der Nachbarschaftswerte der Fabriken am Ende, Belegung am Ende
     weiter: S.stats.weiter || [], katCounts: G.katCounts(), synergie: Object.fromEntries(Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0 && G.OPT[k] && G.OPT[k].synergie).map(k => [k, (({ n, value }) => ({ n, value }))(G.synergieNow(k))])),
