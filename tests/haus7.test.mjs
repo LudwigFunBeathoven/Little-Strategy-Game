@@ -75,7 +75,7 @@ test('K7.04: Die Automatik (Karte „Fließband“) und Bots können die Grenze 
   const snap = JSON.parse(JSON.stringify(G.snapshot()));
   const H = core.KlammerCore.create(); H.FX.on = false; H.adopt(snap);
   assert.equal(H.S.slots[4].type, 'haupthaus'); assert.equal(H.hausStufe(), 1); assert.equal(H.buildBlock(3, 'fabrik'), 'fabrikGrenze');
-  assert.equal(core.KlammerCore.SAVE_VERSION, 14); assert.match(core.KF_CONFIG.SAVE_KEY, /v14$/);
+  assert.equal(core.KlammerCore.SAVE_VERSION, 15); assert.match(core.KF_CONFIG.SAVE_KEY, /v15$/);
 });
 
 test('K7.02, K7.04: Texte in beiden Sprachen (Reiter, Stufen, Grenze, Erklärzeile)', () => {
@@ -132,7 +132,7 @@ test('K7.03: Stufe II und III nur nach Wahl der Karte und Bezahlung; Ausbau daue
   assert.equal(G.fluegelBlock('turm'), 'unknown');
 });
 
-test('K7.03 Flügel Bibliothek: Technologiekarten und Forschung ohne Universität, ×1,5 Dauer, Budget bis 25 %; Buchdruck braucht eine Universität', () => {
+test('K7.03 Flügel Bibliothek: Technologiekarten und Forschung ohne Universität, ×1,5 Dauer, Budget bis 20 %; Buchdruck braucht eine Universität', () => {
   const { G, C } = game(); G.S.pfad.choices = 3;
   assert.equal(G.optionAvailable(G.OPT.fortgeschritteneTaktiken), false, 'ohne Universität keine Technologie');
   stufe(G, 2); assert.ok(G.chooseFluegel('bibliothek'));
@@ -144,12 +144,13 @@ test('K7.03 Flügel Bibliothek: Technologiekarten und Forschung ohne Universitä
   const a = G.S.research.active[0]; assert.equal(a.bib, true);
   idle(G); G.tick(0.05); assert.ok(Math.abs(a.t - 0.05 / C.HAUPTHAUS.fluegel.bibliothek.zeitFaktor) < 1e-9, `Fortschritt ${a.t}`);
   finish(G, Math.ceil(a.timeS * 1.5) + 1); assert.equal(G.researchTier('r_reiter'), 1, 'abgeschlossen'); assert.ok(G.unitUnlocked('reiter'));
-  // Budget: höchstens 25 % ohne Universität
-  assert.equal(G.budgetMax(), C.HAUPTHAUS.fluegel.bibliothek.budgetMax); assert.equal(G.setBudget(2), false); assert.ok(G.setBudget(1)); assert.equal(G.budgetShare(), 0.25);
+  // Budget: höchstens die Stufe budgetMax (Teil 12: 20 %) ohne Universität
+  const bm = C.HAUPTHAUS.fluegel.bibliothek.budgetMax;
+  assert.equal(G.budgetMax(), bm); assert.equal(G.setBudget(bm + 1), false); assert.ok(G.setBudget(bm)); assert.equal(G.budgetShare(), C.KARTEN.budget.stufen[bm]);
   // Buchdruck in der Bibliothek gesperrt
   pick(G, 'buchdruck'); G.unlockKey('forschung:r_buchdruck'); assert.equal(G.researchBlock('r_buchdruck'), 'noUni');
   // mit Universität: zwei Plätze, der erste in der Universität ohne Aufschlag
-  place(G, 'universitaet', 0); assert.equal(G.researchSlots(), 2); assert.equal(G.budgetMax(), 2);
+  place(G, 'universitaet', 0); assert.equal(G.researchSlots(), 2); assert.equal(G.budgetMax(), C.KARTEN.budget.stufen.length - 1);
   G.unlockKey('forschung:r_schild'); G.S.research.done.r_reiter = 1;
   assert.ok(G.startResearch('r_buchdruck')); assert.equal(G.S.research.active.find(x => x.id === 'r_buchdruck').bib, undefined, 'Buchdruck in der Universität');
 });

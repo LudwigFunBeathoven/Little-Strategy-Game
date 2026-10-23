@@ -26,31 +26,35 @@ test('Der eingestellte Anteil des Materialertrags wird abgezogen und zum Kurs in
   }
 });
 
-test('Der Kurs sinkt mit dem Anteil: 25 % zum Kurs k, 50 % zum Kurs 0,7 k (abnehmender Ertrag)', () => {
+test('Der Kurs sinkt flach mit dem Anteil: nie unter die Hälfte des Kurses beim kleinsten Anteil, die EP je Sekunde steigen mit dem Anteil (Teil 12, REQ-K12.03)', () => {
   const { G, C } = game(); withEco(G);
   const k = C.KARTEN.budget;
-  assert.deepEqual(JSON.parse(JSON.stringify(k.stufen)), [0, 0.25, 0.5]);
-  G.setBudget(1); const r1 = G.budgetKurs(); G.setBudget(2); const r2 = G.budgetKurs();
-  assert.ok(Math.abs(r1 - k.kurs) < 1e-12); assert.ok(Math.abs(r2 / r1 - 0.7) < 1e-12);
-  // je Material liefert 25 % also mehr als 50 %, insgesamt aber bringt 50 % mehr EP (sonst wäre die Stufe sinnlos)
-  assert.ok(0.5 * r2 > 0.25 * r1, 'mehr Anteil bringt in der Summe mehr EP');
-  assert.ok(r2 < r1, 'aber zu schlechterem Kurs');
+  assert.deepEqual(JSON.parse(JSON.stringify(k.stufen)), [0, 0.1, 0.2, 0.3, 0.4, 0.5]);
+  const kurs = k.stufen.map((_, i) => { G.setBudget(i); return G.budgetKurs(); });
+  for (let i = 1; i < kurs.length; i++){
+    assert.ok(kurs[i] <= kurs[i - 1] + 1e-12, `Stufe ${i}: der Kurs steigt nicht`);
+    assert.ok(k.stufen[i] * kurs[i] > k.stufen[i - 1] * kurs[i - 1], `Stufe ${i}: mehr Anteil bringt in der Summe mehr EP`);
+  }
+  assert.ok(Math.abs(kurs[1] - k.kurs) < 1e-12, 'kleinster Anteil zum Grundkurs');
+  assert.ok(kurs[kurs.length - 1] >= 0.5 * kurs[1], 'höchster Anteil mindestens 50 % des Kurses beim kleinsten');
+  assert.ok(kurs[kurs.length - 1] < kurs[1], 'aber degressiv');
 });
 
 test('Das Budget braucht die Universität, lässt sich jederzeit ändern und gilt nur im Modus karten', () => {
-  const { G } = game(); G.S.material = 1e5; G.build('fabrik');
+  const { G, C } = game(); G.S.material = 1e5; G.build('fabrik');
   assert.equal(G.setBudget(1), false, 'ohne Universität');
   assert.equal(G.budgetShare(), 0);
   G.build('universitaet');
-  assert.ok(G.setBudget(2)); assert.equal(G.budgetShare(), 0.5);
+  const top = C.KARTEN.budget.stufen.length - 1, share = C.KARTEN.budget.stufen[top];
+  assert.ok(G.setBudget(top)); assert.equal(G.budgetShare(), share);
   assert.ok(G.setBudget(0)); assert.equal(G.budgetShare(), 0);
-  assert.equal(G.setBudget(3), false, 'unbekannte Stufe'); assert.equal(G.setBudget(-1), false);
-  G.setBudget(2);
+  assert.equal(G.setBudget(top + 1), false, 'unbekannte Stufe'); assert.equal(G.setBudget(-1), false);
+  G.setBudget(top);
   const i = G.S.slots.findIndex(s => s && s.type === 'universitaet'); G.demolish(i);
-  assert.equal(G.budgetShare(), 0, 'ohne Universität wirkt es nicht'); assert.equal(G.S.budget, 2, 'die Einstellung bleibt');
-  G.S.material = 1e5; G.build('universitaet'); assert.equal(G.budgetShare(), 0.5, 'mit neuer Universität wirkt es wieder');
+  assert.equal(G.budgetShare(), 0, 'ohne Universität wirkt es nicht'); assert.equal(G.S.budget, top, 'die Einstellung bleibt');
+  G.S.material = 1e5; G.build('universitaet'); assert.equal(G.budgetShare(), share, 'mit neuer Universität wirkt es wieder');
   const { G: S } = game('standard'); S.S.material = 1e5; S.build('universitaet');
-  assert.equal(S.setBudget(2), false, 'Standardmodus: kein Forschungsbudget'); assert.equal(S.budgetShare(), 0);
+  assert.equal(S.setBudget(top), false, 'Standardmodus: kein Forschungsbudget'); assert.equal(S.budgetShare(), 0);
 });
 
 test('Klicks, Zinsen und Beute bleiben unberührt; nur Fabriken und Presse speisen das Budget', () => {
@@ -73,7 +77,7 @@ test('Lehrjahre und die Kartenwahl: das Budget bringt EP, die zur nächsten Wahl
   G.setBudget(2);
   const s = second(G);
   const gross = G.matRate() + G.autoPressCps() * G.clickPower(), rate = G.budgetKurs();
-  assert.ok(Math.abs(s.budget - gross * 0.5 * rate * 1.3) < 1e-6 * gross, 'Lehrjahre wirken auf das Budget');
+  assert.ok(Math.abs(s.budget - gross * G.budgetShare() * rate * 1.3) < 1e-6 * gross, 'Lehrjahre wirken auf das Budget');
   // genug Sekunden: aus dem Budget allein wird eine Wahl fällig
   G.S.draft.stacks.kriegserfahrung = 0; G.S.draft.ver++;
   for (let i = 0; i < 20 * 800 && !G.S.pendingDraft; i++){ G.S.sections.forEach(x => { x.hp = 1e9; }); G.tick(0.05); }

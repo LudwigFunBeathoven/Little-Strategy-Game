@@ -301,7 +301,7 @@ export function playGame(job){
   if (saved){ const a = job.budgetPct / 100; B.kursFaktor = [1, kursFaktorBei(saved, a)]; B.stufen = [0, a]; }
   try { return playGameInner(job); } finally { if (rule) rule.per = per; if (saved){ B.stufen = saved.stufen; B.kursFaktor = saved.kursFaktor; } }
 }
-function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, budgetPct, startCards, xpLog, gegnerfern, fluegel }){
+function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy = 'gierig', clickPolicy = 'always', cps, maxMin = 30, horizon = 45, forbid, uniFirst, forceResearch, lockResearch, noRush, pacing, pfad, banCards, sampleXp, bonusScan, kat, druck, budget, budgetPct, kombi, startCards, xpLog, gegnerfern, fluegel }){
   const prof = Object.assign({}, PROFILES[profile] || PROFILES.durchschnitt);
   if (cps !== undefined) prof.cps = cps;
   if (budget !== undefined) prof.budget = budget;                          // Forschungsbudget (Teil 5): Stufe 0, 1, 2 (0, 25, 50 %)
@@ -310,6 +310,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
   if (kat){ prof.kat = kat; prof.pfad = prof.pfad && pfad ? prof.pfad : KF_BROWSER_BOT.KAT_PFAD[kat]; }       // Kategorie-Bot (Teil 6, REQ-K6.08; vorher Linien-Bot): bevorzugt Karten, Doktrinen und Varianten seiner Kategorie
   const G = newGame(diff, seed, pacing, druck, gegnerfern, fluegel);
   if (xpLog) G.S.xpLog = [];                                                 // Werkzeug (Teil 8): Einzelereignisse der EP aufzeichnen
+  if (kombi === 'alle'){ G.S.draft.stacks.kriegserfahrung = 2; G.S.draft.ver++; }       // Teil 12 (REQ-K12.03): alle Multiplikatoren des Budgetkurses zugleich – Lehrjahre Stufe 2 von Beginn an, Akademie und Stiftungshaus, sobald die Universität steht
   if (startCards){ for (const id of startCards) G.S.draft.stacks[id] = 1; G.S.draft.ver++; }       // Werkzeug für Versuche: Karten von Beginn an
   if (noRush) G.rushWave = () => false;                                   // Paarvergleich: ohne „Welle vorziehen“ (REQ-6.07 c)
   const stats = { built: {}, demolished: 0, offered: {}, picked: {}, draftTimes: [], offers: [], researched: {}, scan: [] };
@@ -346,6 +347,8 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
   const dirs = directionTracker({ lateralOf: G.lateralOf });
   const xpAt = sampleXp ? sampleXp.map(() => null) : null;                  // Referenzlauf (REQ-P.02): EP-Stand zu festen Zeitpunkten
   let wallFall = null, sx = 0, xi = 0, reachedSeen = 0;
+  const bPhase = { early: { s: 0, t: 0 }, mid: { s: 0, t: 0 }, late: { s: 0, t: 0 } };       // Teil 12 (REQ-K12.06): mittleres Budget je Phase (zeitgewichtet)
+  const bMin = [];                                                           // Teil 12: mittleres Budget je Spielminute (zeitgewichtet)
   const stufenSrc = [];                                                      // Teil 12: EP je Quelle (kumuliert) beim Erreichen jeder Schwelle
   const XP_AT = [300, 600, 900], xpSrcAt = {};
   // Teil 4 (REQ-S.09): Belegung des Rasters zu festen Zeitpunkten und Lebenspunkte, die die Mauer insgesamt verliert (Abnahme je Schritt, Reparatur zählt nicht)
@@ -360,6 +363,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
       G.S.research.done[forceResearch.id] = 1; G.S.research.ver++;
     }
     bot.step();
+    { const b = bPhase[G.phase()]; if (b){ b.s += G.budgetShare() * DT; b.t += DT; } const m = Math.floor(G.S.t / 60); while (bMin.length <= m) bMin.push({ s: 0, t: 0 }); bMin[m].s += G.budgetShare() * DT; bMin[m].t += DT; }
     while (G.S.reached > reachedSeen){ reachedSeen++; stufenSrc.push({ n: reachedSeen, t: Math.round(G.S.t * 10) / 10, total: Math.round(G.S.xpTotal), src: Object.fromEntries(Object.entries(G.S.stats.xpSrc || {}).map(([k, v]) => [k, Math.round(v)])), lager: Math.round(G.S.stats.tradeXp || 0) }); }
     dirs.sample(G.S, DT);
     if (xpAt) while (sx < sampleXp.length && G.S.t >= sampleXp[sx]) xpAt[sx++] = G.S.xpTotal;
@@ -380,7 +384,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
   const lateMade = S.stats.prod.late.click + S.stats.prod.late.auto;
   const unused = lateMade > 0 ? Math.min(S.material, lateMade) / lateMade : null;
   return {
-    diff, profile, strategy, clickPolicy, seed, budgetPct,
+    diff, profile, strategy, clickPolicy, seed, budgetPct, kombi,
     status: S.status, t: S.t,
     combo: S.slots.filter(Boolean).map(x => x.type).sort().join('+') || '–',
     built: stats.built, demolished: stats.demolished,
@@ -392,7 +396,7 @@ function playGameInner({ trace, traceEvery = 30, diff, seed, profile, strategy =
     unused, lateMade, dir: dirs.result(), unitShare: acts.units + acts.other ? acts.units / (acts.units + acts.other) : null,
     enemyBaseFrac: S.enemyBaseHp / G.diffCfg().enemyBaseHp, supplyEnd: G.supplyCap(), kills: S.kills, losses: S.losses, matRateEnd: Math.round(G.matRate() * 10) / 10,
     grid, wallLost: Math.round(wallLost), variants: S.stats.variants || [],
-    stufenSrc, rueckMax: S.stats.rueckMax || 0, rueck2T: Math.round(S.stats.rueck2T || 0),       // Teil 10 (REQ-K10.05): größter Rückstau (erreichte, nicht getroffene Wahlen) und Sekunden mit mehr als einer
+    stufenSrc, budgetMin: bMin.map(x => x.t ? Math.round(1000 * x.s / x.t) / 1000 : null), budgetEnd: G.budgetShare(), budgetPhase: Object.fromEntries(Object.entries(bPhase).map(([k, v]) => [k, v.t ? Math.round(1000 * v.s / v.t) / 1000 : null])), rueckMax: S.stats.rueckMax || 0, rueck2T: Math.round(S.stats.rueck2T || 0),       // Teil 10 (REQ-K10.05): größter Rückstau (erreichte, nicht getroffene Wahlen) und Sekunden mit mehr als einer
     haus: S.stats.haus || [], fluegel: S.stats.fluegel || [], kompanien: (S.stats.kompanien || []).length, gekauft: S.stats.gekauft || {},       // Teil 7 (REQ-K7.12)
     nbEnd: Math.round(1000 * S.slots.reduce((a, x, k) => a + (x && x.type === 'fabrik' && !x.upg ? G.neighborValue(k, 'fabrik') : 0), 0)) / 1000, slotsEnd: S.slots.map(x => x ? x.type : null),       // Teil 7 (REQ-K7.01): Summe der Nachbarschaftswerte der Fabriken am Ende, Belegung am Ende
     weiter: S.stats.weiter || [], katCounts: G.katCounts(), synergie: Object.fromEntries(Object.keys(S.draft.stacks).filter(k => S.draft.stacks[k] > 0 && G.OPT[k] && G.OPT[k].synergie).map(k => [k, (({ n, value }) => ({ n, value }))(G.synergieNow(k))])),

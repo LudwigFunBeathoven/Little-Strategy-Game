@@ -2,8 +2,8 @@
    Alle Spielwerte stehen hier. Der Spielcode enthält keine eigenen Zahlenwerte für Balancing oder Regeln.
    Texte stehen nicht hier, sondern in i18n/de.js und i18n/en.js. */
 const KF_CONFIG = {
-  VERSION: '0.9.2-kartenpfad-11',
-  SAVE_KEY: 'klammerfront.save.v14',         // Branch: eigene, höhere Spielstand-Version als main (7); 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
+  VERSION: '0.9.2-kartenpfad-12',
+  SAVE_KEY: 'klammerfront.save.v15',         // Branch: eigene, höhere Spielstand-Version als main (7); 15 mit Teil 12 (Regler in 10-%-Schritten, neue Kostenkurve der Wahlen), 11 mit Teil 6 (Kategorien statt Linien, Synergiekarten, Zufallsfaktor der Doktrinen), 12 mit Teil 7 (Haupthaus): ältere Spielstände werden verworfen
   SAVE_PREFIX: 'klammerfront.save.',   // ältere Spielstände unter diesem Präfix werden erkannt und mit Hinweis verworfen
   RECORDS_KEY: 'klammerfront.records.v1',
   LANG_KEY: 'klammerfront.lang',
@@ -22,7 +22,7 @@ const KF_CONFIG = {
        nur eine Stellschraube, Standard 1). minAbstand: Mindestabstand zweier Wahlen in Sekunden Spielzeit; er verzögert eine fällige Wahl (die EP darüber bleiben erhalten), löst aber keine aus.
        Kalibrierziel (Normal, „durchschnitt“): 12–16 Wahlen bei etwa 15 Minuten Partiedauer (Bericht kartenpfad-5). */
     schwellenRef: { start: 70, wachstum: 1.05 },       // Referenzkurve für Stärke und Phase (Teil 10): unabhängig von den Kosten der Wahlen
-    schwellen: { start: 70, wachstum: 1.35, dyn: null },       // Teil 10 (Arm C2, vom PO bestätigt): wachstum 1.05 → 1.35, Mindestabstand 45 → 40 s; die Stärke der Einheiten folgt der Referenzkurve schwellenRef       // dyn: { ref, max } – dynamischer Anstieg (Teil 10, REQ-K10.05); null = aus
+    schwellen: { start: 125, wachstum: 1.3, dyn: null },       // Teil 12 (REQ-K12.02): Kosten der Wahl n = start · wachstum^(n−1) = E0 · g^(n−1) (Teil 10: 70 und 1,35; Teil 9: 70 und 1,05); g = 1,3 liegt über dem zulässigen Bereich 1,08–1,20 der Anforderung: Abweichung, im Bericht Teil 12 begründet, Entscheidung des PO offen; die Stärke der Einheiten folgt der Referenzkurve schwellenRef       // dyn: { ref, max } – dynamischer Anstieg (Teil 10, REQ-K10.05); null = aus
     uebertrag: null,                                // Teil 8 (REQ-K8.02, Hebel 3): { anteil: 0.25 } – wartet eine Stufe (Mindestabstand), geht in die nächste höchstens dieser Anteil ihrer Kosten über, weitere EP verfallen; null = unbegrenzt (Standard: Der Hebel schwächt die Bots stark, siehe Bericht kartenpfad-8)
     schwellenFaktor: { leicht: 1, normal: 1, schwer: 1 },
     minAbstand: 40,
@@ -41,11 +41,11 @@ const KF_CONFIG = {
     /* Forschungsbudget der Universität (Teil 5, REQ-K5.05, ersetzt im Modus karten den Hörsaal): Der Spieler stellt ein, welcher Anteil des laufenden Materialertrags (Fabriken und Presse)
        in EP umgewandelt wird. stufen: wählbare Anteile; kurs: EP je Material bei kursFaktor 1; kursFaktor je Stufe: der Kurs sinkt mit dem Anteil (abnehmender Ertrag, reines Forschen soll nicht
        die beste Strategie sein). Gilt nur bei stehender Universität. */
-    budget: { stufen: [0, 0.25, 0.5], kurs: 0.08, kursFaktor: [1, 1, 0.7], abnahme: 0 },       // abnahme (Teil 8, REQ-K8.02, Hebel 2): Kurs × 1 / (1 + Summe der Budget-EP / abnahme); 0 = aus (die Messungen in Bericht kartenpfad-8 zeigen, dass der Hebel Wirtschaft und Verteidigung zu stark schwächt)
+    budget: { stufen: [0, 0.1, 0.2, 0.3, 0.4, 0.5], kurs: 0.7, kursFaktor: [1, 1, 0.95, 0.9, 0.85, 0.8], abnahme: 0 },       // Teil 12 (REQ-K12.03): Regler in 10-%-Schritten bis 50 % (vorher 0 / 25 / 50 %), Kurs 0,08 → 0,7 EP je Material, flachere Degression (vorher 1 / 1 / 0,7; bei 50 % noch 80 % des Kurses bei 10 %)       // abnahme (Teil 8, REQ-K8.02, Hebel 2): Kurs × 1 / (1 + Summe der Budget-EP / abnahme); 0 = aus (die Messungen in Bericht kartenpfad-8 zeigen, dass der Hebel Wirtschaft und Verteidigung zu stark schwächt)
     xpMult: { leicht: 1, normal: 1, schwer: 1 }, // EP je Abschuss je Grad (ersetzt im Modus karten DIFFICULTY.xpMult: mehr Gegner bringen mehr EP, ein Ausgleich über den Faktor entfällt)
     wellenFaktor: 1.5,           // Modus karten: reguläre Gegnerwellen wachsen bis auf × wellenFaktor, linear über wellenAnstiegMin Minuten (Standard unverändert)
     wellenAnstiegMin: 8,
-    basisFaktor: { leicht: 8.0, normal: 9.5, schwer: 7.5 },    // Teil 7: Normal 10,5 → 9,5 (Obergrenze für Fabriken und Haupthaus verlangsamen die Wirtschaft; Bot ohne Kategorie wieder 15:07 bei 15 Wahlen). Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer).
+    basisFaktor: { leicht: 8.8, normal: 10.5, schwer: 8.3 },    // Teil 7: Normal 10,5 → 9,5 (Obergrenze für Fabriken und Haupthaus verlangsamen die Wirtschaft; Bot ohne Kategorie wieder 15:07 bei 15 Wahlen). Modus karten: Lebenspunkte der gegnerischen Basis × Faktor je Schwierigkeitsgrad (REQ-P.03, einzige Stellschraube der Partiedauer).
                                 // Teil 5 (REQ-K5.03): Ziel etwa 15 Minuten bei 12–16 Wahlen (Normal, „durchschnitt“); vorher 5,5 / 5,5 / 3,0 bei etwa 11:50. Leicht liefert weniger Abschüsse (kleinere Wellen), Schwer mehr.
     /* Werte des Schwierigkeitsgrades (DIFFICULTY), die im Modus karten anders gelten (Teil 5, REQ-K5.02: „Schwer, durchschnitt“ 70–90 % Siege); der Modus standard bleibt unverändert */
     gegner: { leicht: {}, normal: {}, schwer: { waveBase: 4.0 } },       // Schwer: Grundwelle 4,0 statt 3,5 (Messung: 3,8 und 4,0 → 87,5 % Siege bei „durchschnitt“, 4,2 → 20 %, die Eröffnung entscheidet)
@@ -157,7 +157,7 @@ const KF_CONFIG = {
        schatzkammer: Zinsen auf den Materialbestand wie ein Kontor mit dem Anteil deckelAnteil an dessen Zinsdeckel (zählt nur ohne stehendes Kontor)
        kanzlei: so viele Karten je Angebot wie mit Universität (nicht zusätzlich) */
     fluegel: {
-      bibliothek:   { zeitFaktor: 1.5, budgetMax: 1, ersetzt: 'universitaet', nachbar: { ziel: 'fabrik', stat: 'nbResearchTime', wert: -0.05, max: 2 } },
+      bibliothek:   { zeitFaktor: 1.5, budgetMax: 2, ersetzt: 'universitaet', nachbar: { ziel: 'fabrik', stat: 'nbResearchTime', wert: -0.05, max: 2 } },
       zeughaus:     { schmiedeStufen: 2, ersetzt: 'schmiede', nachbar: { ziel: 'kaserne', stat: 'nbUnitHp', wert: 0.10, max: 2 } },
       schatzkammer: { deckelAnteil: 0.5, ersetzt: 'kontor', nachbar: { ziel: 'fabrik', stat: 'nbFactoryYield', wert: 0.10, max: 2 } },
       kanzlei:      { ersetzt: 'universitaet', nachbar: { ziel: 'alle', stat: 'nbVariantCost', wert: -0.15, max: 2 } },

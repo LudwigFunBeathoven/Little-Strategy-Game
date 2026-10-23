@@ -121,7 +121,7 @@ test('K5.07 Stiftung: Stiftungshaus verdoppelt den Kurs des Forschungsbudgets; E
   assert.ok(G.has('universitaet'));
   const x0 = (G.S.stats.xpSrc || {}).budget || 0; for (let i = 0; i < 20; i++){ idle(G); G.tick(0.05); }
   const dx = ((G.S.stats.xpSrc || {}).budget || 0) - x0, gross = G.matRate() + G.autoPressCps() * G.clickPower();
-  assert.ok(Math.abs(dx - gross * 0.5 * G.budgetKurs()) < 1e-6 * gross + 1e-6, `EP aus dem Budget ${dx}`);
+  assert.ok(Math.abs(dx - gross * G.budgetShare() * G.budgetKurs()) < 1e-6 * gross + 1e-6, `EP aus dem Budget ${dx}`);
 });
 
 test('K5.07 Stehendes Heer: Heerlager gibt Versorgung +6; jede Einheit kostet Unterhalt in Material je Minute', () => {

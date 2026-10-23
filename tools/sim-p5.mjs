@@ -1,6 +1,7 @@
 // Klammerfront – Messung für Kartenpfad Teil 5 und 6 (REQ-K5.01, K5.10, K6.08).
 // Aufruf:  node tools/sim-p5.mjs --suite felder [--runs 50] [--json reports/kartenpfad5-basis.json] [--label "Fahrplan aus"]
 //   --budget <n>  fester Forschungsbudget-Anteil in Prozent für alle Bots der Suite felder (Teil 12, REQ-K12.01); ohne Angabe gilt die Regel des Bots
+//   --kombi alle  Lehrjahre Stufe 2, Akademie und Stiftungshaus von Beginn an bzw. sobald die Universität steht (Teil 12, REQ-K12.03)
 //   Filter: --diffs leicht,normal,schwer  --profiles aktiv,durchschnitt,gelegentlich  --strategy einheiten-zuerst|gierig  --kat militaer|wirtschaft|verteidigung  --druck hoch
 //   budget  Paarvergleich des Forschungsbudgets (REQ-K5.05): derselbe Bot mit 0 %, 25 % und 50 %, Normal/durchschnitt (--budgetRuns, Standard 50)
 //   doktrin Paarvergleich je Doktrin (REQ-K5.07): der Kategorie-Bot der Doktrin, Normal/durchschnitt (--doktrinDiff, --doktrinProfile), nur diese Doktrin im Pool (Arm „mit“) gegen keine Doktrin (Arm „ohne“),
@@ -18,7 +19,7 @@ const SLIM = r => ({ diff: r.diff, profile: r.profile, strategy: r.strategy, see
   xpPassive: r.xpPassive, xpBounty: r.xpBounty, xpSrc: r.xpSrc, wahlen: r.wahlen || [], freeChoices: r.freeChoices, researchTimes: r.researchTimes || [], research: r.research, grid: r.grid, built: r.built,
   wallLost: r.wallLost, variants: r.variants, cards: r.cards, maxArmy: r.maxArmy, level: r.level, picks: r.picks, offers: r.offers,
   doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, doktrinen: r.doktrinen, upkeep: r.upkeep, towerKills: r.towerKills,
-  weiter: r.weiter || [], katCounts: r.katCounts, synergie: r.synergie, doktrinP: r.doktrinP || [], trade: r.trade, milizUnits: r.milizUnits, zermuerbt: r.zermuerbt, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, gekauft: r.gekauft, rueckMax: r.rueckMax, rueck2T: r.rueck2T, stufenSrc: r.stufenSrc, budgetPct: r.budgetPct });
+  weiter: r.weiter || [], katCounts: r.katCounts, synergie: r.synergie, doktrinP: r.doktrinP || [], trade: r.trade, milizUnits: r.milizUnits, zermuerbt: r.zermuerbt, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, gekauft: r.gekauft, rueckMax: r.rueckMax, rueck2T: r.rueck2T, stufenSrc: r.stufenSrc, budgetPct: r.budgetPct, kombi: r.kombi, budgetMin: r.budgetMin, budgetPhase: r.budgetPhase });
 
 if (!isMainThread){
   const { playGame } = await import('./sim-bot.mjs');
@@ -36,10 +37,10 @@ if (!isMainThread){
   const jobs = [];
   if (SUITE === 'felder')
     for (const diff of DIFFS) for (const profile of PROFILES) for (let r = 0; r < RUNS; r++)
-      jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, gegnerfern: arg('gegnerfern', 'an') === 'aus' ? 'aus' : undefined, fluegel: arg('fluegel', '') || undefined, budgetPct: arg('budget', null) === null ? undefined : Number(arg('budget')), sampleXp: EP_AT, xpLog: arg('xplog', 'nein') === 'ja' || undefined, seed: seedOf(2, r) });
+      jobs.push({ ...base, suite: 'felder', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, gegnerfern: arg('gegnerfern', 'an') === 'aus' ? 'aus' : undefined, fluegel: arg('fluegel', '') || undefined, budgetPct: arg('budget', null) === null ? undefined : Number(arg('budget')), kombi: arg('kombi', '') || undefined, sampleXp: EP_AT, xpLog: arg('xplog', 'nein') === 'ja' || undefined, seed: seedOf(2, r) });
 
   if (SUITE === 'budget')
-    for (const arm of [0, 1, 2]) for (const profile of PROFILES) for (const diff of DIFFS) for (let r = 0; r < RUNS; r++)
+    for (const arm of C.KARTEN.budget.stufen.map((_, i) => i)) for (const profile of PROFILES) for (const diff of DIFFS) for (let r = 0; r < RUNS; r++)
       jobs.push({ ...base, suite: 'budget', diff, profile, strategy: EZ, pfad: KAT ? undefined : 'militaer', kat: KAT || undefined, druck: DRUCK === 'hoch' ? 'hoch' : undefined, budget: arm, arm, sampleXp: EP_AT, seed: seedOf(7, r) });
   /* Doktrin, Kategorie des Bots (Mischdoktrinen: die zuerst genannte Kategorie), Sonderbau (null: keiner); Teil 6 (REQ-K6.05) ergänzt sieben Doktrinen */
   const DOKS = [['zunftordnung', 'wirtschaft'], ['stiftung', 'wirtschaft'], ['stehendesHeer', 'militaer'], ['vorstoss', 'militaer'], ['bollwerk', 'verteidigung'], ['ausfall', 'verteidigung'],
@@ -180,7 +181,7 @@ if (!isMainThread){
     console.log('|---|---|---|---|---|---|---|---|---|');
     for (const x of rows){
       const base0 = rows.find(y => y.diff === x.diff && y.profile === x.profile && y.arm === 0);
-      console.log(`| ${x.diff} | ${x.profile} | ${[0, 25, 50][x.arm]} % | ${x.siegquote} % | ${mm(x.dauerMedian)} | ${x.wahlenMedian} (${f1(x.wahlenMittel)}) | ${x.arm ? '+' + (x.wahlenMedian - base0.wahlenMedian) : '–'} | ${x.arm ? (x.siegquote - base0.siegquote >= 0 ? '+' : '') + f1(x.siegquote - base0.siegquote) + ' pp' : '–'} | ${pc1b(x.quellen.budget)} |`);
+      console.log(`| ${x.diff} | ${x.profile} | ${(100 * C.KARTEN.budget.stufen[x.arm])} % | ${x.siegquote} % | ${mm(x.dauerMedian)} | ${x.wahlenMedian} (${f1(x.wahlenMittel)}) | ${x.arm ? '+' + (x.wahlenMedian - base0.wahlenMedian) : '–'} | ${x.arm ? (x.siegquote - base0.siegquote >= 0 ? '+' : '') + f1(x.siegquote - base0.siegquote) + ' pp' : '–'} | ${pc1b(x.quellen.budget)} |`);
     }
   }
   if (SUITE === 'doktrin'){
@@ -216,5 +217,5 @@ if (!isMainThread){
   }
   if (JSON_OUT) writeFileSync(JSON_OUT, JSON.stringify({ ...report, roh: results.map(r => ({ suite: r.suite, diff: r.diff, profile: r.profile, strategy: r.strategy, seed: r.seed, status: r.status, t: Math.round(r.t * 10) / 10,
     arm: r.arm, variant: r.variant, druckName: r.druckName, doktrinen: r.doktrinen, doktrinOffers: r.doktrinOffers, doktrinOfferWahlen: r.doktrinOfferWahlen, upkeep: r.upkeep, towerKills: r.towerKills, variants: r.variants, xpSrc: r.xpSrc, xpAt: r.xpAt, xpTotal: Math.round(r.xpTotal), xpKill: Math.round(r.xpKill), xpTower: Math.round(r.xpTower), xpPassive: Math.round(r.xpPassive), research: r.research, researchTimes: r.researchTimes,
-    grid: r.grid, wallLost: r.wallLost, synergie: r.synergie, katCounts: r.katCounts, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, weiter: r.weiter, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, budgetPct: r.budgetPct, stufenSrc: r.stufenSrc, rueckMax: r.rueckMax, rueck2T: r.rueck2T, gekauft: r.gekauft, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t * 10) / 10, lt: w.lt, w: w.w, ue: w.ue, rest: w.rest })), xpSrcAt: r.xpSrcAt, xpLog: r.xpLog })) }));
+    grid: r.grid, wallLost: r.wallLost, synergie: r.synergie, katCounts: r.katCounts, nbEnd: r.nbEnd, slotsEnd: r.slotsEnd, weiter: r.weiter, haus: r.haus, fluegel: r.fluegel, kompanien: r.kompanien, budgetPct: r.budgetPct, budgetMin: r.budgetMin, budgetPhase: r.budgetPhase, stufenSrc: r.stufenSrc, rueckMax: r.rueckMax, rueck2T: r.rueck2T, gekauft: r.gekauft, wahlen: r.wahlen && r.wahlen.map(w => ({ n: w.n, t: Math.round(w.t * 10) / 10, lt: w.lt, w: w.w, ue: w.ue, rest: w.rest })), xpSrcAt: r.xpSrcAt, xpLog: r.xpLog })) }));
 }

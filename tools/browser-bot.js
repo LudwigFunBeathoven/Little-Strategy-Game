@@ -52,9 +52,9 @@ function KF_BROWSER_BOT(G, profile, hooks){
       const type = G.factoryCount() < 3 ? 'fabrik' : order.find(b => !(o.forbid || []).includes(b) && !(fabWanted && covered.includes(b)) && G.buildBlock(free, b) === null);
       if (type) build(bestSlot(type), type);
     } else if (free >= 0 && G.buildBlock(free, 'fabrik') === null) build(bestSlot('fabrik'), 'fabrik');
-    // Forschungsbudget (Teil 5, REQ-K5.10): feste Regel je Kategorie-Bot – Militär 0 %, Wirtschaft 50 %, Verteidigung 25 %; ohne Kategorie und Angabe 0 %; o.budget überschreibt (Stufe 0, 1, 2)
+    // Forschungsbudget (Teil 12, REQ-K12.06): fester Anteil je Strategie (BUDGET_ANTEIL); o.budget überschreibt (Index im Regler)
     if (G.pacing() === 'karten' && G.has('universitaet')){
-      const want = o.budget !== undefined ? o.budget : o.kat ? KF_BROWSER_BOT.KAT_BUDGET[o.kat] : 0;
+      const want = o.budget !== undefined ? o.budget : KF_BROWSER_BOT.budgetStufe(G, o.kat || 'ohne');
       if (G.budgetStufe() !== want) G.setBudget(want);
     }
     // Freihandel (Teil 6, REQ-K6.05): Material über dem Dreifachen eines Stapels wird gegen EP getauscht (höchstens zwei Stapel je Entscheidung)
@@ -132,7 +132,13 @@ KF_BROWSER_BOT.pfadPick = function(G, offer, variant, kat){
 
 /* Gebäude-Aufwertung (Teil 4, REQ-S.05): Der Kategorie-Bot wertet jedes Gebäude, für das seine Kategorie eine Variante hat, auf, sobald das Material mit Rücklage reicht.
    Fabriken werden nur zur Manufaktur mehrfach aufgewertet (Ertrag je Gebäude); jede andere Variante wirkt einmal, ein zweites Gebäude brächte nichts. */
-KF_BROWSER_BOT.KAT_BUDGET = { militaer: 0, wirtschaft: 2, verteidigung: 1 };       // Stufe des Forschungsbudgets je Kategorie-Bot (0, 25, 50 %)
+/* Budgetregel der Bots (Teil 12, REQ-K12.06): Anteil des Materialertrags je Strategie (Bot ohne Kategorie: „ohne“); die Stufe des Reglers ist die größte, die den Anteil nicht überschreitet */
+KF_BROWSER_BOT.BUDGET_ANTEIL = { ohne: 0.4, militaer: 0.2, wirtschaft: 0.3, verteidigung: 0.3 };
+KF_BROWSER_BOT.budgetStufe = function(G, bot){
+  const st = KF_CONFIG.KARTEN.budget.stufen, a = KF_BROWSER_BOT.BUDGET_ANTEIL[bot] ?? 0;
+  let k = 0; for (let i = 0; i < st.length; i++) if (st[i] <= a + 1e-9) k = i;
+  return k;
+};
 /* Flügel des Haupthauses (Teil 7, REQ-K7.12): feste Reihenfolge je Kategorie-Bot; der Bot ohne Kategorie nimmt Kanzlei und Bibliothek (beide ersetzen die Universität, Schmiede und Kontor bleiben) */
 KF_BROWSER_BOT.KAT_FLUEGEL = { militaer: ['zeughaus', 'kanzlei'], wirtschaft: ['schatzkammer', 'bibliothek'], verteidigung: ['bibliothek', 'zeughaus'], ohne: ['kanzlei', 'bibliothek'] };
 /* Gebäude, deren Grundfunktion ein Flügel übernimmt: Es weicht einer weiteren Fabrik, wenn das Raster voll ist */

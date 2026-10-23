@@ -93,9 +93,9 @@ test('S.05: Manufaktur wirkt je Gebäude, Werkstatt und die übrigen Varianten e
   assert.ok(Math.abs(G.matRate() / r0 - (1 + 2 * (1 + yield1)) / 3) < 1e-6, `Mehrertrag je Manufaktur: ${G.matRate() / r0}`);
 });
 
-test('S.05: Spielstand-Version 14 (Teil 10) und Zustand der Aufwertung im Spielstand', () => {
+test('S.05: Spielstand-Version 15 (Teil 12) und Zustand der Aufwertung im Spielstand', () => {
   const { G } = game();
-  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 14);
+  assert.equal(loadCore().KlammerCore.SAVE_VERSION, 15);
   place(G, 'fabrik', 0); G.S.t = 200; G.S.material = 1e6; G.upgradeBuilding(0, 'manufaktur');
   const snap = JSON.parse(JSON.stringify(G.snapshot()));
   assert.ok(snap.slots[0].upg);
