@@ -1,0 +1,549 @@
+{
+ "cand": "d5",
+ "kriterien": {
+  "Elastizität ab Stufe 10 (30 % gegen 0 %)": {
+   "wert": "gepaart 0 % (39 Paare), gepoolt 49 %",
+   "erfuellt": false
+  },
+  "Grundlinie Budget 0 %: Wahlen (ohne Kategorie)": {
+   "wert": 10,
+   "erfuellt": true
+  },
+  "Korridor mit Regel: Wahlen · Dauer (ohne Kategorie)": {
+   "wert": "12 · 13:10",
+   "erfuellt": true
+  },
+  "Optimum im Inneren, ohne": {
+   "wert": "20 % (Siege 100 %, Dauer 12:55)",
+   "erfuellt": true
+  },
+  "Optimum im Inneren, militaer": {
+   "wert": "40 % (Siege 98 %, Dauer 12:26)",
+   "erfuellt": true
+  },
+  "Optimum im Inneren, wirtschaft": {
+   "wert": "40 % (Siege 100 %, Dauer 13:28)",
+   "erfuellt": true
+  },
+  "Optimum im Inneren, verteidigung": {
+   "wert": "50 % (Siege 99 %, Dauer 14:25)",
+   "erfuellt": false
+  },
+  "Strategieabhängigkeit: Optimum Wirtschaft > Militär": {
+   "wert": "40 % gegen 40 %",
+   "erfuellt": false
+  },
+  "Alternative, keine Pflicht, ohne": {
+   "wert": "3,0 pp",
+   "erfuellt": true
+  },
+  "Alternative, keine Pflicht, militaer": {
+   "wert": "4,0 pp",
+   "erfuellt": true
+  },
+  "Alternative, keine Pflicht, wirtschaft": {
+   "wert": "7,0 pp",
+   "erfuellt": true
+  },
+  "Alternative, keine Pflicht, verteidigung": {
+   "wert": "3,0 pp",
+   "erfuellt": true
+  },
+  "Mindestabstand bindet beim Optimum, ohne": {
+   "wert": "12 %",
+   "erfuellt": true
+  },
+  "Mindestabstand bindet beim Optimum, militaer": {
+   "wert": "17 %",
+   "erfuellt": false
+  },
+  "Mindestabstand bindet beim Optimum, wirtschaft": {
+   "wert": "34 %",
+   "erfuellt": false
+  },
+  "Mindestabstand bindet beim Optimum, verteidigung": {
+   "wert": "24 %",
+   "erfuellt": false
+  },
+  "Rückstau: Partien mit höchstens einer offenen Wahl": {
+   "wert": "96 %",
+   "erfuellt": true
+  },
+  "Rückstau: größter Wert": {
+   "wert": 2,
+   "erfuellt": true
+  },
+  "Takt: Variationskoeffizient (Median)": {
+   "wert": "0,33",
+   "erfuellt": true
+  },
+  "Siegquote Wirtschafts-Bot (Regel)": {
+   "wert": "100 %",
+   "erfuellt": true
+  }
+ },
+ "opt": {
+  "ohne": "20",
+  "militaer": "40",
+  "wirtschaft": "40",
+  "verteidigung": "50"
+ },
+ "kennzahlen": {
+  "ohne": {
+   "0": {
+    "n": 100,
+    "siege": 0.97,
+    "patt": 0,
+    "dauer": 849.8,
+    "wahlen": 10,
+    "gebremst": 0.21544715447154472,
+    "gebremst6": 0.03166666666666667,
+    "abstandAb10": 40.19999999999993,
+    "abstandAb10N": 54,
+    "abstand5": 98.60000000000002,
+    "abstand10": 40.10000000000002,
+    "cv": 0.49065458672251316,
+    "rueck1": 0.74,
+    "rueckMax": 2
+   },
+   "10": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 795,
+    "wahlen": 10,
+    "gebremst": 0.12868369351669942,
+    "gebremst6": 0.05,
+    "abstandAb10": 44.39999999999998,
+    "abstandAb10N": 64,
+    "abstand5": 78.39999999999998,
+    "abstand10": 40.10000000000002,
+    "cv": 0.3460616929105319,
+    "rueck1": 0.98,
+    "rueckMax": 2
+   },
+   "20": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 774.6,
+    "wahlen": 10,
+    "gebremst": 0.12237093690248566,
+    "gebremst6": 0.105,
+    "abstandAb10": 49.89999999999998,
+    "abstandAb10N": 74,
+    "abstand5": 70,
+    "abstand10": 46.799999999999955,
+    "cv": 0.3158596767018003,
+    "rueck1": 0.98,
+    "rueckMax": 2
+   },
+   "30": {
+    "n": 100,
+    "siege": 0.99,
+    "patt": 0,
+    "dauer": 777.9,
+    "wahlen": 11,
+    "gebremst": 0.14645103324348607,
+    "gebremst6": 0.185,
+    "abstandAb10": 59.700000000000045,
+    "abstandAb10N": 123,
+    "abstand5": 60.19999999999999,
+    "abstand10": 53.700000000000045,
+    "cv": 0.32749240777067706,
+    "rueck1": 0.99,
+    "rueckMax": 2
+   },
+   "40": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 789.9,
+    "wahlen": 12,
+    "gebremst": 0.18329070758738278,
+    "gebremst6": 0.2816666666666667,
+    "abstandAb10": 64.69999999999993,
+    "abstandAb10N": 175,
+    "abstand5": 43.89999999999998,
+    "abstand10": 73.19999999999999,
+    "cv": 0.32030786915725346,
+    "rueck1": 0.97,
+    "rueckMax": 2
+   },
+   "50": {
+    "n": 100,
+    "siege": 0.97,
+    "patt": 0,
+    "dauer": 792.5,
+    "wahlen": 12,
+    "gebremst": 0.26986754966887416,
+    "gebremst6": 0.4266666666666667,
+    "abstandAb10": 67.80000000000007,
+    "abstandAb10N": 208,
+    "abstand5": 40,
+    "abstand10": 72.20000000000005,
+    "cv": 0.32795879365311087,
+    "rueck1": 0.93,
+    "rueckMax": 2
+   },
+   "regel": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 789.9,
+    "wahlen": 12,
+    "gebremst": 0.18329070758738278,
+    "gebremst6": 0.2816666666666667,
+    "abstandAb10": 64.69999999999993,
+    "abstandAb10N": 175,
+    "abstand5": 43.89999999999998,
+    "abstand10": 73.19999999999999,
+    "cv": 0.32030786915725346,
+    "rueck1": 0.97,
+    "rueckMax": 2
+   }
+  },
+  "militaer": {
+   "0": {
+    "n": 100,
+    "siege": 0.94,
+    "patt": 0.01,
+    "dauer": 818.1,
+    "wahlen": 8,
+    "gebremst": 0.1239766081871345,
+    "gebremst6": 0.02512562814070352,
+    "abstandAb10": 65.70000000000005,
+    "abstandAb10N": 39,
+    "abstand5": 99.90000000000003,
+    "abstand10": 40.10000000000002,
+    "cv": 0.48073405439040545,
+    "rueck1": 0.88,
+    "rueckMax": 2
+   },
+   "10": {
+    "n": 100,
+    "siege": 0.96,
+    "patt": 0,
+    "dauer": 746.7,
+    "wahlen": 9,
+    "gebremst": 0.09040178571428571,
+    "gebremst6": 0.03166666666666667,
+    "abstandAb10": 87.29999999999995,
+    "abstandAb10N": 24,
+    "abstand5": 86.30000000000001,
+    "abstand10": 87.29999999999995,
+    "cv": 0.35411248713915494,
+    "rueck1": 0.88,
+    "rueckMax": 2
+   },
+   "20": {
+    "n": 100,
+    "siege": 0.97,
+    "patt": 0,
+    "dauer": 740.8,
+    "wahlen": 9,
+    "gebremst": 0.11449579831932773,
+    "gebremst6": 0.08666666666666667,
+    "abstandAb10": 81.09999999999991,
+    "abstandAb10N": 39,
+    "abstand5": 74.89999999999998,
+    "abstand10": 59.10000000000002,
+    "cv": 0.3452723733566302,
+    "rueck1": 0.96,
+    "rueckMax": 2
+   },
+   "30": {
+    "n": 100,
+    "siege": 0.97,
+    "patt": 0.02,
+    "dauer": 754.4,
+    "wahlen": 10,
+    "gebremst": 0.12772277227722773,
+    "gebremst6": 0.135,
+    "abstandAb10": 62.5,
+    "abstandAb10N": 55,
+    "abstand5": 62.299999999999955,
+    "abstand10": 40.10000000000002,
+    "cv": 0.3769007949438247,
+    "rueck1": 0.99,
+    "rueckMax": 2
+   },
+   "40": {
+    "n": 100,
+    "siege": 0.98,
+    "patt": 0.02,
+    "dauer": 746.1,
+    "wahlen": 10,
+    "gebremst": 0.17458777885548013,
+    "gebremst6": 0.21833333333333332,
+    "abstandAb10": 74.09999999999991,
+    "abstandAb10N": 61,
+    "abstand5": 50,
+    "abstand10": 74.09999999999991,
+    "cv": 0.36047241298374877,
+    "rueck1": 0.99,
+    "rueckMax": 2
+   },
+   "50": {
+    "n": 100,
+    "siege": 0.95,
+    "patt": 0.03,
+    "dauer": 782.7,
+    "wahlen": 10,
+    "gebremst": 0.24573055028462998,
+    "gebremst6": 0.37833333333333335,
+    "abstandAb10": 115.5,
+    "abstandAb10N": 80,
+    "abstand5": 40,
+    "abstand10": 103.19999999999993,
+    "cv": 0.4234420159169421,
+    "rueck1": 0.98,
+    "rueckMax": 2
+   },
+   "regel": {
+    "n": 100,
+    "siege": 0.97,
+    "patt": 0,
+    "dauer": 740.8,
+    "wahlen": 9,
+    "gebremst": 0.11449579831932773,
+    "gebremst6": 0.08666666666666667,
+    "abstandAb10": 81.09999999999991,
+    "abstandAb10N": 39,
+    "abstand5": 74.89999999999998,
+    "abstand10": 59.10000000000002,
+    "cv": 0.3452723733566302,
+    "rueck1": 0.96,
+    "rueckMax": 2
+   }
+  },
+  "wirtschaft": {
+   "0": {
+    "n": 100,
+    "siege": 0.93,
+    "patt": 0.02,
+    "dauer": 956.9,
+    "wahlen": 11,
+    "gebremst": 0.21823204419889503,
+    "gebremst6": 0.045075125208681135,
+    "abstandAb10": 65.80000000000018,
+    "abstandAb10N": 146,
+    "abstand5": 90,
+    "abstand10": 40.10000000000002,
+    "cv": 0.5157122914688291,
+    "rueck1": 0.69,
+    "rueckMax": 3
+   },
+   "10": {
+    "n": 100,
+    "siege": 0.98,
+    "patt": 0,
+    "dauer": 864.8,
+    "wahlen": 11,
+    "gebremst": 0.14900947459086994,
+    "gebremst6": 0.07833333333333334,
+    "abstandAb10": 57.5,
+    "abstandAb10N": 183,
+    "abstand5": 70.69999999999999,
+    "abstand10": 59.299999999999955,
+    "cv": 0.3390949502957723,
+    "rueck1": 0.95,
+    "rueckMax": 2
+   },
+   "20": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 846.2,
+    "wahlen": 12,
+    "gebremst": 0.18389897395422258,
+    "gebremst6": 0.13166666666666665,
+    "abstandAb10": 54.700000000000045,
+    "abstandAb10N": 269,
+    "abstand5": 57.19999999999999,
+    "abstand10": 62.69999999999993,
+    "cv": 0.295672536026299,
+    "rueck1": 0.88,
+    "rueckMax": 2
+   },
+   "30": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 811.5,
+    "wahlen": 13,
+    "gebremst": 0.2534142640364188,
+    "gebremst6": 0.25833333333333336,
+    "abstandAb10": 57.200000000000045,
+    "abstandAb10N": 318,
+    "abstand5": 40,
+    "abstand10": 57,
+    "cv": 0.2767915918455956,
+    "rueck1": 0.91,
+    "rueckMax": 2
+   },
+   "40": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 808,
+    "wahlen": 13,
+    "gebremst": 0.3372177713037145,
+    "gebremst6": 0.38333333333333336,
+    "abstandAb10": 51.09999999999991,
+    "abstandAb10N": 373,
+    "abstand5": 40,
+    "abstand10": 55,
+    "cv": 0.25735719421710085,
+    "rueck1": 0.82,
+    "rueckMax": 4
+   },
+   "50": {
+    "n": 100,
+    "siege": 0.99,
+    "patt": 0,
+    "dauer": 794.9,
+    "wahlen": 14,
+    "gebremst": 0.4576271186440678,
+    "gebremst6": 0.49,
+    "abstandAb10": 50.60000000000002,
+    "abstandAb10N": 416,
+    "abstand5": 40,
+    "abstand10": 46.200000000000045,
+    "cv": 0.2673568515247896,
+    "rueck1": 0.75,
+    "rueckMax": 5
+   },
+   "regel": {
+    "n": 100,
+    "siege": 1,
+    "patt": 0,
+    "dauer": 811.5,
+    "wahlen": 13,
+    "gebremst": 0.2534142640364188,
+    "gebremst6": 0.25833333333333336,
+    "abstandAb10": 57.200000000000045,
+    "abstandAb10N": 318,
+    "abstand5": 40,
+    "abstand10": 57,
+    "cv": 0.2767915918455956,
+    "rueck1": 0.91,
+    "rueckMax": 2
+   }
+  },
+  "verteidigung": {
+   "0": {
+    "n": 100,
+    "siege": 0.96,
+    "patt": 0.02,
+    "dauer": 949,
+    "wahlen": 11,
+    "gebremst": 0.22846781504986402,
+    "gebremst6": 0.03166666666666667,
+    "abstandAb10": 68.70000000000005,
+    "abstandAb10N": 126,
+    "abstand5": 95.30000000000007,
+    "abstand10": 40.5,
+    "cv": 0.5289845898614641,
+    "rueck1": 0.73,
+    "rueckMax": 2
+   },
+   "10": {
+    "n": 100,
+    "siege": 0.97,
+    "patt": 0,
+    "dauer": 864.6,
+    "wahlen": 11,
+    "gebremst": 0.14272644098810613,
+    "gebremst6": 0.02666666666666667,
+    "abstandAb10": 60.30000000000007,
+    "abstandAb10N": 111,
+    "abstand5": 80.69999999999999,
+    "abstand10": 48.30000000000007,
+    "cv": 0.42111751094763966,
+    "rueck1": 0.96,
+    "rueckMax": 2
+   },
+   "20": {
+    "n": 100,
+    "siege": 0.96,
+    "patt": 0.02,
+    "dauer": 834.9,
+    "wahlen": 11,
+    "gebremst": 0.13918439716312056,
+    "gebremst6": 0.10333333333333333,
+    "abstandAb10": 64.10000000000014,
+    "abstandAb10N": 135,
+    "abstand5": 75.69999999999999,
+    "abstand10": 50,
+    "cv": 0.37675555306163905,
+    "rueck1": 0.99,
+    "rueckMax": 2
+   },
+   "30": {
+    "n": 100,
+    "siege": 0.98,
+    "patt": 0,
+    "dauer": 847.9,
+    "wahlen": 11,
+    "gebremst": 0.13765541740674955,
+    "gebremst6": 0.175,
+    "abstandAb10": 84.5,
+    "abstandAb10N": 128,
+    "abstand5": 60.60000000000002,
+    "abstand10": 91.39999999999998,
+    "cv": 0.3853153853236874,
+    "rueck1": 0.99,
+    "rueckMax": 2
+   },
+   "40": {
+    "n": 100,
+    "siege": 0.97,
+    "patt": 0.01,
+    "dauer": 823.3,
+    "wahlen": 12,
+    "gebremst": 0.17258883248730963,
+    "gebremst6": 0.25833333333333336,
+    "abstandAb10": 81.69999999999993,
+    "abstandAb10N": 182,
+    "abstand5": 47.099999999999966,
+    "abstand10": 89,
+    "cv": 0.37551352494765966,
+    "rueck1": 1,
+    "rueckMax": 1
+   },
+   "50": {
+    "n": 100,
+    "siege": 0.99,
+    "patt": 0,
+    "dauer": 864.7,
+    "wahlen": 12,
+    "gebremst": 0.24006622516556292,
+    "gebremst6": 0.41333333333333333,
+    "abstandAb10": 80.80000000000007,
+    "abstandAb10N": 209,
+    "abstand5": 40,
+    "abstand10": 84.59999999999997,
+    "cv": 0.4009023594152087,
+    "rueck1": 0.97,
+    "rueckMax": 2
+   },
+   "regel": {
+    "n": 100,
+    "siege": 0.98,
+    "patt": 0,
+    "dauer": 847.9,
+    "wahlen": 11,
+    "gebremst": 0.13765541740674955,
+    "gebremst6": 0.175,
+    "abstandAb10": 84.5,
+    "abstandAb10N": 128,
+    "abstand5": 60.60000000000002,
+    "abstand10": 91.39999999999998,
+    "cv": 0.3853153853236874,
+    "rueck1": 0.99,
+    "rueckMax": 2
+   }
+  }
+ }
+}
